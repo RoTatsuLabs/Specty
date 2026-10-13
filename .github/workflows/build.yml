@@ -38,7 +38,7 @@ jobs:
       - name: Upload debug APK
         uses: actions/upload-artifact@v4
         with:
-          name: audexa-debug-apk
+          name: specty-debug-apk
           path: app/build/outputs/apk/debug/*.apk
           if-no-files-found: error
 
