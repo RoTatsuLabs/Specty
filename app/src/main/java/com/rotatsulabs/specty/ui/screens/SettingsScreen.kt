@@ -65,7 +65,7 @@ fun SettingsScreen(fftSize: Int, onFftSize: (Int) -> Unit, modifier: Modifier = 
         }
 
         SettingsCard("About") {
-            Text("Audexa ${BuildConfig.VERSION_NAME}", style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold)
+            Text("Specty ${BuildConfig.VERSION_NAME}", style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold)
             Text(
                 "Free software under the GNU General Public License v3.0. Decoding by FFmpeg through a maintained ffmpeg-kit fork. " +
                     "All analysis runs on your device.",

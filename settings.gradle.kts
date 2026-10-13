@@ -14,5 +14,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "Audexa"
+rootProject.name = "Specty"
 include(":app")

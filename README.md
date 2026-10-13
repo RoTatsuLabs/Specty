@@ -1,8 +1,8 @@
-# Audexa
+# Specty
 
 An expressive audio analyzer for Android, built with Material Design 3 Expressive.
 
-Pick a file (or browse your library) and Audexa shows what it really contains: codec and format facts, loudness and dynamics, per-channel stats, a spectrogram, and a check for lossy or upsampled sources hiding inside "lossless" files.
+Pick a file (or browse your library) and Specty shows what it really contains: codec and format facts, loudness and dynamics, per-channel stats, a spectrogram, and a check for lossy or upsampled sources hiding inside "lossless" files.
 
 ## Features
 

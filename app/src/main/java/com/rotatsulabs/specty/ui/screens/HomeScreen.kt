@@ -41,7 +41,7 @@ fun HomeScreen(onPickFile: () -> Unit, onOpenLibrary: () -> Unit, modifier: Modi
         verticalArrangement = Arrangement.spacedBy(20.dp),
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            Text("Audexa", style = MaterialTheme.typography.displaySmall, fontWeight = FontWeight.Bold)
+            Text("Specty", style = MaterialTheme.typography.displaySmall, fontWeight = FontWeight.Bold)
             Text(
                 "See what your audio files really contain.",
                 style = MaterialTheme.typography.bodyLarge,

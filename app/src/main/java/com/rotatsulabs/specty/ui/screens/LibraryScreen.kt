@@ -145,7 +145,7 @@ private fun PermissionPrompt(onGrant: () -> Unit) {
         Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Text("Allow access to your music", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
             Text(
-                "Audexa reads your audio files on this device to list them here. Nothing leaves your phone.",
+                "Specty reads your audio files on this device to list them here. Nothing leaves your phone.",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
