@@ -43,16 +43,7 @@ Min SDK is 33 (Android 13). Package ID: `com.rotatsulabs.specty`.
 
 ### Continuous integration
 
-The workflow lives in `ci/build.yml`. Install it once from the repository root:
-
-```sh
-git pull
-sh ci/apply-ci.sh
-```
-
-Or, without the script: `git apply ci/workflow.patch && git add .github && git commit -m "ci: add workflow" && git push`.
-
-Pushing workflow files needs a token with the `workflow` scope.
+GitHub Actions (`.github/workflows/build.yml`) runs the unit tests and builds a debug APK on every push, uploaded as the `audexa-debug-apk` artifact.
 
 ## Decoding
 
