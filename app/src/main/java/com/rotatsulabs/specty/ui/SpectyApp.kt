@@ -31,6 +31,7 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit) {
     val analysis by viewModel.analysis.collectAsStateWithLifecycle()
     val library by viewModel.library.collectAsStateWithLifecycle()
     val fftSize by viewModel.fftSize.collectAsStateWithLifecycle()
+    val verdicts by viewModel.cachedVerdicts.collectAsStateWithLifecycle()
     var showSettings by rememberSaveable { mutableStateOf(false) }
     val analysisOpen = analysis !is AnalysisState.Idle
 
@@ -48,6 +49,7 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit) {
                 onOpen = { viewModel.analyze(it.uri) },
                 onPickFile = onPickFile,
                 onOpenSettings = { showSettings = true },
+                verdictFor = { track -> verdicts[viewModel.cacheKey(track.uri, track.sizeBytes, fftSize)] },
             )
         }
 
@@ -58,13 +60,13 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit) {
         ) {
             Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.surface) {
                 Box(Modifier.navigationBarsPadding()) {
-                    AnalysisScreen(held.state, onBack = viewModel::closeAnalysis)
+                    AnalysisScreen(held.state, onBack = viewModel::closeAnalysis, onReanalyse = viewModel::reanalyze)
                 }
             }
         }
     }
 
     if (showSettings) {
-        SettingsSheet(fftSize = fftSize, onFftSize = viewModel::setFftSize, onDismiss = { showSettings = false })
+        SettingsSheet(fftSize = fftSize, onFftSize = viewModel::setFftSize, onClearCache = viewModel::clearCache, onDismiss = { showSettings = false })
     }
 }

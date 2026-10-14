@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.SegmentedButton
@@ -25,7 +26,7 @@ private val fftChoices = listOf(1024, 2048, 4096)
 
 /** Settings live in a bottom sheet opened from the overflow menu. */
 @Composable
-fun SettingsSheet(fftSize: Int, onFftSize: (Int) -> Unit, onDismiss: () -> Unit) {
+fun SettingsSheet(fftSize: Int, onFftSize: (Int) -> Unit, onClearCache: () -> Unit, onDismiss: () -> Unit) {
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         shape = RoundedCornerShape(topStart = 36.dp, topEnd = 36.dp),
@@ -66,6 +67,16 @@ fun SettingsSheet(fftSize: Int, onFftSize: (Int) -> Unit, onDismiss: () -> Unit)
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
+            }
+
+            SettingsCard("Saved results") {
+                Text(
+                    "Finished analyses are kept on this device, so a file you already checked opens instantly. " +
+                        "Changing the resolution above analyses files again.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                FilledTonalButton(onClick = onClearCache) { Text("Clear saved results") }
             }
 
             SettingsCard("About") {

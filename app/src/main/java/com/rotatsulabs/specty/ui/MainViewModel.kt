@@ -8,7 +8,9 @@ import androidx.lifecycle.viewModelScope
 import com.rotatsulabs.specty.audio.AnalysisResult
 import com.rotatsulabs.specty.audio.AudioAnalyzer
 import com.rotatsulabs.specty.audio.MediaProbe
+import com.rotatsulabs.specty.audio.Verdict
 import com.rotatsulabs.specty.data.LibraryRepository
+import com.rotatsulabs.specty.data.ResultCache
 import com.rotatsulabs.specty.data.Track
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
@@ -22,7 +24,7 @@ import kotlinx.coroutines.withContext
 sealed interface AnalysisState {
     data object Idle : AnalysisState
     data class Running(val title: String, val stage: String, val progress: Float) : AnalysisState
-    data class Done(val result: AnalysisResult) : AnalysisState
+    data class Done(val result: AnalysisResult, val cached: Boolean = false) : AnalysisState
     data class Failed(val title: String, val message: String) : AnalysisState
 }
 
@@ -35,6 +37,8 @@ data class LibraryState(
 
 class MainViewModel(app: Application) : AndroidViewModel(app) {
     private val analyzer = AudioAnalyzer(app)
+    private val cache = ResultCache(app)
+    private var lastUri: Uri? = null
     private val prefs = app.getSharedPreferences("specty", Context.MODE_PRIVATE)
 
     private val _analysis = MutableStateFlow<AnalysisState>(AnalysisState.Idle)
@@ -53,16 +57,42 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         prefs.edit().putInt(KEY_FFT, size).apply()
     }
 
-    fun analyze(uri: Uri) {
+    /** Verdicts of files analysed before, keyed by [cacheKey]. */
+    val cachedVerdicts: StateFlow<Map<String, Verdict>> = cache.verdicts
+
+    fun cacheKey(uri: Uri, sizeBytes: Long, fftSize: Int): String = cache.keyOf(uri, sizeBytes, fftSize)
+
+    fun clearCache() = cache.clear()
+
+    fun reanalyze() {
+        lastUri?.let { analyze(it, force = true) }
+    }
+
+    fun analyze(uri: Uri, force: Boolean = false) {
         analysisJob?.cancel()
+        lastUri = uri
         analysisJob = viewModelScope.launch {
-            val title = withContext(Dispatchers.IO) { MediaProbe.queryMeta(getApplication(), uri).displayName }
+            val meta = withContext(Dispatchers.IO) { MediaProbe.queryMeta(getApplication(), uri) }
+            val title = meta.displayName
+            val fft = _fftSize.value
+            val cacheable = meta.sizeBytes > 0
+            val key = cache.keyOf(uri, meta.sizeBytes, fft)
+
+            if (cacheable && !force) {
+                val hit = withContext(Dispatchers.IO) { cache.load(key, uri) }
+                if (hit != null) {
+                    _analysis.value = AnalysisState.Done(hit, cached = true)
+                    return@launch
+                }
+            }
+
             _analysis.value = AnalysisState.Running(title, "Reading file", 0f)
             try {
-                val result = analyzer.analyze(uri, _fftSize.value) { stage, progress ->
+                val result = analyzer.analyze(uri, fft) { stage, progress ->
                     _analysis.value = AnalysisState.Running(title, stage, progress)
                 }
                 _analysis.value = AnalysisState.Done(result)
+                if (cacheable) withContext(Dispatchers.IO) { cache.save(key, result) }
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Throwable) {

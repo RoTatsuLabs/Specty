@@ -17,7 +17,11 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -28,7 +32,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -72,7 +75,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
+import com.rotatsulabs.specty.audio.Verdict
 import com.rotatsulabs.specty.data.Track
+import com.rotatsulabs.specty.ui.components.CoverImage
 import com.rotatsulabs.specty.ui.LibraryState
 import com.rotatsulabs.specty.ui.components.Fmt
 import com.rotatsulabs.specty.ui.theme.Motion
@@ -90,6 +95,7 @@ fun LibraryScreen(
     onOpen: (Track) -> Unit,
     onPickFile: () -> Unit,
     onOpenSettings: () -> Unit,
+    verdictFor: (Track) -> Verdict?,
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
@@ -126,47 +132,76 @@ fun LibraryScreen(
         if (ascending) sorted else sorted.reversed()
     }
 
-    Column(modifier.fillMaxSize().statusBarsPadding()) {
-        Header(
-            onRescan = { onLoad(true) },
-            onSettings = onOpenSettings,
-            canRescan = granted,
-        )
-        SearchPill(query, { query = it })
-        Spacer(Modifier.height(12.dp))
-        PickerPill(onPickFile)
-        Spacer(Modifier.height(16.dp))
+    val sheetColor = MaterialTheme.colorScheme.surfaceContainerLowest
+    val hasTracks = granted && !state.loading && state.error == null && state.tracks.isNotEmpty()
 
-        Surface(
-            modifier = Modifier.weight(1f).fillMaxWidth(),
-            shape = RoundedCornerShape(topStart = 36.dp, topEnd = 36.dp),
-            color = MaterialTheme.colorScheme.surfaceContainerLowest,
-        ) {
-            Column(Modifier.fillMaxSize()) {
-                when {
-                    !granted -> PermissionPrompt { launcher.launch(Manifest.permission.READ_MEDIA_AUDIO) }
-                    state.loading && state.tracks.isEmpty() ->
-                        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                            CircularProgressIndicator(Modifier.size(56.dp), strokeWidth = 6.dp)
-                        }
-                    state.error != null -> Message(state.error)
-                    state.tracks.isEmpty() -> Message("No audio files found on this device. Use the button above to pick one.")
-                    else -> {
-                        SheetHeader(
-                            count = visible.size,
-                            sort = sort,
-                            ascending = ascending,
-                            onSort = { sortIndex = it.ordinal },
-                            onToggle = { ascending = !ascending },
-                        )
-                        if (visible.isEmpty()) {
-                            Message("Nothing matches \"$query\".")
-                        } else {
-                            TrackList(visible, onOpen)
-                        }
-                    }
+    // One scrolling column: the header, search and picker scroll away with the list, like a collapsing app bar.
+    LazyColumn(
+        modifier.fillMaxSize(),
+        contentPadding = WindowInsets.statusBars.asPaddingValues(),
+    ) {
+        item(key = "header") {
+            Header(onRescan = { onLoad(true) }, onSettings = onOpenSettings, canRescan = granted)
+        }
+        item(key = "search") { SearchPill(query, { query = it }) }
+        item(key = "picker") {
+            Spacer(Modifier.height(12.dp))
+            PickerPill(onPickFile)
+            Spacer(Modifier.height(16.dp))
+        }
+        item(key = "sheetTop") {
+            Box(Modifier.fillMaxWidth().background(sheetColor, RoundedCornerShape(topStart = 36.dp, topEnd = 36.dp))) {
+                if (hasTracks) {
+                    SheetHeader(
+                        count = visible.size,
+                        sort = sort,
+                        ascending = ascending,
+                        onSort = { sortIndex = it.ordinal },
+                        onToggle = { ascending = !ascending },
+                    )
+                } else {
+                    Spacer(Modifier.height(28.dp))
                 }
             }
+        }
+        when {
+            !granted -> item(key = "permission") {
+                Box(Modifier.fillParentMaxHeight(0.6f).fillMaxWidth().background(sheetColor)) {
+                    PermissionPrompt { launcher.launch(Manifest.permission.READ_MEDIA_AUDIO) }
+                }
+            }
+            state.loading && state.tracks.isEmpty() -> item(key = "loading") {
+                Box(Modifier.fillParentMaxHeight(0.6f).fillMaxWidth().background(sheetColor), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator(Modifier.size(56.dp), strokeWidth = 6.dp)
+                }
+            }
+            state.error != null -> item(key = "error") {
+                Box(Modifier.fillParentMaxHeight(0.6f).fillMaxWidth().background(sheetColor)) { Message(state.error) }
+            }
+            state.tracks.isEmpty() -> item(key = "empty") {
+                Box(Modifier.fillParentMaxHeight(0.6f).fillMaxWidth().background(sheetColor)) {
+                    Message("No audio files found on this device. Use the button above to pick one.")
+                }
+            }
+            visible.isEmpty() -> item(key = "nomatch") {
+                Box(Modifier.fillParentMaxHeight(0.6f).fillMaxWidth().background(sheetColor)) {
+                    Message("Nothing matches \"$query\".")
+                }
+            }
+            else -> itemsIndexed(visible, key = { _, t -> t.uri.toString() }) { index, track ->
+                Box(
+                    Modifier
+                        .animateItem(placementSpec = Motion.spatial())
+                        .fillMaxWidth()
+                        .background(sheetColor)
+                        .padding(horizontal = 12.dp, vertical = 1.5.dp),
+                ) {
+                    TrackRow(track, index, verdictFor(track), onOpen = { onOpen(track) })
+                }
+            }
+        }
+        item(key = "bottom") {
+            Spacer(Modifier.fillMaxWidth().background(sheetColor).navigationBarsPadding().height(28.dp))
         }
     }
 }
@@ -318,21 +353,7 @@ private fun SheetHeader(count: Int, sort: SortKey, ascending: Boolean, onSort: (
 }
 
 @Composable
-private fun TrackList(tracks: List<Track>, onOpen: (Track) -> Unit) {
-    LazyColumn(
-        Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(start = 12.dp, end = 12.dp, bottom = 12.dp),
-        verticalArrangement = Arrangement.spacedBy(3.dp),
-    ) {
-        itemsIndexed(tracks, key = { _, t -> t.uri.toString() }) { index, track ->
-            TrackRow(track, index, onOpen = { onOpen(track) }, modifier = Modifier.animateItem(placementSpec = Motion.spatial()))
-        }
-        item { Spacer(Modifier.navigationBarsPadding()) }
-    }
-}
-
-@Composable
-private fun TrackRow(track: Track, index: Int, onOpen: () -> Unit, modifier: Modifier = Modifier) {
+private fun TrackRow(track: Track, index: Int, verdict: Verdict?, onOpen: () -> Unit, modifier: Modifier = Modifier) {
     // Staggered entrance for the first screenful.
     var shown by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) {
@@ -356,9 +377,11 @@ private fun TrackRow(track: Track, index: Int, onOpen: () -> Unit, modifier: Mod
         color = MaterialTheme.colorScheme.surfaceContainer,
     ) {
         Row(Modifier.padding(horizontal = 14.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
-            Box(
-                Modifier.size(56.dp),
-                contentAlignment = Alignment.Center,
+            CoverImage(
+                uri = track.uri,
+                shape = RoundedCornerShape(16.dp),
+                modifier = Modifier.size(56.dp),
+                sizePx = 160,
             ) {
                 Surface(
                     shape = RoundedCornerShape(16.dp),
@@ -393,7 +416,26 @@ private fun TrackRow(track: Track, index: Int, onOpen: () -> Unit, modifier: Mod
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
+            if (verdict != null) {
+                Spacer(Modifier.width(8.dp))
+                VerdictBadge(verdict)
+            }
         }
+    }
+}
+
+@Composable
+private fun VerdictBadge(verdict: Verdict) {
+    val scheme = MaterialTheme.colorScheme
+    val spec = when (verdict) {
+        Verdict.GENUINE -> Triple("Genuine", scheme.tertiaryContainer, scheme.onTertiaryContainer)
+        Verdict.LOSSY_SOURCE, Verdict.UPSAMPLED -> Triple("Fake", scheme.errorContainer, scheme.onErrorContainer)
+        Verdict.POSSIBLE_LOSSY_SOURCE, Verdict.BAND_LIMITED -> Triple("Maybe", scheme.secondaryContainer, scheme.onSecondaryContainer)
+        Verdict.LOSSY_CODEC -> Triple("Lossy", scheme.surfaceContainerHighest, scheme.onSurfaceVariant)
+        Verdict.INCONCLUSIVE -> return
+    }
+    Surface(shape = CircleShape, color = spec.second, contentColor = spec.third) {
+        Text(spec.first, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp))
     }
 }
 
