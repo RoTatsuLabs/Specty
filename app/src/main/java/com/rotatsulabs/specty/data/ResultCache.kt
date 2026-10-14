@@ -24,7 +24,7 @@ import java.util.zip.GZIPOutputStream
  * Persists finished analyses so a file is only measured once. Entries are keyed by uri, file size and
  * spectrogram window, so changing the file or the resolution setting triggers a fresh analysis.
  */
-class ResultCache(context: Context) {
+class ResultCache private constructor(context: Context) {
     private val dir = File(context.filesDir, "results").apply { mkdirs() }
     private val indexFile = File(dir, "index.txt")
     private val lock = Any()
@@ -39,7 +39,8 @@ class ResultCache(context: Context) {
             if (indexFile.exists()) {
                 indexFile.forEachLine { line ->
                     val parts = line.split('\t')
-                    if (parts.size == 2 && File(dir, "${parts[0]}.bin").exists()) {
+                    // Entries stay even when their bulky result file was evicted: the verdict is still known.
+                    if (parts.size == 2) {
                         Verdict.entries.firstOrNull { it.name == parts[1] }?.let { index[parts[0]] = it }
                     }
                 }
@@ -47,6 +48,9 @@ class ResultCache(context: Context) {
         }
         _verdicts.value = index.toMap()
     }
+
+    /** True when a verdict is known for [key], even if the full result has been evicted. */
+    fun contains(key: String): Boolean = synchronized(lock) { index.containsKey(key) }
 
     fun keyOf(uri: Uri, sizeBytes: Long, fftSize: Int): String {
         val digest = MessageDigest.getInstance("SHA-1").digest("$uri|$sizeBytes|$fftSize".toByteArray())
@@ -78,8 +82,23 @@ class ResultCache(context: Context) {
                     index.remove(oldest)
                     File(dir, "$oldest.bin").delete()
                 }
+                trimToBudget()
                 persistIndex()
             }
+        }
+    }
+
+    /** Deletes the oldest result files (not their verdicts) until the folder fits the size budget. */
+    private fun trimToBudget() {
+        val files = dir.listFiles { f -> f.extension == "bin" } ?: return
+        var total = files.sumOf { it.length() }
+        if (total <= MAX_BYTES) return
+        for (key in index.keys.toList()) {
+            val f = File(dir, "$key.bin")
+            if (!f.exists()) continue
+            total -= f.length()
+            f.delete()
+            if (total <= MAX_BYTES) break
         }
     }
 
@@ -208,8 +227,17 @@ class ResultCache(context: Context) {
 
     private fun readStr(inp: DataInputStream): String? = inp.readBoolean().let { has -> inp.readUTF().takeIf { has } }
 
-    private companion object {
-        const val MAGIC = 0x53504333 // "SPC3"
-        const val MAX_ENTRIES = 80
+    companion object {
+        private const val MAGIC = 0x53504333 // "SPC3"
+        /** Verdicts remembered for library badges. */
+        private const val MAX_ENTRIES = 20_000
+        /** Disk budget for full results (spectrograms dominate). */
+        private const val MAX_BYTES = 600L * 1024 * 1024
+
+        @Volatile private var instance: ResultCache? = null
+
+        /** One cache per process, shared by the UI and the background batch scan. */
+        fun get(context: Context): ResultCache =
+            instance ?: synchronized(this) { instance ?: ResultCache(context.applicationContext).also { instance = it } }
     }
 }

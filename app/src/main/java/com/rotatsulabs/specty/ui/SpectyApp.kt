@@ -38,6 +38,7 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit) {
     val appearance by viewModel.appearance.collectAsStateWithLifecycle()
     val showMetadata by viewModel.showMetadata.collectAsStateWithLifecycle()
     val verdicts by viewModel.cachedVerdicts.collectAsStateWithLifecycle()
+    val batch by viewModel.batch.collectAsStateWithLifecycle()
     var showSettings by rememberSaveable { mutableStateOf(false) }
     var viewerView by rememberSaveable { mutableStateOf<Int?>(null) }
     val keyFor = remember(fftSize) { { track: com.rotatsulabs.specty.data.Track -> viewModel.cacheKey(track.uri, track.sizeBytes, fftSize) } }
@@ -67,6 +68,10 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit) {
                 dockVisible = dockVisible,
                 verdicts = verdicts,
                 keyFor = keyFor,
+                batch = batch,
+                onScanAll = viewModel::scanLibrary,
+                onCancelScan = viewModel::cancelScan,
+                onDismissScan = viewModel::dismissScanSummary,
             )
         }
 

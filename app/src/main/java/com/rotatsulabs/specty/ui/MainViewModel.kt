@@ -9,6 +9,7 @@ import com.rotatsulabs.specty.audio.AnalysisResult
 import com.rotatsulabs.specty.audio.AudioAnalyzer
 import com.rotatsulabs.specty.audio.MediaProbe
 import com.rotatsulabs.specty.audio.Verdict
+import com.rotatsulabs.specty.batch.BatchScanner
 import com.rotatsulabs.specty.data.LibraryRepository
 import com.rotatsulabs.specty.data.ResultCache
 import com.rotatsulabs.specty.data.Track
@@ -39,7 +40,7 @@ data class LibraryState(
 
 class MainViewModel(app: Application) : AndroidViewModel(app) {
     private val analyzer = AudioAnalyzer(app)
-    private val cache = ResultCache(app)
+    private val cache = ResultCache.get(app)
     private var lastUri: Uri? = null
     private val prefs = app.getSharedPreferences("specty", Context.MODE_PRIVATE)
 
@@ -93,6 +94,17 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     private var analysisJob: Job? = null
+
+    /** Progress of the background library scan. */
+    val batch: StateFlow<BatchScanner.State> = BatchScanner.state
+
+    fun scanLibrary() {
+        BatchScanner.start(getApplication(), _library.value.tracks, _fftSize.value)
+    }
+
+    fun cancelScan() = BatchScanner.cancel(getApplication())
+
+    fun dismissScanSummary() = BatchScanner.dismissSummary()
 
     fun setFftSize(size: Int) {
         _fftSize.value = size

@@ -52,6 +52,8 @@ import androidx.compose.material.icons.rounded.FolderOpen
 import androidx.compose.material.icons.rounded.GridView
 import androidx.compose.material.icons.rounded.KeyboardArrowUp
 import androidx.compose.material.icons.rounded.MoreVert
+import androidx.compose.material.icons.rounded.Radar
+import com.rotatsulabs.specty.batch.BatchScanner
 import androidx.compose.material.icons.rounded.MusicNote
 import androidx.compose.material.icons.rounded.Refresh
 import androidx.compose.material.icons.rounded.Search
@@ -65,6 +67,8 @@ import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -131,6 +135,10 @@ fun LibraryScreen(
     onOpenSettings: () -> Unit,
     verdicts: Map<String, Verdict>,
     keyFor: (Track) -> String,
+    batch: BatchScanner.State = BatchScanner.State(),
+    onScanAll: () -> Unit = {},
+    onCancelScan: () -> Unit = {},
+    onDismissScan: () -> Unit = {},
     dockVisible: Boolean = false,
     modifier: Modifier = Modifier,
 ) {
@@ -143,6 +151,12 @@ fun LibraryScreen(
     }
     val launcher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { ok -> granted = ok }
     LaunchedEffect(granted) { if (granted) onLoad(false) }
+    // Notifications are optional: the scan runs either way, the permission only shows its progress.
+    val notificationLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { onScanAll() }
+    val startScan = {
+        val allowed = ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
+        if (allowed) onScanAll() else notificationLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+    }
 
     var query by rememberSaveable { mutableStateOf("") }
     var sortIndex by rememberSaveable { mutableStateOf(0) }
@@ -214,12 +228,24 @@ fun LibraryScreen(
                     scaleY = s
                     transformOrigin = TransformOrigin(0f, 0.5f)
                 }
-                Header(onRescan = { onLoad(true) }, onSettings = onOpenSettings, canRescan = granted, brandModifier = titleFx)
+                Header(
+                    onRescan = { onLoad(true) },
+                    onSettings = onOpenSettings,
+                    canRescan = granted,
+                    canScan = granted && state.tracks.isNotEmpty() && !batch.running,
+                    onScanAll = startScan,
+                    brandModifier = titleFx,
+                )
             }
 
             if (hasTracks) {
                 item(key = "health") {
                     HealthCard(total = state.tracks.size, checked = checked, suspects = suspects, genuine = genuine)
+                }
+            }
+            if (batch.running || batch.finished) {
+                item(key = "batch") {
+                    BatchCard(batch, onCancel = onCancelScan, onDismiss = onDismissScan)
                 }
             }
             item(key = "search") {
@@ -326,7 +352,7 @@ fun LibraryScreen(
 // ---- header --------------------------------------------------------------------------------
 
 @Composable
-private fun Header(onRescan: () -> Unit, onSettings: () -> Unit, canRescan: Boolean, brandModifier: Modifier) {
+private fun Header(onRescan: () -> Unit, onSettings: () -> Unit, canRescan: Boolean, canScan: Boolean, onScanAll: () -> Unit, brandModifier: Modifier) {
     var menu by remember { mutableStateOf(false) }
     val menuSource = remember { MutableInteractionSource() }
     val menuTurn by animateFloatAsState(if (menu) 90f else 0f, Motion.spatial(), label = "menuTurn")
@@ -352,6 +378,13 @@ private fun Header(onRescan: () -> Unit, onSettings: () -> Unit, canRescan: Bool
                         text = { Text("Rescan library") },
                         leadingIcon = { Icon(Icons.Rounded.Refresh, contentDescription = null) },
                         onClick = { menu = false; onRescan() },
+                    )
+                }
+                if (canScan) {
+                    DropdownMenuItem(
+                        text = { Text("Scan whole library") },
+                        leadingIcon = { Icon(Icons.Rounded.Radar, contentDescription = null) },
+                        onClick = { menu = false; onScanAll() },
                     )
                 }
                 DropdownMenuItem(
@@ -390,6 +423,51 @@ private fun EqualizerMark() {
                     size = Size(barWidth, barHeight),
                     cornerRadius = androidx.compose.ui.geometry.CornerRadius(barWidth / 2f),
                 )
+            }
+        }
+    }
+}
+
+// ---- batch scan ----------------------------------------------------------------------------------
+
+@Composable
+private fun BatchCard(batch: BatchScanner.State, onCancel: () -> Unit, onDismiss: () -> Unit) {
+    val scheme = MaterialTheme.colorScheme
+    val progress by animateFloatAsState(batch.fraction, Motion.effects(), label = "batchProgress")
+    Surface(
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp),
+        shape = RoundedCornerShape(topStart = 14.dp, topEnd = 36.dp, bottomStart = 36.dp, bottomEnd = 36.dp),
+        color = scheme.secondaryContainer,
+        contentColor = scheme.onSecondaryContainer,
+    ) {
+        Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.weight(1f)) {
+                    Text(
+                        when {
+                            batch.running -> "Scanning library"
+                            batch.cancelled -> "Scan cancelled"
+                            else -> "Scan finished"
+                        },
+                        style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold,
+                    )
+                    Text(
+                        if (batch.running && batch.current.isNotEmpty()) batch.current else
+                            "${batch.done} analysed" + (if (batch.skipped > 0) ", ${batch.skipped} already saved" else "") +
+                                (if (batch.flagged > 0) ", ${batch.flagged} need a look" else "") +
+                                (if (batch.failed > 0) ", ${batch.failed} failed" else ""),
+                        style = MaterialTheme.typography.bodyMedium, maxLines = 1, overflow = TextOverflow.Ellipsis,
+                    )
+                }
+                if (batch.running) {
+                    TextButton(onClick = onCancel) { Text("Cancel") }
+                } else {
+                    IconButton(onClick = onDismiss) { Icon(Icons.Rounded.Close, contentDescription = "Dismiss") }
+                }
+            }
+            if (batch.running) {
+                LinearProgressIndicator(progress = { progress }, modifier = Modifier.fillMaxWidth(), strokeCap = StrokeCap.Round)
+                Text("${batch.processed} of ${batch.total}", style = MaterialTheme.typography.labelMedium)
             }
         }
     }
