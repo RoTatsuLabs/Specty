@@ -155,10 +155,11 @@ fun SpectrogramViewer(spectrogram: Spectrogram, title: String, initialView: Int,
                 .onSizeChanged { canvasSize = it }
                 .pointerInput(spectrogram) { detectTapGestures(onDoubleTap = { x0 = 0f; x1 = 1f; f0 = 0f; f1 = 1f; touch = null }) }
                 .pointerInput(spectrogram) {
-                    val left = 52.dp.toPx(); val right = 12.dp.toPx(); val top = 8.dp.toPx(); val bottom = 28.dp.toPx()
-                    val plotW = size.width - left - right
-                    val plotH = size.height - top - bottom
                     awaitEachGesture {
+                        // Measured per gesture so a rotation mid-session is picked up.
+                        val left = 52.dp.toPx(); val right = 12.dp.toPx(); val top = 8.dp.toPx(); val bottom = 28.dp.toPx()
+                        val plotW = (size.width - left - right).coerceAtLeast(1f)
+                        val plotH = (size.height - top - bottom).coerceAtLeast(1f)
                         val first = awaitFirstDown(requireUnconsumed = false)
                         touch = first.position
                         var multi = false
