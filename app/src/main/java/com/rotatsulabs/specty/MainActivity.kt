@@ -24,6 +24,10 @@ class MainActivity : ComponentActivity() {
         if (uri != null) viewModel.analyze(uri)
     }
 
+    private val comparePicker = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        if (uri != null) viewModel.startCompare(uri)
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -41,6 +45,7 @@ class MainActivity : ComponentActivity() {
                 SpectyApp(
                     viewModel = viewModel,
                     onPickFile = { picker.launch(arrayOf("audio/*", "application/ogg")) },
+                    onPickCompare = { comparePicker.launch(arrayOf("audio/*", "application/ogg")) },
                 )
             }
         }

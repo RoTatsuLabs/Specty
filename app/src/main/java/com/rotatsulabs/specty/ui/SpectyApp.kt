@@ -31,7 +31,7 @@ import com.rotatsulabs.specty.ui.screens.SettingsScreen
 import com.rotatsulabs.specty.ui.theme.Motion
 
 @Composable
-fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit) {
+fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit, onPickCompare: () -> Unit) {
     val analysis by viewModel.analysis.collectAsStateWithLifecycle()
     val library by viewModel.library.collectAsStateWithLifecycle()
     val fftSize by viewModel.fftSize.collectAsStateWithLifecycle()
@@ -39,6 +39,9 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit) {
     val showMetadata by viewModel.showMetadata.collectAsStateWithLifecycle()
     val verdicts by viewModel.cachedVerdicts.collectAsStateWithLifecycle()
     val batch by viewModel.batch.collectAsStateWithLifecycle()
+    val compare by viewModel.compare.collectAsStateWithLifecycle()
+    val compareHeld = remember { object { var state: CompareState = CompareState.Idle } }
+    if (compare !is CompareState.Idle) compareHeld.state = compare
     var showSettings by rememberSaveable { mutableStateOf(false) }
     var viewerView by rememberSaveable { mutableStateOf<Int?>(null) }
     val keyFor = remember(fftSize) { { track: com.rotatsulabs.specty.data.Track -> viewModel.cacheKey(track.uri, track.sizeBytes, fftSize) } }
@@ -53,6 +56,7 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit) {
 
     BackHandler(enabled = analysisOpen) { viewModel.closeAnalysis() }
     BackHandler(enabled = showSettings) { showSettings = false }
+    BackHandler(enabled = compare !is CompareState.Idle) { viewModel.closeCompare() }
     // Drop a stale viewer request if the analysis it belonged to is gone.
     val viewerResult = (held.state as? AnalysisState.Done)?.result
     if (viewerView != null && (viewerResult == null || !analysisOpen)) viewerView = null
@@ -96,7 +100,7 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit) {
         ) {
             Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.surface) {
                 Box(Modifier.navigationBarsPadding()) {
-                    AnalysisScreen(held.state, onBack = viewModel::closeAnalysis, onReanalyse = viewModel::reanalyze, showMetadata = showMetadata, onFullscreen = { viewerView = it })
+                    AnalysisScreen(held.state, onBack = viewModel::closeAnalysis, onReanalyse = viewModel::reanalyze, showMetadata = showMetadata, onFullscreen = { viewerView = it }, onCompare = onPickCompare)
                 }
             }
         }
@@ -120,6 +124,18 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit) {
                     onClearCache = viewModel::clearCache,
                     onBack = { showSettings = false },
                 )
+            }
+        }
+
+        AnimatedVisibility(
+            visible = compare !is CompareState.Idle,
+            enter = slideInVertically(Motion.spatial()) { it / 5 } + scaleIn(Motion.spatial(), initialScale = 0.9f) + fadeIn(Motion.effects()),
+            exit = slideOutVertically(Motion.spatial()) { it / 8 } + scaleOut(Motion.spatial(), targetScale = 0.94f) + fadeOut(Motion.effects()),
+        ) {
+            Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.surface) {
+                Box(Modifier.navigationBarsPadding()) {
+                    com.rotatsulabs.specty.ui.screens.CompareScreen(compareHeld.state, onBack = viewModel::closeCompare)
+                }
             }
         }
 
