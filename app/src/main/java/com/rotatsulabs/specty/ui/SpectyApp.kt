@@ -38,6 +38,7 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit) {
     val appearance by viewModel.appearance.collectAsStateWithLifecycle()
     val verdicts by viewModel.cachedVerdicts.collectAsStateWithLifecycle()
     var showSettings by rememberSaveable { mutableStateOf(false) }
+    val keyFor = remember(fftSize) { { track: com.rotatsulabs.specty.data.Track -> viewModel.cacheKey(track.uri, track.sizeBytes, fftSize) } }
     val analysisOpen by viewModel.viewing.collectAsStateWithLifecycle()
     val dockVisible = !analysisOpen && analysis !is AnalysisState.Idle
 
@@ -59,7 +60,8 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit) {
                 onPickFile = onPickFile,
                 onOpenSettings = { showSettings = true },
                 dockVisible = dockVisible,
-                verdictFor = { track -> verdicts[viewModel.cacheKey(track.uri, track.sizeBytes, fftSize)] },
+                verdicts = verdicts,
+                keyFor = keyFor,
             )
         }
 
