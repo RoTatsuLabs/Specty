@@ -9,6 +9,10 @@ import androidx.compose.animation.scaleOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.padding
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.unit.dp
+import com.rotatsulabs.specty.ui.components.AnalysisDock
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.material3.MaterialTheme
@@ -34,11 +38,14 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit) {
     val appearance by viewModel.appearance.collectAsStateWithLifecycle()
     val verdicts by viewModel.cachedVerdicts.collectAsStateWithLifecycle()
     var showSettings by rememberSaveable { mutableStateOf(false) }
-    val analysisOpen = analysis !is AnalysisState.Idle
+    val analysisOpen by viewModel.viewing.collectAsStateWithLifecycle()
+    val dockVisible = !analysisOpen && analysis !is AnalysisState.Idle
 
     // Keep the last non-idle state around so the screen can animate out with its content intact.
     val held = remember { object { var state: AnalysisState = AnalysisState.Idle } }
     if (analysisOpen) held.state = analysis
+    val dockHeld = remember { object { var state: AnalysisState = AnalysisState.Idle } }
+    if (dockVisible) dockHeld.state = analysis
 
     BackHandler(enabled = analysisOpen) { viewModel.closeAnalysis() }
     BackHandler(enabled = showSettings) { showSettings = false }
@@ -51,7 +58,22 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit) {
                 onOpen = { viewModel.analyze(it.uri) },
                 onPickFile = onPickFile,
                 onOpenSettings = { showSettings = true },
+                dockVisible = dockVisible,
                 verdictFor = { track -> verdicts[viewModel.cacheKey(track.uri, track.sizeBytes, fftSize)] },
+            )
+        }
+
+        AnimatedVisibility(
+            visible = dockVisible,
+            modifier = Modifier.align(Alignment.BottomCenter),
+            enter = slideInVertically(Motion.spatial()) { it } + fadeIn(Motion.effects()) + scaleIn(Motion.spatial(), initialScale = 0.92f),
+            exit = slideOutVertically(Motion.spatial()) { it } + fadeOut(Motion.effects()) + scaleOut(Motion.spatial(), targetScale = 0.92f),
+        ) {
+            AnalysisDock(
+                state = dockHeld.state,
+                onOpen = viewModel::openResult,
+                onDismiss = viewModel::closeAnalysis,
+                modifier = Modifier.navigationBarsPadding().padding(horizontal = 12.dp, vertical = 12.dp),
             )
         }
 

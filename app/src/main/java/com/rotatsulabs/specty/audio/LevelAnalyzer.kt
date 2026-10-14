@@ -1,5 +1,9 @@
 package com.rotatsulabs.specty.audio
 
+import java.util.concurrent.Callable
+import java.util.concurrent.ExecutionException
+import java.util.concurrent.Executors
+import java.util.concurrent.atomic.AtomicLong
 import kotlin.math.abs
 import kotlin.math.log10
 import kotlin.math.max
@@ -20,12 +24,33 @@ object LevelAnalyzer {
         val sumSquares = DoubleArray(channels)
         val runs = IntArray(channels)
         val loudness = LoudnessMeter(pcm.sampleRate, channels)
-        val truePeak = TruePeakMeter(channels, pcm.sampleRate)
         var clipped = 0L
         var bitMask = 0L
         var frames = 0L
         val total = pcm.frames.coerceAtLeast(1)
 
+        // True peak is the expensive part and channels are independent, so each channel gets its own thread.
+        val tpDone = Array(channels) { AtomicLong() }
+        val tpPeaks = DoubleArray(channels)
+        val cancelled = java.util.concurrent.atomic.AtomicBoolean(false)
+        val pool = Executors.newFixedThreadPool(channels.coerceAtMost(8))
+        val futures = (0 until channels).map { c ->
+            pool.submit(
+                Callable {
+                    val meter = TruePeakChannel(pcm.sampleRate)
+                    PcmFile(pcm.file, channels, pcm.sampleRate).use { own ->
+                        own.forEachChunk { buf, n ->
+                            if (cancelled.get()) return@forEachChunk
+                            meter.process(buf, n, channels, c)
+                            tpDone[c].addAndGet(n.toLong())
+                        }
+                    }
+                    tpPeaks[c] = meter.peak
+                },
+            )
+        }
+
+        try {
         pcm.forEachChunk { buf, n ->
             for (f in 0 until n) {
                 val base = f * channels
@@ -43,9 +68,22 @@ object LevelAnalyzer {
                 }
             }
             loudness.process(buf, n)
-            truePeak.process(buf, n)
             frames += n
-            onProgress((frames.toDouble() / total).toFloat().coerceIn(0f, 1f))
+            val tp = tpDone.sumOf { it.get() }.toDouble() / (total * channels)
+            onProgress(((frames.toDouble() / total) * 0.4 + tp * 0.6).toFloat().coerceIn(0f, 1f))
+        }
+        for (f in futures) {
+            try {
+                f.get()
+            } catch (e: ExecutionException) {
+                throw e.cause ?: e
+            }
+        }
+        } catch (t: Throwable) {
+            cancelled.set(true)
+            throw t
+        } finally {
+            pool.shutdownNow()
         }
 
         if (frames == 0L) throw IllegalStateException("The decoder produced no audio samples")
@@ -72,7 +110,7 @@ object LevelAnalyzer {
             peakDb = toDb(overallPeak),
             rmsDb = toDb(overallRms),
             lufs = loudness.integratedLufs(),
-            truePeakDbtp = toDb(truePeak.peak),
+            truePeakDbtp = toDb(tpPeaks.max()),
             clippedSamples = clipped,
             framesPerChannel = frames,
             effectiveBitDepth = effectiveBits,

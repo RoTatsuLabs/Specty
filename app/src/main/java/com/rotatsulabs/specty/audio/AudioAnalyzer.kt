@@ -3,6 +3,8 @@ package com.rotatsulabs.specty.audio
 import android.content.Context
 import android.net.Uri
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -37,16 +39,28 @@ class AudioAnalyzer(private val context: Context) {
             PcmFile(temp, info.channels, info.sampleRate).use { pcm ->
                 if (pcm.frames <= 0) throw IOException("The decoder produced no audio")
 
-                report("Measuring levels", 0.55f)
-                val levels = LevelAnalyzer.analyze(pcm) { p -> report("Measuring levels", 0.55f + 0.25f * p) }
-
-                report("Building spectrogram", 0.8f)
-                val spectrum = SpectrogramAnalyzer.analyze(pcm, fftSize) { p ->
-                    report("Building spectrogram", 0.8f + 0.2f * p)
+                // Level measurement (multi-threaded inside) and the spectrogram read the same file independently,
+                // so they run side by side.
+                val stage = "Analysing"
+                val specProgress = java.util.concurrent.atomic.AtomicInteger(0)
+                report(stage, 0.55f)
+                coroutineScope {
+                    val spectrum = async(Dispatchers.Default) {
+                        PcmFile(temp, info.channels, info.sampleRate).use { own ->
+                            SpectrogramAnalyzer.analyze(own, fftSize) { p ->
+                                ensureActive()
+                                specProgress.set((p * 1000).toInt())
+                            }
+                        }
+                    }
+                    val levels = LevelAnalyzer.analyze(pcm) { p ->
+                        report(stage, 0.55f + 0.45f * (0.85f * p + 0.15f * specProgress.get() / 1000f))
+                    }
+                    val out = spectrum.await()
+                    report(stage, 1f)
+                    val authenticity = AuthenticityAnalyzer.analyze(info, out.averageDb, fftSize, levels.effectiveBitDepth)
+                    AnalysisResult(uri, info, levels, authenticity, out.spectrogram)
                 }
-
-                val authenticity = AuthenticityAnalyzer.analyze(info, spectrum.averageDb, fftSize, levels.effectiveBitDepth)
-                AnalysisResult(uri, info, levels, authenticity, spectrum.spectrogram)
             }
         } finally {
             temp.delete()
