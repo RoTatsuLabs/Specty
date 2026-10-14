@@ -6,6 +6,12 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.material3.FilterChip
+import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -51,9 +57,15 @@ fun SpectrogramCard(spectrogram: Spectrogram, modifier: Modifier = Modifier) {
     var selected by rememberSaveable { mutableIntStateOf(0) }
     if (selected >= spectrogram.views.size) selected = 0
 
-    val image by produceState<ImageBitmap?>(initialValue = null, spectrogram, selected) {
+    val prefs = LocalContext.current.getSharedPreferences("specty", android.content.Context.MODE_PRIVATE)
+    var paletteIndex by remember {
+        mutableIntStateOf(prefs.getInt("spectrogram_palette", 0).coerceIn(0, SpectrogramPalette.entries.lastIndex))
+    }
+    val palette = SpectrogramPalette.entries[paletteIndex]
+
+    val image by produceState<ImageBitmap?>(initialValue = null, spectrogram, selected, palette) {
         value = withContext(Dispatchers.Default) {
-            SpectrogramRenderer.render(spectrogram, selected).asImageBitmap()
+            SpectrogramRenderer.render(spectrogram, selected, palette).asImageBitmap()
         }
     }
 
@@ -79,7 +91,7 @@ fun SpectrogramCard(spectrogram: Spectrogram, modifier: Modifier = Modifier) {
                 }
             }
 
-            Canvas(Modifier.fillMaxWidth().height(260.dp)) {
+            Canvas(Modifier.fillMaxWidth().aspectRatio(16f / 9f)) {
                 val left = 40.dp.toPx()
                 val right = 6.dp.toPx()
                 val top = 6.dp.toPx()
@@ -132,6 +144,22 @@ fun SpectrogramCard(spectrogram: Spectrogram, modifier: Modifier = Modifier) {
             }
 
             Row(
+                Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                SpectrogramPalette.entries.forEachIndexed { index, p ->
+                    FilterChip(
+                        selected = paletteIndex == index,
+                        onClick = {
+                            paletteIndex = index
+                            prefs.edit().putInt("spectrogram_palette", index).apply()
+                        },
+                        label = { Text(p.label) },
+                    )
+                }
+            }
+
+            Row(
                 Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(10.dp),
                 verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
@@ -142,7 +170,7 @@ fun SpectrogramCard(spectrogram: Spectrogram, modifier: Modifier = Modifier) {
                         .weight(1f)
                         .height(10.dp)
                         .clip(CircleShape)
-                        .background(Brush.horizontalGradient(SpectrogramRenderer.gradientColors())),
+                        .background(Brush.horizontalGradient(SpectrogramRenderer.gradientColors(palette))),
                 )
                 Text("0 dBFS", style = MaterialTheme.typography.labelMedium, color = axisColor)
             }
