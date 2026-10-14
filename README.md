@@ -125,4 +125,4 @@ Issues and pull requests are welcome. For code changes, please run `gradle :app:
 
 Specty is free software released under the [GNU General Public License v3.0](LICENSE).
 
-It uses FFmpeg through ffmpeg-kit. The FFmpeg build included is licensed under the GPL, which is compatible with this project.
+It uses FFmpeg through ffmpeg-kit. FFmpeg is licensed under the LGPL or GPL depending on how it is built. See the ffmpeg-kit-maintained project for the exact terms of the bundled build.
