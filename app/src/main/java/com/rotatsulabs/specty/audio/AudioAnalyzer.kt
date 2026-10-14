@@ -58,7 +58,10 @@ class AudioAnalyzer(private val context: Context) {
                     }
                     val out = spectrum.await()
                     report(stage, 1f)
-                    val authenticity = AuthenticityAnalyzer.analyze(info, out.averageDb, fftSize, levels.effectiveBitDepth)
+                    val base = AuthenticityAnalyzer.analyze(info, out.averageDb, fftSize, levels.effectiveBitDepth)
+                    val authenticity = AuthenticityAnalyzer.withInsights(
+                        base, info, out.averageDb, fftSize, AuthenticityAnalyzer.segmentSpectra(out.spectrogram),
+                    )
                     AnalysisResult(uri, info, levels, authenticity, out.spectrogram)
                 }
             }

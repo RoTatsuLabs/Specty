@@ -15,6 +15,7 @@ object LevelAnalyzer {
     private const val CLIP_LEVEL = 0.99997
     private const val MIN_CLIP_RUN = 3
     private const val SCALE_24 = 8_388_608.0
+    private const val TIMELINE_POINTS = 240
 
     fun toDb(linear: Double): Double = if (linear <= 1e-10) -200.0 else 20.0 * log10(linear)
 
@@ -24,6 +25,9 @@ object LevelAnalyzer {
         val sumSquares = DoubleArray(channels)
         val runs = IntArray(channels)
         val loudness = LoudnessMeter(pcm.sampleRate, channels)
+        val dynamics = DynamicsMeter(channels, pcm.sampleRate)
+        val slicePeaks = DoubleArray(TIMELINE_POINTS)
+        val sliceClips = IntArray(TIMELINE_POINTS)
         var clipped = 0L
         var bitMask = 0L
         var frames = 0L
@@ -54,13 +58,21 @@ object LevelAnalyzer {
         pcm.forEachChunk { buf, n ->
             for (f in 0 until n) {
                 val base = f * channels
+                val slice = ((frames + f) * TIMELINE_POINTS / total).toInt().coerceAtMost(TIMELINE_POINTS - 1)
                 for (c in 0 until channels) {
                     val a = abs(buf[base + c].toDouble())
+                    if (a > slicePeaks[slice]) slicePeaks[slice] = a
                     if (a > peaks[c]) peaks[c] = a
                     sumSquares[c] += a * a
                     if (a >= CLIP_LEVEL) {
                         runs[c]++
-                        if (runs[c] == MIN_CLIP_RUN) clipped += MIN_CLIP_RUN else if (runs[c] > MIN_CLIP_RUN) clipped++
+                        if (runs[c] == MIN_CLIP_RUN) {
+                            clipped += MIN_CLIP_RUN
+                            sliceClips[slice] += MIN_CLIP_RUN
+                        } else if (runs[c] > MIN_CLIP_RUN) {
+                            clipped++
+                            sliceClips[slice]++
+                        }
                     } else {
                         runs[c] = 0
                     }
@@ -68,6 +80,7 @@ object LevelAnalyzer {
                 }
             }
             loudness.process(buf, n)
+            dynamics.process(buf, n)
             frames += n
             val tp = tpDone.sumOf { it.get() }.toDouble() / (total * channels)
             onProgress(((frames.toDouble() / total) * 0.4 + tp * 0.6).toFloat().coerceIn(0f, 1f))
@@ -106,6 +119,14 @@ object LevelAnalyzer {
             (24 - java.lang.Long.numberOfTrailingZeros(bitMask).coerceAtMost(23)).coerceAtLeast(1)
         }
 
+        val durationSec = frames.toDouble() / pcm.sampleRate
+        val timeline = Timeline(
+            loudness = loudness.series(TIMELINE_POINTS, durationSec),
+            peakDb = FloatArray(TIMELINE_POINTS) { toDb(slicePeaks[it]).coerceAtLeast(-120.0).toFloat() },
+            clips = sliceClips,
+            durationSec = durationSec,
+        )
+
         return LevelStats(
             peakDb = toDb(overallPeak),
             rmsDb = toDb(overallRms),
@@ -115,6 +136,11 @@ object LevelAnalyzer {
             framesPerChannel = frames,
             effectiveBitDepth = effectiveBits,
             channels = perChannel,
+            drTt = dynamics.dynamicRange(),
+            dcOffsets = dynamics.dcOffsets(),
+            correlation = dynamics.correlation(),
+            balanceDb = dynamics.balanceDb(),
+            timeline = timeline,
         )
     }
 }

@@ -8,6 +8,7 @@ import com.rotatsulabs.specty.audio.AuthenticityReport
 import com.rotatsulabs.specty.audio.ChannelStats
 import com.rotatsulabs.specty.audio.LevelStats
 import com.rotatsulabs.specty.audio.Spectrogram
+import com.rotatsulabs.specty.audio.Timeline
 import com.rotatsulabs.specty.audio.Verdict
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -114,10 +115,26 @@ class ResultCache(context: Context) {
             out.writeInt(effectiveBitDepth ?: -1)
             out.writeInt(channels.size)
             channels.forEach { out.writeDouble(it.peakDb); out.writeDouble(it.rmsDb) }
+            out.writeDouble(drTt ?: Double.NaN)
+            out.writeInt(dcOffsets.size); dcOffsets.forEach { out.writeDouble(it) }
+            out.writeDouble(correlation ?: Double.NaN)
+            out.writeDouble(balanceDb ?: Double.NaN)
+            val t = timeline
+            out.writeInt(t?.points ?: 0)
+            if (t != null) {
+                out.writeDouble(t.durationSec)
+                t.loudness.forEach { out.writeFloat(it) }
+                t.peakDb.forEach { out.writeFloat(it) }
+                t.clips.forEach { out.writeInt(it) }
+            }
         }
         with(r.authenticity) {
             out.writeUTF(verdict.name); out.writeDouble(cutoffHz); out.writeBoolean(hasCliff)
             out.writeDouble(cliffDropDb); out.writeUTF(note)
+            out.writeInt(confidence)
+            out.writeInt(segmentCutoffs.size); segmentCutoffs.forEach { out.writeFloat(it) }
+            writeStr(out, encoderGuess)
+            out.writeDouble(emptyAboveHz ?: Double.NaN)
         }
         with(r.spectrogram) {
             out.writeInt(columns); out.writeInt(bins); out.writeInt(sampleRate); out.writeInt(fftSize)
@@ -142,10 +159,28 @@ class ResultCache(context: Context) {
         val truePeak = inp.readDouble(); val clipped = inp.readLong(); val frames = inp.readLong()
         val effective = inp.readInt().takeIf { it >= 0 }
         val channels = List(inp.readInt()) { ChannelStats(inp.readDouble(), inp.readDouble()) }
-        val levels = LevelStats(peak, rms, lufs, truePeak, clipped, frames, effective, channels)
+        val dr = inp.readDouble().takeUnless { it.isNaN() }
+        val dc = List(inp.readInt()) { inp.readDouble() }
+        val corr = inp.readDouble().takeUnless { it.isNaN() }
+        val balance = inp.readDouble().takeUnless { it.isNaN() }
+        val points = inp.readInt()
+        val timeline = if (points > 0) {
+            val duration = inp.readDouble()
+            val loud = FloatArray(points) { inp.readFloat() }
+            val peaks = FloatArray(points) { inp.readFloat() }
+            val clips = IntArray(points) { inp.readInt() }
+            Timeline(loud, peaks, clips, duration)
+        } else {
+            null
+        }
+        val levels = LevelStats(peak, rms, lufs, truePeak, clipped, frames, effective, channels, dr, dc, corr, balance, timeline)
         val authenticity = AuthenticityReport(
             verdict = Verdict.valueOf(inp.readUTF()), cutoffHz = inp.readDouble(), hasCliff = inp.readBoolean(),
             cliffDropDb = inp.readDouble(), note = inp.readUTF(),
+            confidence = inp.readInt(),
+            segmentCutoffs = FloatArray(inp.readInt()).also { for (i in it.indices) it[i] = inp.readFloat() },
+            encoderGuess = readStr(inp),
+            emptyAboveHz = inp.readDouble().takeUnless { it.isNaN() },
         )
         val columns = inp.readInt(); val bins = inp.readInt(); val rate = inp.readInt(); val fft = inp.readInt()
         val duration = inp.readDouble()
@@ -174,7 +209,7 @@ class ResultCache(context: Context) {
     private fun readStr(inp: DataInputStream): String? = inp.readBoolean().let { has -> inp.readUTF().takeIf { has } }
 
     private companion object {
-        const val MAGIC = 0x53504332 // "SPC2"
+        const val MAGIC = 0x53504333 // "SPC3"
         const val MAX_ENTRIES = 80
     }
 }
