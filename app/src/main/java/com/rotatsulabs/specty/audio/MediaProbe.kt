@@ -60,6 +60,28 @@ object MediaProbe {
                 ?: props.optString("duration").toDoubleOrNull()
                 ?: 0.0,
             sizeBytes = if (meta.sizeBytes > 0) meta.sizeBytes else media.size?.toLongOrNull() ?: 0L,
+            tags = readTags(media.tags, stream.tags),
         )
     }
+
+    /** Merges container and stream tags (Ogg and Opus keep theirs on the stream), dropping lyrics and duplicates. */
+    private fun readTags(vararg sources: JSONObject?): List<Pair<String, String>> {
+        val seen = HashSet<String>()
+        val out = ArrayList<Pair<String, String>>()
+        for (json in sources) {
+            if (json == null) continue
+            val keys = json.keys()
+            while (keys.hasNext()) {
+                val key = keys.next()
+                val lower = key.lowercase()
+                if ("lyric" in lower || lower == "uslt" || lower == "sylt") continue
+                val value = json.optString(key).trim()
+                if (value.isEmpty() || !seen.add(lower)) continue
+                out += key to value.take(MAX_TAG_LENGTH)
+            }
+        }
+        return out
+    }
+
+    private const val MAX_TAG_LENGTH = 4000
 }

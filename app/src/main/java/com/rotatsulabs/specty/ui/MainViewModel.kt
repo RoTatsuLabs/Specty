@@ -84,6 +84,14 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         prefs.edit().putBoolean(KEY_BLACK, enabled).apply()
     }
 
+    private val _showMetadata = MutableStateFlow(prefs.getBoolean(KEY_META, false))
+    val showMetadata: StateFlow<Boolean> = _showMetadata.asStateFlow()
+
+    fun setShowMetadata(enabled: Boolean) {
+        _showMetadata.value = enabled
+        prefs.edit().putBoolean(KEY_META, enabled).apply()
+    }
+
     private var analysisJob: Job? = null
 
     fun setFftSize(size: Int) {
@@ -164,5 +172,6 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         const val KEY_THEME = "theme_mode"
         const val KEY_DYNAMIC = "dynamic_color"
         const val KEY_BLACK = "pure_black"
+        const val KEY_META = "show_metadata"
     }
 }

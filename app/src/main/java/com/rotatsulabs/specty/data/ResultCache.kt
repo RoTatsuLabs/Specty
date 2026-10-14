@@ -104,6 +104,8 @@ class ResultCache(context: Context) {
             out.writeInt(sampleRate); out.writeInt(channels)
             out.writeInt(bitDepth ?: -1); writeStr(out, sampleFormat)
             out.writeLong(bitrateBps ?: -1L); out.writeDouble(durationSec); out.writeLong(sizeBytes)
+            out.writeInt(tags.size)
+            tags.forEach { out.writeUTF(it.first); writeLong(out, it.second) }
         }
         with(r.levels) {
             out.writeDouble(peakDb); out.writeDouble(rmsDb)
@@ -133,6 +135,7 @@ class ResultCache(context: Context) {
             sampleRate = inp.readInt(), channels = inp.readInt(),
             bitDepth = inp.readInt().takeIf { it >= 0 }, sampleFormat = readStr(inp),
             bitrateBps = inp.readLong().takeIf { it >= 0 }, durationSec = inp.readDouble(), sizeBytes = inp.readLong(),
+            tags = List(inp.readInt()) { inp.readUTF() to readLong(inp) },
         )
         val peak = inp.readDouble(); val rms = inp.readDouble()
         val lufs = inp.readBoolean().let { has -> inp.readDouble().takeIf { has } }
@@ -151,6 +154,19 @@ class ResultCache(context: Context) {
         return AnalysisResult(uri, info, levels, authenticity, Spectrogram(columns, bins, rate, fft, duration, views, labels))
     }
 
+    // writeUTF is limited to 64 KB; tag values are capped well below that, but encode as bytes to be safe.
+    private fun writeLong(out: DataOutputStream, s: String) {
+        val bytes = s.toByteArray(Charsets.UTF_8)
+        out.writeInt(bytes.size)
+        out.write(bytes)
+    }
+
+    private fun readLong(inp: DataInputStream): String {
+        val bytes = ByteArray(inp.readInt())
+        inp.readFully(bytes)
+        return String(bytes, Charsets.UTF_8)
+    }
+
     private fun writeStr(out: DataOutputStream, s: String?) {
         out.writeBoolean(s != null); out.writeUTF(s ?: "")
     }
@@ -158,7 +174,7 @@ class ResultCache(context: Context) {
     private fun readStr(inp: DataInputStream): String? = inp.readBoolean().let { has -> inp.readUTF().takeIf { has } }
 
     private companion object {
-        const val MAGIC = 0x53504331 // "SPC1"
+        const val MAGIC = 0x53504332 // "SPC2"
         const val MAX_ENTRIES = 80
     }
 }

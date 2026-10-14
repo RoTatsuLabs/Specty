@@ -36,6 +36,7 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit) {
     val library by viewModel.library.collectAsStateWithLifecycle()
     val fftSize by viewModel.fftSize.collectAsStateWithLifecycle()
     val appearance by viewModel.appearance.collectAsStateWithLifecycle()
+    val showMetadata by viewModel.showMetadata.collectAsStateWithLifecycle()
     val verdicts by viewModel.cachedVerdicts.collectAsStateWithLifecycle()
     var showSettings by rememberSaveable { mutableStateOf(false) }
     val keyFor = remember(fftSize) { { track: com.rotatsulabs.specty.data.Track -> viewModel.cacheKey(track.uri, track.sizeBytes, fftSize) } }
@@ -86,7 +87,7 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit) {
         ) {
             Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.surface) {
                 Box(Modifier.navigationBarsPadding()) {
-                    AnalysisScreen(held.state, onBack = viewModel::closeAnalysis, onReanalyse = viewModel::reanalyze)
+                    AnalysisScreen(held.state, onBack = viewModel::closeAnalysis, onReanalyse = viewModel::reanalyze, showMetadata = showMetadata)
                 }
             }
         }
@@ -102,6 +103,8 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit) {
                     onThemeMode = viewModel::setThemeMode,
                     onDynamicColor = viewModel::setDynamicColor,
                     onPureBlack = viewModel::setPureBlack,
+                    showMetadata = showMetadata,
+                    onShowMetadata = viewModel::setShowMetadata,
                     fftSize = fftSize,
                     onFftSize = viewModel::setFftSize,
                     savedCount = verdicts.size,
