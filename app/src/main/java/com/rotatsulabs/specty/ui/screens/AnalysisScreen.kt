@@ -100,7 +100,7 @@ import com.rotatsulabs.specty.ui.theme.Motion
 import kotlinx.coroutines.delay
 
 @Composable
-fun AnalysisScreen(state: AnalysisState, onBack: () -> Unit, onReanalyse: () -> Unit, modifier: Modifier = Modifier, showMetadata: Boolean = false) {
+fun AnalysisScreen(state: AnalysisState, onBack: () -> Unit, onReanalyse: () -> Unit, modifier: Modifier = Modifier, showMetadata: Boolean = false, onFullscreen: (Int) -> Unit = {}) {
     val title = when (state) {
         is AnalysisState.Running -> state.title
         is AnalysisState.Failed -> state.title
@@ -137,7 +137,7 @@ fun AnalysisScreen(state: AnalysisState, onBack: () -> Unit, onReanalyse: () -> 
             when (state) {
                 is AnalysisState.Running -> RunningContent(state)
                 is AnalysisState.Failed -> FailedContent(state.message, onBack)
-                is AnalysisState.Done -> ResultContent(state.result, state.cached, showMetadata)
+                is AnalysisState.Done -> ResultContent(state.result, state.cached, showMetadata, onFullscreen)
                 AnalysisState.Idle -> Unit
             }
         }
@@ -178,7 +178,7 @@ private fun FailedContent(message: String, onBack: () -> Unit) {
 }
 
 @Composable
-private fun ResultContent(result: AnalysisResult, cached: Boolean, showMetadata: Boolean) {
+private fun ResultContent(result: AnalysisResult, cached: Boolean, showMetadata: Boolean, onFullscreen: (Int) -> Unit) {
     Column(
         Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
@@ -193,7 +193,7 @@ private fun ResultContent(result: AnalysisResult, cached: Boolean, showMetadata:
         Reveal(7) { ChannelsCard(result) }
         Reveal(8) { StereoCard(result.levels) }
         if (showMetadata) Reveal(9) { TagsCard(result.info.tags) }
-        Reveal(10) { SpectrogramCard(result.spectrogram, title = result.info.displayName) }
+        Reveal(10) { SpectrogramCard(result.spectrogram, title = result.info.displayName, onFullscreen = onFullscreen) }
         Spacer(Modifier.height(12.dp))
     }
 }
