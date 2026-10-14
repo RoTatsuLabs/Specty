@@ -1,6 +1,7 @@
 package com.rotatsulabs.specty.audio
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -248,5 +249,149 @@ class AudioDspTest {
             val out = SpectrogramAnalyzer.analyze(pcm, 2048)
             assertEquals(Verdict.INCONCLUSIVE, AuthenticityAnalyzer.analyze(info("flac", 44100), out.averageDb, 2048, null).verdict)
         }
+    }
+
+    // ---- dynamics, stereo, timeline, confidence ------------------------------------------
+
+    private fun levelsOf(channels: Int, rate: Int, seconds: Int, gen: (Int, Int) -> Float): LevelStats {
+        val file = writePcm(channels, rate * seconds, gen)
+        PcmFile(file, channels, rate).use { return LevelAnalyzer.analyze(it) }
+    }
+
+    @Test
+    fun fullScaleSineReadsDr0() {
+        val rate = 8000
+        val m = DynamicsMeter(1, rate)
+        val data = FloatArray(rate * 30) { sin(2 * PI * 100.0 * it / rate).toFloat() }
+        m.process(data, data.size)
+        val dr = m.dynamicRange()!!
+        assertTrue("dr $dr", abs(dr) < 0.1)
+    }
+
+    @Test
+    fun loudBurstsOverQuietBedGiveHigherDr() {
+        val rate = 8000
+        // 30 s at -30 dBFS with a -10 dBFS section lasting two blocks; peaks stay equal.
+        val m = DynamicsMeter(1, rate)
+        val data = FloatArray(rate * 30) { i ->
+            val loud = i / rate in 12 until 18
+            ((if (loud) 0.316 else 0.0316) * sin(2 * PI * 100.0 * i / rate)).toFloat()
+        }
+        m.process(data, data.size)
+        val dr = m.dynamicRange()!!
+        // The top 20% of ten blocks are the two loud ones (-10 dBFS RMS+3 dB) against a -10 dBFS peak.
+        assertTrue("dr $dr", abs(dr) < 0.5)
+        val flat = DynamicsMeter(1, rate)
+        val quietBed = FloatArray(rate * 30) { i ->
+            val a = if (i / rate in 12 until 18) 0.316 else 0.0316
+            val spike = if (i == 5 * rate + 7 || i == 25 * rate + 7) 0.9f else 0f
+            (a * sin(2 * PI * 100.0 * i / rate)).toFloat() + spike
+        }
+        flat.process(quietBed, quietBed.size)
+        assertTrue("dr ${flat.dynamicRange()}", flat.dynamicRange()!! > 5.0)
+    }
+
+    @Test
+    fun silenceHasNoDr() {
+        val m = DynamicsMeter(2, 8000)
+        val z = FloatArray(8000 * 2 * 10)
+        m.process(z, 8000 * 10)
+        assertNull(m.dynamicRange())
+        assertNull(m.correlation())
+    }
+
+    @Test
+    fun stereoCorrelationAndBalance() {
+        val rate = 8000
+        val n = rate * 4
+        fun run(gen: (Int, Int) -> Float): DynamicsMeter {
+            val m = DynamicsMeter(2, rate)
+            val d = FloatArray(n * 2)
+            for (f in 0 until n) for (c in 0..1) d[f * 2 + c] = gen(f, c)
+            m.process(d, n)
+            return m
+        }
+        val tone = { f: Int -> sin(2 * PI * 440.0 * f / rate).toFloat() }
+        val same = run { f, _ -> 0.5f * tone(f) }
+        assertTrue(abs(same.correlation()!! - 1.0) < 1e-6)
+        assertTrue(abs(same.balanceDb()!!) < 1e-6)
+        val inverted = run { f, c -> if (c == 0) 0.5f * tone(f) else -0.5f * tone(f) }
+        assertTrue(abs(inverted.correlation()!! + 1.0) < 1e-6)
+        val louderLeft = run { f, c -> if (c == 0) 0.5f * tone(f) else 0.25f * tone(f) }
+        assertTrue(abs(louderLeft.balanceDb()!! - 6.02) < 0.05)
+        val noise = Random(3)
+        val independent = run { _, _ -> noise.nextFloat() - 0.5f }
+        assertTrue(abs(independent.correlation()!!) < 0.05)
+    }
+
+    @Test
+    fun dcOffsetIsMeasuredPerChannel() {
+        val rate = 8000
+        val m = DynamicsMeter(2, rate)
+        val d = FloatArray(rate * 2 * 2) { i -> if (i % 2 == 0) 0.1f + 0.2f * sin(i * 0.1).toFloat() else -0.05f }
+        m.process(d, rate * 2)
+        val dc = m.dcOffsets()
+        assertTrue("dc $dc", abs(dc[0] - 0.1) < 0.01 && abs(dc[1] + 0.05) < 1e-6)
+    }
+
+    @Test
+    fun timelineTracksLoudnessPeaksAndClips() {
+        val rate = 8000
+        // 20 s: quiet first half, loud second half with a clipped burst at 15 s.
+        val stats = levelsOf(1, rate, 20) { f, _ ->
+            val sec = f / rate
+            val amp = if (sec < 10) 0.05 else 0.5
+            if (f in 15 * rate until 15 * rate + 50) 1f else (amp * sin(2 * PI * 440.0 * f / rate)).toFloat()
+        }
+        val t = stats.timeline!!
+        assertEquals(240, t.points)
+        assertTrue("first ${t.loudness[10]} last ${t.loudness[200]}", t.loudness[200] - t.loudness[10] > 15f)
+        val clipSlice = t.clips.indexOfFirst { it > 0 }
+        assertTrue("clip slice $clipSlice", clipSlice in 175..185)
+        assertEquals(stats.clippedSamples, t.clips.sum().toLong())
+        assertTrue(t.peakDb[200] > t.peakDb[10] + 15f)
+        assertNotNull(stats.drTt)
+    }
+
+    @Test
+    fun segmentCutoffsAndConfidenceForAnMp3Transcode() {
+        val rate = 44100
+        val file = multitone(rate, 12, 16000.0, 60.0)
+        PcmFile(file, 2, rate).use { pcm ->
+            val out = SpectrogramAnalyzer.analyze(pcm, 2048)
+            val base = AuthenticityAnalyzer.analyze(info("flac", rate), out.averageDb, 2048, null)
+            val full = AuthenticityAnalyzer.withInsights(
+                base, info("flac", rate), out.averageDb, 2048, AuthenticityAnalyzer.segmentSpectra(out.spectrogram),
+            )
+            assertEquals(Verdict.LOSSY_SOURCE, full.verdict)
+            assertTrue("conf ${full.confidence}", full.confidence >= 80)
+            assertTrue(full.segmentCutoffs.isNotEmpty() && full.segmentCutoffs.all { abs(it - 16000f) < 700f })
+            assertNotNull(full.encoderGuess)
+            assertNotNull(full.emptyAboveHz)
+            assertTrue(abs(full.emptyAboveHz!! - 16000.0) < 800.0)
+        }
+    }
+
+    @Test
+    fun fullBandSignalHasNoEmptyBandAndGoodConfidence() {
+        val rate = 44100
+        val file = multitone(rate, 12, 21_900.0, 60.0)
+        PcmFile(file, 2, rate).use { pcm ->
+            val out = SpectrogramAnalyzer.analyze(pcm, 2048)
+            val base = AuthenticityAnalyzer.analyze(info("flac", rate), out.averageDb, 2048, null)
+            val full = AuthenticityAnalyzer.withInsights(
+                base, info("flac", rate), out.averageDb, 2048, AuthenticityAnalyzer.segmentSpectra(out.spectrogram),
+            )
+            assertEquals(Verdict.GENUINE, full.verdict)
+            assertTrue("conf ${full.confidence}", full.confidence >= 80)
+            assertNull(full.encoderGuess)
+        }
+    }
+
+    @Test
+    fun encoderGuessTable() {
+        assertNull(AuthenticityAnalyzer.encoderGuess(8000.0, "mp3"))
+        assertTrue(AuthenticityAnalyzer.encoderGuess(16000.0, "mp3")!!.contains("128"))
+        assertTrue(AuthenticityAnalyzer.encoderGuess(20500.0, "mp3")!!.contains("320"))
     }
 }
