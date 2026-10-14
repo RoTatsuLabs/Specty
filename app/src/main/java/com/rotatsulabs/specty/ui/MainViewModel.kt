@@ -31,6 +31,13 @@ sealed interface AnalysisState {
     data class Failed(val title: String, val message: String) : AnalysisState
 }
 
+sealed interface CompareState {
+    data object Idle : CompareState
+    data class Running(val title: String, val stage: String, val progress: Float) : CompareState
+    data class Ready(val a: AnalysisResult, val b: AnalysisResult) : CompareState
+    data class Failed(val message: String) : CompareState
+}
+
 data class LibraryState(
     val loaded: Boolean = false,
     val loading: Boolean = false,
@@ -94,6 +101,45 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     private var analysisJob: Job? = null
+
+    private val _compare = MutableStateFlow<CompareState>(CompareState.Idle)
+    val compare: StateFlow<CompareState> = _compare.asStateFlow()
+    private var compareJob: Job? = null
+
+    /** Analyses [second] (or loads it from the cache) and shows it next to the result currently open. */
+    fun startCompare(second: Uri) {
+        val first = (_analysis.value as? AnalysisState.Done)?.result ?: return
+        compareJob?.cancel()
+        compareJob = viewModelScope.launch {
+            val meta = withContext(Dispatchers.IO) { MediaProbe.queryMeta(getApplication(), second) }
+            val fft = _fftSize.value
+            val key = cache.keyOf(second, meta.sizeBytes, fft)
+            if (meta.sizeBytes > 0) {
+                val hit = withContext(Dispatchers.IO) { cache.load(key, second) }
+                if (hit != null) {
+                    _compare.value = CompareState.Ready(first, hit)
+                    return@launch
+                }
+            }
+            _compare.value = CompareState.Running(meta.displayName, "Reading file", 0f)
+            try {
+                val result = analyzer.analyze(second, fft) { stage, progress ->
+                    _compare.value = CompareState.Running(meta.displayName, stage, progress)
+                }
+                if (meta.sizeBytes > 0) withContext(Dispatchers.IO) { cache.save(key, result) }
+                _compare.value = CompareState.Ready(first, result)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Throwable) {
+                _compare.value = CompareState.Failed(e.message ?: "Analysis failed")
+            }
+        }
+    }
+
+    fun closeCompare() {
+        compareJob?.cancel()
+        _compare.value = CompareState.Idle
+    }
 
     /** Progress of the background library scan. */
     val batch: StateFlow<BatchScanner.State> = BatchScanner.state
