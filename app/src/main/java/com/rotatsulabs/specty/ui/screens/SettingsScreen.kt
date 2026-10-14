@@ -50,6 +50,8 @@ fun SettingsScreen(
     onThemeMode: (ThemeMode) -> Unit,
     onDynamicColor: (Boolean) -> Unit,
     onPureBlack: (Boolean) -> Unit,
+    showMetadata: Boolean,
+    onShowMetadata: (Boolean) -> Unit,
     fftSize: Int,
     onFftSize: (Int) -> Unit,
     savedCount: Int,
@@ -106,7 +108,16 @@ fun SettingsScreen(
                 )
             }
 
-            SettingsGroup("Spectrogram", 1) {
+            SettingsGroup("Results", 1) {
+                SwitchRow(
+                    title = "Show tags and metadata",
+                    subtitle = "Adds a read-only card with the file's tags, including custom and unfamiliar ones. Lyrics are never shown.",
+                    checked = showMetadata,
+                    onChange = onShowMetadata,
+                )
+            }
+
+            SettingsGroup("Spectrogram", 2) {
                 Text("Window size", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
                 Text(
                     "Larger windows resolve frequency more finely; smaller ones resolve time more finely.",
@@ -130,7 +141,7 @@ fun SettingsScreen(
                 )
             }
 
-            SettingsGroup("Saved results", 2) {
+            SettingsGroup("Saved results", 3) {
                 Text(
                     if (savedCount == 0) "No saved results yet." else "$savedCount analyses saved on this device, so files you already checked open instantly.",
                     style = MaterialTheme.typography.bodyMedium,
@@ -139,7 +150,7 @@ fun SettingsScreen(
                 FilledTonalButton(onClick = onClearCache, enabled = savedCount > 0) { Text("Clear saved results") }
             }
 
-            SettingsGroup("About", 3) {
+            SettingsGroup("About", 4) {
                 Text("Specty ${BuildConfig.VERSION_NAME}", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                 Text(
                     "Free software under the GNU General Public License v3.0. Decoding by FFmpeg through a maintained ffmpeg-kit fork. " +
