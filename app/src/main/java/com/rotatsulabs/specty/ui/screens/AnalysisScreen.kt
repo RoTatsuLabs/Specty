@@ -92,6 +92,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.ui.draw.scale
 import java.util.Locale
+import kotlin.math.roundToInt
 import com.rotatsulabs.specty.ui.components.Stat
 import com.rotatsulabs.specty.ui.components.StatGrid
 import com.rotatsulabs.specty.ui.spectrogram.SpectrogramCard
@@ -185,11 +186,14 @@ private fun ResultContent(result: AnalysisResult, cached: Boolean, showMetadata:
         Reveal(0) { Hero(result, cached) }
         Reveal(1) { VerdictCard(result.authenticity) }
         Reveal(2) { MetricTiles(result) }
-        Reveal(3) { FileCard(result) }
-        Reveal(4) { LevelsCard(result) }
-        Reveal(5) { ChannelsCard(result) }
-        if (showMetadata) Reveal(6) { TagsCard(result.info.tags) }
-        Reveal(7) { SpectrogramCard(result.spectrogram, title = result.info.displayName) }
+        Reveal(3) { ConfidenceCard(result.authenticity, result.info) }
+        Reveal(4) { FileCard(result) }
+        Reveal(5) { LevelsCard(result) }
+        Reveal(6) { TimelineCard(result.levels) }
+        Reveal(7) { ChannelsCard(result) }
+        Reveal(8) { StereoCard(result.levels) }
+        if (showMetadata) Reveal(9) { TagsCard(result.info.tags) }
+        Reveal(10) { SpectrogramCard(result.spectrogram, title = result.info.displayName) }
         Spacer(Modifier.height(12.dp))
     }
 }
@@ -354,7 +358,7 @@ private fun MetricTile(
 }
 
 @Composable
-private fun SectionCard(title: String, content: @Composable () -> Unit) {
+internal fun SectionCard(title: String, content: @Composable () -> Unit) {
     val source = remember { MutableInteractionSource() }
     Surface(
         onClick = {},
@@ -396,6 +400,7 @@ private fun LevelsCard(result: AnalysisResult) {
     val levels = result.levels
     val stats = buildList {
         add(Stat(Icons.Rounded.ShowChart, "Dynamic Range", Fmt.db(levels.dynamicRangeDb)))
+        levels.drTt?.let { add(Stat(Icons.Rounded.ShowChart, "DR meter", "DR${it.roundToInt()}")) }
         add(Stat(Icons.Rounded.Equalizer, "Peak", Fmt.db(levels.peakDb)))
         add(Stat(Icons.Rounded.BarChart, "RMS", Fmt.db(levels.rmsDb)))
         add(Stat(Icons.AutoMirrored.Rounded.VolumeUp, "LUFS", Fmt.lufs(levels.lufs)))

@@ -144,4 +144,29 @@ class LoudnessMeter(private val sampleRate: Int, private val channels: Int) {
         if (gatedCount == 0) return null
         return -0.691 + 10.0 * log10(gatedSum / gatedCount)
     }
+
+    /**
+     * Loudness over time as [points] equal slices of [durationSec]; each slice averages the 400 ms
+     * blocks that start inside it. Slices without a block repeat the previous value; silence is -70.
+     */
+    fun series(points: Int, durationSec: Double): FloatArray {
+        val sums = DoubleArray(points)
+        val counts = IntArray(points)
+        for (i in 0 until blockCount) {
+            val centre = i * 0.1 + 0.2
+            val slice = (centre / durationSec * points).toInt().coerceIn(0, points - 1)
+            sums[slice] += energies[i]
+            counts[slice]++
+        }
+        val out = FloatArray(points)
+        var last = -70f
+        for (i in 0 until points) {
+            if (counts[i] > 0) {
+                val mean = sums[i] / counts[i]
+                last = (if (mean <= 0.0) -70.0 else (-0.691 + 10.0 * log10(mean)).coerceAtLeast(-70.0)).toFloat()
+            }
+            out[i] = last
+        }
+        return out
+    }
 }
