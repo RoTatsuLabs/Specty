@@ -189,7 +189,7 @@ private fun ResultContent(result: AnalysisResult, cached: Boolean) {
         Reveal(3) { FileCard(result) }
         Reveal(4) { LevelsCard(result) }
         Reveal(5) { ChannelsCard(result) }
-        Reveal(6) { SpectrogramCard(result.spectrogram) }
+        Reveal(6) { SpectrogramCard(result.spectrogram, title = result.info.displayName) }
         Spacer(Modifier.height(12.dp))
     }
 }

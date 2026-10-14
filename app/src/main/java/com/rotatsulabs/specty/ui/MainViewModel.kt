@@ -46,6 +46,14 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     private val _analysis = MutableStateFlow<AnalysisState>(AnalysisState.Idle)
     val analysis: StateFlow<AnalysisState> = _analysis.asStateFlow()
 
+    private val _viewing = MutableStateFlow(false)
+    /** True while the full result screen is open; otherwise progress and results live in the dock. */
+    val viewing: StateFlow<Boolean> = _viewing.asStateFlow()
+
+    fun openResult() {
+        if (_analysis.value is AnalysisState.Done) _viewing.value = true
+    }
+
     private val _library = MutableStateFlow(LibraryState())
     val library: StateFlow<LibraryState> = _library.asStateFlow()
 
@@ -97,6 +105,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     fun analyze(uri: Uri, force: Boolean = false) {
         analysisJob?.cancel()
         lastUri = uri
+        _viewing.value = false
         analysisJob = viewModelScope.launch {
             val meta = withContext(Dispatchers.IO) { MediaProbe.queryMeta(getApplication(), uri) }
             val title = meta.displayName
@@ -108,6 +117,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                 val hit = withContext(Dispatchers.IO) { cache.load(key, uri) }
                 if (hit != null) {
                     _analysis.value = AnalysisState.Done(hit, cached = true)
+                    _viewing.value = true
                     return@launch
                 }
             }
@@ -129,6 +139,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     fun closeAnalysis() {
         analysisJob?.cancel()
+        _viewing.value = false
         _analysis.value = AnalysisState.Idle
     }
 
