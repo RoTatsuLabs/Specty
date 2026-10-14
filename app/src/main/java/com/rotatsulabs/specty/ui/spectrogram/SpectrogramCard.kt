@@ -22,6 +22,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Download
+import androidx.compose.material.icons.rounded.Fullscreen
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.foundation.layout.size
@@ -69,7 +70,12 @@ import kotlinx.coroutines.withContext
 import kotlin.math.roundToInt
 
 @Composable
-fun SpectrogramCard(spectrogram: Spectrogram, modifier: Modifier = Modifier, title: String = "Spectrogram") {
+fun SpectrogramCard(
+    spectrogram: Spectrogram,
+    modifier: Modifier = Modifier,
+    title: String = "Spectrogram",
+    onFullscreen: ((view: Int) -> Unit)? = null,
+) {
     var selected by rememberSaveable { mutableIntStateOf(0) }
     if (selected >= spectrogram.views.size) selected = 0
 
@@ -203,6 +209,18 @@ fun SpectrogramCard(spectrogram: Spectrogram, modifier: Modifier = Modifier, tit
                         .background(Brush.horizontalGradient(SpectrogramRenderer.gradientColors(palette))),
                 )
                 Text("0 dBFS", style = MaterialTheme.typography.labelMedium, color = axisColor)
+            }
+
+            if (onFullscreen != null) {
+                val fullSource = remember { MutableInteractionSource() }
+                androidx.compose.material3.Button(
+                    interactionSource = fullSource,
+                    onClick = { onFullscreen(selected) },
+                    modifier = Modifier.fillMaxWidth().pressScale(fullSource, 0.96f),
+                ) {
+                    Icon(Icons.Rounded.Fullscreen, contentDescription = null, modifier = Modifier.size(20.dp))
+                    Text("Full screen, zoom and inspect", modifier = Modifier.padding(start = 8.dp))
+                }
             }
 
             val saveSource = remember { MutableInteractionSource() }

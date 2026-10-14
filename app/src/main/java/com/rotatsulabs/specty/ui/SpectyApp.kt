@@ -39,6 +39,7 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit) {
     val showMetadata by viewModel.showMetadata.collectAsStateWithLifecycle()
     val verdicts by viewModel.cachedVerdicts.collectAsStateWithLifecycle()
     var showSettings by rememberSaveable { mutableStateOf(false) }
+    var viewerView by rememberSaveable { mutableStateOf<Int?>(null) }
     val keyFor = remember(fftSize) { { track: com.rotatsulabs.specty.data.Track -> viewModel.cacheKey(track.uri, track.sizeBytes, fftSize) } }
     val analysisOpen by viewModel.viewing.collectAsStateWithLifecycle()
     val dockVisible = !analysisOpen && analysis !is AnalysisState.Idle
@@ -51,6 +52,9 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit) {
 
     BackHandler(enabled = analysisOpen) { viewModel.closeAnalysis() }
     BackHandler(enabled = showSettings) { showSettings = false }
+    // Drop a stale viewer request if the analysis it belonged to is gone.
+    val viewerResult = (held.state as? AnalysisState.Done)?.result
+    if (viewerView != null && (viewerResult == null || !analysisOpen)) viewerView = null
 
     Box(Modifier.fillMaxSize()) {
         Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.surface) {
@@ -87,7 +91,7 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit) {
         ) {
             Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.surface) {
                 Box(Modifier.navigationBarsPadding()) {
-                    AnalysisScreen(held.state, onBack = viewModel::closeAnalysis, onReanalyse = viewModel::reanalyze, showMetadata = showMetadata)
+                    AnalysisScreen(held.state, onBack = viewModel::closeAnalysis, onReanalyse = viewModel::reanalyze, showMetadata = showMetadata, onFullscreen = { viewerView = it })
                 }
             }
         }
@@ -110,6 +114,18 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit) {
                     savedCount = verdicts.size,
                     onClearCache = viewModel::clearCache,
                     onBack = { showSettings = false },
+                )
+            }
+        }
+
+        val open = viewerView
+        if (open != null && viewerResult != null) {
+            Surface(Modifier.fillMaxSize(), color = androidx.compose.ui.graphics.Color.Black) {
+                com.rotatsulabs.specty.ui.spectrogram.SpectrogramViewer(
+                    spectrogram = viewerResult.spectrogram,
+                    title = viewerResult.info.displayName,
+                    initialView = open,
+                    onClose = { viewerView = null },
                 )
             }
         }
