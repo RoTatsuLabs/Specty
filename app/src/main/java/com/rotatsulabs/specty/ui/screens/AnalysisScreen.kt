@@ -82,6 +82,16 @@ import com.rotatsulabs.specty.audio.Verdict
 import com.rotatsulabs.specty.ui.AnalysisState
 import com.rotatsulabs.specty.ui.components.CoverImage
 import com.rotatsulabs.specty.ui.components.Fmt
+import com.rotatsulabs.specty.ui.components.Reveal
+import com.rotatsulabs.specty.ui.components.pressScale
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.ui.draw.scale
+import java.util.Locale
 import com.rotatsulabs.specty.ui.components.Stat
 import com.rotatsulabs.specty.ui.components.StatGrid
 import com.rotatsulabs.specty.ui.spectrogram.SpectrogramCard
@@ -103,13 +113,19 @@ fun AnalysisScreen(state: AnalysisState, onBack: () -> Unit, onReanalyse: () -> 
             TopAppBar(
                 title = { Text(title, maxLines = 1, overflow = TextOverflow.Ellipsis, fontWeight = FontWeight.Bold) },
                 navigationIcon = {
-                    FilledTonalIconButton(onClick = onBack, modifier = Modifier.padding(start = 8.dp)) {
+                    val backSource = remember { MutableInteractionSource() }
+                    FilledTonalIconButton(onClick = onBack, interactionSource = backSource, modifier = Modifier.padding(start = 8.dp).pressScale(backSource)) {
                         Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Back")
                     }
                 },
                 actions = {
                     if (state is AnalysisState.Done) {
-                        IconButton(onClick = onReanalyse) { Icon(Icons.Rounded.Refresh, contentDescription = "Analyse again") }
+                        val refreshSource = remember { MutableInteractionSource() }
+                        var spins by remember { mutableStateOf(0) }
+                        val spin by animateFloatAsState(spins * 360f, spring(dampingRatio = 0.6f, stiffness = 120f), label = "spin")
+                        IconButton(onClick = { spins++; onReanalyse() }, interactionSource = refreshSource, modifier = Modifier.pressScale(refreshSource)) {
+                            Icon(Icons.Rounded.Refresh, contentDescription = "Analyse again", modifier = Modifier.graphicsLayer { rotationZ = spin })
+                        }
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent),
@@ -160,23 +176,6 @@ private fun FailedContent(message: String, onBack: () -> Unit) {
     }
 }
 
-/** Fades and lifts a section into place, staggered by [index]. */
-@Composable
-private fun Reveal(index: Int, content: @Composable () -> Unit) {
-    var shown by remember { mutableStateOf(false) }
-    LaunchedEffect(Unit) {
-        delay(70L * index)
-        shown = true
-    }
-    val p by animateFloatAsState(if (shown) 1f else 0f, Motion.spatial(), label = "reveal")
-    Box(
-        Modifier.graphicsLayer {
-            alpha = p.coerceIn(0f, 1f)
-            translationY = (1f - p) * 72f
-        },
-    ) { content() }
-}
-
 @Composable
 private fun ResultContent(result: AnalysisResult, cached: Boolean) {
     Column(
@@ -199,10 +198,15 @@ private fun Hero(result: AnalysisResult, cached: Boolean) {
     val info = result.info
     val scheme = MaterialTheme.colorScheme
     Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(14.dp)) {
+        val coverSource = remember { MutableInteractionSource() }
         CoverImage(
             uri = result.uri,
             shape = RoundedCornerShape(40.dp),
-            modifier = Modifier.fillMaxWidth(0.62f).aspectRatio(1f),
+            modifier = Modifier
+                .fillMaxWidth(0.62f)
+                .aspectRatio(1f)
+                .pressScale(coverSource, 0.94f)
+                .clickable(interactionSource = coverSource, indication = null) { },
             sizePx = 768,
         ) {
             Surface(Modifier.fillMaxSize(), color = scheme.tertiaryContainer, contentColor = scheme.onTertiaryContainer) {
@@ -240,7 +244,8 @@ private fun InfoChip(
     container: Color = MaterialTheme.colorScheme.surfaceContainerHigh,
     content: Color = MaterialTheme.colorScheme.onSurface,
 ) {
-    Surface(shape = CircleShape, color = container, contentColor = content) {
+    val source = remember { MutableInteractionSource() }
+    Surface(onClick = {}, interactionSource = source, modifier = Modifier.pressScale(source, 0.9f), shape = CircleShape, color = container, contentColor = content) {
         Text(
             text,
             style = MaterialTheme.typography.labelLarge,
@@ -263,14 +268,23 @@ private fun VerdictCard(report: AuthenticityReport) {
         Verdict.LOSSY_CODEC -> Quad(scheme.surfaceContainerHigh, scheme.onSurface, Icons.Rounded.Info, "Lossy format")
         Verdict.INCONCLUSIVE -> Quad(scheme.surfaceContainerHigh, scheme.onSurface, Icons.Rounded.Info, "Inconclusive")
     }
+    val source = remember { MutableInteractionSource() }
+    var popped by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) {
+        delay(350)
+        popped = true
+    }
+    val pop by animateFloatAsState(if (popped) 1f else 0f, spring(dampingRatio = 0.4f, stiffness = 260f), label = "verdictPop")
     Surface(
-        modifier = Modifier.fillMaxWidth(),
+        onClick = {},
+        interactionSource = source,
+        modifier = Modifier.fillMaxWidth().pressScale(source, 0.97f),
         shape = RoundedCornerShape(32.dp),
         color = container,
         contentColor = content,
     ) {
         Row(Modifier.padding(20.dp), horizontalArrangement = Arrangement.spacedBy(16.dp), verticalAlignment = Alignment.Top) {
-            Surface(shape = CircleShape, color = content.copy(alpha = 0.14f), modifier = Modifier.size(48.dp)) {
+            Surface(shape = CircleShape, color = content.copy(alpha = 0.14f), modifier = Modifier.size(48.dp).scale(pop)) {
                 Box(contentAlignment = Alignment.Center) { Icon(icon, contentDescription = null, modifier = Modifier.size(26.dp)) }
             }
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -320,10 +334,19 @@ private fun MetricTile(
 ) {
     val number = value.substringBeforeLast(' ')
     val unit = if (' ' in value) value.substringAfterLast(' ') else ""
-    Surface(modifier, shape = shape, color = container, contentColor = content) {
+    val target = number.toDoubleOrNull()
+    val decimals = number.substringAfter('.', "").length
+    val progress = remember { Animatable(0f) }
+    LaunchedEffect(number) {
+        progress.snapTo(0f)
+        progress.animateTo(1f, tween(1100, delayMillis = 250, easing = FastOutSlowInEasing))
+    }
+    val shown = if (target != null) String.format(Locale.US, "%.${decimals}f", target * progress.value) else number
+    val source = remember { MutableInteractionSource() }
+    Surface(onClick = {}, interactionSource = source, modifier = modifier.pressScale(source, 0.93f), shape = shape, color = container, contentColor = content) {
         Column(Modifier.padding(horizontal = 14.dp, vertical = 16.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
             Text(label, style = MaterialTheme.typography.labelMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            Text(number, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold, maxLines = 1)
+            Text(shown, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold, maxLines = 1)
             Text(unit.ifEmpty { " " }, style = MaterialTheme.typography.labelMedium, maxLines = 1)
         }
     }
@@ -331,8 +354,11 @@ private fun MetricTile(
 
 @Composable
 private fun SectionCard(title: String, content: @Composable () -> Unit) {
+    val source = remember { MutableInteractionSource() }
     Surface(
-        modifier = Modifier.fillMaxWidth(),
+        onClick = {},
+        interactionSource = source,
+        modifier = Modifier.fillMaxWidth().pressScale(source, 0.985f),
         shape = RoundedCornerShape(32.dp),
         color = MaterialTheme.colorScheme.surfaceContainer,
     ) {
