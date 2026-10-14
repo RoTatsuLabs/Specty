@@ -65,7 +65,7 @@ object SpectrogramRenderer {
 
     /** Row 0 is the highest frequency so the image reads bottom-to-top like a normal spectrogram. */
     fun render(spectrogram: Spectrogram, view: Int, palette: SpectrogramPalette): Bitmap {
-        val lut = lut(palette)
+        val table = lut(palette)
         val columns = spectrogram.columns
         val bins = spectrogram.bins
         val data = spectrogram.views[view]
@@ -73,7 +73,7 @@ object SpectrogramRenderer {
         for (col in 0 until columns) {
             val base = col * bins
             for (k in 0 until bins) {
-                pixels[(bins - 1 - k) * columns + col] = lut[data[base + k].toInt() and 0xFF]
+                pixels[(bins - 1 - k) * columns + col] = table[data[base + k].toInt() and 0xFF]
             }
         }
         return Bitmap.createBitmap(pixels, columns, bins, Bitmap.Config.ARGB_8888)
