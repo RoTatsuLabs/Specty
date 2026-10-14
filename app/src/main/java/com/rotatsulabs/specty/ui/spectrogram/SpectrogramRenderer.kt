@@ -1,3 +1,9 @@
+package com.rotatsulabs.specty.ui.spectrogram
+
+import android.graphics.Bitmap
+import androidx.compose.ui.graphics.Color
+import com.rotatsulabs.specty.audio.Spectrogram
+
 /** Colour ramps for the spectrogram; each is a list of (position, RGB) stops from quiet to loud. */
 enum class SpectrogramPalette(val label: String, internal val stops: List<Pair<Float, Int>>) {
     Fire(
