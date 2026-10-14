@@ -33,6 +33,10 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.rotatsulabs.specty.BuildConfig
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.runtime.remember
+import com.rotatsulabs.specty.ui.components.Reveal
+import com.rotatsulabs.specty.ui.components.pressScale
 import com.rotatsulabs.specty.ui.theme.Appearance
 import com.rotatsulabs.specty.ui.theme.ThemeMode
 import com.rotatsulabs.specty.ui.theme.isDarkFor
@@ -58,7 +62,8 @@ fun SettingsScreen(
             Modifier.fillMaxWidth().padding(start = 12.dp, end = 16.dp, top = 12.dp, bottom = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            FilledTonalIconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Back") }
+            val backSource = remember { MutableInteractionSource() }
+            FilledTonalIconButton(onClick = onBack, interactionSource = backSource, modifier = Modifier.pressScale(backSource)) { Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Back") }
             Text(
                 "Settings",
                 style = MaterialTheme.typography.headlineLarge,
@@ -74,7 +79,7 @@ fun SettingsScreen(
                 .padding(horizontal = 16.dp, vertical = 8.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            SettingsGroup("Appearance") {
+            SettingsGroup("Appearance", 0) {
                 Text("Theme", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
                 SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
                     ThemeMode.entries.forEachIndexed { index, mode ->
@@ -101,7 +106,7 @@ fun SettingsScreen(
                 )
             }
 
-            SettingsGroup("Spectrogram") {
+            SettingsGroup("Spectrogram", 1) {
                 Text("Window size", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
                 Text(
                     "Larger windows resolve frequency more finely; smaller ones resolve time more finely.",
@@ -125,7 +130,7 @@ fun SettingsScreen(
                 )
             }
 
-            SettingsGroup("Saved results") {
+            SettingsGroup("Saved results", 2) {
                 Text(
                     if (savedCount == 0) "No saved results yet." else "$savedCount analyses saved on this device, so files you already checked open instantly.",
                     style = MaterialTheme.typography.bodyMedium,
@@ -134,7 +139,7 @@ fun SettingsScreen(
                 FilledTonalButton(onClick = onClearCache, enabled = savedCount > 0) { Text("Clear saved results") }
             }
 
-            SettingsGroup("About") {
+            SettingsGroup("About", 3) {
                 Text("Specty ${BuildConfig.VERSION_NAME}", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                 Text(
                     "Free software under the GNU General Public License v3.0. Decoding by FFmpeg through a maintained ffmpeg-kit fork. " +
@@ -176,9 +181,13 @@ private fun SwitchRow(title: String, subtitle: String, checked: Boolean, onChang
 }
 
 @Composable
-private fun SettingsGroup(title: String, content: @Composable () -> Unit) {
+private fun SettingsGroup(title: String, index: Int, content: @Composable () -> Unit) {
+    val source = remember { MutableInteractionSource() }
+    Reveal(index) {
     Surface(
-        modifier = Modifier.fillMaxWidth(),
+        onClick = {},
+        interactionSource = source,
+        modifier = Modifier.fillMaxWidth().pressScale(source, 0.985f),
         shape = RoundedCornerShape(32.dp),
         color = MaterialTheme.colorScheme.surfaceContainer,
     ) {
@@ -186,5 +195,6 @@ private fun SettingsGroup(title: String, content: @Composable () -> Unit) {
             Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
             content()
         }
+    }
     }
 }

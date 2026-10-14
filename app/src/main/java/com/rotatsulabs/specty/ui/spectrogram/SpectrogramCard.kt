@@ -10,6 +10,13 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.FilterChip
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.ui.graphics.drawscope.clipRect
+import com.rotatsulabs.specty.ui.components.pressScale
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.mutableStateOf
@@ -81,6 +88,15 @@ fun SpectrogramCard(spectrogram: Spectrogram, modifier: Modifier = Modifier, tit
         }
     }
 
+    // Left-to-right wipe whenever a fresh image arrives (first load, channel or palette change).
+    val reveal = remember { Animatable(0f) }
+    LaunchedEffect(image) {
+        if (image != null) {
+            reveal.snapTo(0f)
+            reveal.animateTo(1f, tween(900, easing = FastOutSlowInEasing))
+        }
+    }
+
     val measurer = rememberTextMeasurer()
     val axisColor = MaterialTheme.colorScheme.onSurfaceVariant
     val labelStyle = TextStyle(fontSize = 10.sp, color = axisColor)
@@ -113,6 +129,7 @@ fun SpectrogramCard(spectrogram: Spectrogram, modifier: Modifier = Modifier, tit
 
                 drawRect(Color.Black, topLeft = Offset(left, top), size = Size(plotWidth, plotHeight))
                 image?.let { img ->
+                    clipRect(left = left, top = top, right = left + plotWidth * reveal.value, bottom = top + plotHeight) {
                     drawImage(
                         image = img,
                         srcOffset = IntOffset.Zero,
@@ -121,6 +138,7 @@ fun SpectrogramCard(spectrogram: Spectrogram, modifier: Modifier = Modifier, tit
                         dstSize = IntSize(plotWidth.roundToInt(), plotHeight.roundToInt()),
                         filterQuality = FilterQuality.Medium,
                     )
+                    }
                 }
 
                 // Frequency axis
@@ -187,7 +205,9 @@ fun SpectrogramCard(spectrogram: Spectrogram, modifier: Modifier = Modifier, tit
                 Text("0 dBFS", style = MaterialTheme.typography.labelMedium, color = axisColor)
             }
 
+            val saveSource = remember { MutableInteractionSource() }
             FilledTonalButton(
+                interactionSource = saveSource,
                 onClick = {
                     if (saving) return@FilledTonalButton
                     saving = true
@@ -211,7 +231,7 @@ fun SpectrogramCard(spectrogram: Spectrogram, modifier: Modifier = Modifier, tit
                     }
                 },
                 enabled = !saving,
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().pressScale(saveSource, 0.96f),
             ) {
                 Icon(Icons.Rounded.Download, contentDescription = null, modifier = Modifier.size(20.dp))
                 Text(if (saving) "Saving…" else "Save image to gallery", modifier = Modifier.padding(start = 8.dp))
