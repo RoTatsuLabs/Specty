@@ -14,6 +14,8 @@ data class AudioInfo(
     val bitrateBps: Long?,
     val durationSec: Double,
     val sizeBytes: Long,
+    /** Container and stream tags as read by FFprobe, lyrics excluded. Original key case is kept. */
+    val tags: List<Pair<String, String>> = emptyList(),
 ) {
     val nyquistHz: Double get() = sampleRate / 2.0
     val isLossless: Boolean get() = Codecs.isLossless(codec)

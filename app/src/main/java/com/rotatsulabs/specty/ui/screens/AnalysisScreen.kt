@@ -99,7 +99,7 @@ import com.rotatsulabs.specty.ui.theme.Motion
 import kotlinx.coroutines.delay
 
 @Composable
-fun AnalysisScreen(state: AnalysisState, onBack: () -> Unit, onReanalyse: () -> Unit, modifier: Modifier = Modifier) {
+fun AnalysisScreen(state: AnalysisState, onBack: () -> Unit, onReanalyse: () -> Unit, modifier: Modifier = Modifier, showMetadata: Boolean = false) {
     val title = when (state) {
         is AnalysisState.Running -> state.title
         is AnalysisState.Failed -> state.title
@@ -136,7 +136,7 @@ fun AnalysisScreen(state: AnalysisState, onBack: () -> Unit, onReanalyse: () -> 
             when (state) {
                 is AnalysisState.Running -> RunningContent(state)
                 is AnalysisState.Failed -> FailedContent(state.message, onBack)
-                is AnalysisState.Done -> ResultContent(state.result, state.cached)
+                is AnalysisState.Done -> ResultContent(state.result, state.cached, showMetadata)
                 AnalysisState.Idle -> Unit
             }
         }
@@ -177,7 +177,7 @@ private fun FailedContent(message: String, onBack: () -> Unit) {
 }
 
 @Composable
-private fun ResultContent(result: AnalysisResult, cached: Boolean) {
+private fun ResultContent(result: AnalysisResult, cached: Boolean, showMetadata: Boolean) {
     Column(
         Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
@@ -188,7 +188,8 @@ private fun ResultContent(result: AnalysisResult, cached: Boolean) {
         Reveal(3) { FileCard(result) }
         Reveal(4) { LevelsCard(result) }
         Reveal(5) { ChannelsCard(result) }
-        Reveal(6) { SpectrogramCard(result.spectrogram, title = result.info.displayName) }
+        if (showMetadata) Reveal(6) { TagsCard(result.info.tags) }
+        Reveal(7) { SpectrogramCard(result.spectrogram, title = result.info.displayName) }
         Spacer(Modifier.height(12.dp))
     }
 }
