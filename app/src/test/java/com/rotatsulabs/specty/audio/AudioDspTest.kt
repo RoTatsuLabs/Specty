@@ -394,4 +394,68 @@ class AudioDspTest {
         assertTrue(AuthenticityAnalyzer.encoderGuess(16000.0, "mp3")!!.contains("128"))
         assertTrue(AuthenticityAnalyzer.encoderGuess(20500.0, "mp3")!!.contains("320"))
     }
+
+    // ---- compare -------------------------------------------------------------------------
+
+    private fun spectrogramOf(rate: Int, maxHz: Double, gainDb: Double = 0.0): Spectrogram {
+        val file = multitone(rate, 6, maxHz, 60.0)
+        PcmFile(file, 2, rate).use { pcm ->
+            val s = SpectrogramAnalyzer.analyze(pcm, 2048).spectrogram
+            if (gainDb == 0.0) return s
+            val shift = (gainDb / (Spectrogram.MAX_DB - Spectrogram.MIN_DB) * 255.0).toInt()
+            val views = s.views.map { v -> ByteArray(v.size) { i -> ((v[i].toInt() and 0xFF) + shift).coerceIn(0, 255).toByte() } }
+            return Spectrogram(s.columns, s.bins, s.sampleRate, s.fftSize, s.durationSec, views, s.viewLabels)
+        }
+    }
+
+    @Test
+    fun differenceOfIdenticalSpectrogramsIsZero() {
+        val s = spectrogramOf(44100, 20_000.0)
+        val d = CompareMath.difference(s, s, 64, 48)
+        assertEquals(0.0, CompareMath.meanAbsolute(d), 1e-9)
+    }
+
+    @Test
+    fun differenceShowsMissingTopEnd() {
+        val full = spectrogramOf(44100, 21_000.0)
+        val lossy = spectrogramOf(44100, 16_000.0)
+        val d = CompareMath.difference(full, lossy, 32, 100)
+        // Top rows (above the 16 kHz cutoff) are strongly negative for B; bottom rows are about equal.
+        val top = d.copyOfRange(0, 32 * 10).average()
+        val bottom = d.copyOfRange(32 * 80, 32 * 100).average()
+        assertTrue("top $top", top < -30.0)
+        assertTrue("bottom $bottom", abs(bottom) < 6.0)
+    }
+
+    @Test
+    fun differenceMeasuresGain() {
+        val s = spectrogramOf(44100, 20_000.0)
+        val louder = spectrogramOf(44100, 20_000.0, gainDb = 6.0)
+        val d = CompareMath.difference(s, louder, 32, 32)
+        assertTrue("mean ${d.average()}", abs(d.average() - 6.0) < 1.0)
+    }
+
+    @Test
+    fun averageSpectrumFollowsContent() {
+        val s = spectrogramOf(44100, 16_000.0)
+        val avg = CompareMath.averageSpectrum(s)
+        val binHz = 44100.0 / 2048
+        assertTrue(avg[(10_000 / binHz).toInt()] > avg[(19_000 / binHz).toInt()] + 40f)
+    }
+
+    @Test
+    fun highlightsMentionTheRealDifferences() {
+        val rate = 44100
+        val full = spectrogramOf(rate, 21_000.0)
+        val lossy = spectrogramOf(rate, 16_000.0)
+        fun rep(s: Spectrogram, codec: String): AuthenticityReport {
+            val avg = CompareMath.averageSpectrum(s)
+            return AuthenticityAnalyzer.analyze(info(codec, rate), avg, 2048, null)
+        }
+        val lv = LevelStats(-1.0, -18.0, -14.0, -0.5, 0, 1000, 24, emptyList(), drTt = 12.0)
+        val lv2 = LevelStats(-1.0, -12.0, -9.0, -0.2, 500, 1000, 24, emptyList(), drTt = 6.0)
+        val lines = CompareMath.highlights(rep(full, "flac"), lv, rep(lossy, "flac"), lv2)
+        val text = lines.joinToString(" ")
+        assertTrue(text, text.contains("more dynamic") && text.contains("louder") && text.contains("clipping"))
+    }
 }

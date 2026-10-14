@@ -28,7 +28,11 @@ Everything runs locally. No account, no network access, nothing is uploaded.
 | **File and codec info** | Codec, container, sample rate, bit depth, decoded sample format, bitrate, channels, duration, size |
 | **Levels and dynamics** | Peak, true peak (oversampled), RMS, integrated loudness (LUFS, ITU-R BS.1770-4), dynamic range, clipping detection, all per channel |
 | **Spectrogram** | STFT heatmap at 16:9 with a combined view and one tab per channel, selectable window size (1024, 2048, 4096) and seven colour palettes |
-| **Authenticity check** | Detects a brick-wall cutoff in the long-term spectrum and classifies the file as genuine, transcoded from a lossy source, or upsampled. Also flags 16-bit audio padded into a 24-bit container |
+| **Dynamics over time** | Loudness and peak graph with clipping markers, a DR meter value (3 s blocks, loudest 20%), stereo correlation and balance, DC offset |
+| **Fullscreen spectrogram** | Landscape viewer with two-finger zoom and pan on each axis and a touch readout of frequency, time and level |
+| **Compare two files** | Stacked spectrograms, a B minus A difference image, overlaid average spectra and a side-by-side metrics table |
+| **Batch scan** | Analyses the whole library in the background with a progress notification; results land in the saved-results store |
+| **Authenticity check** | Detects a brick-wall cutoff in the long-term spectrum and classifies the file as genuine, transcoded from a lossy source, or upsampled. Reports a confidence score, where in the track the cutoff appears and which encoder low-pass it resembles. Also flags 16-bit audio padded into a 24-bit container |
 | **Library and files** | Scan the device library or pick any file with the system picker. "Open with" from other apps works too |
 | **Saved results** | Finished analyses are stored on the device, so a file you already checked opens instantly. Library rows show a verdict badge |
 | **Export** | Save the spectrogram as a PNG, with axes, legend and title, to `Pictures/Specty` |
@@ -111,10 +115,8 @@ Specty reads audio only to analyse it. The library scan needs the `READ_MEDIA_AU
 ## Roadmap
 
 - Streaming decode through a pipe instead of a temporary file
-- Fullscreen spectrogram with zoom, pan and a time cursor
-- Batch scan of the whole library with a quality column
 - Export a report as image or JSON
-- Track-level DR meter (TT) mode
+- Scan any folder, not only the MediaStore library
 - Material 3 Expressive components once they are stable in the Compose version supported by the build
 
 ## Contributing
