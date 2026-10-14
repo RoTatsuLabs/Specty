@@ -34,6 +34,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
+import com.rotatsulabs.specty.ui.components.pressScale
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -137,12 +141,24 @@ fun LibraryScreen(
     val hasTracks = granted && !state.loading && state.error == null && state.tracks.isNotEmpty()
 
     // One scrolling column: the header, search and picker scroll away with the list, like a collapsing app bar.
+    val listState = rememberLazyListState()
     LazyColumn(
         modifier.fillMaxSize(),
+        state = listState,
         contentPadding = WindowInsets.statusBars.asPaddingValues(),
     ) {
         item(key = "header") {
-            Header(onRescan = { onLoad(true) }, onSettings = onOpenSettings, canRescan = granted)
+            val titleFx = Modifier.graphicsLayer {
+                // Parallax: the big title drifts, shrinks and fades as the list scrolls up.
+                val offset = if (listState.firstVisibleItemIndex == 0) listState.firstVisibleItemScrollOffset.toFloat() else 1200f
+                alpha = (1f - offset / 260f).coerceIn(0f, 1f)
+                translationY = offset * 0.45f
+                val s = (1f - offset / 1600f).coerceIn(0.8f, 1f)
+                scaleX = s
+                scaleY = s
+                transformOrigin = androidx.compose.ui.graphics.TransformOrigin(0f, 0.5f)
+            }
+            Header(onRescan = { onLoad(true) }, onSettings = onOpenSettings, canRescan = granted, titleModifier = titleFx)
         }
         item(key = "search") { SearchPill(query, { query = it }) }
         item(key = "picker") {
@@ -208,8 +224,10 @@ fun LibraryScreen(
 }
 
 @Composable
-private fun Header(onRescan: () -> Unit, onSettings: () -> Unit, canRescan: Boolean) {
+private fun Header(onRescan: () -> Unit, onSettings: () -> Unit, canRescan: Boolean, titleModifier: Modifier = Modifier) {
     var menu by remember { mutableStateOf(false) }
+    val menuSource = remember { MutableInteractionSource() }
+    val menuTurn by animateFloatAsState(if (menu) 90f else 0f, Motion.spatial(), label = "menuTurn")
     Row(
         Modifier.fillMaxWidth().padding(start = 24.dp, end = 12.dp, top = 20.dp, bottom = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -219,10 +237,12 @@ private fun Header(onRescan: () -> Unit, onSettings: () -> Unit, canRescan: Bool
             style = MaterialTheme.typography.displaySmall,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.onSurface,
-            modifier = Modifier.weight(1f),
+            modifier = Modifier.weight(1f).then(titleModifier),
         )
         Box {
-            IconButton(onClick = { menu = true }) { Icon(Icons.Rounded.MoreVert, contentDescription = "More options") }
+            IconButton(onClick = { menu = true }, interactionSource = menuSource, modifier = Modifier.pressScale(menuSource)) {
+                Icon(Icons.Rounded.MoreVert, contentDescription = "More options", modifier = Modifier.rotate(menuTurn))
+            }
             DropdownMenu(expanded = menu, onDismissRequest = { menu = false }, shape = RoundedCornerShape(20.dp)) {
                 if (canRescan) {
                     DropdownMenuItem(
@@ -268,12 +288,16 @@ private fun SearchPill(query: String, onChange: (String) -> Unit) {
 
 @Composable
 private fun PickerPill(onClick: () -> Unit) {
+    val haptic = LocalHapticFeedback.current
     val source = remember { MutableInteractionSource() }
     val pressed by source.collectIsPressedAsState()
     val corner by animateDpAsState(if (pressed) 14.dp else 28.dp, Motion.spatialFast(), label = "pickerCorner")
     val scale by animateFloatAsState(if (pressed) 0.98f else 1f, Motion.spatialFast(), label = "pickerScale")
     Surface(
-        onClick = onClick,
+        onClick = {
+            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+            onClick()
+        },
         interactionSource = source,
         modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp).height(60.dp).scale(scale),
         shape = RoundedCornerShape(corner),
@@ -291,6 +315,9 @@ private fun PickerPill(onClick: () -> Unit) {
 @Composable
 private fun SheetHeader(count: Int, sort: SortKey, ascending: Boolean, onSort: (SortKey) -> Unit, onToggle: () -> Unit) {
     var menu by remember { mutableStateOf(false) }
+    val haptic = LocalHapticFeedback.current
+    val sortSource = remember { MutableInteractionSource() }
+    val toggleSource = remember { MutableInteractionSource() }
     val rotation by animateFloatAsState(if (ascending) 0f else 180f, Motion.spatial(), label = "sortArrow")
     Row(
         Modifier.fillMaxWidth().padding(start = 24.dp, end = 16.dp, top = 20.dp, bottom = 12.dp),
@@ -316,7 +343,8 @@ private fun SheetHeader(count: Int, sort: SortKey, ascending: Boolean, onSort: (
             Box {
                 Surface(
                     onClick = { menu = true },
-                    modifier = Modifier.height(48.dp),
+                    interactionSource = sortSource,
+                    modifier = Modifier.height(48.dp).pressScale(sortSource, 0.94f),
                     shape = RoundedCornerShape(topStart = 24.dp, bottomStart = 24.dp, topEnd = 6.dp, bottomEnd = 6.dp),
                     color = MaterialTheme.colorScheme.secondaryContainer,
                     contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
@@ -335,8 +363,12 @@ private fun SheetHeader(count: Int, sort: SortKey, ascending: Boolean, onSort: (
                 }
             }
             Surface(
-                onClick = onToggle,
-                modifier = Modifier.height(48.dp).width(56.dp),
+                onClick = {
+                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                    onToggle()
+                },
+                interactionSource = toggleSource,
+                modifier = Modifier.height(48.dp).width(56.dp).pressScale(toggleSource, 0.9f),
                 shape = RoundedCornerShape(topStart = 6.dp, bottomStart = 6.dp, topEnd = 24.dp, bottomEnd = 24.dp),
                 color = MaterialTheme.colorScheme.secondaryContainer,
                 contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
@@ -366,11 +398,14 @@ private fun TrackRow(track: Track, index: Int, verdict: Verdict?, onOpen: () -> 
     val source = remember { MutableInteractionSource() }
     val pressed by source.collectIsPressedAsState()
     val corner by animateDpAsState(if (pressed) 12.dp else 24.dp, Motion.spatialFast(), label = "rowCorner")
+    val squash by animateFloatAsState(if (pressed) 0.975f else 1f, Motion.spatialFast(), label = "rowSquash")
 
     Surface(
         onClick = onOpen,
         interactionSource = source,
         modifier = modifier.fillMaxWidth().graphicsLayer {
+            scaleX = squash
+            scaleY = squash
             alpha = appear.coerceIn(0f, 1f)
             translationY = (1f - appear) * 48f
         },
