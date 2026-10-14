@@ -96,6 +96,7 @@ fun LibraryScreen(
     onPickFile: () -> Unit,
     onOpenSettings: () -> Unit,
     verdictFor: (Track) -> Verdict?,
+    dockVisible: Boolean = false,
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
@@ -201,7 +202,7 @@ fun LibraryScreen(
             }
         }
         item(key = "bottom") {
-            Spacer(Modifier.fillMaxWidth().background(sheetColor).navigationBarsPadding().height(28.dp))
+            Spacer(Modifier.fillMaxWidth().background(sheetColor).navigationBarsPadding().height(if (dockVisible) 120.dp else 28.dp))
         }
     }
 }
