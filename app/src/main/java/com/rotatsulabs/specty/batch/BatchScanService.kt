@@ -47,11 +47,11 @@ class BatchScanService : Service() {
             progressNotification("Preparing", 0, total, indeterminate = true),
             ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC,
         )
-        job = scope.launch { run() }
+        job = scope.launch { run(this) }
         return START_NOT_STICKY
     }
 
-    private suspend fun run() {
+    private suspend fun run(coroutines: CoroutineScope) {
         val cache = ResultCache.get(this)
         val analyzer = AudioAnalyzer(applicationContext)
         val fft = BatchScanner.fftSize
@@ -59,7 +59,7 @@ class BatchScanService : Service() {
         var cancelled = false
         try {
             for ((index, track) in queue.withIndex()) {
-                ensureActive()
+                coroutines.ensureActive()
                 BatchScanner.update { it.copy(current = track.title) }
                 notify(track.title, index, queue.size, force = true)
                 val key = cache.keyOf(track.uri, track.sizeBytes, fft)

@@ -277,7 +277,7 @@ private fun SpectrumCard(a: Spectrogram, b: Spectrogram) {
                     khz += 5
                 }
                 curves?.let { (ca, cb) ->
-                    fun draw(c: FloatArray, sampleRate: Int, color: Color) {
+                    fun plot(c: FloatArray, sampleRate: Int, color: Color) {
                         val nyq = sampleRate / 2.0
                         val path = Path()
                         val steps = min(c.size, 400)
@@ -288,8 +288,8 @@ private fun SpectrumCard(a: Spectrogram, b: Spectrogram) {
                         }
                         drawPath(path, color, style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round))
                     }
-                    draw(ca, a.sampleRate, colorA)
-                    draw(cb, b.sampleRate, colorB)
+                    plot(ca, a.sampleRate, colorA)
+                    plot(cb, b.sampleRate, colorB)
                 }
             }
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
