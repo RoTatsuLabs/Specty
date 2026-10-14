@@ -23,7 +23,7 @@ import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.rotatsulabs.specty.ui.screens.AnalysisScreen
 import com.rotatsulabs.specty.ui.screens.LibraryScreen
-import com.rotatsulabs.specty.ui.screens.SettingsSheet
+import com.rotatsulabs.specty.ui.screens.SettingsScreen
 import com.rotatsulabs.specty.ui.theme.Motion
 
 @Composable
@@ -31,6 +31,7 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit) {
     val analysis by viewModel.analysis.collectAsStateWithLifecycle()
     val library by viewModel.library.collectAsStateWithLifecycle()
     val fftSize by viewModel.fftSize.collectAsStateWithLifecycle()
+    val appearance by viewModel.appearance.collectAsStateWithLifecycle()
     val verdicts by viewModel.cachedVerdicts.collectAsStateWithLifecycle()
     var showSettings by rememberSaveable { mutableStateOf(false) }
     val analysisOpen = analysis !is AnalysisState.Idle
@@ -40,6 +41,7 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit) {
     if (analysisOpen) held.state = analysis
 
     BackHandler(enabled = analysisOpen) { viewModel.closeAnalysis() }
+    BackHandler(enabled = showSettings) { showSettings = false }
 
     Box(Modifier.fillMaxSize()) {
         Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.surface) {
@@ -64,9 +66,25 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit) {
                 }
             }
         }
-    }
 
-    if (showSettings) {
-        SettingsSheet(fftSize = fftSize, onFftSize = viewModel::setFftSize, onClearCache = viewModel::clearCache, onDismiss = { showSettings = false })
+        AnimatedVisibility(
+            visible = showSettings,
+            enter = slideInVertically(Motion.spatial()) { it / 5 } + scaleIn(Motion.spatial(), initialScale = 0.9f) + fadeIn(Motion.effects()),
+            exit = slideOutVertically(Motion.spatial()) { it / 8 } + scaleOut(Motion.spatial(), targetScale = 0.94f) + fadeOut(Motion.effects()),
+        ) {
+            Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.surface) {
+                SettingsScreen(
+                    appearance = appearance,
+                    onThemeMode = viewModel::setThemeMode,
+                    onDynamicColor = viewModel::setDynamicColor,
+                    onPureBlack = viewModel::setPureBlack,
+                    fftSize = fftSize,
+                    onFftSize = viewModel::setFftSize,
+                    savedCount = verdicts.size,
+                    onClearCache = viewModel::clearCache,
+                    onBack = { showSettings = false },
+                )
+            }
+        }
     }
 }

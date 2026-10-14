@@ -12,6 +12,8 @@ import com.rotatsulabs.specty.audio.Verdict
 import com.rotatsulabs.specty.data.LibraryRepository
 import com.rotatsulabs.specty.data.ResultCache
 import com.rotatsulabs.specty.data.Track
+import com.rotatsulabs.specty.ui.theme.Appearance
+import com.rotatsulabs.specty.ui.theme.ThemeMode
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -49,6 +51,30 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     private val _fftSize = MutableStateFlow(prefs.getInt(KEY_FFT, 2048))
     val fftSize: StateFlow<Int> = _fftSize.asStateFlow()
+
+    private val _appearance = MutableStateFlow(
+        Appearance(
+            mode = ThemeMode.entries.getOrElse(prefs.getInt(KEY_THEME, 0)) { ThemeMode.System },
+            dynamicColor = prefs.getBoolean(KEY_DYNAMIC, true),
+            pureBlack = prefs.getBoolean(KEY_BLACK, false),
+        ),
+    )
+    val appearance: StateFlow<Appearance> = _appearance.asStateFlow()
+
+    fun setThemeMode(mode: ThemeMode) {
+        _appearance.value = _appearance.value.copy(mode = mode)
+        prefs.edit().putInt(KEY_THEME, mode.ordinal).apply()
+    }
+
+    fun setDynamicColor(enabled: Boolean) {
+        _appearance.value = _appearance.value.copy(dynamicColor = enabled)
+        prefs.edit().putBoolean(KEY_DYNAMIC, enabled).apply()
+    }
+
+    fun setPureBlack(enabled: Boolean) {
+        _appearance.value = _appearance.value.copy(pureBlack = enabled)
+        prefs.edit().putBoolean(KEY_BLACK, enabled).apply()
+    }
 
     private var analysisJob: Job? = null
 
@@ -124,5 +150,8 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     private companion object {
         const val KEY_FFT = "fft_size"
+        const val KEY_THEME = "theme_mode"
+        const val KEY_DYNAMIC = "dynamic_color"
+        const val KEY_BLACK = "pure_black"
     }
 }
