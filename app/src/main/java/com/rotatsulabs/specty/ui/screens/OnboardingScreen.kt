@@ -159,7 +159,7 @@ fun OnboardingScreen(onFinish: () -> Unit, onPermission: (Boolean) -> Unit, modi
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
                     val (title, body) = copy(page)
-                    Text(title, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
+                    Text(title, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center, color = MaterialTheme.colorScheme.onSurface)
                     Text(body, style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = TextAlign.Center)
                     if (page == PAGES - 1) {
                         Spacer(Modifier.height(8.dp))
