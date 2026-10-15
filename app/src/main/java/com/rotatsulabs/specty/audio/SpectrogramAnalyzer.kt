@@ -18,6 +18,7 @@ object SpectrogramAnalyzer {
         pcm: PcmFile,
         fftSize: Int,
         maxColumns: Int = 1600,
+        windowFn: WindowFn = WindowFn.Hann,
         onProgress: (Float) -> Unit = {},
     ): Output {
         val channels = pcm.channels
@@ -30,7 +31,7 @@ object SpectrogramAnalyzer {
         }
 
         val fft = Fft(fftSize)
-        val window = DoubleArray(fftSize) { 0.5 - 0.5 * cos(2.0 * PI * it / fftSize) }
+        val window = windowFn.coefficients(fftSize)
         val windowSum = window.sum()
 
         val viewCount = if (channels == 1) 1 else channels + 1

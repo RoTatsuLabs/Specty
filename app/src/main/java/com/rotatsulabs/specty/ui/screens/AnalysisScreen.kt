@@ -198,7 +198,12 @@ private fun ResultContent(result: AnalysisResult, cached: Boolean, showMetadata:
         Reveal(7) { ChannelsCard(result) }
         Reveal(8) { StereoCard(result.levels) }
         if (showMetadata) Reveal(9) { TagsCard(result.info.tags) }
-        Reveal(10) { SpectrogramCard(result.spectrogram, title = result.info.displayName, onFullscreen = onFullscreen) }
+        Reveal(10) { SpectrogramCard(
+                result.spectrogram,
+                title = result.info.displayName,
+                onFullscreen = onFullscreen,
+                cutoffHz = result.authenticity.cutoffHz.takeIf { result.authenticity.hasCliff },
+            ) }
         Spacer(Modifier.height(12.dp))
     }
 }

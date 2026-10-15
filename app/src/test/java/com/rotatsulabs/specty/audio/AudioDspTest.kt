@@ -458,4 +458,53 @@ class AudioDspTest {
         val text = lines.joinToString(" ")
         assertTrue(text, text.contains("more dynamic") && text.contains("louder") && text.contains("clipping"))
     }
+
+    // ---- window functions and frequency scale -------------------------------------------
+
+    @Test
+    fun windowsAreWellFormed() {
+        for (w in WindowFn.entries) {
+            val c = w.coefficients(1024)
+            assertTrue("$w start", c[0] < 0.1)
+            assertTrue("$w peak", abs(c[512] - 1.0) < 1e-9)
+            assertTrue("$w range", c.all { it in -1e-9..1.0 + 1e-9 })
+        }
+    }
+
+    @Test
+    fun blackmanHarrisLeaksLessThanHannNearATone() {
+        val rate = 44100
+        val file = writePcm(1, rate * 3) { f, _ -> (0.5 * sin(2 * PI * 1000.5 * f / rate)).toFloat() }
+        fun farLevel(w: WindowFn): Float = PcmFile(file, 1, rate).use { pcm ->
+            val out = SpectrogramAnalyzer.analyze(pcm, 2048, windowFn = w)
+            val binHz = rate / 2048.0
+            out.averageDb[((1000.5 / binHz) + 12).toInt()]
+        }
+        val hann = farLevel(WindowFn.Hann)
+        val bh = farLevel(WindowFn.BlackmanHarris)
+        assertTrue("hann $hann bh $bh", bh < hann - 10f)
+    }
+
+    @Test
+    fun frequencyScaleRoundTrips() {
+        for (log in listOf(false, true)) {
+            for (hz in listOf(100.0, 1000.0, 8000.0, 20000.0)) {
+                val back = FreqScale.fracToHz(FreqScale.hzToFrac(hz, 22050.0, log), 22050.0, log)
+                assertEquals("$log $hz", hz, back, 1e-6 * hz)
+            }
+        }
+        assertEquals(0.0, FreqScale.hzToFrac(0.0, 22050.0, true), 0.0)
+        assertEquals(1.0, FreqScale.hzToFrac(22050.0, 22050.0, true), 1e-12)
+    }
+
+    @Test
+    fun frequencyTicksAndLabels() {
+        assertEquals(listOf(0.0, 5000.0, 10000.0, 15000.0, 20000.0), FreqScale.ticks(22050.0, false))
+        assertEquals(listOf(50.0, 100.0, 200.0, 500.0, 1000.0, 2000.0, 5000.0, 10000.0, 20000.0), FreqScale.ticks(22050.0, true))
+        assertEquals(listOf(50.0, 100.0, 200.0, 500.0, 1000.0, 2000.0, 5000.0), FreqScale.ticks(8000.0, true))
+        assertEquals("1k", FreqScale.label(1000.0))
+        assertEquals("1.5k", FreqScale.label(1500.0))
+        assertEquals("200", FreqScale.label(200.0))
+        assertEquals("0", FreqScale.label(0.0))
+    }
 }
