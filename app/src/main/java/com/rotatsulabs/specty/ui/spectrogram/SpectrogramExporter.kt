@@ -15,6 +15,7 @@ import android.provider.MediaStore
 import android.text.TextPaint
 import android.text.TextUtils
 import androidx.compose.ui.graphics.toArgb
+import com.rotatsulabs.specty.audio.FreqScale
 import com.rotatsulabs.specty.audio.Spectrogram
 import com.rotatsulabs.specty.ui.components.Fmt
 import java.text.SimpleDateFormat
@@ -34,7 +35,14 @@ object SpectrogramExporter {
     private const val TEXT = 0xFFF2F0F4.toInt()
     private const val MUTED = 0xFFB4B0BA.toInt()
 
-    fun render(spectrogram: Spectrogram, view: Int, palette: SpectrogramPalette, title: String): Bitmap {
+    fun render(
+        spectrogram: Spectrogram,
+        view: Int,
+        palette: SpectrogramPalette,
+        title: String,
+        options: SpecOptions = SpecOptions(),
+        cutoffHz: Double? = null,
+    ): Bitmap {
         val plotW = WIDTH - LEFT - RIGHT
         val plotH = plotW * 9f / 16f
         val height = (TOP + plotH + BOTTOM).roundToInt()
@@ -51,33 +59,37 @@ object SpectrogramExporter {
         val shownTitle = TextUtils.ellipsize(title, titlePaint, WIDTH - 120f, TextUtils.TruncateAt.END).toString()
         canvas.drawText(shownTitle, 60f, 90f, titlePaint)
         val subtitle = "${spectrogram.viewLabels[view]}  ·  ${spectrogram.sampleRate / 1000.0} kHz  ·  " +
-            "FFT ${spectrogram.fftSize}  ·  ${Fmt.duration(spectrogram.durationSec)}  ·  ${palette.label}"
+            "FFT ${spectrogram.fftSize}  ·  ${Fmt.duration(spectrogram.durationSec)}  ·  ${palette.label}" +
+            if (options.log) "  ·  log scale" else ""
         canvas.drawText(subtitle, 60f, 145f, subtitlePaint)
 
         // Plot
         val plot = RectF(LEFT, TOP, LEFT + plotW, TOP + plotH)
         canvas.drawRect(plot, Paint().apply { color = 0xFF000000.toInt() })
-        val image = SpectrogramRenderer.render(spectrogram, view, palette)
+        val image = SpectrogramRenderer.render(spectrogram, view, palette, options)
         canvas.drawBitmap(image, null, plot, Paint(Paint.FILTER_BITMAP_FLAG))
         image.recycle()
 
         val grid = Paint().apply { color = 0x24FFFFFF; strokeWidth = 2f }
 
         // Frequency axis
-        val nyquistK = spectrogram.sampleRate / 2000f
-        val freqStep = when {
-            nyquistK > 30f -> 10
-            nyquistK > 12f -> 5
-            nyquistK > 6f -> 2
-            else -> 1
-        }
+        val nyquist = spectrogram.sampleRate / 2.0
         axisPaint.textAlign = Paint.Align.RIGHT
-        var f = 0
-        while (f <= nyquistK) {
-            val y = plot.bottom - plotH * (f / nyquistK)
+        for (hz in FreqScale.ticks(nyquist, options.log)) {
+            val y = plot.bottom - plotH * FreqScale.hzToFrac(hz, nyquist, options.log).toFloat()
             canvas.drawLine(plot.left, y, plot.right, y, grid)
-            canvas.drawText(if (f == 0) "0" else "${f}k", plot.left - 14f, y + 10f, axisPaint)
-            f += freqStep
+            canvas.drawText(FreqScale.label(hz), plot.left - 14f, y + 10f, axisPaint)
+        }
+        if (options.cutoffLine && cutoffHz != null && cutoffHz < nyquist * 0.99) {
+            val y = plot.bottom - plotH * FreqScale.hzToFrac(cutoffHz, nyquist, options.log).toFloat()
+            val dash = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                color = 0xE6FFFFFF.toInt(); strokeWidth = 3f; style = Paint.Style.STROKE
+                pathEffect = android.graphics.DashPathEffect(floatArrayOf(28f, 20f), 0f)
+            }
+            canvas.drawLine(plot.left, y, plot.right, y, dash)
+            axisPaint.textAlign = Paint.Align.RIGHT
+            val tag = Paint(axisPaint).apply { color = 0xFFFFFFFF.toInt() }
+            canvas.drawText("cutoff ${Fmt.kHz(cutoffHz)}", plot.right - 12f, y - 12f, tag)
         }
 
         // Time axis
@@ -101,9 +113,9 @@ object SpectrogramExporter {
         }
         canvas.drawRoundRect(legend, 14f, 14f, gradient)
         axisPaint.textAlign = Paint.Align.LEFT
-        canvas.drawText("${Spectrogram.MIN_DB.toInt()} dBFS", legend.left, legend.bottom + 44f, axisPaint)
+        canvas.drawText("${options.range.floor} dBFS", legend.left, legend.bottom + 44f, axisPaint)
         axisPaint.textAlign = Paint.Align.RIGHT
-        canvas.drawText("${Spectrogram.MAX_DB.toInt()} dBFS", legend.right, legend.bottom + 44f, axisPaint)
+        canvas.drawText("${options.range.ceil} dBFS", legend.right, legend.bottom + 44f, axisPaint)
         axisPaint.textAlign = Paint.Align.CENTER
         canvas.drawText("Specty", (legend.left + legend.right) / 2f, legend.bottom + 44f, axisPaint)
         return out

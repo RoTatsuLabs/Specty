@@ -60,6 +60,7 @@ import androidx.compose.ui.unit.sp
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
+import com.rotatsulabs.specty.audio.FreqScale
 import com.rotatsulabs.specty.audio.Spectrogram
 import com.rotatsulabs.specty.ui.components.Fmt
 import kotlinx.coroutines.Dispatchers
@@ -100,7 +101,7 @@ internal fun niceStep(range: Double, target: Int = 5): Double {
  * zoom (each axis follows the finger spread) and pan; double tap resets the view.
  */
 @Composable
-fun SpectrogramViewer(spectrogram: Spectrogram, title: String, initialView: Int, onClose: () -> Unit) {
+fun SpectrogramViewer(spectrogram: Spectrogram, title: String, initialView: Int, onClose: () -> Unit, cutoffHz: Double? = null) {
     val context = LocalContext.current
     var landscape by remember { mutableStateOf(true) }
 
@@ -128,8 +129,9 @@ fun SpectrogramViewer(spectrogram: Spectrogram, title: String, initialView: Int,
         mutableIntStateOf(prefs.getInt("spectrogram_palette", 0).coerceIn(0, SpectrogramPalette.entries.lastIndex))
     }
     val palette = SpectrogramPalette.entries[paletteIndex]
-    val image by produceState<ImageBitmap?>(null, spectrogram, view, palette) {
-        value = withContext(Dispatchers.Default) { SpectrogramRenderer.render(spectrogram, view, palette).asImageBitmap() }
+    var options by remember { mutableStateOf(SpecOptions.load(prefs)) }
+    val image by produceState<ImageBitmap?>(null, spectrogram, view, palette, options.log, options.range) {
+        value = withContext(Dispatchers.Default) { SpectrogramRenderer.render(spectrogram, view, palette, options).asImageBitmap() }
     }
 
     // Visible window as fractions: time left to right, frequency bottom (0) to top (1).
@@ -220,18 +222,51 @@ fun SpectrogramViewer(spectrogram: Spectrogram, title: String, initialView: Int,
                 }
             }
 
-            // Frequency axis
-            val fLoK = f0 * nyquist / 1000.0
-            val fHiK = f1 * nyquist / 1000.0
-            val fStep = niceStep(fHiK - fLoK)
-            var fk = ceilTo(fLoK, fStep)
-            while (fk <= fHiK + 1e-9) {
-                val y = top + plotH * (1f - ((fk - fLoK) / (fHiK - fLoK)).toFloat())
+            // Frequency axis. The image rows already follow the chosen scale, so a row fraction maps straight to y.
+            fun yOfFrac(frac: Double) = top + plotH * (1f - ((frac - f0) / (f1 - f0)).toFloat())
+            fun axisLine(hz: Double, label: String?) {
+                val y = yOfFrac(FreqScale.hzToFrac(hz, nyquist, options.log))
+                if (y < top - 1f || y > top + plotH + 1f) return
                 drawLine(grid, Offset(left, y), Offset(left + plotW, y), 1f)
-                val text = if (fStep < 1.0) String.format(Locale.US, "%.1fk", fk) else "${fk.roundToInt()}k"
-                val layout = measurer.measure(if (fk == 0.0) "0" else text, axisStyle)
-                drawText(layout, topLeft = Offset(left - 6.dp.toPx() - layout.size.width, (y - layout.size.height / 2f).coerceIn(0f, size.height - layout.size.height)))
-                fk += fStep
+                if (label != null) {
+                    val layout = measurer.measure(label, axisStyle)
+                    drawText(layout, topLeft = Offset(left - 6.dp.toPx() - layout.size.width, (y - layout.size.height / 2f).coerceIn(0f, size.height - layout.size.height)))
+                }
+            }
+            if (options.log) {
+                val loHz = FreqScale.fracToHz(f0.toDouble(), nyquist, true)
+                val hiHz = FreqScale.fracToHz(f1.toDouble(), nyquist, true)
+                val narrow = hiHz / loHz < 4.0
+                var decade = 10.0.pow(floor(log10(max(loHz, 1.0))))
+                while (decade <= hiHz) {
+                    for (m in 1..9) {
+                        val hz = m * decade
+                        if (hz < loHz || hz > hiHz || hz < FreqScale.LOG_MIN_HZ) continue
+                        axisLine(hz, if (m == 1 || m == 2 || m == 5 || narrow) FreqScale.label(hz) else null)
+                    }
+                    decade *= 10.0
+                }
+            } else {
+                val fLoK = f0 * nyquist / 1000.0
+                val fHiK = f1 * nyquist / 1000.0
+                val fStep = niceStep(fHiK - fLoK)
+                var fk = ceilTo(fLoK, fStep)
+                while (fk <= fHiK + 1e-9) {
+                    val text = if (fStep < 1.0) String.format(Locale.US, "%.1fk", fk) else "${fk.roundToInt()}k"
+                    axisLine(fk * 1000.0, if (fk == 0.0) "0" else text)
+                    fk += fStep
+                }
+            }
+            if (options.cutoffLine && cutoffHz != null && cutoffHz < nyquist * 0.99) {
+                val y = yOfFrac(FreqScale.hzToFrac(cutoffHz, nyquist, options.log))
+                if (y in top..(top + plotH)) {
+                    drawLine(
+                        Color.White.copy(alpha = 0.9f), Offset(left, y), Offset(left + plotW, y), 1.5.dp.toPx(),
+                        pathEffect = androidx.compose.ui.graphics.PathEffect.dashPathEffect(floatArrayOf(16f, 10f)),
+                    )
+                    val tag = measurer.measure("cutoff ${Fmt.kHz(cutoffHz)}", axisStyle)
+                    drawText(tag, topLeft = Offset(left + plotW - tag.size.width - 6.dp.toPx(), (y - tag.size.height - 2.dp.toPx()).coerceAtLeast(top)))
+                }
             }
             // Time axis
             val tLo = x0 * duration
@@ -266,10 +301,10 @@ fun SpectrogramViewer(spectrogram: Spectrogram, title: String, initialView: Int,
                 val tFrac = x0 + (p.x - left) / w * (x1 - x0)
                 val fFrac = f1 - (p.y - top) / h * (f1 - f0)
                 val col = (tFrac * (spectrogram.columns - 1)).roundToInt().coerceIn(0, spectrogram.columns - 1)
-                val bin = (fFrac * (spectrogram.bins - 1)).roundToInt().coerceIn(0, spectrogram.bins - 1)
+                val bin = (FreqScale.fracToHz(fFrac.toDouble(), nyquist, options.log) / nyquist * (spectrogram.bins - 1)).roundToInt().coerceIn(0, spectrogram.bins - 1)
                 val q = spectrogram.views[view][col * spectrogram.bins + bin].toInt() and 0xFF
                 val db = Spectrogram.MIN_DB + q / 255.0 * (Spectrogram.MAX_DB - Spectrogram.MIN_DB)
-                val hz = fFrac * nyquist
+                val hz = FreqScale.fracToHz(fFrac.toDouble(), nyquist, options.log)
                 val seconds = tFrac * duration
                 String.format(Locale.US, "%.2f kHz   %s   %.0f dB", hz / 1000.0, formatTime(seconds), db)
             }
@@ -300,6 +335,13 @@ fun SpectrogramViewer(spectrogram: Spectrogram, title: String, initialView: Int,
                 paletteIndex = (paletteIndex + 1) % SpectrogramPalette.entries.size
                 prefs.edit().putInt("spectrogram_palette", paletteIndex).apply()
             }) { Text(palette.label, color = Color.White) }
+            TextButton(onClick = { options = options.copy(log = !options.log).also { it.save(prefs) }; x0 = 0f; x1 = 1f; f0 = 0f; f1 = 1f; touch = null }) {
+                Text(if (options.log) "Log" else "Linear", color = Color.White)
+            }
+            TextButton(onClick = {
+                val next = DbRange.entries[(options.range.ordinal + 1) % DbRange.entries.size]
+                options = options.copy(range = next).also { it.save(prefs) }
+            }) { Text(options.range.label, color = Color.White) }
             FilledTonalIconButton(onClick = { landscape = !landscape }) { Icon(Icons.Rounded.CropRotate, contentDescription = "Toggle landscape lock") }
             FilledTonalIconButton(onClick = { x0 = 0f; x1 = 1f; f0 = 0f; f1 = 1f; touch = null }) {
                 Icon(Icons.Rounded.ZoomOutMap, contentDescription = "Reset zoom")

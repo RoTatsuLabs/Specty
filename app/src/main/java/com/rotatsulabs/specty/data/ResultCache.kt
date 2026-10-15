@@ -10,6 +10,7 @@ import com.rotatsulabs.specty.audio.LevelStats
 import com.rotatsulabs.specty.audio.Spectrogram
 import com.rotatsulabs.specty.audio.Timeline
 import com.rotatsulabs.specty.audio.Verdict
+import com.rotatsulabs.specty.audio.WindowFn
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -52,8 +53,10 @@ class ResultCache private constructor(context: Context) {
     /** True when a verdict is known for [key], even if the full result has been evicted. */
     fun contains(key: String): Boolean = synchronized(lock) { index.containsKey(key) }
 
-    fun keyOf(uri: Uri, sizeBytes: Long, fftSize: Int): String {
-        val digest = MessageDigest.getInstance("SHA-1").digest("$uri|$sizeBytes|$fftSize".toByteArray())
+    /** The default Hann window adds nothing to the key, so results saved before window choices existed stay valid. */
+    fun keyOf(uri: Uri, sizeBytes: Long, fftSize: Int, window: WindowFn = WindowFn.Hann): String {
+        val suffix = if (window == WindowFn.Hann) "" else "|w=${window.name}"
+        val digest = MessageDigest.getInstance("SHA-1").digest("$uri|$sizeBytes|$fftSize$suffix".toByteArray())
         return digest.joinToString("") { "%02x".format(it) }
     }
 

@@ -16,6 +16,7 @@ class AudioAnalyzer(private val context: Context) {
     suspend fun analyze(
         uri: Uri,
         fftSize: Int,
+        windowFn: WindowFn = WindowFn.Hann,
         onStage: (stage: String, progress: Float) -> Unit,
     ): AnalysisResult = withContext(Dispatchers.Default) {
         fun report(stage: String, progress: Float) {
@@ -47,7 +48,7 @@ class AudioAnalyzer(private val context: Context) {
                 coroutineScope {
                     val spectrum = async(Dispatchers.Default) {
                         PcmFile(temp, info.channels, info.sampleRate).use { own ->
-                            SpectrogramAnalyzer.analyze(own, fftSize) { p ->
+                            SpectrogramAnalyzer.analyze(own, fftSize, windowFn = windowFn) { p ->
                                 ensureActive()
                                 specProgress.set((p * 1000).toInt())
                             }
