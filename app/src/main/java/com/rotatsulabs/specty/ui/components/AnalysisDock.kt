@@ -93,7 +93,7 @@ fun AnalysisDock(state: AnalysisState, onOpen: () -> Unit, onDismiss: () -> Unit
                     Text(title, style = MaterialTheme.typography.titleSmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     Text(subtitle, style = MaterialTheme.typography.bodySmall, maxLines = 2, overflow = TextOverflow.Ellipsis)
                 }
-                ExpressiveIconButton(Icons.Rounded.Close, if (done || failed) "Dismiss" else "Cancel", onDismiss, tonal = false, size = 44.dp)
+                ExpressiveIconButton(Icons.Rounded.Close, if (done || failed) "Dismiss" else "Cancel", onDismiss, tonal = false)
             }
             if (state is AnalysisState.Running) {
                 WavyProgressBar(

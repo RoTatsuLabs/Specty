@@ -7,6 +7,7 @@ import com.rotatsulabs.specty.ui.design.components.ExpressiveButton
 import com.rotatsulabs.specty.ui.design.components.ExpressiveIconButton
 import com.rotatsulabs.specty.ui.design.components.ExpressiveTopBar
 import com.rotatsulabs.specty.ui.design.components.IconBadge
+import com.rotatsulabs.specty.ui.design.components.MetricTile
 import com.rotatsulabs.specty.ui.design.components.MorphSurface
 import com.rotatsulabs.specty.ui.design.components.Pill
 import com.rotatsulabs.specty.ui.design.components.ShapeLoader
@@ -307,39 +308,26 @@ private fun MetricTiles(result: AnalysisResult) {
     val levels = result.levels
     val scheme = MaterialTheme.colorScheme
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(3.dp)) {
-        MetricTile("Dynamic Range", Fmt.db(levels.dynamicRangeDb), SpectyShapes.TileStart, scheme.primaryContainer, scheme.onPrimaryContainer, Modifier.weight(1f))
-        MetricTile("Loudness", Fmt.lufs(levels.lufs), SpectyShapes.TileMiddle, scheme.secondaryContainer, scheme.onSecondaryContainer, Modifier.weight(1f))
-        MetricTile("True Peak", Fmt.dbtp(levels.truePeakDbtp), SpectyShapes.TileEnd, scheme.tertiaryContainer, scheme.onTertiaryContainer, Modifier.weight(1f))
-    }
-}
-
-@Composable
-private fun MetricTile(
-    label: String,
-    value: String,
-    corners: Corners,
-    container: Color,
-    content: Color,
-    modifier: Modifier = Modifier,
-) {
-    val number = value.substringBeforeLast(' ')
-    val unit = if (' ' in value) value.substringAfterLast(' ') else ""
-    val target = number.toDoubleOrNull()
-    val decimals = number.substringAfter('.', "").length
-    val progress = remember { Animatable(0f) }
-    LaunchedEffect(number) {
-        progress.snapTo(0f)
-        progress.animateTo(1f, tween(1100, delayMillis = 250, easing = FastOutSlowInEasing))
-    }
-    val shown = if (target != null) String.format(Locale.US, "%.${decimals}f", target * progress.value) else number
-    MorphSurface(modifier, corners, container, content, onClick = {}) {
-        Column(Modifier.padding(horizontal = 14.dp, vertical = 16.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-            Text(label, style = MaterialTheme.typography.labelMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            Text(shown, style = MaterialTheme.typography.headlineSmall, maxLines = 1)
-            Text(unit.ifEmpty { " " }, style = MaterialTheme.typography.labelMedium, maxLines = 1)
+        val tiles = listOf(
+            Triple("Dynamic Range", Fmt.db(levels.dynamicRangeDb), SpectyShapes.TileStart),
+            Triple("Loudness", Fmt.lufs(levels.lufs), SpectyShapes.TileMiddle),
+            Triple("True Peak", Fmt.dbtp(levels.truePeakDbtp), SpectyShapes.TileEnd),
+        )
+        val colours = listOf(
+            scheme.primaryContainer to scheme.onPrimaryContainer,
+            scheme.secondaryContainer to scheme.onSecondaryContainer,
+            scheme.tertiaryContainer to scheme.onTertiaryContainer,
+        )
+        tiles.forEachIndexed { i, (label, text, corners) ->
+            MetricTile(
+                label, text.substringBeforeLast(' '), Modifier.weight(1f),
+                unit = text.substringAfterLast(' ', "").ifEmpty { null }, corners = corners,
+                container = colours[i].first, content = colours[i].second, countUp = true, onClick = {},
+            )
         }
     }
 }
+
 
 @Composable
 internal fun SectionCard(title: String, content: @Composable () -> Unit) {

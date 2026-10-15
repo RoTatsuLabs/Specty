@@ -75,6 +75,7 @@ fun ExpressiveIconButton(
     modifier: Modifier = Modifier,
     toggled: Boolean = false,
     tonal: Boolean = true,
+    // 48 dp is the minimum comfortable touch target; smaller sizes are for decorative use only.
     size: Dp = 48.dp,
     iconModifier: Modifier = Modifier,
 ) {

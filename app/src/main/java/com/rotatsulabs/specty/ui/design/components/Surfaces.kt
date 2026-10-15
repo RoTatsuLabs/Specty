@@ -28,7 +28,8 @@ import androidx.compose.ui.unit.dp
 import com.rotatsulabs.specty.ui.components.pressScale
 import com.rotatsulabs.specty.ui.design.Corners
 import com.rotatsulabs.specty.ui.design.SpectyShapes
-import com.rotatsulabs.specty.ui.design.animateCorners
+import androidx.compose.animation.core.animateFloatAsState
+import com.rotatsulabs.specty.ui.theme.Motion
 import com.rotatsulabs.specty.ui.design.animateTone
 
 /**
@@ -53,8 +54,9 @@ fun MorphSurface(
 ) {
     val source = remember { MutableInteractionSource() }
     val pressed by source.collectIsPressedAsState()
-    val shapeCorners = animateCorners(if (pressed && morphOnPress && onClick != null) corners.pressed() else corners)
-    val shape = shapeCorners.toShape()
+    // One spring drives all four corners, so a pressed surface costs a single animation.
+    val squash by animateFloatAsState(if (pressed && morphOnPress && onClick != null) 1f else 0f, Motion.spatialFast(), label = "morph")
+    val shape = remember(corners, squash) { corners.lerpTo(corners.pressed(), squash).toShape() }
     var m = modifier
     if (onClick != null) m = m.pressScale(source, 0.97f)
     if (shadowElevation > 0.dp) m = m.shadow(shadowElevation, shape)

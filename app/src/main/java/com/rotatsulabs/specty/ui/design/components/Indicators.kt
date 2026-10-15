@@ -24,7 +24,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
@@ -54,25 +54,26 @@ fun WavyProgressBar(
     wavelength: Dp = 28.dp,
     stroke: Dp = 5.dp,
 ) {
-    val phase by rememberInfiniteTransition(label = "wave").animateFloat(
+    val phase = rememberInfiniteTransition(label = "wave").animateFloat(
         0f, (2 * PI).toFloat(),
         infiniteRepeatable(tween(1400, easing = LinearEasing), RepeatMode.Restart),
         label = "phase",
     )
-    val animated by animateFloatAsState(progress ?: 0.35f, Motion.spatial(), label = "progress")
+    val animated = animateFloatAsState(progress ?: 0.35f, Motion.spatial(), label = "progress")
     Canvas(modifier.fillMaxWidth().height(amplitude * 2 + stroke)) {
         val w = size.width
         val mid = size.height / 2f
         val strokePx = stroke.toPx()
         val amp = amplitude.toPx()
         val len = wavelength.toPx()
-        val filled = w * animated.coerceIn(0f, 1f)
+        val filled = w * animated.value.coerceIn(0f, 1f)
+        val phaseNow = phase.value
         drawLine(track, Offset(filled, mid), Offset(w, mid), strokePx, StrokeCap.Round)
         val path = Path()
         var x = 0f
         while (x <= filled) {
             val damp = if (progress != null && progress > 0.9f) ((1f - progress) / 0.1f).coerceIn(0.2f, 1f) else 1f
-            val y = mid + amp * damp * sin(x / len * 2f * PI.toFloat() - phase)
+            val y = mid + amp * damp * sin(x / len * 2f * PI.toFloat() - phaseNow)
             if (x == 0f) path.moveTo(x, y) else path.lineTo(x, y)
             x += 2f
         }
@@ -91,14 +92,14 @@ fun RingProgress(
     track: Color = MaterialTheme.colorScheme.surfaceContainerHighest,
     center: (@Composable () -> Unit)? = null,
 ) {
-    val p by animateFloatAsState(progress.coerceIn(0f, 1f), Motion.spatial(), label = "ring")
+    val p = animateFloatAsState(progress.coerceIn(0f, 1f), Motion.spatial(), label = "ring")
     Box(modifier.size(size), contentAlignment = Alignment.Center) {
         Canvas(Modifier.size(size)) {
             val s = stroke.toPx()
             val inset = s / 2f
             val arc = Size(this.size.width - s, this.size.height - s)
             drawArc(track, 0f, 360f, false, Offset(inset, inset), arc, style = Stroke(s, cap = StrokeCap.Round))
-            drawArc(color, -90f, 360f * p, false, Offset(inset, inset), arc, style = Stroke(s, cap = StrokeCap.Round))
+            drawArc(color, -90f, 360f * p.value, false, Offset(inset, inset), arc, style = Stroke(s, cap = StrokeCap.Round))
         }
         center?.invoke()
     }
@@ -112,12 +113,12 @@ fun ShapeLoader(
     color: Color = MaterialTheme.colorScheme.primary,
 ) {
     val t = rememberInfiniteTransition(label = "loader")
-    val spin by t.animateFloat(0f, 360f, infiniteRepeatable(tween(3200, easing = LinearEasing)), label = "spin")
+    val spin = t.animateFloat(0f, 360f, infiniteRepeatable(tween(3200, easing = LinearEasing)), label = "spin")
     val depth by t.animateFloat(0.04f, 0.16f, infiniteRepeatable(tween(1100), RepeatMode.Reverse), label = "depth")
     Box(
         modifier
             .size(size)
-            .rotate(spin)
+            .graphicsLayer { rotationZ = spin.value }
             .clip(LobedShape(lobes = 8, amplitude = depth))
             .background(color),
     )

@@ -34,6 +34,7 @@ import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import com.rotatsulabs.specty.ui.design.SpectyShapes
 import com.rotatsulabs.specty.ui.design.animateTone
@@ -83,7 +84,7 @@ fun <T> SegmentedControl(
         if (targetWidth > 0.dp) {
             Box(
                 Modifier
-                    .offset(x = left)
+                    .offset { IntOffset(left.roundToPx(), 0) }
                     .width(width)
                     .fillMaxHeight()
                     .clip(shape)

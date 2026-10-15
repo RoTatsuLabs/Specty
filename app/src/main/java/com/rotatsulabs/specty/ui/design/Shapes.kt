@@ -1,10 +1,7 @@
 package com.rotatsulabs.specty.ui.design
 
-import androidx.compose.animation.core.AnimationSpec
-import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Shapes
-import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Outline
@@ -15,7 +12,6 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.lerp
-import com.rotatsulabs.specty.ui.theme.Motion
 import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.min
@@ -75,16 +71,6 @@ val SpectyMaterialShapes = Shapes(
     large = RoundedCornerShape(32.dp),
     extraLarge = RoundedCornerShape(44.dp),
 )
-
-/** Animates towards [target] with a spring, corner by corner. Overshoot is clamped when the shape is built. */
-@Composable
-fun animateCorners(target: Corners, spec: AnimationSpec<Dp> = Motion.spatialFast()): Corners {
-    val a = animateDpAsState(target.topStart, spec, label = "cornerTS")
-    val b = animateDpAsState(target.topEnd, spec, label = "cornerTE")
-    val c = animateDpAsState(target.bottomEnd, spec, label = "cornerBE")
-    val d = animateDpAsState(target.bottomStart, spec, label = "cornerBS")
-    return Corners(a.value, b.value, c.value, d.value)
-}
 
 /**
  * A rounded blob with [lobes] gentle bumps, like a cookie or scalloped badge. [amplitude] (0..0.5) is how deep the

@@ -602,7 +602,6 @@ private fun SectionBar(
             if (ascending) "Ascending" else "Descending",
             { haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove); onToggleOrder() },
             iconModifier = Modifier.rotate(rotation),
-            size = 40.dp,
         )
         Spacer(Modifier.width(6.dp))
         ExpressiveIconButton(
@@ -610,7 +609,6 @@ private fun SectionBar(
             if (grid) "Show as list" else "Show as grid",
             { haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove); onToggleGrid() },
             toggled = grid,
-            size = 40.dp,
         )
     }
 }

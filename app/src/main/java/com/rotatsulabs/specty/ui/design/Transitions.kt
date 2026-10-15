@@ -1,7 +1,5 @@
 package com.rotatsulabs.specty.ui.design
 
-import androidx.compose.animation.AnimatedContentTransitionScope
-import androidx.compose.animation.ContentTransform
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.animateColorAsState
@@ -15,7 +13,6 @@ import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.slideOutVertically
-import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -44,7 +41,6 @@ object FadeThrough {
 
     fun exit(): ExitTransition = fadeOut(tween(MotionTokens.FadeOut, 0, MotionTokens.EmphasizedAccelerate))
 
-    fun <S> transition(): AnimatedContentTransitionScope<S>.() -> ContentTransform = { enter() togetherWith exit() }
 }
 
 enum class Axis { X, Y, Z }
@@ -75,11 +71,6 @@ object SharedAxis {
             Axis.Z -> scaleOut(tween(MotionTokens.Medium, easing = MotionTokens.Emphasized), targetScale = if (forward) 1.1f else 0.8f)
         }
     }
-
-    fun <S> transition(axis: Axis, forward: (initial: S, target: S) -> Boolean): AnimatedContentTransitionScope<S>.() -> ContentTransform = {
-        val f = forward(initialState, targetState)
-        enter(axis, f) togetherWith exit(axis, f)
-    }
 }
 
 /** Remembers where a tapped element sits so a destination can grow out of it and shrink back into it. */
@@ -87,12 +78,6 @@ object SharedAxis {
 class ContainerOrigin {
     var bounds: Rect? by mutableStateOf(null)
     var corners: Corners by mutableStateOf(Corners(24.dp))
-
-    /** Mark the element that launches the transition. */
-    fun Modifier.asOrigin(corners: Corners = this@ContainerOrigin.corners): Modifier = onGloballyPositioned {
-        bounds = it.boundsInRoot()
-        this@ContainerOrigin.corners = corners
-    }
 }
 
 @Composable
@@ -114,12 +99,16 @@ fun ContainerTransform(
     content: @Composable () -> Unit,
 ) {
     val progress = remember { Animatable(0f) }
+    var gone by remember { mutableStateOf(true) }
     LaunchedEffect(visible) {
+        if (visible) gone = false
         progress.animateTo(if (visible) 1f else 0f, Motion.spatial())
-        if (!visible) onGone()
+        if (!visible) {
+            gone = true
+            onGone()
+        }
     }
-    val p = progress.value
-    if (p <= 0.001f && !visible) return
+    if (gone && !visible) return
     val from = origin.bounds
     val startCorners = origin.corners
     Box(
@@ -127,6 +116,7 @@ fun ContainerTransform(
             val w = size.width
             val h = size.height
             transformOrigin = TransformOrigin(0f, 0f)
+            val p = progress.value
             if (from != null && w > 0f && h > 0f) {
                 val sx = lerpF(from.width / w, 1f, p)
                 val sy = lerpF(from.height / h, 1f, p)

@@ -8,6 +8,7 @@ import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import com.rotatsulabs.specty.ui.design.SpectyMaterialShapes
@@ -38,11 +39,15 @@ private fun ColorScheme.asPureBlack(): ColorScheme = copy(
 fun SpectyTheme(appearance: Appearance, content: @Composable () -> Unit) {
     val context = LocalContext.current
     val dark = isDarkFor(appearance)
-    var scheme = when {
-        appearance.dynamicColor -> if (dark) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
-        else -> SeedScheme(appearance.seed).roles(dark).toColorScheme(dark)
+    // The tonal maths is not free, so derive the scheme only when one of its inputs changes.
+    val scheme = remember(appearance.dynamicColor, appearance.seed, appearance.pureBlack, dark) {
+        val base = if (appearance.dynamicColor) {
+            if (dark) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
+        } else {
+            SeedScheme(appearance.seed).roles(dark).toColorScheme(dark)
+        }
+        if (dark && appearance.pureBlack) base.asPureBlack() else base
     }
-    if (dark && appearance.pureBlack) scheme = scheme.asPureBlack()
     MaterialTheme(colorScheme = scheme, typography = SpectyTypography, shapes = SpectyMaterialShapes, content = content)
 }
 

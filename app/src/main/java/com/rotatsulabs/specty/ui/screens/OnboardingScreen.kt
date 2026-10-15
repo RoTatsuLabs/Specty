@@ -185,6 +185,7 @@ fun OnboardingScreen(onFinish: () -> Unit, onPermission: (Boolean) -> Unit, modi
                 icon = if (last) null else Icons.AutoMirrored.Rounded.ArrowForward,
                 corners = Corners(topStart = 28.dp, topEnd = 14.dp, bottomEnd = 28.dp, bottomStart = 28.dp),
             )
+        }
     }
 }
 
