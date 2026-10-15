@@ -28,6 +28,16 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.rotatsulabs.specty.ui.screens.AnalysisScreen
 import com.rotatsulabs.specty.ui.screens.LibraryScreen
 import com.rotatsulabs.specty.ui.screens.SettingsScreen
+import com.rotatsulabs.specty.ui.design.Axis
+import com.rotatsulabs.specty.ui.design.ContainerTransform
+import com.rotatsulabs.specty.ui.design.Corners
+import com.rotatsulabs.specty.ui.design.FadeThrough
+import com.rotatsulabs.specty.ui.design.SharedAxis
+import com.rotatsulabs.specty.ui.design.SpectyShapes
+import com.rotatsulabs.specty.ui.design.rememberContainerOrigin
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.layout.boundsInRoot
+import androidx.compose.ui.layout.onGloballyPositioned
 import com.rotatsulabs.specty.ui.theme.Motion
 
 @Composable
@@ -46,6 +56,8 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit, onPickCompare: (
     var permissionEpoch by remember { mutableStateOf(0) }
     val compareHeld = remember { object { var state: CompareState = CompareState.Idle } }
     if (compare !is CompareState.Idle) compareHeld.state = compare
+    val origin = rememberContainerOrigin()
+    var dockBounds by remember { mutableStateOf<Rect?>(null) }
     var showSettings by rememberSaveable { mutableStateOf(false) }
     var viewerView by rememberSaveable { mutableStateOf<Int?>(null) }
     val keyFor = remember(fftSize, windowFn) { { track: com.rotatsulabs.specty.data.Track -> viewModel.cacheKey(track.uri, track.sizeBytes, fftSize, windowFn) } }
@@ -71,7 +83,7 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit, onPickCompare: (
             LibraryScreen(
                 state = library,
                 onLoad = viewModel::loadLibrary,
-                onOpen = { viewModel.analyze(it.uri) },
+                onOpen = { track, bounds -> origin.bounds = bounds; origin.corners = SpectyShapes.Row; viewModel.analyze(track.uri) },
                 onPickFile = onPickFile,
                 onOpenSettings = { showSettings = true },
                 dockVisible = dockVisible,
@@ -93,16 +105,20 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit, onPickCompare: (
         ) {
             AnalysisDock(
                 state = dockHeld.state,
-                onOpen = viewModel::openResult,
+                onOpen = { origin.bounds = dockBounds; origin.corners = Corners(28.dp); viewModel.openResult() },
                 onDismiss = viewModel::closeAnalysis,
-                modifier = Modifier.navigationBarsPadding().padding(horizontal = 12.dp, vertical = 12.dp),
+                modifier = Modifier
+                    .navigationBarsPadding()
+                    .padding(horizontal = 12.dp, vertical = 12.dp)
+                    .onGloballyPositioned { dockBounds = it.boundsInRoot() },
             )
         }
 
-        AnimatedVisibility(
+        ContainerTransform(
             visible = analysisOpen,
-            enter = slideInVertically(Motion.spatial()) { it / 5 } + scaleIn(Motion.spatial(), initialScale = 0.9f) + fadeIn(Motion.effects()),
-            exit = slideOutVertically(Motion.spatial()) { it / 8 } + scaleOut(Motion.spatial(), targetScale = 0.94f) + fadeOut(Motion.effects()),
+            origin = origin,
+            modifier = Modifier.fillMaxSize(),
+            endCorners = Corners(0.dp),
         ) {
             Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.surface) {
                 Box(Modifier.navigationBarsPadding()) {
@@ -113,14 +129,15 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit, onPickCompare: (
 
         AnimatedVisibility(
             visible = showSettings,
-            enter = slideInVertically(Motion.spatial()) { it / 5 } + scaleIn(Motion.spatial(), initialScale = 0.9f) + fadeIn(Motion.effects()),
-            exit = slideOutVertically(Motion.spatial()) { it / 8 } + scaleOut(Motion.spatial(), targetScale = 0.94f) + fadeOut(Motion.effects()),
+            enter = SharedAxis.enter(Axis.X, true),
+            exit = SharedAxis.exit(Axis.X, false),
         ) {
             Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.surface) {
                 SettingsScreen(
                     appearance = appearance,
                     onThemeMode = viewModel::setThemeMode,
                     onDynamicColor = viewModel::setDynamicColor,
+                    onSeed = viewModel::setSeed,
                     onPureBlack = viewModel::setPureBlack,
                     showMetadata = showMetadata,
                     onShowMetadata = viewModel::setShowMetadata,
@@ -138,8 +155,8 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit, onPickCompare: (
 
         AnimatedVisibility(
             visible = compare !is CompareState.Idle,
-            enter = slideInVertically(Motion.spatial()) { it / 5 } + scaleIn(Motion.spatial(), initialScale = 0.9f) + fadeIn(Motion.effects()),
-            exit = slideOutVertically(Motion.spatial()) { it / 8 } + scaleOut(Motion.spatial(), targetScale = 0.94f) + fadeOut(Motion.effects()),
+            enter = SharedAxis.enter(Axis.Z, true),
+            exit = SharedAxis.exit(Axis.Z, false),
         ) {
             Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.surface) {
                 Box(Modifier.navigationBarsPadding()) {
@@ -163,8 +180,8 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit, onPickCompare: (
 
         AnimatedVisibility(
             visible = onboarding,
-            enter = fadeIn(Motion.effects()) + scaleIn(Motion.spatial(), initialScale = 1.06f),
-            exit = fadeOut(Motion.effects()) + scaleOut(Motion.spatial(), targetScale = 0.94f),
+            enter = FadeThrough.enter(),
+            exit = FadeThrough.exit(),
         ) {
             com.rotatsulabs.specty.ui.screens.OnboardingScreen(
                 onFinish = viewModel::finishOnboarding,

@@ -1,5 +1,15 @@
 package com.rotatsulabs.specty.ui.screens
 
+import com.rotatsulabs.specty.ui.design.Corners
+import com.rotatsulabs.specty.ui.design.SpectyShapes
+import com.rotatsulabs.specty.ui.design.components.ButtonKind
+import com.rotatsulabs.specty.ui.design.components.ExpressiveButton
+import com.rotatsulabs.specty.ui.design.components.ExpressiveTopBar
+import com.rotatsulabs.specty.ui.design.components.MorphSurface
+import com.rotatsulabs.specty.ui.design.components.Pill
+import com.rotatsulabs.specty.ui.design.components.ShapeLoader
+import com.rotatsulabs.specty.ui.design.components.SpectyCard
+import com.rotatsulabs.specty.ui.design.components.WavyProgressBar
 import android.graphics.Bitmap
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
@@ -78,17 +88,7 @@ fun CompareScreen(state: CompareState, onBack: () -> Unit, modifier: Modifier = 
         modifier = modifier,
         containerColor = MaterialTheme.colorScheme.surface,
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
-        topBar = {
-            TopAppBar(
-                title = { Text("Compare", fontWeight = FontWeight.Bold) },
-                navigationIcon = {
-                    FilledTonalIconButton(onClick = onBack, modifier = Modifier.padding(start = 8.dp)) {
-                        Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Back")
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent),
-            )
-        },
+        topBar = { ExpressiveTopBar("Compare", onBack = onBack) },
     ) { padding ->
         Box(Modifier.fillMaxSize().padding(padding)) {
             when (state) {
@@ -97,18 +97,21 @@ fun CompareScreen(state: CompareState, onBack: () -> Unit, modifier: Modifier = 
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center,
                 ) {
-                    CircularProgressIndicator(Modifier.size(64.dp), strokeWidth = 7.dp, strokeCap = StrokeCap.Round)
-                    Spacer(Modifier.height(20.dp))
-                    Text(state.title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    ShapeLoader(size = 72.dp)
+                    Spacer(Modifier.height(24.dp))
+                    Text(state.title, style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     Text(state.stage, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    Spacer(Modifier.height(12.dp))
-                    LinearProgressIndicator(progress = { state.progress }, modifier = Modifier.fillMaxWidth(), strokeCap = StrokeCap.Round)
+                    Spacer(Modifier.height(16.dp))
+                    WavyProgressBar(state.progress)
                 }
                 is CompareState.Failed -> Column(Modifier.fillMaxSize().padding(24.dp), verticalArrangement = Arrangement.Center) {
-                    Text("Could not compare", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                    Spacer(Modifier.height(8.dp))
-                    Text(state.message, style = MaterialTheme.typography.bodyMedium)
-                    TextButton(onClick = onBack) { Text("Back") }
+                    SpectyCard(corners = SpectyShapes.Hero, color = MaterialTheme.colorScheme.errorContainer) {
+                        Text("Could not compare", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onErrorContainer)
+                        Spacer(Modifier.height(8.dp))
+                        Text(state.message, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onErrorContainer)
+                        Spacer(Modifier.height(12.dp))
+                        ExpressiveButton("Back", onBack, kind = ButtonKind.Tonal)
+                    }
                 }
                 is CompareState.Ready -> ReadyContent(state.a, state.b)
                 CompareState.Idle -> Unit
@@ -149,14 +152,12 @@ private fun ReadyContent(a: AnalysisResult, b: AnalysisResult) {
 
 @Composable
 private fun FileTag(letter: String, r: AnalysisResult, container: Color, content: Color, modifier: Modifier) {
-    Surface(modifier, shape = RoundedCornerShape(28.dp), color = container, contentColor = content) {
+    MorphSurface(modifier, SpectyShapes.Tile, container, content, morphOnPress = false) {
         Row(Modifier.padding(14.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            Surface(shape = CircleShape, color = content.copy(alpha = 0.16f)) {
-                Text(letter, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp))
-            }
+            Pill(letter, container = content.copy(alpha = 0.16f), content = content)
             Column {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Text(r.info.displayName.substringBeforeLast('.'), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false))
+                    Text(r.info.displayName.substringBeforeLast('.'), style = MaterialTheme.typography.titleSmall, maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false))
                     if (isExplicit(r.info.tags)) Icon(Icons.Rounded.Explicit, contentDescription = "Explicit", modifier = Modifier.size(18.dp))
                 }
                 Text(
@@ -198,12 +199,11 @@ private fun StackedImage(label: String, spec: Spectrogram, palette: SpectrogramP
         image?.let {
             Image(it, contentDescription = "Spectrogram $label", modifier = Modifier.fillMaxSize(), contentScale = ContentScale.FillBounds, filterQuality = FilterQuality.Medium)
         }
-        Surface(
+        Pill(
+            "$label · ${Fmt.kHz(spec.sampleRate / 2.0)} top",
             Modifier.padding(8.dp).align(Alignment.TopStart),
-            shape = CircleShape, color = Color.Black.copy(alpha = 0.6f), contentColor = Color.White,
-        ) {
-            Text("$label · ${Fmt.kHz(spec.sampleRate / 2.0)} top", style = MaterialTheme.typography.labelMedium, modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp))
-        }
+            container = Color.Black.copy(alpha = 0.6f), content = Color.White,
+        )
     }
 }
 
@@ -360,7 +360,7 @@ private fun MetricsTable(a: AnalysisResult, b: AnalysisResult) {
                 Text("B", Modifier.weight(0.33f), fontWeight = FontWeight.Bold, color = scheme.tertiary)
             }
             rows.forEachIndexed { i, r ->
-                Surface(shape = RoundedCornerShape(14.dp), color = if (i % 2 == 0) scheme.surfaceContainerHigh else Color.Transparent) {
+                MorphSurface(Modifier.fillMaxWidth(), Corners(14.dp), if (i % 2 == 0) scheme.surfaceContainerHigh else Color.Transparent, morphOnPress = false) {
                     Row(Modifier.fillMaxWidth().padding(horizontal = 10.dp, vertical = 9.dp), verticalAlignment = Alignment.CenterVertically) {
                         Text(r.label, Modifier.weight(0.34f), style = MaterialTheme.typography.bodySmall, color = scheme.onSurfaceVariant)
                         Cell(r.a, r.better == 0, Modifier.weight(0.33f))
