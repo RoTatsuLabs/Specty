@@ -41,6 +41,9 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit, onPickCompare: (
     val verdicts by viewModel.cachedVerdicts.collectAsStateWithLifecycle()
     val batch by viewModel.batch.collectAsStateWithLifecycle()
     val compare by viewModel.compare.collectAsStateWithLifecycle()
+    val onboarding by viewModel.onboarding.collectAsStateWithLifecycle()
+    // Bumped when the intro obtains library access, so the library screen re-reads the permission.
+    var permissionEpoch by remember { mutableStateOf(0) }
     val compareHeld = remember { object { var state: CompareState = CompareState.Idle } }
     if (compare !is CompareState.Idle) compareHeld.state = compare
     var showSettings by rememberSaveable { mutableStateOf(false) }
@@ -64,6 +67,7 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit, onPickCompare: (
 
     Box(Modifier.fillMaxSize()) {
         Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.surface) {
+            androidx.compose.runtime.key(permissionEpoch) {
             LibraryScreen(
                 state = library,
                 onLoad = viewModel::loadLibrary,
@@ -78,6 +82,7 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit, onPickCompare: (
                 onCancelScan = viewModel::cancelScan,
                 onDismissScan = viewModel::dismissScanSummary,
             )
+            }
         }
 
         AnimatedVisibility(
@@ -125,6 +130,7 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit, onPickCompare: (
                     onWindowFn = viewModel::setWindowFn,
                     savedCount = verdicts.size,
                     onClearCache = viewModel::clearCache,
+                    onReplayIntro = { showSettings = false; viewModel.replayOnboarding() },
                     onBack = { showSettings = false },
                 )
             }
@@ -153,6 +159,17 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit, onPickCompare: (
                     cutoffHz = viewerResult.authenticity.cutoffHz.takeIf { viewerResult.authenticity.hasCliff },
                 )
             }
+        }
+
+        AnimatedVisibility(
+            visible = onboarding,
+            enter = fadeIn(Motion.effects()) + scaleIn(Motion.spatial(), initialScale = 1.06f),
+            exit = fadeOut(Motion.effects()) + scaleOut(Motion.spatial(), targetScale = 0.94f),
+        ) {
+            com.rotatsulabs.specty.ui.screens.OnboardingScreen(
+                onFinish = viewModel::finishOnboarding,
+                onPermission = { ok -> if (ok) permissionEpoch++ },
+            )
         }
     }
 }

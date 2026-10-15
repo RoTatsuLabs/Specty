@@ -59,6 +59,7 @@ fun SettingsScreen(
     onWindowFn: (WindowFn) -> Unit,
     savedCount: Int,
     onClearCache: () -> Unit,
+    onReplayIntro: () -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -173,6 +174,7 @@ fun SettingsScreen(
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
+                FilledTonalButton(onClick = onReplayIntro) { Text("Show the intro again") }
             }
             Spacer(Modifier.navigationBarsPadding().height(16.dp))
         }
