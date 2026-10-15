@@ -22,6 +22,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
+import androidx.compose.material.icons.rounded.Explicit
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
@@ -154,7 +155,10 @@ private fun FileTag(letter: String, r: AnalysisResult, container: Color, content
                 Text(letter, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp))
             }
             Column {
-                Text(r.info.displayName.substringBeforeLast('.'), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Text(r.info.displayName.substringBeforeLast('.'), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false))
+                    if (isExplicit(r.info.tags)) Icon(Icons.Rounded.Explicit, contentDescription = "Explicit", modifier = Modifier.size(18.dp))
+                }
                 Text(
                     "${Codecs.displayName(r.info.codec)} · ${Fmt.kHz(r.info.sampleRate.toDouble())}",
                     style = MaterialTheme.typography.labelMedium, maxLines = 1,
