@@ -3,6 +3,7 @@ package com.rotatsulabs.specty.batch
 import android.content.Context
 import android.content.Intent
 import androidx.core.content.ContextCompat
+import com.rotatsulabs.specty.audio.WindowFn
 import com.rotatsulabs.specty.data.Track
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -32,12 +33,14 @@ object BatchScanner {
 
     @Volatile internal var queue: List<Track> = emptyList()
     @Volatile internal var fftSize: Int = 2048
+    @Volatile internal var window: WindowFn = WindowFn.Hann
 
     /** Queues [tracks] for background analysis. Files with a saved result are skipped. */
-    fun start(context: Context, tracks: List<Track>, fftSize: Int) {
+    fun start(context: Context, tracks: List<Track>, fftSize: Int, window: WindowFn = WindowFn.Hann) {
         if (_state.value.running || tracks.isEmpty()) return
         queue = tracks
         this.fftSize = fftSize
+        this.window = window
         _state.value = State(running = true, total = tracks.size)
         ContextCompat.startForegroundService(context, Intent(context, BatchScanService::class.java))
     }

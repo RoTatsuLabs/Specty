@@ -35,6 +35,7 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit, onPickCompare: (
     val analysis by viewModel.analysis.collectAsStateWithLifecycle()
     val library by viewModel.library.collectAsStateWithLifecycle()
     val fftSize by viewModel.fftSize.collectAsStateWithLifecycle()
+    val windowFn by viewModel.windowFn.collectAsStateWithLifecycle()
     val appearance by viewModel.appearance.collectAsStateWithLifecycle()
     val showMetadata by viewModel.showMetadata.collectAsStateWithLifecycle()
     val verdicts by viewModel.cachedVerdicts.collectAsStateWithLifecycle()
@@ -44,7 +45,7 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit, onPickCompare: (
     if (compare !is CompareState.Idle) compareHeld.state = compare
     var showSettings by rememberSaveable { mutableStateOf(false) }
     var viewerView by rememberSaveable { mutableStateOf<Int?>(null) }
-    val keyFor = remember(fftSize) { { track: com.rotatsulabs.specty.data.Track -> viewModel.cacheKey(track.uri, track.sizeBytes, fftSize) } }
+    val keyFor = remember(fftSize, windowFn) { { track: com.rotatsulabs.specty.data.Track -> viewModel.cacheKey(track.uri, track.sizeBytes, fftSize, windowFn) } }
     val analysisOpen by viewModel.viewing.collectAsStateWithLifecycle()
     val dockVisible = !analysisOpen && analysis !is AnalysisState.Idle
 
@@ -120,6 +121,8 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit, onPickCompare: (
                     onShowMetadata = viewModel::setShowMetadata,
                     fftSize = fftSize,
                     onFftSize = viewModel::setFftSize,
+                    windowFn = windowFn,
+                    onWindowFn = viewModel::setWindowFn,
                     savedCount = verdicts.size,
                     onClearCache = viewModel::clearCache,
                     onBack = { showSettings = false },
@@ -147,6 +150,7 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit, onPickCompare: (
                     title = viewerResult.info.displayName,
                     initialView = open,
                     onClose = { viewerView = null },
+                    cutoffHz = viewerResult.authenticity.cutoffHz.takeIf { viewerResult.authenticity.hasCliff },
                 )
             }
         }

@@ -2,6 +2,7 @@ package com.rotatsulabs.specty.ui.spectrogram
 
 import android.graphics.Bitmap
 import androidx.compose.ui.graphics.Color
+import com.rotatsulabs.specty.audio.FreqScale
 import com.rotatsulabs.specty.audio.Spectrogram
 
 /** Colour ramps for the spectrogram; each is a list of (position, RGB) stops from quiet to loud. */
@@ -69,20 +70,44 @@ object SpectrogramRenderer {
         return List(count) { Color(table[it * 255 / (count - 1)]) }
     }
 
-    /** Row 0 is the highest frequency so the image reads bottom-to-top like a normal spectrogram. */
-    fun render(spectrogram: Spectrogram, view: Int, palette: SpectrogramPalette): Bitmap {
+    /** Height of the image when frequency is drawn logarithmically; low rows repeat bins, which is expected. */
+    private const val LOG_ROWS = 768
+
+    /**
+     * Row 0 is the highest frequency so the image reads bottom-to-top like a normal spectrogram.
+     * [options] sets the level window and the frequency scale.
+     */
+    fun render(spectrogram: Spectrogram, view: Int, palette: SpectrogramPalette, options: SpecOptions = SpecOptions()): Bitmap {
         val table = lut(palette)
+        val span = (options.range.ceil - options.range.floor).toDouble()
+        val map = IntArray(256) { q ->
+            val db = Spectrogram.MIN_DB + q / 255.0 * (Spectrogram.MAX_DB - Spectrogram.MIN_DB)
+            val t = ((db - options.range.floor) / span).coerceIn(0.0, 1.0)
+            table[(t * 255.0).toInt()]
+        }
         val columns = spectrogram.columns
         val bins = spectrogram.bins
         val data = spectrogram.views[view]
-        val pixels = IntArray(columns * bins)
-        for (col in 0 until columns) {
-            val base = col * bins
-            for (k in 0 until bins) {
-                pixels[(bins - 1 - k) * columns + col] = table[data[base + k].toInt() and 0xFF]
+        if (!options.log) {
+            val pixels = IntArray(columns * bins)
+            for (col in 0 until columns) {
+                val base = col * bins
+                for (k in 0 until bins) {
+                    pixels[(bins - 1 - k) * columns + col] = map[data[base + k].toInt() and 0xFF]
+                }
+            }
+            return Bitmap.createBitmap(pixels, columns, bins, Bitmap.Config.ARGB_8888)
+        }
+        val nyquist = spectrogram.sampleRate / 2.0
+        val pixels = IntArray(columns * LOG_ROWS)
+        for (y in 0 until LOG_ROWS) {
+            val hz = FreqScale.fracToHz(1.0 - (y + 0.5) / LOG_ROWS, nyquist, log = true)
+            val bin = Math.round(hz / nyquist * (bins - 1)).toInt().coerceIn(0, bins - 1)
+            for (col in 0 until columns) {
+                pixels[y * columns + col] = map[data[col * bins + bin].toInt() and 0xFF]
             }
         }
-        return Bitmap.createBitmap(pixels, columns, bins, Bitmap.Config.ARGB_8888)
+        return Bitmap.createBitmap(pixels, columns, LOG_ROWS, Bitmap.Config.ARGB_8888)
     }
 
     private fun colorAt(stops: List<Pair<Float, Int>>, t: Float): Int {

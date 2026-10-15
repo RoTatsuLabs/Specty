@@ -33,6 +33,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.rotatsulabs.specty.BuildConfig
+import com.rotatsulabs.specty.audio.WindowFn
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.runtime.remember
 import com.rotatsulabs.specty.ui.components.Reveal
@@ -54,6 +55,8 @@ fun SettingsScreen(
     onShowMetadata: (Boolean) -> Unit,
     fftSize: Int,
     onFftSize: (Int) -> Unit,
+    windowFn: WindowFn,
+    onWindowFn: (WindowFn) -> Unit,
     savedCount: Int,
     onClearCache: () -> Unit,
     onBack: () -> Unit,
@@ -134,8 +137,20 @@ fun SettingsScreen(
                         )
                     }
                 }
+                Text("Window function", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
+                SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
+                    WindowFn.entries.forEachIndexed { index, w ->
+                        SegmentedButton(
+                            selected = windowFn == w,
+                            onClick = { onWindowFn(w) },
+                            shape = SegmentedButtonDefaults.itemShape(index, WindowFn.entries.size),
+                            label = { Text(w.label, maxLines = 1) },
+                        )
+                    }
+                }
+                Text(windowFn.note, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 Text(
-                    "Applies to the next file you analyse. Files already checked at another size are analysed again.",
+                    "Applies to the next file you analyse. Files already checked with another size or window are analysed again.",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )

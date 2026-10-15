@@ -63,6 +63,7 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.rotatsulabs.specty.audio.FreqScale
 import com.rotatsulabs.specty.audio.Spectrogram
 import com.rotatsulabs.specty.ui.components.Fmt
 import kotlinx.coroutines.Dispatchers
@@ -75,6 +76,7 @@ fun SpectrogramCard(
     modifier: Modifier = Modifier,
     title: String = "Spectrogram",
     onFullscreen: ((view: Int) -> Unit)? = null,
+    cutoffHz: Double? = null,
 ) {
     var selected by rememberSaveable { mutableIntStateOf(0) }
     if (selected >= spectrogram.views.size) selected = 0
@@ -87,10 +89,11 @@ fun SpectrogramCard(
         mutableIntStateOf(prefs.getInt("spectrogram_palette", 0).coerceIn(0, SpectrogramPalette.entries.lastIndex))
     }
     val palette = SpectrogramPalette.entries[paletteIndex]
+    var options by remember { mutableStateOf(SpecOptions.load(prefs)) }
 
-    val image by produceState<ImageBitmap?>(initialValue = null, spectrogram, selected, palette) {
+    val image by produceState<ImageBitmap?>(initialValue = null, spectrogram, selected, palette, options.log, options.range) {
         value = withContext(Dispatchers.Default) {
-            SpectrogramRenderer.render(spectrogram, selected, palette).asImageBitmap()
+            SpectrogramRenderer.render(spectrogram, selected, palette, options).asImageBitmap()
         }
     }
 
@@ -148,21 +151,22 @@ fun SpectrogramCard(
                 }
 
                 // Frequency axis
-                val nyquistK = spectrogram.sampleRate / 2000f
-                val freqStep = when {
-                    nyquistK > 30f -> 10
-                    nyquistK > 12f -> 5
-                    nyquistK > 6f -> 2
-                    else -> 1
-                }
-                var f = 0
-                while (f <= nyquistK) {
-                    val y = top + plotHeight * (1f - f / nyquistK)
+                val nyquist = spectrogram.sampleRate / 2.0
+                for (hz in FreqScale.ticks(nyquist, options.log)) {
+                    val y = top + plotHeight * (1f - FreqScale.hzToFrac(hz, nyquist, options.log).toFloat())
                     drawLine(gridColor, Offset(left, y), Offset(left + plotWidth, y), strokeWidth = 1f)
-                    val layout = measurer.measure(if (f == 0) "0" else "${f}k", labelStyle)
+                    val layout = measurer.measure(FreqScale.label(hz), labelStyle)
                     val labelY = (y - layout.size.height / 2f).coerceIn(0f, size.height - bottom - layout.size.height + 4.dp.toPx())
                     drawText(layout, topLeft = Offset(left - 6.dp.toPx() - layout.size.width, labelY))
-                    f += freqStep
+                }
+                if (options.cutoffLine && cutoffHz != null && cutoffHz < nyquist * 0.99) {
+                    val y = top + plotHeight * (1f - FreqScale.hzToFrac(cutoffHz, nyquist, options.log).toFloat())
+                    drawLine(
+                        Color.White.copy(alpha = 0.9f), Offset(left, y), Offset(left + plotWidth, y), strokeWidth = 1.5.dp.toPx(),
+                        pathEffect = androidx.compose.ui.graphics.PathEffect.dashPathEffect(floatArrayOf(14f, 10f)),
+                    )
+                    val tag = measurer.measure("cutoff ${Fmt.kHz(cutoffHz)}", TextStyle(fontSize = 10.sp, color = Color.White))
+                    drawText(tag, topLeft = Offset(left + plotWidth - tag.size.width - 6.dp.toPx(), (y - tag.size.height - 2.dp.toPx()).coerceAtLeast(top)))
                 }
 
                 // Time axis
@@ -196,11 +200,26 @@ fun SpectrogramCard(
             }
 
             Row(
+                Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                fun set(o: SpecOptions) { options = o; o.save(prefs) }
+                FilterChip(selected = !options.log, onClick = { set(options.copy(log = false)) }, label = { Text("Linear") })
+                FilterChip(selected = options.log, onClick = { set(options.copy(log = true)) }, label = { Text("Log") })
+                DbRange.entries.forEach { r ->
+                    FilterChip(selected = options.range == r, onClick = { set(options.copy(range = r)) }, label = { Text(r.label) })
+                }
+                if (cutoffHz != null) {
+                    FilterChip(selected = options.cutoffLine, onClick = { set(options.copy(cutoffLine = !options.cutoffLine)) }, label = { Text("Cutoff line") })
+                }
+            }
+
+            Row(
                 Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(10.dp),
                 verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
             ) {
-                Text("-120 dBFS", style = MaterialTheme.typography.labelMedium, color = axisColor)
+                Text("${options.range.floor} dBFS", style = MaterialTheme.typography.labelMedium, color = axisColor)
                 Box(
                     Modifier
                         .weight(1f)
@@ -208,7 +227,7 @@ fun SpectrogramCard(
                         .clip(CircleShape)
                         .background(Brush.horizontalGradient(SpectrogramRenderer.gradientColors(palette))),
                 )
-                Text("0 dBFS", style = MaterialTheme.typography.labelMedium, color = axisColor)
+                Text("${options.range.ceil} dBFS", style = MaterialTheme.typography.labelMedium, color = axisColor)
             }
 
             if (onFullscreen != null) {
@@ -233,7 +252,7 @@ fun SpectrogramCard(
                     val chosen = palette
                     scope.launch {
                         val uri = withContext(Dispatchers.Default) {
-                            val bmp = SpectrogramExporter.render(spectrogram, view, chosen, title)
+                            val bmp = SpectrogramExporter.render(spectrogram, view, chosen, title, options, cutoffHz)
                             try {
                                 SpectrogramExporter.saveToGallery(context, bmp, "$title ${spectrogram.viewLabels[view]}")
                             } finally {

@@ -55,6 +55,7 @@ class BatchScanService : Service() {
         val cache = ResultCache.get(this)
         val analyzer = AudioAnalyzer(applicationContext)
         val fft = BatchScanner.fftSize
+        val window = BatchScanner.window
         val queue = BatchScanner.queue
         var cancelled = false
         try {
@@ -62,13 +63,13 @@ class BatchScanService : Service() {
                 coroutines.ensureActive()
                 BatchScanner.update { it.copy(current = track.title) }
                 notify(track.title, index, queue.size, force = true)
-                val key = cache.keyOf(track.uri, track.sizeBytes, fft)
+                val key = cache.keyOf(track.uri, track.sizeBytes, fft, window)
                 if (track.sizeBytes > 0 && cache.contains(key)) {
                     BatchScanner.update { it.copy(skipped = it.skipped + 1) }
                     continue
                 }
                 try {
-                    val result = analyzer.analyze(track.uri, fft) { _, p ->
+                    val result = analyzer.analyze(track.uri, fft, window) { _, p ->
                         notify(track.title, index, queue.size, within = p)
                     }
                     if (track.sizeBytes > 0) withContext(Dispatchers.IO) { cache.save(key, result) }
