@@ -1,5 +1,23 @@
 package com.rotatsulabs.specty.ui.screens
 
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.layout.boundsInRoot
+import androidx.compose.ui.layout.onGloballyPositioned
+import com.rotatsulabs.specty.ui.design.SpectyShapes
+import com.rotatsulabs.specty.ui.design.components.ButtonKind
+import com.rotatsulabs.specty.ui.design.components.EmptyState
+import com.rotatsulabs.specty.ui.design.components.ExpressiveButton
+import com.rotatsulabs.specty.ui.design.components.ExpressiveIconButton
+import com.rotatsulabs.specty.ui.design.components.MorphSurface
+import com.rotatsulabs.specty.ui.design.components.Pill
+import com.rotatsulabs.specty.ui.design.components.RingProgress
+import com.rotatsulabs.specty.ui.design.components.SearchField
+import com.rotatsulabs.specty.ui.design.components.Segment
+import com.rotatsulabs.specty.ui.design.components.SegmentedControl
+import com.rotatsulabs.specty.ui.design.components.ShapeLoader
+import com.rotatsulabs.specty.ui.design.components.SpectyCard
+import com.rotatsulabs.specty.ui.design.components.VerdictPill
+import com.rotatsulabs.specty.ui.design.components.WavyProgressBar
 import android.Manifest
 import android.content.pm.PackageManager
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -130,7 +148,7 @@ private fun Verdict.isSuspect() =
 fun LibraryScreen(
     state: LibraryState,
     onLoad: (force: Boolean) -> Unit,
-    onOpen: (Track) -> Unit,
+    onOpen: (Track, androidx.compose.ui.geometry.Rect?) -> Unit,
     onPickFile: () -> Unit,
     onOpenSettings: () -> Unit,
     verdicts: Map<String, Verdict>,
@@ -286,7 +304,7 @@ fun LibraryScreen(
                 }
                 state.loading && state.tracks.isEmpty() -> item(key = "loading") {
                     Box(Modifier.fillParentMaxHeight(0.6f).fillMaxWidth(), contentAlignment = Alignment.Center) {
-                        CircularProgressIndicator(Modifier.size(56.dp), strokeWidth = 6.dp)
+                        ShapeLoader(size = 56.dp)
                     }
                 }
                 state.error != null -> item(key = "error") {
@@ -306,14 +324,14 @@ fun LibraryScreen(
                         horizontalArrangement = Arrangement.spacedBy(14.dp),
                     ) {
                         pair.forEachIndexed { i, track ->
-                            TrackTile(track, rowIndex * 2 + i, verdictByTrack[track.uri.toString()], { onOpen(track) }, Modifier.weight(1f))
+                            TrackTile(track, rowIndex * 2 + i, verdictByTrack[track.uri.toString()], { b -> onOpen(track, b) }, Modifier.weight(1f))
                         }
                         if (pair.size == 1) Spacer(Modifier.weight(1f))
                     }
                 }
                 else -> itemsIndexed(visible, key = { _, t -> t.uri.toString() }) { index, track ->
                     TrackRow(
-                        track, index, verdictByTrack[track.uri.toString()], { onOpen(track) },
+                        track, index, verdictByTrack[track.uri.toString()], { b -> onOpen(track, b) },
                         Modifier.padding(horizontal = 10.dp).animateItem(placementSpec = Motion.spatial()),
                     )
                 }
@@ -330,20 +348,20 @@ fun LibraryScreen(
             exit = scaleOut(Motion.spatial(), targetScale = 0.6f) + fadeOut(Motion.effects()),
         ) {
             val haptic = LocalHapticFeedback.current
-            val source = remember { MutableInteractionSource() }
-            ExtendedFloatingActionButton(
+            MorphSurface(
+                Modifier.navigationBarsPadding().padding(20.dp),
+                corners = SpectyShapes.Feature,
+                color = MaterialTheme.colorScheme.primaryContainer,
                 onClick = {
                     haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                     onPickFile()
                 },
-                interactionSource = source,
-                modifier = Modifier.navigationBarsPadding().padding(20.dp).pressScale(source, 0.9f),
-                shape = RoundedCornerShape(24.dp),
-                containerColor = MaterialTheme.colorScheme.primaryContainer,
-                contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                role = androidx.compose.ui.semantics.Role.Button,
             ) {
-                Icon(Icons.Rounded.FolderOpen, contentDescription = null)
-                Text("Analyse a file", style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(start = 12.dp))
+                Row(Modifier.padding(horizontal = 24.dp, vertical = 18.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Rounded.FolderOpen, contentDescription = null)
+                    Text("Analyse a file", style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(start = 12.dp))
+                }
             }
         }
     }
@@ -354,7 +372,6 @@ fun LibraryScreen(
 @Composable
 private fun Header(onRescan: () -> Unit, onSettings: () -> Unit, canRescan: Boolean, canScan: Boolean, onScanAll: () -> Unit, brandModifier: Modifier) {
     var menu by remember { mutableStateOf(false) }
-    val menuSource = remember { MutableInteractionSource() }
     val menuTurn by animateFloatAsState(if (menu) 90f else 0f, Motion.spatial(), label = "menuTurn")
     Row(
         Modifier.fillMaxWidth().padding(start = 20.dp, end = 12.dp, top = 16.dp, bottom = 8.dp),
@@ -364,14 +381,12 @@ private fun Header(onRescan: () -> Unit, onSettings: () -> Unit, canRescan: Bool
             EqualizerMark()
             Spacer(Modifier.width(14.dp))
             Column {
-                Text("Specty", style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.Bold)
+                Text("Specty", style = MaterialTheme.typography.headlineLarge)
                 Text("Audio quality lab", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
         Box {
-            IconButton(onClick = { menu = true }, interactionSource = menuSource, modifier = Modifier.pressScale(menuSource)) {
-                Icon(Icons.Rounded.MoreVert, contentDescription = "More options", modifier = Modifier.rotate(menuTurn))
-            }
+            ExpressiveIconButton(Icons.Rounded.MoreVert, "More options", { menu = true }, toggled = menu, iconModifier = Modifier.rotate(menuTurn))
             DropdownMenu(expanded = menu, onDismissRequest = { menu = false }, shape = RoundedCornerShape(20.dp)) {
                 if (canRescan) {
                     DropdownMenuItem(
@@ -409,7 +424,7 @@ private fun EqualizerMark() {
     )
     val container = MaterialTheme.colorScheme.primaryContainer
     val bars = MaterialTheme.colorScheme.onPrimaryContainer
-    Surface(shape = RoundedCornerShape(16.dp), color = container, modifier = Modifier.size(52.dp)) {
+    MorphSurface(Modifier.size(52.dp), corners = SpectyShapes.Segment, color = container, morphOnPress = false) {
         Canvas(Modifier.fillMaxSize().padding(12.dp)) {
             val count = 4
             val gap = size.width * 0.12f
@@ -433,14 +448,12 @@ private fun EqualizerMark() {
 @Composable
 private fun BatchCard(batch: BatchScanner.State, onCancel: () -> Unit, onDismiss: () -> Unit) {
     val scheme = MaterialTheme.colorScheme
-    val progress by animateFloatAsState(batch.fraction, Motion.effects(), label = "batchProgress")
-    Surface(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp),
-        shape = RoundedCornerShape(topStart = 14.dp, topEnd = 36.dp, bottomStart = 36.dp, bottomEnd = 36.dp),
+    SpectyCard(
+        modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+        corners = SpectyShapes.Card,
         color = scheme.secondaryContainer,
-        contentColor = scheme.onSecondaryContainer,
     ) {
-        Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        androidx.compose.runtime.CompositionLocalProvider(androidx.compose.material3.LocalContentColor provides scheme.onSecondaryContainer) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
                     Text(
@@ -449,7 +462,7 @@ private fun BatchCard(batch: BatchScanner.State, onCancel: () -> Unit, onDismiss
                             batch.cancelled -> "Scan cancelled"
                             else -> "Scan finished"
                         },
-                        style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold,
+                        style = MaterialTheme.typography.titleMedium,
                     )
                     Text(
                         if (batch.running && batch.current.isNotEmpty()) batch.current else
@@ -460,13 +473,15 @@ private fun BatchCard(batch: BatchScanner.State, onCancel: () -> Unit, onDismiss
                     )
                 }
                 if (batch.running) {
-                    TextButton(onClick = onCancel) { Text("Cancel") }
+                    ExpressiveButton("Cancel", onCancel, kind = ButtonKind.Text)
                 } else {
-                    IconButton(onClick = onDismiss) { Icon(Icons.Rounded.Close, contentDescription = "Dismiss") }
+                    ExpressiveIconButton(Icons.Rounded.Close, "Dismiss", onDismiss, tonal = false)
                 }
             }
             if (batch.running) {
-                LinearProgressIndicator(progress = { progress }, modifier = Modifier.fillMaxWidth(), strokeCap = StrokeCap.Round)
+                Spacer(Modifier.height(10.dp))
+                WavyProgressBar(batch.fraction, color = scheme.onSecondaryContainer, track = scheme.onSecondaryContainer.copy(alpha = 0.18f))
+                Spacer(Modifier.height(6.dp))
                 Text("${batch.processed} of ${batch.total}", style = MaterialTheme.typography.labelMedium)
             }
         }
@@ -479,28 +494,15 @@ private fun BatchCard(batch: BatchScanner.State, onCancel: () -> Unit, onDismiss
 private fun HealthCard(total: Int, checked: Int, suspects: Int, genuine: Int) {
     val scheme = MaterialTheme.colorScheme
     val coverage = if (total == 0) 0f else checked.toFloat() / total
-    val sweep by animateFloatAsState(coverage, Motion.spatial(), label = "coverage")
-    val source = remember { MutableInteractionSource() }
-    Surface(
-        onClick = {},
-        interactionSource = source,
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp).pressScale(source, 0.97f),
-        shape = RoundedCornerShape(topStart = 40.dp, topEnd = 40.dp, bottomStart = 40.dp, bottomEnd = 14.dp),
+    SpectyCard(
+        modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+        corners = SpectyShapes.Hero,
         color = scheme.surfaceContainerHigh,
     ) {
-        Row(Modifier.padding(20.dp), verticalAlignment = Alignment.CenterVertically) {
-            Box(Modifier.size(104.dp), contentAlignment = Alignment.Center) {
-                val track = scheme.surfaceContainerHighest
-                val arc = scheme.primary
-                Canvas(Modifier.fillMaxSize()) {
-                    val stroke = Stroke(width = 14.dp.toPx(), cap = StrokeCap.Round)
-                    val inset = 7.dp.toPx()
-                    val arcSize = Size(size.width - inset * 2, size.height - inset * 2)
-                    drawArc(track, 0f, 360f, false, Offset(inset, inset), arcSize, style = stroke)
-                    if (sweep > 0.001f) drawArc(arc, -90f, 360f * sweep.coerceIn(0f, 1f), false, Offset(inset, inset), arcSize, style = stroke)
-                }
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            RingProgress(coverage, size = 104.dp, stroke = 14.dp, track = scheme.surfaceContainerHighest) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text("${(coverage * 100).toInt()}%", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                    Text("${(coverage * 100).toInt()}%", style = MaterialTheme.typography.titleLarge)
                     Text("checked", style = MaterialTheme.typography.labelSmall, color = scheme.onSurfaceVariant)
                 }
             }
@@ -527,51 +529,22 @@ private fun HealthLine(dot: Color, text: String) {
 
 @Composable
 private fun SearchPill(query: String, onChange: (String) -> Unit) {
-    TextField(
-        value = query,
-        onValueChange = onChange,
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
-        singleLine = true,
-        shape = RoundedCornerShape(topStart = 14.dp, topEnd = 32.dp, bottomStart = 32.dp, bottomEnd = 32.dp),
-        leadingIcon = { Icon(Icons.Rounded.Search, contentDescription = null) },
-        trailingIcon = {
-            AnimatedVisibility(query.isNotEmpty(), enter = scaleIn(Motion.spatialFast()) + fadeIn(), exit = scaleOut() + fadeOut()) {
-                IconButton(onClick = { onChange("") }) { Icon(Icons.Rounded.Close, contentDescription = "Clear search") }
-            }
-        },
-        placeholder = { Text("Search your library") },
-        colors = TextFieldDefaults.colors(
-            focusedContainerColor = MaterialTheme.colorScheme.surfaceContainer,
-            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainer,
-            focusedIndicatorColor = Color.Transparent,
-            unfocusedIndicatorColor = Color.Transparent,
-            disabledIndicatorColor = Color.Transparent,
-        ),
-    )
+    SearchField(query, onChange, Modifier.padding(horizontal = 16.dp), placeholder = "Search your library")
 }
 
 @Composable
 private fun FilterRow(selected: Filter, counts: Map<Filter, Int>, onSelect: (Filter) -> Unit) {
     val haptic = LocalHapticFeedback.current
-    Row(
-        Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(horizontal = 16.dp, vertical = 12.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
-        Filter.entries.forEach { f ->
-            val source = remember { MutableInteractionSource() }
-            FilterChip(
-                selected = selected == f,
-                onClick = {
-                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                    onSelect(f)
-                },
-                interactionSource = source,
-                modifier = Modifier.pressScale(source, 0.9f),
-                label = { Text("${f.label}  ${counts[f] ?: 0}") },
-                shape = CircleShape,
-            )
-        }
-    }
+    SegmentedControl(
+        segments = Filter.entries.map { Segment(it, "${it.label}  ${counts[it] ?: 0}") },
+        selected = selected,
+        onSelect = {
+            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+            onSelect(it)
+        },
+        scrollable = true,
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
+    )
 }
 
 @Composable
@@ -587,9 +560,6 @@ private fun SectionBar(
     var menu by remember { mutableStateOf(false) }
     val haptic = LocalHapticFeedback.current
     val rotation by animateFloatAsState(if (ascending) 0f else 180f, Motion.spatial(), label = "sortArrow")
-    val sortSource = remember { MutableInteractionSource() }
-    val orderSource = remember { MutableInteractionSource() }
-    val gridSource = remember { MutableInteractionSource() }
     Row(
         Modifier.fillMaxWidth().padding(start = 24.dp, end = 12.dp, top = 4.dp, bottom = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -603,21 +573,18 @@ private fun SectionBar(
             Text(
                 if (n == 1) "1 track" else "$n tracks",
                 style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
         Box {
-            Surface(
-                onClick = { menu = true },
-                interactionSource = sortSource,
-                modifier = Modifier.height(40.dp).pressScale(sortSource, 0.92f),
-                shape = CircleShape,
+            MorphSurface(
+                Modifier.height(40.dp),
+                corners = SpectyShapes.Pill,
                 color = MaterialTheme.colorScheme.secondaryContainer,
-                contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                onClick = { menu = true },
             ) {
-                Box(Modifier.padding(horizontal = 18.dp), contentAlignment = Alignment.Center) {
-                    Text(sort.label, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
+                Box(Modifier.height(40.dp).padding(horizontal = 18.dp), contentAlignment = Alignment.Center) {
+                    Text(sort.label, style = MaterialTheme.typography.labelLarge)
                 }
             }
             DropdownMenu(expanded = menu, onDismissRequest = { menu = false }, shape = RoundedCornerShape(20.dp)) {
@@ -630,39 +597,21 @@ private fun SectionBar(
             }
         }
         Spacer(Modifier.width(6.dp))
-        Surface(
-            onClick = {
-                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                onToggleOrder()
-            },
-            interactionSource = orderSource,
-            modifier = Modifier.size(40.dp).pressScale(orderSource, 0.85f),
-            shape = CircleShape,
-            color = MaterialTheme.colorScheme.secondaryContainer,
-            contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
-        ) {
-            Box(contentAlignment = Alignment.Center) {
-                Icon(Icons.Rounded.KeyboardArrowUp, contentDescription = if (ascending) "Ascending" else "Descending", modifier = Modifier.rotate(rotation))
-            }
-        }
+        ExpressiveIconButton(
+            Icons.Rounded.KeyboardArrowUp,
+            if (ascending) "Ascending" else "Descending",
+            { haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove); onToggleOrder() },
+            iconModifier = Modifier.rotate(rotation),
+            size = 40.dp,
+        )
         Spacer(Modifier.width(6.dp))
-        Surface(
-            onClick = {
-                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                onToggleGrid()
-            },
-            interactionSource = gridSource,
-            modifier = Modifier.size(40.dp).pressScale(gridSource, 0.85f),
-            shape = CircleShape,
-            color = MaterialTheme.colorScheme.tertiaryContainer,
-            contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
-        ) {
-            Box(contentAlignment = Alignment.Center) {
-                AnimatedContent(targetState = grid, transitionSpec = { scaleIn(Motion.spatialFast()) + fadeIn() togetherWith scaleOut() + fadeOut() }, label = "viewMode") { isGrid ->
-                    Icon(if (isGrid) Icons.Rounded.ViewAgenda else Icons.Rounded.GridView, contentDescription = if (isGrid) "Show as list" else "Show as grid")
-                }
-            }
-        }
+        ExpressiveIconButton(
+            if (grid) Icons.Rounded.ViewAgenda else Icons.Rounded.GridView,
+            if (grid) "Show as list" else "Show as grid",
+            { haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove); onToggleGrid() },
+            toggled = grid,
+            size = 40.dp,
+        )
     }
 }
 
@@ -683,27 +632,23 @@ private fun CoverFallback(track: Track) {
 
 /** Flat row: no card, just cover, text and a trailing badge. Pressing morphs the corners. */
 @Composable
-private fun TrackRow(track: Track, index: Int, verdict: Verdict?, onOpen: () -> Unit, modifier: Modifier = Modifier) {
+private fun TrackRow(track: Track, index: Int, verdict: Verdict?, onOpen: (Rect?) -> Unit, modifier: Modifier = Modifier) {
     val appear = rememberAppear(index)
-    val source = remember { MutableInteractionSource() }
-    val pressed by source.collectIsPressedAsState()
-    val corner by animateDpAsState(if (pressed) 14.dp else 28.dp, Motion.spatialFast(), label = "rowCorner")
-    val squash by animateFloatAsState(if (pressed) 0.97f else 1f, Motion.spatialFast(), label = "rowSquash")
-
-    Surface(
-        onClick = onOpen,
-        interactionSource = source,
-        modifier = modifier.fillMaxWidth().graphicsLayer {
-            scaleX = squash
-            scaleY = squash
-            alpha = appear.value.coerceIn(0f, 1f)
-            translationY = (1f - appear.value) * 48f
-        },
-        shape = RoundedCornerShape(corner),
+    var bounds by remember { mutableStateOf<Rect?>(null) }
+    MorphSurface(
+        modifier = modifier
+            .fillMaxWidth()
+            .onGloballyPositioned { bounds = it.boundsInRoot() }
+            .graphicsLayer {
+                alpha = appear.value.coerceIn(0f, 1f)
+                translationY = (1f - appear.value) * 48f
+            },
+        corners = SpectyShapes.Row,
         color = Color.Transparent,
+        onClick = { onOpen(bounds) },
     ) {
         Row(Modifier.padding(horizontal = 10.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-            CoverImage(uri = track.uri, shape = RoundedCornerShape(18.dp), modifier = Modifier.size(60.dp), sizePx = 180) { CoverFallback(track) }
+            CoverImage(uri = track.uri, shape = SpectyShapes.Cover.toShape(), modifier = Modifier.size(60.dp), sizePx = 180) { CoverFallback(track) }
             Spacer(Modifier.width(16.dp))
             Column(Modifier.weight(1f)) {
                 Text(track.title, style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
@@ -729,44 +674,36 @@ private fun TrackRow(track: Track, index: Int, verdict: Verdict?, onOpen: () -> 
 
 /** Cover-first tile for the grid view, with the format and verdict laid over the artwork. */
 @Composable
-private fun TrackTile(track: Track, index: Int, verdict: Verdict?, onOpen: () -> Unit, modifier: Modifier = Modifier) {
+private fun TrackTile(track: Track, index: Int, verdict: Verdict?, onOpen: (Rect?) -> Unit, modifier: Modifier = Modifier) {
     val appear = rememberAppear(index / 2)
-    val source = remember { MutableInteractionSource() }
-    val pressed by source.collectIsPressedAsState()
-    val corner by animateDpAsState(if (pressed) 16.dp else 32.dp, Motion.spatialFast(), label = "tileCorner")
-    val squash by animateFloatAsState(if (pressed) 0.95f else 1f, Motion.spatialFast(), label = "tileSquash")
-
-    Surface(
-        onClick = onOpen,
-        interactionSource = source,
-        modifier = modifier.graphicsLayer {
-            scaleX = squash
-            scaleY = squash
-            alpha = appear.value.coerceIn(0f, 1f)
-            translationY = (1f - appear.value) * 64f
-        },
-        shape = RoundedCornerShape(corner),
+    var bounds by remember { mutableStateOf<Rect?>(null) }
+    MorphSurface(
+        modifier = modifier
+            .onGloballyPositioned { bounds = it.boundsInRoot() }
+            .graphicsLayer {
+                alpha = appear.value.coerceIn(0f, 1f)
+                translationY = (1f - appear.value) * 64f
+            },
+        corners = SpectyShapes.Tile,
         color = Color.Transparent,
+        onClick = { onOpen(bounds) },
     ) {
         Column(Modifier.padding(bottom = 6.dp)) {
             Box(Modifier.fillMaxWidth().aspectRatio(1f)) {
-                CoverImage(uri = track.uri, shape = RoundedCornerShape(corner), modifier = Modifier.fillMaxSize(), sizePx = 420) { CoverFallback(track) }
+                CoverImage(uri = track.uri, shape = SpectyShapes.Tile.toShape(), modifier = Modifier.fillMaxSize(), sizePx = 420) { CoverFallback(track) }
                 if (verdict != null) Box(Modifier.align(Alignment.TopEnd).padding(10.dp)) { VerdictBadge(verdict) }
                 if (track.extension.isNotEmpty()) {
-                    Surface(
-                        modifier = Modifier.align(Alignment.BottomStart).padding(10.dp),
-                        shape = CircleShape,
-                        color = Color.Black.copy(alpha = 0.55f),
-                        contentColor = Color.White,
-                    ) {
-                        Text(track.extension, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 9.dp, vertical = 4.dp))
-                    }
+                    Pill(
+                        track.extension,
+                        Modifier.align(Alignment.BottomStart).padding(10.dp),
+                        container = Color.Black.copy(alpha = 0.55f),
+                        content = Color.White,
+                    )
                 }
             }
             Text(
                 track.title,
                 style = MaterialTheme.typography.titleSmall,
-                fontWeight = FontWeight.Bold,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.padding(start = 6.dp, end = 6.dp, top = 10.dp),
@@ -795,49 +732,21 @@ private fun rememberAppear(index: Int): androidx.compose.runtime.State<Float> {
 }
 
 @Composable
-private fun VerdictBadge(verdict: Verdict) {
-    val scheme = MaterialTheme.colorScheme
-    val spec = when (verdict) {
-        Verdict.GENUINE -> Triple("Genuine", scheme.tertiaryContainer, scheme.onTertiaryContainer)
-        Verdict.LOSSY_SOURCE, Verdict.UPSAMPLED -> Triple("Fake", scheme.errorContainer, scheme.onErrorContainer)
-        Verdict.POSSIBLE_LOSSY_SOURCE, Verdict.BAND_LIMITED -> Triple("Maybe", scheme.secondaryContainer, scheme.onSecondaryContainer)
-        Verdict.LOSSY_CODEC -> Triple("Lossy", scheme.surfaceContainerHighest, scheme.onSurfaceVariant)
-        Verdict.INCONCLUSIVE -> return
-    }
-    Surface(shape = CircleShape, color = spec.second, contentColor = spec.third) {
-        Text(spec.first, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp))
-    }
-}
+private fun VerdictBadge(verdict: Verdict) = VerdictPill(verdict)
 
 @Composable
 private fun PermissionPrompt(onGrant: () -> Unit) {
-    Column(
-        Modifier.fillMaxSize().padding(32.dp),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        Surface(
-            shape = RoundedCornerShape(28.dp),
-            color = MaterialTheme.colorScheme.tertiaryContainer,
-            contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
-            modifier = Modifier.size(72.dp),
-        ) { Box(contentAlignment = Alignment.Center) { Icon(Icons.Rounded.MusicNote, contentDescription = null, modifier = Modifier.size(32.dp)) } }
-        Spacer(Modifier.height(20.dp))
-        Text("Allow access to your music", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-        Spacer(Modifier.height(8.dp))
-        Text(
-            "Specty reads your audio files on this device to list them here. Nothing leaves your phone.",
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-        Spacer(Modifier.height(24.dp))
-        Button(onClick = onGrant) { Text("Grant access") }
-    }
+    EmptyState(
+        icon = Icons.Rounded.MusicNote,
+        title = "Allow access to your music",
+        message = "Specty reads your audio files on this device to list them here. Nothing leaves your phone.",
+        modifier = Modifier.fillMaxSize(),
+        action = { ExpressiveButton("Grant access", onGrant) },
+    )
 }
 
 @Composable
 private fun Message(text: String) {
-    Box(Modifier.fillMaxSize().padding(32.dp), contentAlignment = Alignment.Center) {
-        Text(text, style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
-    }
+    EmptyState(icon = Icons.Rounded.MusicNote, title = "Nothing to show", message = text, modifier = Modifier.fillMaxSize())
 }
+

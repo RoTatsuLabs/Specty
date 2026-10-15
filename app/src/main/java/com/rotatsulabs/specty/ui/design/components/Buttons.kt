@@ -76,6 +76,7 @@ fun ExpressiveIconButton(
     toggled: Boolean = false,
     tonal: Boolean = true,
     size: Dp = 48.dp,
+    iconModifier: Modifier = Modifier,
 ) {
     val s = MaterialTheme.colorScheme
     val container = when {
@@ -92,7 +93,7 @@ fun ExpressiveIconButton(
         onClick = onClick,
         role = Role.Button,
     ) {
-        Box(Modifier.size(size), contentAlignment = Alignment.Center) { Icon(icon, null, Modifier.size(size * 0.5f)) }
+        Box(Modifier.size(size), contentAlignment = Alignment.Center) { Icon(icon, null, iconModifier.size(size * 0.5f)) }
     }
 }
 
