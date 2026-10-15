@@ -21,6 +21,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
@@ -47,6 +48,7 @@ fun MorphSurface(
     enabled: Boolean = true,
     role: Role? = null,
     morphOnPress: Boolean = true,
+    shadowElevation: androidx.compose.ui.unit.Dp = 0.dp,
     content: @Composable () -> Unit,
 ) {
     val source = remember { MutableInteractionSource() }
@@ -55,6 +57,7 @@ fun MorphSurface(
     val shape = shapeCorners.toShape()
     var m = modifier
     if (onClick != null) m = m.pressScale(source, 0.97f)
+    if (shadowElevation > 0.dp) m = m.shadow(shadowElevation, shape)
     m = m.clip(shape).background(animateTone(color), shape)
     if (border != null) m = m.border(border, shape)
     if (onClick != null) {

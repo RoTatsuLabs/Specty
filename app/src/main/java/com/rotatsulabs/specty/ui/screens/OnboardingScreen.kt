@@ -1,5 +1,9 @@
 package com.rotatsulabs.specty.ui.screens
 
+import com.rotatsulabs.specty.ui.design.Corners
+import com.rotatsulabs.specty.ui.design.components.ButtonKind
+import com.rotatsulabs.specty.ui.design.components.ExpressiveButton
+import com.rotatsulabs.specty.ui.design.components.MorphSurface
 import android.Manifest
 import android.content.pm.PackageManager
 import androidx.activity.compose.BackHandler
@@ -123,9 +127,7 @@ fun OnboardingScreen(onFinish: () -> Unit, onPermission: (Boolean) -> Unit, modi
     ) {
         Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp), horizontalArrangement = Arrangement.End) {
             val last = pager.currentPage == PAGES - 1
-            TextButton(onClick = onFinish, enabled = !last) {
-                Text(if (last) "" else "Skip")
-            }
+            if (!last) ExpressiveButton("Skip", onFinish, kind = ButtonKind.Text)
         }
 
         HorizontalPager(pager, Modifier.weight(1f)) { page ->
@@ -159,7 +161,7 @@ fun OnboardingScreen(onFinish: () -> Unit, onPermission: (Boolean) -> Unit, modi
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
                     val (title, body) = copy(page)
-                    Text(title, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center, color = MaterialTheme.colorScheme.onSurface)
+                    Text(title, style = MaterialTheme.typography.headlineMedium, textAlign = TextAlign.Center, color = MaterialTheme.colorScheme.onSurface)
                     Text(body, style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = TextAlign.Center)
                     if (page == PAGES - 1) {
                         Spacer(Modifier.height(8.dp))
@@ -177,28 +179,12 @@ fun OnboardingScreen(onFinish: () -> Unit, onPermission: (Boolean) -> Unit, modi
                 repeat(PAGES) { i -> Dot(selected = pager.currentPage == i) }
             }
             val last = pager.currentPage == PAGES - 1
-            val source = remember { MutableInteractionSource() }
-            Button(
+            ExpressiveButton(
+                text = if (last) "Get started" else "Next",
                 onClick = { if (last) onFinish() else scope.launch { pager.animateScrollToPage(pager.currentPage + 1) } },
-                interactionSource = source,
-                modifier = Modifier.pressScale(source, 0.92f),
-                shape = RoundedCornerShape(topStart = 28.dp, topEnd = 14.dp, bottomStart = 28.dp, bottomEnd = 28.dp),
-            ) {
-                AnimatedContent(
-                    targetState = last,
-                    transitionSpec = { (slideInVertically { it / 2 } + fadeIn()) togetherWith (slideOutVertically { -it / 2 } + fadeOut()) },
-                    label = "nextLabel",
-                ) { isLast ->
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(if (isLast) "Get started" else "Next", modifier = Modifier.padding(vertical = 4.dp))
-                        if (!isLast) {
-                            Spacer(Modifier.size(8.dp))
-                            Icon(Icons.AutoMirrored.Rounded.ArrowForward, contentDescription = null, modifier = Modifier.size(18.dp))
-                        }
-                    }
-                }
-            }
-        }
+                icon = if (last) null else Icons.AutoMirrored.Rounded.ArrowForward,
+                corners = Corners(topStart = 28.dp, topEnd = 14.dp, bottomEnd = 28.dp, bottomStart = 28.dp),
+            )
     }
 }
 
@@ -222,7 +208,7 @@ private fun Dot(selected: Boolean) {
 @Composable
 private fun PermissionBlock(granted: Boolean, onAllow: () -> Unit) {
     val scheme = MaterialTheme.colorScheme
-    Surface(shape = RoundedCornerShape(24.dp), color = scheme.surfaceContainerHigh, modifier = Modifier.fillMaxWidth()) {
+    MorphSurface(Modifier.fillMaxWidth(), Corners(24.dp), scheme.surfaceContainerHigh, morphOnPress = false) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp), horizontalAlignment = Alignment.CenterHorizontally) {
             if (granted) {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -234,7 +220,7 @@ private fun PermissionBlock(granted: Boolean, onAllow: () -> Unit) {
                     Icon(Icons.Rounded.Lock, contentDescription = null, tint = scheme.onSurfaceVariant, modifier = Modifier.size(18.dp))
                     Text("Needed to list your music. Files never leave your device.", style = MaterialTheme.typography.bodySmall, color = scheme.onSurfaceVariant)
                 }
-                FilledTonalButton(onClick = onAllow) { Text("Allow library access") }
+                ExpressiveButton("Allow library access", onAllow, kind = ButtonKind.Tonal)
             }
         }
     }

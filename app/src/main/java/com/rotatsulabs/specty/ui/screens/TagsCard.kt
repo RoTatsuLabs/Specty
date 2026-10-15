@@ -1,5 +1,9 @@
 package com.rotatsulabs.specty.ui.screens
 
+import com.rotatsulabs.specty.ui.design.Corners
+import com.rotatsulabs.specty.ui.design.SpectyShapes
+import com.rotatsulabs.specty.ui.design.components.MorphSurface
+import com.rotatsulabs.specty.ui.design.components.Pill
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -82,19 +86,17 @@ fun TagsCard(tags: List<Pair<String, String>>) {
 
     var expanded by rememberSaveable { mutableStateOf(false) }
     val turn by animateFloatAsState(if (expanded) 180f else 0f, Motion.spatial(), label = "tagsTurn")
-    val source = remember { MutableInteractionSource() }
 
-    Surface(
+    MorphSurface(
         modifier = Modifier.fillMaxWidth().animateContentSize(Motion.spatial()),
-        shape = RoundedCornerShape(32.dp),
+        corners = SpectyShapes.Card,
         color = MaterialTheme.colorScheme.surfaceContainer,
+        morphOnPress = false,
     ) {
         Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text("Tags and metadata", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
-                Surface(shape = CircleShape, color = MaterialTheme.colorScheme.secondaryContainer, contentColor = MaterialTheme.colorScheme.onSecondaryContainer) {
-                    Text("${tags.size}", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp))
-                }
+                Pill("${tags.size}")
             }
 
             if (tags.isEmpty()) {
@@ -109,12 +111,11 @@ fun TagsCard(tags: List<Pair<String, String>>) {
             }
 
             if (replayGain.isNotEmpty() || custom.isNotEmpty()) {
-                Surface(
-                    onClick = { expanded = !expanded },
-                    interactionSource = source,
-                    modifier = Modifier.fillMaxWidth().pressScale(source, 0.97f),
-                    shape = RoundedCornerShape(20.dp),
+                MorphSurface(
+                    modifier = Modifier.fillMaxWidth(),
+                    corners = Corners(20.dp),
                     color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                    onClick = { expanded = !expanded },
                 ) {
                     Row(Modifier.padding(horizontal = 16.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
                         Text(
@@ -156,13 +157,11 @@ private fun SubHeader(text: String) {
 @Composable
 private fun TagRow(label: String, value: String, monospaceKey: Boolean = false) {
     var open by rememberSaveable(label, value) { mutableStateOf(false) }
-    val source = remember { MutableInteractionSource() }
-    Surface(
-        onClick = { open = !open },
-        interactionSource = source,
-        modifier = Modifier.fillMaxWidth().pressScale(source, 0.98f).animateContentSize(Motion.spatial()),
-        shape = RoundedCornerShape(16.dp),
+    MorphSurface(
+        modifier = Modifier.fillMaxWidth().animateContentSize(Motion.spatial()),
+        corners = Corners(16.dp),
         color = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.55f),
+        onClick = { open = !open },
     ) {
         Row(Modifier.padding(horizontal = 14.dp, vertical = 10.dp), verticalAlignment = Alignment.Top) {
             Text(

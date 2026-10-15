@@ -1,5 +1,9 @@
 package com.rotatsulabs.specty.ui.spectrogram
 
+import com.rotatsulabs.specty.ui.design.components.ButtonKind
+import com.rotatsulabs.specty.ui.design.components.ExpressiveButton
+import com.rotatsulabs.specty.ui.design.components.ExpressiveIconButton
+import com.rotatsulabs.specty.ui.design.components.Pill
 import android.app.Activity
 import android.content.Context
 import android.content.ContextWrapper
@@ -315,37 +319,26 @@ fun SpectrogramViewer(spectrogram: Spectrogram, title: String, initialView: Int,
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            FilledTonalIconButton(onClick = onClose) { Icon(Icons.Rounded.Close, contentDescription = "Close") }
-            Surface(shape = CircleShape, color = Color.Black.copy(alpha = 0.55f), contentColor = Color.White) {
-                Text(
-                    readout ?: "$title  ·  touch to read, two fingers to zoom",
-                    style = MaterialTheme.typography.labelLarge,
-                    fontWeight = if (readout != null) FontWeight.Bold else FontWeight.Normal,
-                    maxLines = 1,
-                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
-                )
-            }
+            ExpressiveIconButton(Icons.Rounded.Close, "Close", onClose)
+            Pill(
+                readout ?: "$title  ·  touch to read, two fingers to zoom",
+                container = Color.Black.copy(alpha = 0.55f), content = Color.White,
+            )
             Box(Modifier.weight(1f))
             if (spectrogram.views.size > 1) {
-                TextButton(onClick = { view = (view + 1) % spectrogram.views.size }) {
-                    Text(spectrogram.viewLabels[view], color = Color.White)
-                }
+                ExpressiveButton(spectrogram.viewLabels[view], { view = (view + 1) % spectrogram.views.size }, kind = ButtonKind.Tonal)
             }
-            TextButton(onClick = {
+            ExpressiveButton(palette.label, {
                 paletteIndex = (paletteIndex + 1) % SpectrogramPalette.entries.size
                 prefs.edit().putInt("spectrogram_palette", paletteIndex).apply()
-            }) { Text(palette.label, color = Color.White) }
-            TextButton(onClick = { options = options.copy(log = !options.log).also { it.save(prefs) }; x0 = 0f; x1 = 1f; f0 = 0f; f1 = 1f; touch = null }) {
-                Text(if (options.log) "Log" else "Linear", color = Color.White)
-            }
-            TextButton(onClick = {
+            }, kind = ButtonKind.Tonal)
+            ExpressiveButton(if (options.log) "Log" else "Linear", { options = options.copy(log = !options.log).also { it.save(prefs) }; x0 = 0f; x1 = 1f; f0 = 0f; f1 = 1f; touch = null }, kind = ButtonKind.Tonal)
+            ExpressiveButton(options.range.label, {
                 val next = DbRange.entries[(options.range.ordinal + 1) % DbRange.entries.size]
                 options = options.copy(range = next).also { it.save(prefs) }
-            }) { Text(options.range.label, color = Color.White) }
-            FilledTonalIconButton(onClick = { landscape = !landscape }) { Icon(Icons.Rounded.CropRotate, contentDescription = "Toggle landscape lock") }
-            FilledTonalIconButton(onClick = { x0 = 0f; x1 = 1f; f0 = 0f; f1 = 1f; touch = null }) {
-                Icon(Icons.Rounded.ZoomOutMap, contentDescription = "Reset zoom")
-            }
+            }, kind = ButtonKind.Tonal)
+            ExpressiveIconButton(Icons.Rounded.CropRotate, "Toggle landscape lock", { landscape = !landscape }, toggled = landscape)
+            ExpressiveIconButton(Icons.Rounded.ZoomOutMap, "Reset zoom", { x0 = 0f; x1 = 1f; f0 = 0f; f1 = 1f; touch = null })
         }
     }
 }

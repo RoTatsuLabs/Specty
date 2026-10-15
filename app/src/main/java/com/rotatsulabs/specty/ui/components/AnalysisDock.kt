@@ -1,5 +1,11 @@
 package com.rotatsulabs.specty.ui.components
 
+import com.rotatsulabs.specty.ui.design.Corners
+import com.rotatsulabs.specty.ui.design.SpectyShapes
+import com.rotatsulabs.specty.ui.design.components.ExpressiveIconButton
+import com.rotatsulabs.specty.ui.design.components.MorphSurface
+import com.rotatsulabs.specty.ui.design.components.ShapeLoader
+import com.rotatsulabs.specty.ui.design.components.WavyProgressBar
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.runtime.remember
@@ -64,16 +70,13 @@ fun AnalysisDock(state: AnalysisState, onOpen: () -> Unit, onDismiss: () -> Unit
     }
     val progress by animateFloatAsState((state as? AnalysisState.Running)?.progress ?: 0f, Motion.effects(), label = "dockProgress")
 
-    val source = remember { MutableInteractionSource() }
-    val closeSource = remember { MutableInteractionSource() }
-    Surface(
-        onClick = { if (done) onOpen() },
-        enabled = done,
-        interactionSource = source,
-        modifier = modifier.fillMaxWidth().pressScale(source, 0.97f),
-        shape = RoundedCornerShape(28.dp),
+    MorphSurface(
+        modifier = modifier.fillMaxWidth(),
+        corners = SpectyShapes.Feature.let { Corners(28.dp, 28.dp, 28.dp, 28.dp) },
         color = container,
         contentColor = content,
+        onClick = { if (done) onOpen() },
+        enabled = done,
         shadowElevation = 6.dp,
     ) {
         Column {
@@ -84,22 +87,21 @@ fun AnalysisDock(state: AnalysisState, onOpen: () -> Unit, onDismiss: () -> Unit
                 when {
                     failed -> Icon(Icons.Rounded.ErrorOutline, contentDescription = null, modifier = Modifier.size(28.dp))
                     done -> Icon(Icons.Rounded.Verified, contentDescription = null, modifier = Modifier.size(28.dp))
-                    else -> CircularProgressIndicator(Modifier.size(28.dp), strokeWidth = 4.dp, strokeCap = StrokeCap.Round)
+                    else -> ShapeLoader(size = 28.dp, color = content)
                 }
                 Spacer(Modifier.width(16.dp))
                 Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                    Text(title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    Text(title, style = MaterialTheme.typography.titleSmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     Text(subtitle, style = MaterialTheme.typography.bodySmall, maxLines = 2, overflow = TextOverflow.Ellipsis)
                 }
-                IconButton(onClick = onDismiss, interactionSource = closeSource, modifier = Modifier.pressScale(closeSource)) {
-                    Icon(Icons.Rounded.Close, contentDescription = if (done || failed) "Dismiss" else "Cancel")
-                }
+                ExpressiveIconButton(Icons.Rounded.Close, if (done || failed) "Dismiss" else "Cancel", onDismiss, tonal = false, size = 44.dp)
             }
             if (state is AnalysisState.Running) {
-                LinearProgressIndicator(
-                    progress = { progress },
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 18.dp).padding(bottom = 12.dp),
-                    strokeCap = StrokeCap.Round,
+                WavyProgressBar(
+                    progress,
+                    modifier = Modifier.padding(horizontal = 18.dp).padding(bottom = 12.dp),
+                    color = content,
+                    track = content.copy(alpha = 0.18f),
                 )
             }
         }
