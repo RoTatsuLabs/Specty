@@ -111,6 +111,19 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     private var analysisJob: Job? = null
 
+    private val _onboarding = MutableStateFlow(!prefs.getBoolean(KEY_ONBOARDED, false))
+    /** True on first launch and when replayed from settings. */
+    val onboarding: StateFlow<Boolean> = _onboarding.asStateFlow()
+
+    fun finishOnboarding() {
+        _onboarding.value = false
+        prefs.edit().putBoolean(KEY_ONBOARDED, true).apply()
+    }
+
+    fun replayOnboarding() {
+        _onboarding.value = true
+    }
+
     private val _compare = MutableStateFlow<CompareState>(CompareState.Idle)
     val compare: StateFlow<CompareState> = _compare.asStateFlow()
     private var compareJob: Job? = null
@@ -237,6 +250,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     private companion object {
         const val KEY_FFT = "fft_size"
         const val KEY_WINDOW = "window_fn"
+        const val KEY_ONBOARDED = "onboarded"
         const val KEY_THEME = "theme_mode"
         const val KEY_DYNAMIC = "dynamic_color"
         const val KEY_BLACK = "pure_black"
