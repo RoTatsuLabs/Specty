@@ -536,13 +536,12 @@ private fun SearchPill(query: String, onChange: (String) -> Unit) {
 private fun FilterRow(selected: Filter, counts: Map<Filter, Int>, onSelect: (Filter) -> Unit) {
     val haptic = LocalHapticFeedback.current
     SegmentedControl(
-        segments = Filter.entries.map { Segment(it, "${it.label}  ${counts[it] ?: 0}") },
+        segments = Filter.entries.map { Segment(it, it.label, badge = "${counts[it] ?: 0}") },
         selected = selected,
         onSelect = {
             haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
             onSelect(it)
         },
-        scrollable = true,
         modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
     )
 }

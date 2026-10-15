@@ -7,6 +7,7 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -42,7 +43,7 @@ import com.rotatsulabs.specty.ui.design.animateTone
 import com.rotatsulabs.specty.ui.theme.Motion
 
 /** One entry of a [SegmentedControl]. */
-data class Segment<T>(val value: T, val label: String, val icon: ImageVector? = null)
+data class Segment<T>(val value: T, val label: String, val icon: ImageVector? = null, val badge: String? = null)
 
 /**
  * A segmented control whose selected pill slides between segments on a spring and stretches to fit each label.
@@ -56,7 +57,7 @@ fun <T> SegmentedControl(
     onSelect: (T) -> Unit,
     modifier: Modifier = Modifier,
     scrollable: Boolean = false,
-    height: Dp = 48.dp,
+    height: Dp = if (segments.any { it.badge != null }) 60.dp else 48.dp,
     track: Color = MaterialTheme.colorScheme.surfaceContainerHighest,
     indicator: Color = MaterialTheme.colorScheme.primary,
     onIndicator: Color = MaterialTheme.colorScheme.onPrimary,
@@ -112,7 +113,7 @@ fun <T> SegmentedControl(
                             indication = null,
                             role = Role.RadioButton,
                         ) { onSelect(seg.value) }
-                        .padding(horizontal = 16.dp),
+                        .padding(horizontal = if (segments.any { it.badge != null }) 6.dp else 16.dp),
                     horizontalArrangement = Arrangement.Center,
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
@@ -120,13 +121,21 @@ fun <T> SegmentedControl(
                         Icon(seg.icon, null, tint = contentColor, modifier = Modifier.width(18.dp).height(18.dp))
                         Box(Modifier.width(6.dp))
                     }
-                    Text(
-                        seg.label,
-                        style = MaterialTheme.typography.labelLarge,
-                        color = contentColor,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
+                    if (seg.badge == null) {
+                        Text(
+                            seg.label,
+                            style = MaterialTheme.typography.labelLarge,
+                            color = contentColor,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                    } else {
+                        // Label over a small count, so several segments with counts still fit one row.
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text(seg.label, style = MaterialTheme.typography.labelLarge, color = contentColor, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                            Text(seg.badge, style = MaterialTheme.typography.labelSmall, color = contentColor.copy(alpha = 0.72f), maxLines = 1)
+                        }
+                    }
                 }
             }
         }
