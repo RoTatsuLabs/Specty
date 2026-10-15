@@ -74,7 +74,7 @@ The DSP code in `app/src/main/java/com/rotatsulabs/specty/audio/` has no Android
 Debug builds are produced by CI on every push.
 
 1. Open the latest successful run under the repository's **Actions** tab.
-2. Download the `audexa-debug-apk` artifact and unzip it.
+2. Download the `specty-debug-apk` artifact and unzip it.
 3. Install the APK on a device running Android 13 or newer. You may need to allow installs from your browser or file manager.
 
 ## Build from source
