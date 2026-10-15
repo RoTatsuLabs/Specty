@@ -27,6 +27,7 @@ import androidx.compose.material.icons.rounded.Compare
 import androidx.compose.material.icons.rounded.DataObject
 import androidx.compose.material.icons.rounded.Equalizer
 import androidx.compose.material.icons.rounded.ErrorOutline
+import androidx.compose.material.icons.rounded.Explicit
 import androidx.compose.material.icons.rounded.FilterAlt
 import androidx.compose.material.icons.rounded.GraphicEq
 import androidx.compose.material.icons.rounded.Info
@@ -224,15 +225,20 @@ private fun Hero(result: AnalysisResult, cached: Boolean) {
                 }
             }
         }
-        Text(
-            info.displayName.substringBeforeLast('.'),
-            style = MaterialTheme.typography.headlineSmall,
-            fontWeight = FontWeight.Bold,
-            textAlign = TextAlign.Center,
-            maxLines = 2,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.padding(horizontal = 8.dp),
-        )
+        Row(Modifier.padding(horizontal = 8.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text(
+                info.displayName.substringBeforeLast('.'),
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Center,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.weight(1f, fill = false),
+            )
+            if (isExplicit(info.tags)) {
+                Icon(Icons.Rounded.Explicit, contentDescription = "Explicit", tint = scheme.onSurfaceVariant, modifier = Modifier.size(26.dp))
+            }
+        }
         Row(
             Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
             horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),

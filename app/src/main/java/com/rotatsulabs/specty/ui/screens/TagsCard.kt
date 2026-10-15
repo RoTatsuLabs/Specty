@@ -54,8 +54,14 @@ private val knownTags = listOf(
     Known("Encoder", "encoder", "encoded_by", "encoding", "encodedby"),
     Known("Comment", "comment", "description"),
     Known("ISRC", "isrc"),
+    Known("UPC", "upc", "barcode"),
+    Known("Rating", "rating"),
     Known("Copyright", "copyright"),
 )
+
+/** True when the file's "rating" tag is 1, the explicit-content flag (0 means not explicit). */
+fun isExplicit(tags: List<Pair<String, String>>): Boolean =
+    tags.any { it.first.equals("rating", ignoreCase = true) && it.second.trim() == "1" }
 
 private fun isReplayGain(key: String) = key.lowercase().startsWith("replaygain") || key.lowercase().startsWith("r128")
 
