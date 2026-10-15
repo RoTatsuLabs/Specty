@@ -1,7 +1,6 @@
 package com.rotatsulabs.specty.ui.components
 
 import com.rotatsulabs.specty.ui.design.Corners
-import com.rotatsulabs.specty.ui.design.SpectyShapes
 import com.rotatsulabs.specty.ui.design.components.ExpressiveIconButton
 import com.rotatsulabs.specty.ui.design.components.MorphSurface
 import com.rotatsulabs.specty.ui.design.components.ShapeLoader
@@ -72,7 +71,7 @@ fun AnalysisDock(state: AnalysisState, onOpen: () -> Unit, onDismiss: () -> Unit
 
     MorphSurface(
         modifier = modifier.fillMaxWidth(),
-        corners = SpectyShapes.Feature.let { Corners(28.dp, 28.dp, 28.dp, 28.dp) },
+        corners = Corners(28.dp),
         color = container,
         contentColor = content,
         onClick = { if (done) onOpen() },

@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -26,7 +25,7 @@ import com.rotatsulabs.specty.ui.components.Reveal
 import com.rotatsulabs.specty.ui.design.components.ButtonKind
 import com.rotatsulabs.specty.ui.design.components.ExpressiveButton
 import com.rotatsulabs.specty.ui.design.components.ExpressiveTopBar
-import com.rotatsulabs.specty.ui.design.components.SegmentedControl
+import com.rotatsulabs.specty.ui.design.components.OptionSegmentedControl
 import com.rotatsulabs.specty.ui.design.components.SettingBlock
 import com.rotatsulabs.specty.ui.design.components.SettingGroup
 import com.rotatsulabs.specty.ui.design.components.SettingToggleRow
@@ -61,7 +60,7 @@ fun SettingsScreen(
     modifier: Modifier = Modifier,
 ) {
     val dark = isDarkFor(appearance)
-    Column(modifier.fillMaxSize().statusBarsPadding()) {
+    Column(modifier.fillMaxSize()) {
         ExpressiveTopBar("Settings", onBack = onBack)
 
         Column(
@@ -74,7 +73,7 @@ fun SettingsScreen(
             Reveal(0) {
                 SettingGroup("Appearance") {
                     SettingBlock("Theme", corners = groupCorners(0, if (appearance.dynamicColor) 3 else 4)) {
-                        SegmentedControl(ThemeMode.entries, appearance.mode, onThemeMode, { it.label })
+                        OptionSegmentedControl(ThemeMode.entries, appearance.mode, onThemeMode, { it.label })
                     }
                     SettingToggleRow(
                         title = "Dynamic colour",
@@ -121,10 +120,10 @@ fun SettingsScreen(
                         supporting = "Larger windows resolve frequency more finely; smaller ones resolve time more finely.",
                         corners = groupCorners(0, 2),
                     ) {
-                        SegmentedControl(fftChoices, fftSize, onFftSize, { "$it" })
+                        OptionSegmentedControl(fftChoices, fftSize, onFftSize, { "$it" })
                     }
                     SettingBlock("Window function", supporting = windowFn.note, corners = groupCorners(1, 2)) {
-                        SegmentedControl(WindowFn.entries, windowFn, onWindowFn, { it.label }, scrollable = true)
+                        OptionSegmentedControl(WindowFn.entries, windowFn, onWindowFn, { it.label }, scrollable = true)
                         Spacer(Modifier.height(8.dp))
                         Text(
                             "Applies to the next file you analyse. Files already checked with another size or window are analysed again.",

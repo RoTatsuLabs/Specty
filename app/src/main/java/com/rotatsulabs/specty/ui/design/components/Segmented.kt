@@ -134,7 +134,7 @@ fun <T> SegmentedControl(
 
 /** Convenience for the common case of an enum or list of labelled values. */
 @Composable
-fun <T> SegmentedControl(
+fun <T> OptionSegmentedControl(
     options: List<T>,
     selected: T,
     onSelect: (T) -> Unit,
