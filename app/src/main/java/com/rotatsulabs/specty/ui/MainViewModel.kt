@@ -14,6 +14,7 @@ import com.rotatsulabs.specty.batch.BatchScanner
 import com.rotatsulabs.specty.data.LibraryRepository
 import com.rotatsulabs.specty.data.ResultCache
 import com.rotatsulabs.specty.data.Track
+import com.rotatsulabs.specty.ui.design.tonal.SeedPalette
 import com.rotatsulabs.specty.ui.theme.Appearance
 import com.rotatsulabs.specty.ui.theme.ThemeMode
 import kotlinx.coroutines.CancellationException
@@ -82,6 +83,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             mode = ThemeMode.entries.getOrElse(prefs.getInt(KEY_THEME, 0)) { ThemeMode.System },
             dynamicColor = prefs.getBoolean(KEY_DYNAMIC, true),
             pureBlack = prefs.getBoolean(KEY_BLACK, false),
+            seed = SeedPalette.entries.getOrElse(prefs.getInt(KEY_SEED, 0)) { SeedPalette.Violet },
         ),
     )
     val appearance: StateFlow<Appearance> = _appearance.asStateFlow()
@@ -94,6 +96,11 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     fun setDynamicColor(enabled: Boolean) {
         _appearance.value = _appearance.value.copy(dynamicColor = enabled)
         prefs.edit().putBoolean(KEY_DYNAMIC, enabled).apply()
+    }
+
+    fun setSeed(seed: SeedPalette) {
+        _appearance.value = _appearance.value.copy(seed = seed)
+        prefs.edit().putInt(KEY_SEED, seed.ordinal).apply()
     }
 
     fun setPureBlack(enabled: Boolean) {
@@ -254,6 +261,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         const val KEY_THEME = "theme_mode"
         const val KEY_DYNAMIC = "dynamic_color"
         const val KEY_BLACK = "pure_black"
+        const val KEY_SEED = "seed_palette"
         const val KEY_META = "show_metadata"
     }
 }

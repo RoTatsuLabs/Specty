@@ -128,3 +128,7 @@ Issues and pull requests are welcome. For code changes, please run `gradle :app:
 Specty is free software released under the [GNU General Public License v3.0](LICENSE).
 
 It uses FFmpeg through ffmpeg-kit. FFmpeg is licensed under the LGPL or GPL depending on how it is built. See the ffmpeg-kit-maintained project for the exact terms of the bundled build.
+
+## Design system
+
+Everything visual lives in `ui/design`: a shape system with morphing corners (`Shapes.kt`), the type scale with emphasized weights (`Typography.kt`), fade-through, shared-axis and container-transform motion (`Transitions.kt`), OKLCH tonal palettes used when dynamic colour is off (`tonal/Tonal.kt`), and the reusable components (`components/`: `SegmentedControl`, `MorphSurface`, `SpectyCard`, `ExpressiveButton`, `ListRow`, `SettingGroup`, `WavyProgressBar`, `ShapeLoader` and more).
