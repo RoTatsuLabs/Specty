@@ -1,5 +1,17 @@
 package com.rotatsulabs.specty.ui.screens
 
+import com.rotatsulabs.specty.ui.design.Corners
+import com.rotatsulabs.specty.ui.design.SpectyShapes
+import com.rotatsulabs.specty.ui.design.components.ButtonKind
+import com.rotatsulabs.specty.ui.design.components.ExpressiveButton
+import com.rotatsulabs.specty.ui.design.components.ExpressiveIconButton
+import com.rotatsulabs.specty.ui.design.components.ExpressiveTopBar
+import com.rotatsulabs.specty.ui.design.components.IconBadge
+import com.rotatsulabs.specty.ui.design.components.MorphSurface
+import com.rotatsulabs.specty.ui.design.components.Pill
+import com.rotatsulabs.specty.ui.design.components.ShapeLoader
+import com.rotatsulabs.specty.ui.design.components.SpectyCard
+import com.rotatsulabs.specty.ui.design.components.WavyProgressBar
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -113,28 +125,21 @@ fun AnalysisScreen(state: AnalysisState, onBack: () -> Unit, onReanalyse: () -> 
         containerColor = MaterialTheme.colorScheme.surface,
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = {
-            TopAppBar(
-                title = { Text(title, maxLines = 1, overflow = TextOverflow.Ellipsis, fontWeight = FontWeight.Bold) },
-                navigationIcon = {
-                    val backSource = remember { MutableInteractionSource() }
-                    FilledTonalIconButton(onClick = onBack, interactionSource = backSource, modifier = Modifier.padding(start = 8.dp).pressScale(backSource)) {
-                        Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Back")
-                    }
-                },
+            ExpressiveTopBar(
+                title = title,
+                onBack = onBack,
+                modifier = Modifier,
                 actions = {
                     if (state is AnalysisState.Done) {
-                        IconButton(onClick = onCompare) {
-                            Icon(Icons.Rounded.Compare, contentDescription = "Compare with another file")
-                        }
-                        val refreshSource = remember { MutableInteractionSource() }
+                        ExpressiveIconButton(Icons.Rounded.Compare, "Compare with another file", onCompare, tonal = false)
                         var spins by remember { mutableStateOf(0) }
                         val spin by animateFloatAsState(spins * 360f, spring(dampingRatio = 0.6f, stiffness = 120f), label = "spin")
-                        IconButton(onClick = { spins++; onReanalyse() }, interactionSource = refreshSource, modifier = Modifier.pressScale(refreshSource)) {
-                            Icon(Icons.Rounded.Refresh, contentDescription = "Analyse again", modifier = Modifier.graphicsLayer { rotationZ = spin })
-                        }
+                        ExpressiveIconButton(
+                            Icons.Rounded.Refresh, "Analyse again", { spins++; onReanalyse() },
+                            tonal = false, iconModifier = Modifier.graphicsLayer { rotationZ = spin },
+                        )
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent),
             )
         },
     ) { padding ->
@@ -151,33 +156,31 @@ fun AnalysisScreen(state: AnalysisState, onBack: () -> Unit, onReanalyse: () -> 
 
 @Composable
 private fun RunningContent(state: AnalysisState.Running) {
-    val progress by animateFloatAsState(state.progress, Motion.effects(), label = "progress")
     Column(
         Modifier.fillMaxSize().padding(32.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
-        CircularProgressIndicator(Modifier.size(72.dp), strokeWidth = 8.dp, strokeCap = StrokeCap.Round)
-        Spacer(Modifier.height(24.dp))
-        Text(state.stage, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-        Spacer(Modifier.height(12.dp))
-        LinearProgressIndicator(progress = { progress }, modifier = Modifier.fillMaxWidth(), strokeCap = StrokeCap.Round)
+        ShapeLoader(size = 80.dp)
+        Spacer(Modifier.height(28.dp))
+        Text(state.stage, style = MaterialTheme.typography.titleMedium)
+        Spacer(Modifier.height(16.dp))
+        WavyProgressBar(state.progress)
     }
 }
 
 @Composable
 private fun FailedContent(message: String, onBack: () -> Unit) {
+    val scheme = MaterialTheme.colorScheme
     Column(Modifier.fillMaxSize().padding(24.dp), verticalArrangement = Arrangement.Center) {
-        Card(
-            shape = RoundedCornerShape(28.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer),
-        ) {
-            Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Icon(Icons.Rounded.ErrorOutline, contentDescription = null, tint = MaterialTheme.colorScheme.onErrorContainer)
-                Text("Could not analyse this file", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onErrorContainer)
-                Text(message, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onErrorContainer)
-                TextButton(onClick = onBack) { Text("Back") }
-            }
+        SpectyCard(corners = SpectyShapes.Hero, color = scheme.errorContainer) {
+            Icon(Icons.Rounded.ErrorOutline, contentDescription = null, tint = scheme.onErrorContainer)
+            Spacer(Modifier.height(8.dp))
+            Text("Could not analyse this file", style = MaterialTheme.typography.titleMedium, color = scheme.onErrorContainer)
+            Spacer(Modifier.height(4.dp))
+            Text(message, style = MaterialTheme.typography.bodyMedium, color = scheme.onErrorContainer)
+            Spacer(Modifier.height(12.dp))
+            ExpressiveButton("Back", onBack, kind = ButtonKind.Tonal)
         }
     }
 }
@@ -216,7 +219,7 @@ private fun Hero(result: AnalysisResult, cached: Boolean) {
         val coverSource = remember { MutableInteractionSource() }
         CoverImage(
             uri = result.uri,
-            shape = RoundedCornerShape(40.dp),
+            shape = SpectyShapes.Feature.toShape(),
             modifier = Modifier
                 .fillMaxWidth(0.62f)
                 .aspectRatio(1f)
@@ -263,18 +266,7 @@ private fun InfoChip(
     text: String,
     container: Color = MaterialTheme.colorScheme.surfaceContainerHigh,
     content: Color = MaterialTheme.colorScheme.onSurface,
-) {
-    val source = remember { MutableInteractionSource() }
-    Surface(onClick = {}, interactionSource = source, modifier = Modifier.pressScale(source, 0.9f), shape = CircleShape, color = container, contentColor = content) {
-        Text(
-            text,
-            style = MaterialTheme.typography.labelLarge,
-            fontWeight = FontWeight.SemiBold,
-            maxLines = 1,
-            modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
-        )
-    }
-}
+) = Pill(text, container = container, content = content)
 
 @Composable
 private fun VerdictCard(report: AuthenticityReport) {
@@ -288,28 +280,20 @@ private fun VerdictCard(report: AuthenticityReport) {
         Verdict.LOSSY_CODEC -> Quad(scheme.surfaceContainerHigh, scheme.onSurface, Icons.Rounded.Info, "Lossy format")
         Verdict.INCONCLUSIVE -> Quad(scheme.surfaceContainerHigh, scheme.onSurface, Icons.Rounded.Info, "Inconclusive")
     }
-    val source = remember { MutableInteractionSource() }
     var popped by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) {
         delay(350)
         popped = true
     }
     val pop by animateFloatAsState(if (popped) 1f else 0f, spring(dampingRatio = 0.4f, stiffness = 260f), label = "verdictPop")
-    Surface(
-        onClick = {},
-        interactionSource = source,
-        modifier = Modifier.fillMaxWidth().pressScale(source, 0.97f),
-        shape = RoundedCornerShape(32.dp),
-        color = container,
-        contentColor = content,
-    ) {
-        Row(Modifier.padding(20.dp), horizontalArrangement = Arrangement.spacedBy(16.dp), verticalAlignment = Alignment.Top) {
-            Surface(shape = CircleShape, color = content.copy(alpha = 0.14f), modifier = Modifier.size(48.dp).scale(pop)) {
-                Box(contentAlignment = Alignment.Center) { Icon(icon, contentDescription = null, modifier = Modifier.size(26.dp)) }
-            }
-            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Text(headline, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                Text(report.note, style = MaterialTheme.typography.bodyMedium)
+    SpectyCard(modifier = Modifier.fillMaxWidth(), corners = SpectyShapes.Hero, color = container) {
+        androidx.compose.runtime.CompositionLocalProvider(androidx.compose.material3.LocalContentColor provides content) {
+            Row(horizontalArrangement = Arrangement.spacedBy(16.dp), verticalAlignment = Alignment.Top) {
+                IconBadge(icon, Modifier.scale(pop), container = content.copy(alpha = 0.14f), content = content, corners = Corners(24.dp), size = 52.dp)
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Text(headline, style = MaterialTheme.typography.titleMedium)
+                    Text(report.note, style = MaterialTheme.typography.bodyMedium)
+                }
             }
         }
     }
@@ -322,24 +306,10 @@ private data class Quad(val container: Color, val content: Color, val icon: Imag
 private fun MetricTiles(result: AnalysisResult) {
     val levels = result.levels
     val scheme = MaterialTheme.colorScheme
-    val outer = 32.dp
-    val inner = 10.dp
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(3.dp)) {
-        MetricTile(
-            "Dynamic Range", Fmt.db(levels.dynamicRangeDb),
-            RoundedCornerShape(topStart = outer, bottomStart = outer, topEnd = inner, bottomEnd = inner),
-            scheme.primaryContainer, scheme.onPrimaryContainer, Modifier.weight(1f),
-        )
-        MetricTile(
-            "Loudness", Fmt.lufs(levels.lufs),
-            RoundedCornerShape(inner),
-            scheme.secondaryContainer, scheme.onSecondaryContainer, Modifier.weight(1f),
-        )
-        MetricTile(
-            "True Peak", Fmt.dbtp(levels.truePeakDbtp),
-            RoundedCornerShape(topStart = inner, bottomStart = inner, topEnd = outer, bottomEnd = outer),
-            scheme.tertiaryContainer, scheme.onTertiaryContainer, Modifier.weight(1f),
-        )
+        MetricTile("Dynamic Range", Fmt.db(levels.dynamicRangeDb), SpectyShapes.TileStart, scheme.primaryContainer, scheme.onPrimaryContainer, Modifier.weight(1f))
+        MetricTile("Loudness", Fmt.lufs(levels.lufs), SpectyShapes.TileMiddle, scheme.secondaryContainer, scheme.onSecondaryContainer, Modifier.weight(1f))
+        MetricTile("True Peak", Fmt.dbtp(levels.truePeakDbtp), SpectyShapes.TileEnd, scheme.tertiaryContainer, scheme.onTertiaryContainer, Modifier.weight(1f))
     }
 }
 
@@ -347,7 +317,7 @@ private fun MetricTiles(result: AnalysisResult) {
 private fun MetricTile(
     label: String,
     value: String,
-    shape: RoundedCornerShape,
+    corners: Corners,
     container: Color,
     content: Color,
     modifier: Modifier = Modifier,
@@ -362,11 +332,10 @@ private fun MetricTile(
         progress.animateTo(1f, tween(1100, delayMillis = 250, easing = FastOutSlowInEasing))
     }
     val shown = if (target != null) String.format(Locale.US, "%.${decimals}f", target * progress.value) else number
-    val source = remember { MutableInteractionSource() }
-    Surface(onClick = {}, interactionSource = source, modifier = modifier.pressScale(source, 0.93f), shape = shape, color = container, contentColor = content) {
+    MorphSurface(modifier, corners, container, content, onClick = {}) {
         Column(Modifier.padding(horizontal = 14.dp, vertical = 16.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
             Text(label, style = MaterialTheme.typography.labelMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            Text(shown, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold, maxLines = 1)
+            Text(shown, style = MaterialTheme.typography.headlineSmall, maxLines = 1)
             Text(unit.ifEmpty { " " }, style = MaterialTheme.typography.labelMedium, maxLines = 1)
         }
     }
@@ -374,18 +343,10 @@ private fun MetricTile(
 
 @Composable
 internal fun SectionCard(title: String, content: @Composable () -> Unit) {
-    val source = remember { MutableInteractionSource() }
-    Surface(
-        onClick = {},
-        interactionSource = source,
-        modifier = Modifier.fillMaxWidth().pressScale(source, 0.985f),
-        shape = RoundedCornerShape(32.dp),
-        color = MaterialTheme.colorScheme.surfaceContainer,
-    ) {
-        Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-            Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-            content()
-        }
+    SpectyCard(Modifier.fillMaxWidth()) {
+        Text(title, style = MaterialTheme.typography.titleMedium)
+        Spacer(Modifier.height(16.dp))
+        content()
     }
 }
 
@@ -443,11 +404,9 @@ private fun ChannelsCard(result: AnalysisResult) {
     SectionCard("Per-channel stats") {
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             result.levels.channels.forEachIndexed { index, channel ->
-                Surface(shape = RoundedCornerShape(20.dp), color = MaterialTheme.colorScheme.surfaceContainerHigh) {
+                MorphSurface(Modifier.fillMaxWidth(), Corners(20.dp), MaterialTheme.colorScheme.surfaceContainerHigh, morphOnPress = false) {
                     Row(Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
-                        Surface(shape = CircleShape, color = MaterialTheme.colorScheme.secondaryContainer, contentColor = MaterialTheme.colorScheme.onSecondaryContainer) {
-                            Text("Ch ${index + 1}", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp))
-                        }
+                        Pill("Ch ${index + 1}")
                         Spacer(Modifier.width(14.dp))
                         Text(
                             buildAnnotatedString {
