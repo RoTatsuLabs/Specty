@@ -1,5 +1,12 @@
 package com.rotatsulabs.specty.ui.design.components
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -13,6 +20,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -24,6 +32,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.rotatsulabs.specty.ui.design.Corners
 import com.rotatsulabs.specty.ui.design.SpectyShapes
+import com.rotatsulabs.specty.ui.theme.Motion
 
 enum class ButtonKind { Filled, Tonal, Outlined, Text }
 
@@ -86,16 +95,27 @@ fun ExpressiveIconButton(
         else -> Color.Transparent
     }
     val content = if (toggled) s.onPrimary else s.onSurfaceVariant
+    // The silhouette springs between round and rounded-square instead of jumping.
+    val radius by animateDpAsState(if (toggled) size * 0.34f else size, Motion.spatial(), label = "iconCorner")
     MorphSurface(
         modifier = modifier.size(size).semantics { contentDescription = description },
-        corners = if (toggled) Corners(size * 0.34f) else Corners(size),
+        corners = Corners(radius),
         color = container,
         contentColor = content,
         onClick = onClick,
         role = Role.Button,
         animateColor = true,
     ) {
-        Box(Modifier.size(size), contentAlignment = Alignment.Center) { Icon(icon, null, iconModifier.size(size * 0.5f)) }
+        Box(Modifier.size(size), contentAlignment = Alignment.Center) {
+            AnimatedContent(
+                targetState = icon,
+                transitionSpec = {
+                    (scaleIn(Motion.spatialFast(), initialScale = 0.3f) + fadeIn(Motion.effects())) togetherWith
+                        (scaleOut(Motion.effects(), targetScale = 0.3f) + fadeOut(Motion.effects()))
+                },
+                label = "iconSwap",
+            ) { current -> Icon(current, null, iconModifier.size(size * 0.5f)) }
+        }
     }
 }
 

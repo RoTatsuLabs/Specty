@@ -43,6 +43,7 @@ import com.rotatsulabs.specty.audio.Verdict
 import com.rotatsulabs.specty.ui.components.Fmt
 import com.rotatsulabs.specty.ui.components.Stat
 import com.rotatsulabs.specty.ui.components.StatGrid
+import com.rotatsulabs.specty.ui.components.rememberGrow
 import com.rotatsulabs.specty.ui.theme.Motion
 import java.util.Locale
 import kotlin.math.abs
@@ -56,7 +57,8 @@ internal fun ConfidenceCard(report: AuthenticityReport, info: AudioInfo) {
     if (report.verdict == Verdict.INCONCLUSIVE) return
     val scheme = MaterialTheme.colorScheme
     val target = report.confidence / 100f
-    val animated by animateFloatAsState(target, Motion.effects(), label = "confidence")
+    val grow by rememberGrow(450)
+    val animated = (target * grow).coerceIn(0f, 1f)
     val label = when {
         report.confidence >= 80 -> "High confidence"
         report.confidence >= 55 -> "Medium confidence"
@@ -96,7 +98,7 @@ private fun CutoffTimeline(report: AuthenticityReport, info: AudioInfo) {
     val cuts = report.segmentCutoffs
     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
         Text("Cutoff across the track", style = MaterialTheme.typography.labelLarge, color = scheme.onSurfaceVariant)
-        val reveal by animateFloatAsState(1f, Motion.effects(), label = "cutoffReveal")
+        val reveal by rememberGrow(600)
         Canvas(Modifier.fillMaxWidth().height(72.dp)) {
             val gap = 3.dp.toPx()
             val w = (size.width - gap * (cuts.size - 1)) / cuts.size
@@ -105,7 +107,7 @@ private fun CutoffTimeline(report: AuthenticityReport, info: AudioInfo) {
                 if (hz <= 0f) {
                     drawRoundRect(none, Offset(x, 0f), Size(w, size.height), androidx.compose.ui.geometry.CornerRadius(w / 2))
                 } else {
-                    val h = size.height * (hz / info.nyquistHz.toFloat()).coerceIn(0.05f, 1f) * reveal
+                    val h = size.height * (hz / info.nyquistHz.toFloat()).coerceIn(0.05f, 1f) * reveal.coerceIn(0f, 1f)
                     drawRoundRect(bar, Offset(x, size.height - h), Size(w, h), androidx.compose.ui.geometry.CornerRadius(w / 2))
                 }
             }
@@ -134,7 +136,7 @@ internal fun TimelineCard(levels: LevelStats) {
     val clipColor = scheme.error
     val grid = scheme.outlineVariant
     var sel by remember { mutableStateOf(-1) }
-    val reveal by animateFloatAsState(1f, Motion.effects(), label = "timelineReveal")
+    val reveal by rememberGrow(500)
 
     val audible = t.loudness.filter { it > -69.9f }
     val lo = if (audible.isEmpty()) -60f else (((audible.min() - 6f) / 10f).toInt() * 10f - 10f).coerceAtLeast(-70f)
@@ -154,7 +156,7 @@ internal fun TimelineCard(levels: LevelStats) {
                         )
                     },
             ) {
-                fun yOf(db: Float) = size.height * (1f - ((db - lo) / (hi - lo)).coerceIn(0f, 1f) * reveal)
+                fun yOf(db: Float) = size.height * (1f - ((db - lo) / (hi - lo)).coerceIn(0f, 1f) * reveal.coerceIn(0f, 1f))
                 fun xOf(i: Int) = (i + 0.5f) / t.points * size.width
                 // Grid every 10 dB.
                 var g = hi
