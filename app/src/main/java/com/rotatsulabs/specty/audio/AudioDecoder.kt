@@ -18,19 +18,17 @@ object AudioDecoder {
         uri: Uri,
         durationSec: Double,
         output: File,
+        maxBytes: Long = 0L,
         onProgress: (Float) -> Unit,
     ) {
         val saf = FFmpegKitConfig.getSafParameterForRead(context, uri)
             ?: throw IOException("Cannot open this file")
-        val args = arrayOf(
-            "-hide_banner", "-nostdin", "-y",
-            "-i", saf,
-            "-map", "0:a:0",
-            "-vn", "-sn", "-dn",
-            "-f", "f32le",
-            "-acodec", "pcm_f32le",
-            output.absolutePath,
-        )
+        val args = buildList {
+            addAll(listOf("-hide_banner", "-nostdin", "-y", "-i", saf, "-map", "0:a:0", "-vn", "-sn", "-dn"))
+            addAll(listOf("-f", "f32le", "-acodec", "pcm_f32le"))
+            if (maxBytes > 0) addAll(listOf("-fs", maxBytes.toString()))
+            add(output.absolutePath)
+        }.toTypedArray()
 
         suspendCancellableCoroutine { continuation ->
             val session = FFmpegKit.executeWithArgumentsAsync(
