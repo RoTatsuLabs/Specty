@@ -11,7 +11,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Contrast
-import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material.icons.rounded.Palette
 import androidx.compose.material.icons.rounded.Sell
 import androidx.compose.material3.MaterialTheme
@@ -19,7 +18,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.rotatsulabs.specty.BuildConfig
 import com.rotatsulabs.specty.audio.WindowFn
 import com.rotatsulabs.specty.ui.components.Reveal
 import com.rotatsulabs.specty.ui.design.components.ButtonKind
@@ -29,7 +27,6 @@ import com.rotatsulabs.specty.ui.design.components.OptionSegmentedControl
 import com.rotatsulabs.specty.ui.design.components.SettingBlock
 import com.rotatsulabs.specty.ui.design.components.SettingGroup
 import com.rotatsulabs.specty.ui.design.components.SettingToggleRow
-import com.rotatsulabs.specty.ui.design.components.SpectyCard
 import com.rotatsulabs.specty.ui.design.components.SwatchRow
 import com.rotatsulabs.specty.ui.design.components.groupCorners
 import com.rotatsulabs.specty.ui.design.tonal.SeedPalette
@@ -55,7 +52,6 @@ fun SettingsScreen(
     onWindowFn: (WindowFn) -> Unit,
     savedCount: Int,
     onClearCache: () -> Unit,
-    onReplayIntro: () -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -146,22 +142,6 @@ fun SettingsScreen(
                 }
             }
 
-            Reveal(4) {
-                SettingGroup("About") {
-                    SpectyCard(corners = com.rotatsulabs.specty.ui.design.SpectyShapes.Tile) {
-                        Text("Specty ${BuildConfig.VERSION_NAME}", style = MaterialTheme.typography.titleLarge)
-                        Spacer(Modifier.height(8.dp))
-                        Text(
-                            "Free software under the GNU General Public License v3.0. Decoding by FFmpeg through a maintained ffmpeg-kit fork. " +
-                                "All analysis runs on your device and nothing is uploaded.",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                        Spacer(Modifier.height(16.dp))
-                        ExpressiveButton("Show the intro again", onReplayIntro, kind = ButtonKind.Tonal, icon = Icons.Rounded.Info)
-                    }
-                }
-            }
             Spacer(Modifier.navigationBarsPadding().height(16.dp))
         }
     }
