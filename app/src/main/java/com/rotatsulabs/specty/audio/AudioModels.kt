@@ -94,6 +94,7 @@ enum class Verdict {
     UPSAMPLED,
     BAND_LIMITED,
     LOSSY_CODEC,
+    DOLBY_ATMOS,
     INCONCLUSIVE,
 }
 

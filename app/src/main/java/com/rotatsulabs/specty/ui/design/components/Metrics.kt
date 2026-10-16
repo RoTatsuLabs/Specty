@@ -66,6 +66,7 @@ fun verdictStyle(verdict: Verdict): VerdictStyle? {
         Verdict.LOSSY_SOURCE, Verdict.UPSAMPLED -> VerdictStyle("Fake", s.errorContainer, s.onErrorContainer)
         Verdict.POSSIBLE_LOSSY_SOURCE, Verdict.BAND_LIMITED -> VerdictStyle("Maybe", s.secondaryContainer, s.onSecondaryContainer)
         Verdict.LOSSY_CODEC -> VerdictStyle("Lossy", s.surfaceContainerHighest, s.onSurfaceVariant)
+        Verdict.DOLBY_ATMOS -> VerdictStyle("Dolby Atmos", s.inverseSurface, s.inverseOnSurface)
         Verdict.INCONCLUSIVE -> null
     }
 }
