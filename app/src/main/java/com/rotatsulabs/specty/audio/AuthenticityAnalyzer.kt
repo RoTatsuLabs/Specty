@@ -36,6 +36,14 @@ object AuthenticityAnalyzer {
         val cutoffKhz = fmt(cutoff / 1000.0)
         val bitDepthNote = bitDepthNote(info, effectiveBitDepth)
 
+        if (info.isDolbyAtmos) {
+            return AuthenticityReport(
+                Verdict.DOLBY_ATMOS, cutoff, hasCliff, bestDrop,
+                "Dolby Atmos object audio carried in a Dolby Digital Plus (E-AC-3) stream. " +
+                    "The spectrum is not judged for lossy origin.",
+            )
+        }
+
         if (info.isLossy) {
             val note = if (hasCliff) {
                 "${Codecs.displayName(info.codec)} is a lossy codec; its encoder low-pass sits near $cutoffKhz kHz."
@@ -110,8 +118,8 @@ object AuthenticityAnalyzer {
             Verdict.BAND_LIMITED -> 15.0
             else -> 0.0
         }
-        if (report.verdict == Verdict.LOSSY_CODEC) confidence = 99.0
-        if (whole.dynamic < 35.0 && report.verdict != Verdict.LOSSY_CODEC) confidence -= 10.0
+        if (report.verdict == Verdict.LOSSY_CODEC || report.verdict == Verdict.DOLBY_ATMOS) confidence = 99.0
+        if (whole.dynamic < 35.0 && report.verdict != Verdict.LOSSY_CODEC && report.verdict != Verdict.DOLBY_ATMOS) confidence -= 10.0
 
         val guess = if (report.hasCliff && report.verdict != Verdict.GENUINE && report.verdict != Verdict.UPSAMPLED) {
             encoderGuess(report.cutoffHz, info.codec)

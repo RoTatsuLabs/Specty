@@ -61,8 +61,20 @@ object MediaProbe {
                 ?: 0.0,
             sizeBytes = if (meta.sizeBytes > 0) meta.sizeBytes else media.size?.toLongOrNull() ?: 0L,
             tags = readTags(media.tags, stream.tags),
-            profile = props.optString("profile").ifEmpty { null },
+            profile = atmosProfile(context, uri, props.optString("codec_name"), media.format)
+                ?: props.optString("profile").ifEmpty { null },
         )
+    }
+
+    private const val ATMOS_PROFILE = "Dolby Digital Plus + Dolby Atmos"
+
+    /** E-AC-3 in MP4 carries Atmos as a flag FFprobe does not report, so read the `dec3` box directly. */
+    private fun atmosProfile(context: Context, uri: Uri, codec: String, format: String?): String? {
+        if (codec != "eac3" || format?.contains("mp4") != true) return null
+        val found = runCatching {
+            AtmosProbe.isAtmos { context.contentResolver.openInputStream(uri) ?: throw IOException("Cannot open") }
+        }.getOrDefault(false)
+        return if (found) ATMOS_PROFILE else null
     }
 
     /** Merges container and stream tags (Ogg and Opus keep theirs on the stream), dropping lyrics and duplicates. */
