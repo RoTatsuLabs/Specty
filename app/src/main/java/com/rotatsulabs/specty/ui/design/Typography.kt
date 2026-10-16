@@ -2,26 +2,15 @@ package com.rotatsulabs.specty.ui.design
 
 import androidx.compose.material3.Typography
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.DeviceFontFamilyName
-import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.font.FontVariation
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 
 /**
- * The system sans-serif with its weight axis, so the heavier display weights are drawn by the font itself
- * where the device ships a variable font and fall back to the nearest static weight elsewhere.
+ * The system sans-serif. Android 13+ ships it as a variable font, so every weight used below is drawn by the
+ * font itself, and the default family needs no extra font loading at startup.
  */
-private fun variable(weight: Int) = Font(
-    familyName = DeviceFontFamilyName("sans-serif"),
-    weight = FontWeight(weight),
-    variationSettings = FontVariation.Settings(FontVariation.weight(weight)),
-)
-
-val SpectyFontFamily = FontFamily(
-    variable(400), variable(500), variable(600), variable(700), variable(800), variable(900),
-)
+val SpectyFontFamily: FontFamily = FontFamily.SansSerif
 
 private val base = Typography()
 

@@ -1,5 +1,6 @@
 package com.rotatsulabs.specty.ui.screens
 
+import com.rotatsulabs.specty.ui.components.withoutExplicitMark
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.layout.onGloballyPositioned
@@ -416,7 +417,7 @@ private fun Header(onRescan: () -> Unit, onSettings: () -> Unit, canRescan: Bool
 @Composable
 private fun EqualizerMark() {
     val transition = rememberInfiniteTransition(label = "equalizer")
-    val phase by transition.animateFloat(
+    val phase = transition.animateFloat(
         initialValue = 0f,
         targetValue = 1f,
         animationSpec = infiniteRepeatable(tween(2400, easing = LinearEasing), RepeatMode.Restart),
@@ -430,7 +431,7 @@ private fun EqualizerMark() {
             val gap = size.width * 0.12f
             val barWidth = (size.width - gap * (count - 1)) / count
             for (i in 0 until count) {
-                val h = 0.28f + 0.72f * abs(sin(phase * 2f * PI.toFloat() + i * 0.9f))
+                val h = 0.28f + 0.72f * abs(sin(phase.value * 2f * PI.toFloat() + i * 0.9f))
                 val barHeight = size.height * h
                 drawRoundRect(
                     color = bars,
@@ -648,7 +649,7 @@ private fun TrackRow(track: Track, index: Int, verdict: Verdict?, onOpen: (Rect?
             CoverImage(uri = track.uri, shape = SpectyShapes.Cover.toShape(), modifier = Modifier.size(60.dp), sizePx = 180) { CoverFallback(track) }
             Spacer(Modifier.width(16.dp))
             Column(Modifier.weight(1f)) {
-                Text(track.title, style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text(track.title.withoutExplicitMark(), style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 val parts = listOfNotNull(track.artist, Fmt.duration(track.durationMs / 1000.0))
                 Text(
                     parts.joinToString("  ·  "),
@@ -699,7 +700,7 @@ private fun TrackTile(track: Track, index: Int, verdict: Verdict?, onOpen: (Rect
                 }
             }
             Text(
-                track.title,
+                track.title.withoutExplicitMark(),
                 style = MaterialTheme.typography.titleSmall,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,

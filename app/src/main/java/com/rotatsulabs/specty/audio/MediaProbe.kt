@@ -61,6 +61,7 @@ object MediaProbe {
                 ?: 0.0,
             sizeBytes = if (meta.sizeBytes > 0) meta.sizeBytes else media.size?.toLongOrNull() ?: 0L,
             tags = readTags(media.tags, stream.tags),
+            profile = props.optString("profile").ifEmpty { null },
         )
     }
 
