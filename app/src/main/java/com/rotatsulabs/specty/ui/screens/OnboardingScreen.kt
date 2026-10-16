@@ -144,6 +144,8 @@ fun OnboardingScreen(onFinish: () -> Unit, onPermission: (Boolean) -> Unit, modi
 
     Column(
         modifier.fillMaxSize()
+            // Opaque base so the screen underneath never shows through the translucent wash.
+            .background(scheme.surface)
             .background(Brush.verticalGradient(listOf(wash.copy(alpha = 0.6f), scheme.surface, scheme.surface)))
             // Swallow touches so nothing underneath reacts while the intro is up.
             .pointerInput(Unit) { detectTapGestures { } }
