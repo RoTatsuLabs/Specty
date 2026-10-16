@@ -60,7 +60,14 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit, onPickCompare: (
     var dockBounds by remember { mutableStateOf<Rect?>(null) }
     var showSettings by rememberSaveable { mutableStateOf(false) }
     var viewerView by rememberSaveable { mutableStateOf<Int?>(null) }
-    val keyFor = remember(fftSize, windowFn) { { track: com.rotatsulabs.specty.data.Track -> viewModel.cacheKey(track.uri, track.sizeBytes, fftSize, windowFn) } }
+    // Hashing every track is not free, so remember each key for as long as the settings it depends on stay put.
+    val keyFor = remember(fftSize, windowFn) {
+        val memo = HashMap<com.rotatsulabs.specty.data.Track, String>()
+        val lookup: (com.rotatsulabs.specty.data.Track) -> String = { track ->
+            memo.getOrPut(track) { viewModel.cacheKey(track.uri, track.sizeBytes, fftSize, windowFn) }
+        }
+        lookup
+    }
     val analysisOpen by viewModel.viewing.collectAsStateWithLifecycle()
     val dockVisible = !analysisOpen && analysis !is AnalysisState.Idle
 

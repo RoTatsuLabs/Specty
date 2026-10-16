@@ -56,9 +56,9 @@ fun AnalysisDock(state: AnalysisState, onOpen: () -> Unit, onDismiss: () -> Unit
         else -> scheme.onSecondaryContainer
     }
     val title = when (state) {
-        is AnalysisState.Running -> state.title
-        is AnalysisState.Done -> state.result.info.displayName
-        is AnalysisState.Failed -> state.title
+        is AnalysisState.Running -> state.title.withoutExplicitMark()
+        is AnalysisState.Done -> state.result.info.displayName.withoutExplicitMark()
+        is AnalysisState.Failed -> state.title.withoutExplicitMark()
         AnalysisState.Idle -> ""
     }
     val subtitle = when (state) {

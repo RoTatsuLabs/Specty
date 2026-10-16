@@ -57,7 +57,13 @@ class ResultCache private constructor(context: Context) {
     fun keyOf(uri: Uri, sizeBytes: Long, fftSize: Int, window: WindowFn = WindowFn.Hann): String {
         val suffix = if (window == WindowFn.Hann) "" else "|w=${window.name}"
         val digest = MessageDigest.getInstance("SHA-1").digest("$uri|$sizeBytes|$fftSize$suffix".toByteArray())
-        return digest.joinToString("") { "%02x".format(it) }
+        // Called once per track on every library refresh, so avoid String.format here.
+        val hex = CharArray(digest.size * 2)
+        digest.forEachIndexed { i, b ->
+            hex[i * 2] = HEX[(b.toInt() shr 4) and 0xF]
+            hex[i * 2 + 1] = HEX[b.toInt() and 0xF]
+        }
+        return String(hex)
     }
 
     fun load(key: String, uri: Uri): AnalysisResult? {
@@ -129,6 +135,7 @@ class ResultCache private constructor(context: Context) {
             out.writeLong(bitrateBps ?: -1L); out.writeDouble(durationSec); out.writeLong(sizeBytes)
             out.writeInt(tags.size)
             tags.forEach { out.writeUTF(it.first); writeLong(out, it.second) }
+            writeStr(out, profile)
         }
         with(r.levels) {
             out.writeDouble(peakDb); out.writeDouble(rmsDb)
@@ -175,6 +182,7 @@ class ResultCache private constructor(context: Context) {
             bitDepth = inp.readInt().takeIf { it >= 0 }, sampleFormat = readStr(inp),
             bitrateBps = inp.readLong().takeIf { it >= 0 }, durationSec = inp.readDouble(), sizeBytes = inp.readLong(),
             tags = List(inp.readInt()) { inp.readUTF() to readLong(inp) },
+            profile = readStr(inp),
         )
         val peak = inp.readDouble(); val rms = inp.readDouble()
         val lufs = inp.readBoolean().let { has -> inp.readDouble().takeIf { has } }
@@ -231,7 +239,8 @@ class ResultCache private constructor(context: Context) {
     private fun readStr(inp: DataInputStream): String? = inp.readBoolean().let { has -> inp.readUTF().takeIf { has } }
 
     companion object {
-        private const val MAGIC = 0x53504333 // "SPC3"
+        private val HEX = "0123456789abcdef".toCharArray()
+        private const val MAGIC = 0x53504334 // "SPC4": adds the codec profile
         /** Verdicts remembered for library badges. */
         private const val MAX_ENTRIES = 20_000
         /** Disk budget for full results (spectrograms dominate). */
