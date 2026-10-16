@@ -365,6 +365,7 @@ private fun VerdictCard(report: AuthenticityReport) {
         Verdict.UPSAMPLED -> Quad(scheme.errorContainer, scheme.onErrorContainer, Icons.Rounded.Warning, "Likely upsampled")
         Verdict.BAND_LIMITED -> Quad(scheme.secondaryContainer, scheme.onSecondaryContainer, Icons.Rounded.WarningAmber, "Band-limited spectrum")
         Verdict.LOSSY_CODEC -> Quad(scheme.surfaceContainerHigh, scheme.onSurface, Icons.Rounded.Info, "Lossy format")
+        Verdict.DOLBY_ATMOS -> Quad(scheme.inverseSurface, scheme.inverseOnSurface, Icons.Rounded.SurroundSound, "Dolby Atmos")
         Verdict.INCONCLUSIVE -> Quad(scheme.surfaceContainerHigh, scheme.onSurface, Icons.Rounded.Info, "Inconclusive")
     }
     var popped by remember { mutableStateOf(false) }

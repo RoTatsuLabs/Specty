@@ -93,6 +93,7 @@ object CompareMath {
         Verdict.UPSAMPLED -> "upsampled"
         Verdict.BAND_LIMITED -> "band-limited"
         Verdict.LOSSY_CODEC -> "a lossy format"
+        Verdict.DOLBY_ATMOS -> "Dolby Atmos"
         Verdict.INCONCLUSIVE -> "inconclusive"
     }
 }

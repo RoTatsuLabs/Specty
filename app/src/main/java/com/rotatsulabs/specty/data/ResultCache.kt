@@ -240,7 +240,7 @@ class ResultCache private constructor(context: Context) {
 
     companion object {
         private val HEX = "0123456789abcdef".toCharArray()
-        private const val MAGIC = 0x53504334 // "SPC4": adds the codec profile
+        private const val MAGIC = 0x53504335 // "SPC5": Dolby Atmos verdict
         /** Verdicts remembered for library badges. */
         private const val MAX_ENTRIES = 20_000
         /** Disk budget for full results (spectrograms dominate). */

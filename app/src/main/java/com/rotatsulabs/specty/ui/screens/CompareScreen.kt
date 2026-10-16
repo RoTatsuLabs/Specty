@@ -392,6 +392,7 @@ private fun verdictShort(r: AnalysisResult): String {
         com.rotatsulabs.specty.audio.Verdict.UPSAMPLED -> "Upsampled"
         com.rotatsulabs.specty.audio.Verdict.BAND_LIMITED -> "Band-limited"
         com.rotatsulabs.specty.audio.Verdict.LOSSY_CODEC -> "Lossy format"
+        com.rotatsulabs.specty.audio.Verdict.DOLBY_ATMOS -> "Dolby Atmos"
         com.rotatsulabs.specty.audio.Verdict.INCONCLUSIVE -> "Inconclusive"
     }
     return if (r.authenticity.confidence > 0) "$v (${r.authenticity.confidence}%)" else v
