@@ -25,6 +25,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.rotatsulabs.specty.ui.screens.AboutScreen
 import com.rotatsulabs.specty.ui.screens.AnalysisScreen
 import com.rotatsulabs.specty.ui.screens.LibraryScreen
 import com.rotatsulabs.specty.ui.screens.SettingsScreen
@@ -63,6 +64,7 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit, onPickCompare: (
     val flight = remember { CoverFlight() }
     var dockBounds by remember { mutableStateOf<Rect?>(null) }
     var showSettings by rememberSaveable { mutableStateOf(false) }
+    var showAbout by rememberSaveable { mutableStateOf(false) }
     var viewerView by rememberSaveable { mutableStateOf<Int?>(null) }
     // Hashing every track is not free, so remember each key for as long as the settings it depends on stay put.
     val keyFor = remember(fftSize, windowFn) {
@@ -83,6 +85,7 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit, onPickCompare: (
 
     BackHandler(enabled = analysisOpen) { viewModel.closeAnalysis() }
     BackHandler(enabled = showSettings) { showSettings = false }
+    BackHandler(enabled = showAbout) { showAbout = false }
     BackHandler(enabled = compare !is CompareState.Idle) { viewModel.closeCompare() }
     // Drop a stale viewer request if the analysis it belonged to is gone.
     val viewerResult = (held.state as? AnalysisState.Done)?.result
@@ -103,6 +106,7 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit, onPickCompare: (
                 flight = flight,
                 onPickFile = onPickFile,
                 onOpenSettings = { showSettings = true },
+                onOpenAbout = { showAbout = true },
                 dockVisible = dockVisible,
                 verdicts = verdicts,
                 keyFor = keyFor,
@@ -166,8 +170,20 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit, onPickCompare: (
                     onWindowFn = viewModel::setWindowFn,
                     savedCount = verdicts.size,
                     onClearCache = viewModel::clearCache,
-                    onReplayIntro = { showSettings = false; viewModel.replayOnboarding() },
                     onBack = { showSettings = false },
+                )
+            }
+        }
+
+        AnimatedVisibility(
+            visible = showAbout,
+            enter = Springy.enterX(true),
+            exit = Springy.exitX(false),
+        ) {
+            Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.surface) {
+                AboutScreen(
+                    onReplayIntro = { showAbout = false; viewModel.replayOnboarding() },
+                    onBack = { showAbout = false },
                 )
             }
         }
