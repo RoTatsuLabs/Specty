@@ -93,6 +93,7 @@ fun ExpressiveIconButton(
         contentColor = content,
         onClick = onClick,
         role = Role.Button,
+        animateColor = true,
     ) {
         Box(Modifier.size(size), contentAlignment = Alignment.Center) { Icon(icon, null, iconModifier.size(size * 0.5f)) }
     }

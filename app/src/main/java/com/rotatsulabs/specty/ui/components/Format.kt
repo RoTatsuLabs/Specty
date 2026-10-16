@@ -49,3 +49,8 @@ object Fmt {
     fun perChannel(peak: Double, rms: Double, dr: Double): String =
         String.format(Locale.US, "P %.1f / R %.1f / DR %.1f", peak, rms, dr)
 }
+
+private val explicitMark = Regex("""\s*[\[(]\s*(?:E|Explicit)\s*[\])]""", RegexOption.IGNORE_CASE)
+
+/** Drops a trailing "[E]" or "(Explicit)" that rippers add to titles; the explicit flag has its own tag. */
+fun String.withoutExplicitMark(): String = replace(explicitMark, "").trim()

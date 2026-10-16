@@ -50,6 +50,8 @@ fun MorphSurface(
     role: Role? = null,
     morphOnPress: Boolean = true,
     shadowElevation: androidx.compose.ui.unit.Dp = 0.dp,
+    /** Crossfade colour changes (toggles, selection). Static surfaces skip the animation, which matters in long lists. */
+    animateColor: Boolean = false,
     content: @Composable () -> Unit,
 ) {
     val source = remember { MutableInteractionSource() }
@@ -60,7 +62,7 @@ fun MorphSurface(
     var m = modifier
     if (onClick != null) m = m.pressScale(source, 0.97f)
     if (shadowElevation > 0.dp) m = m.shadow(shadowElevation, shape)
-    m = m.clip(shape).background(animateTone(color), shape)
+    m = m.clip(shape).background(if (animateColor) animateTone(color) else color, shape)
     if (border != null) m = m.border(border, shape)
     if (onClick != null) {
         m = m.combinedClickable(

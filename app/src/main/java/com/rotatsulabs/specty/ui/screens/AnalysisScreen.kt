@@ -1,5 +1,6 @@
 package com.rotatsulabs.specty.ui.screens
 
+import com.rotatsulabs.specty.ui.components.withoutExplicitMark
 import com.rotatsulabs.specty.ui.design.Corners
 import com.rotatsulabs.specty.ui.design.SpectyShapes
 import com.rotatsulabs.specty.ui.design.components.ButtonKind
@@ -16,6 +17,8 @@ import com.rotatsulabs.specty.ui.design.components.WavyProgressBar
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -41,6 +44,7 @@ import androidx.compose.material.icons.rounded.DataObject
 import androidx.compose.material.icons.rounded.Equalizer
 import androidx.compose.material.icons.rounded.ErrorOutline
 import androidx.compose.material.icons.rounded.Explicit
+import androidx.compose.material.icons.rounded.SurroundSound
 import androidx.compose.material.icons.rounded.FilterAlt
 import androidx.compose.material.icons.rounded.GraphicEq
 import androidx.compose.material.icons.rounded.Info
@@ -212,6 +216,7 @@ private fun ResultContent(result: AnalysisResult, cached: Boolean, showMetadata:
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun Hero(result: AnalysisResult, cached: Boolean) {
     val info = result.info
@@ -236,27 +241,26 @@ private fun Hero(result: AnalysisResult, cached: Boolean) {
         }
         Row(Modifier.padding(horizontal = 8.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(
-                info.displayName.substringBeforeLast('.'),
+                info.displayName.substringBeforeLast('.').withoutExplicitMark(),
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.weight(1f, fill = false),
             )
-            if (isExplicit(info.tags)) {
-                Icon(Icons.Rounded.Explicit, contentDescription = "Explicit", tint = scheme.onSurfaceVariant, modifier = Modifier.size(26.dp))
-            }
         }
-        Row(
-            Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+        FlowRow(
+            Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             val lossless = info.isLossless
             InfoChip(Codecs.displayName(info.codec), if (lossless) scheme.tertiaryContainer else scheme.secondaryContainer, if (lossless) scheme.onTertiaryContainer else scheme.onSecondaryContainer)
             InfoChip(Fmt.kHz(info.sampleRate.toDouble()))
             info.bitDepth?.let { InfoChip("$it-bit") }
             InfoChip(Fmt.size(info.sizeBytes))
+            if (info.isDolbyAtmos) Pill("Dolby Atmos", container = scheme.inverseSurface, content = scheme.inverseOnSurface, icon = Icons.Rounded.SurroundSound)
+            if (isExplicit(info.tags)) Pill("Explicit", icon = Icons.Rounded.Explicit)
             if (cached) InfoChip("Saved result", scheme.primaryContainer, scheme.onPrimaryContainer)
         }
     }

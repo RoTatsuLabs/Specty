@@ -16,7 +16,11 @@ data class AudioInfo(
     val sizeBytes: Long,
     /** Container and stream tags as read by FFprobe, lyrics excluded. Original key case is kept. */
     val tags: List<Pair<String, String>> = emptyList(),
+    /** Codec profile as FFprobe reports it, e.g. "Dolby Digital Plus + Dolby Atmos". */
+    val profile: String? = null,
 ) {
+    /** Dolby Atmos is carried inside E-AC-3 (JOC) or TrueHD streams, and FFprobe names it in the profile. */
+    val isDolbyAtmos: Boolean get() = profile?.contains("atmos", ignoreCase = true) == true
     val nyquistHz: Double get() = sampleRate / 2.0
     val isLossless: Boolean get() = Codecs.isLossless(codec)
     val isLossy: Boolean get() = Codecs.isLossy(codec)
@@ -44,6 +48,9 @@ object Codecs {
 
     fun displayName(codec: String): String = when (val c = codec.lowercase()) {
         "alac" -> "ALAC"
+        "ac3" -> "Dolby Digital"
+        "eac3" -> "Dolby Digital Plus"
+        "truehd" -> "Dolby TrueHD"
         "flac" -> "FLAC"
         "mp3" -> "MP3"
         "aac" -> "AAC"

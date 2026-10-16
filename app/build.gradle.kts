@@ -23,6 +23,16 @@ android {
     }
 
     buildTypes {
+        // CI ships the debug build, and a debuggable, unshrunk Compose app runs several times slower than a
+        // release one. Keep debug signing, but build it the way release is built.
+        debug {
+            isDebuggable = false
+            isMinifyEnabled = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro",
+            )
+        }
         release {
             isMinifyEnabled = true
             isShrinkResources = true
