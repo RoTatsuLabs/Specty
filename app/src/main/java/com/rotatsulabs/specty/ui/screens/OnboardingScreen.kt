@@ -1,5 +1,18 @@
 package com.rotatsulabs.specty.ui.screens
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.ui.graphics.Brush
+import com.rotatsulabs.specty.ui.design.LobedShape
+import com.rotatsulabs.specty.ui.design.SpectyShapes
+import com.rotatsulabs.specty.ui.design.animateTone
+import com.rotatsulabs.specty.ui.design.components.ExpressiveIconButton
+import com.rotatsulabs.specty.ui.design.components.IconBadge
+import com.rotatsulabs.specty.ui.design.components.Pill
+import com.rotatsulabs.specty.ui.design.components.SpectyCard
 import com.rotatsulabs.specty.ui.design.Corners
 import com.rotatsulabs.specty.ui.design.components.ButtonKind
 import com.rotatsulabs.specty.ui.design.components.ExpressiveButton
@@ -46,6 +59,7 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.automirrored.rounded.ArrowForward
 import androidx.compose.material.icons.rounded.CheckCircle
 import androidx.compose.material.icons.rounded.Lock
@@ -96,9 +110,10 @@ import kotlin.math.sin
 private const val PAGES = 4
 
 /**
- * First-run introduction: four swipeable pages with small looping illustrations, ending with the library
- * permission. [onFinish] is called when the person leaves it by any route; [onPermission] after the system
- * dialog so the library can reload.
+ * First-run introduction: four swipeable pages, each with a looping illustration on a slowly turning lobed
+ * stage, a tonal wash that changes colour from page to page, and the library permission on the last one.
+ * [onFinish] is called when the person leaves it by any route; [onPermission] after the system dialog so the
+ * library can reload.
  */
 @Composable
 fun OnboardingScreen(onFinish: () -> Unit, onPermission: (Boolean) -> Unit, modifier: Modifier = Modifier) {
@@ -117,16 +132,30 @@ fun OnboardingScreen(onFinish: () -> Unit, onPermission: (Boolean) -> Unit, modi
         if (pager.currentPage > 0) scope.launch { pager.animateScrollToPage(pager.currentPage - 1) } else onFinish()
     }
 
+    val scheme = MaterialTheme.colorScheme
+    val wash = animateTone(
+        when (pager.targetPage) {
+            1 -> scheme.tertiaryContainer
+            2 -> scheme.secondaryContainer
+            else -> scheme.primaryContainer
+        },
+    )
+    val last = pager.currentPage == PAGES - 1
+
     Column(
         modifier.fillMaxSize()
-            .background(MaterialTheme.colorScheme.surface)
+            .background(Brush.verticalGradient(listOf(wash.copy(alpha = 0.6f), scheme.surface, scheme.surface)))
             // Swallow touches so nothing underneath reacts while the intro is up.
             .pointerInput(Unit) { detectTapGestures { } }
             .statusBarsPadding()
             .navigationBarsPadding(),
     ) {
-        Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp), horizontalArrangement = Arrangement.End) {
-            val last = pager.currentPage == PAGES - 1
+        Row(
+            Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 10.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Pill("${pager.currentPage + 1} of $PAGES", container = scheme.surfaceContainerHighest, content = scheme.onSurfaceVariant)
+            Spacer(Modifier.weight(1f))
             if (!last) ExpressiveButton("Skip", onFinish, kind = ButtonKind.Text)
         }
 
@@ -147,24 +176,26 @@ fun OnboardingScreen(onFinish: () -> Unit, onPermission: (Boolean) -> Unit, modi
                     },
                     contentAlignment = Alignment.Center,
                 ) {
-                    when (page) {
-                        0 -> BarsArt()
-                        1 -> SpectrumArt()
-                        2 -> VerdictArt()
-                        else -> NumbersArt(active)
+                    Stage(wash) {
+                        when (page) {
+                            0 -> BarsArt()
+                            1 -> SpectrumArt()
+                            2 -> VerdictArt()
+                            else -> NumbersArt(active)
+                        }
                     }
                 }
-                Spacer(Modifier.height(36.dp))
+                Spacer(Modifier.height(28.dp))
                 Column(
                     Modifier.graphicsLayer { alpha = 1f - abs(offset).coerceAtMost(1f); translationX = offset * -60f },
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
                     val (title, body) = copy(page)
-                    Text(title, style = MaterialTheme.typography.headlineMedium, textAlign = TextAlign.Center, color = MaterialTheme.colorScheme.onSurface)
-                    Text(body, style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = TextAlign.Center)
+                    Text(title, style = MaterialTheme.typography.headlineLarge, textAlign = TextAlign.Center, color = scheme.onSurface)
+                    Text(body, style = MaterialTheme.typography.bodyLarge, color = scheme.onSurfaceVariant, textAlign = TextAlign.Center)
                     if (page == PAGES - 1) {
-                        Spacer(Modifier.height(8.dp))
+                        Spacer(Modifier.height(4.dp))
                         PermissionBlock(granted, onAllow = { launcher.launch(Manifest.permission.READ_MEDIA_AUDIO) })
                     }
                 }
@@ -172,13 +203,23 @@ fun OnboardingScreen(onFinish: () -> Unit, onPermission: (Boolean) -> Unit, modi
         }
 
         Row(
-            Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 20.dp),
+            Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 20.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
+            AnimatedVisibility(
+                visible = pager.currentPage > 0,
+                enter = scaleIn(Motion.spatialFast()) + fadeIn(),
+                exit = scaleOut() + fadeOut(),
+            ) {
+                ExpressiveIconButton(
+                    Icons.AutoMirrored.Rounded.ArrowBack, "Previous page",
+                    { scope.launch { pager.animateScrollToPage(pager.currentPage - 1) } },
+                    modifier = Modifier.padding(end = 12.dp),
+                )
+            }
             Row(Modifier.weight(1f), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
                 repeat(PAGES) { i -> Dot(selected = pager.currentPage == i) }
             }
-            val last = pager.currentPage == PAGES - 1
             ExpressiveButton(
                 text = if (last) "Get started" else "Next",
                 onClick = { if (last) onFinish() else scope.launch { pager.animateScrollToPage(pager.currentPage + 1) } },
@@ -189,40 +230,65 @@ fun OnboardingScreen(onFinish: () -> Unit, onPermission: (Boolean) -> Unit, modi
     }
 }
 
+/** A slowly turning lobed blob behind an illustration, tinted with the page's wash colour. */
+@Composable
+private fun Stage(wash: Color, content: @Composable () -> Unit) {
+    val turn = rememberInfiniteTransition(label = "stage").animateFloat(
+        0f, 360f, infiniteRepeatable(tween(40_000, easing = LinearEasing)), label = "turn",
+    )
+    Box(contentAlignment = Alignment.Center, modifier = Modifier.size(width = 340.dp, height = 300.dp)) {
+        Box(
+            Modifier
+                .size(290.dp)
+                .graphicsLayer { rotationZ = turn.value }
+                .clip(LobedShape(lobes = 9, amplitude = 0.07f))
+                .background(wash.copy(alpha = 0.55f)),
+        )
+        content()
+    }
+}
+
 private fun copy(page: Int): Pair<String, String> = when (page) {
     0 -> "Meet Specty" to "A quality lab for your music. Look inside any audio file and see what it really contains."
-    1 -> "See the spectrum" to "The spectrogram shows every frequency over time. Pinch it open fullscreen, zoom into the top end and touch it to read exact values."
-    2 -> "Catch fake lossless" to "A lossless file made from an MP3 keeps the MP3's cutoff. Specty finds that edge, tells you how sure it is and which encoder it resembles."
-    else -> "Measure everything" to "Loudness, true peak, dynamic range, clipping and stereo health, plus a scan of your whole library in the background. All of it runs on your device."
+    1 -> "See the spectrum" to "The spectrogram shows every frequency over time. Open it fullscreen, pinch to zoom into the top end and touch it to read exact values."
+    2 -> "Catch fake lossless" to "A lossless file made from an MP3 keeps the MP3's cutoff. Specty finds that edge, says how sure it is and which encoder it resembles."
+    else -> "Measure everything" to "Loudness, true peak, dynamic range, clipping and stereo health, plus a background scan of your whole library. It all runs on your device."
 }
 
 @Composable
 private fun Dot(selected: Boolean) {
-    val width by animateDpAsState(if (selected) 30.dp else 9.dp, Motion.spatial(), label = "dotWidth")
-    val color by animateColorAsState(
-        if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant,
-        tween(250), label = "dotColor",
-    )
-    Box(Modifier.size(width, 9.dp).clip(CircleShape).background(color))
+    val width by animateDpAsState(if (selected) 34.dp else 10.dp, Motion.spatial(), label = "dotWidth")
+    val color = animateTone(if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant)
+    Box(Modifier.size(width, 10.dp).clip(CircleShape).background(color))
 }
 
 @Composable
 private fun PermissionBlock(granted: Boolean, onAllow: () -> Unit) {
     val scheme = MaterialTheme.colorScheme
-    MorphSurface(Modifier.fillMaxWidth(), Corners(24.dp), scheme.surfaceContainerHigh, morphOnPress = false) {
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-            if (granted) {
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Icon(Icons.Rounded.CheckCircle, contentDescription = null, tint = scheme.primary)
-                    Text("Library access allowed", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
-                }
-            } else {
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Icon(Icons.Rounded.Lock, contentDescription = null, tint = scheme.onSurfaceVariant, modifier = Modifier.size(18.dp))
-                    Text("Needed to list your music. Files never leave your device.", style = MaterialTheme.typography.bodySmall, color = scheme.onSurfaceVariant)
-                }
-                ExpressiveButton("Allow library access", onAllow, kind = ButtonKind.Tonal)
+    SpectyCard(
+        modifier = Modifier.fillMaxWidth(),
+        corners = SpectyShapes.Card,
+        color = if (granted) scheme.tertiaryContainer else scheme.surfaceContainerHigh,
+        padding = PaddingValues(16.dp),
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+            IconBadge(
+                if (granted) Icons.Rounded.CheckCircle else Icons.Rounded.Lock,
+                container = if (granted) scheme.onTertiaryContainer.copy(alpha = 0.14f) else scheme.secondaryContainer,
+                content = if (granted) scheme.onTertiaryContainer else scheme.onSecondaryContainer,
+            )
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                Text(if (granted) "Library access allowed" else "Library access", style = MaterialTheme.typography.titleSmall)
+                Text(
+                    if (granted) "Your music will be listed as soon as you start." else "Needed to list your music. Files never leave your device.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = if (granted) scheme.onTertiaryContainer else scheme.onSurfaceVariant,
+                )
             }
+        }
+        if (!granted) {
+            Spacer(Modifier.height(12.dp))
+            ExpressiveButton("Allow library access", onAllow, kind = ButtonKind.Tonal, modifier = Modifier.fillMaxWidth())
         }
     }
 }

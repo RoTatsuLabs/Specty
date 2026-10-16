@@ -257,11 +257,6 @@ fun LibraryScreen(
                 )
             }
 
-            if (hasTracks) {
-                item(key = "health") {
-                    HealthCard(total = state.tracks.size, checked = checked, suspects = suspects, genuine = genuine)
-                }
-            }
             if (batch.running || batch.finished) {
                 item(key = "batch") {
                     BatchCard(batch, onCancel = onCancelScan, onDismiss = onDismissScan)
@@ -490,41 +485,6 @@ private fun BatchCard(batch: BatchScanner.State, onCancel: () -> Unit, onDismiss
 }
 
 // ---- library health ---------------------------------------------------------------------------
-
-@Composable
-private fun HealthCard(total: Int, checked: Int, suspects: Int, genuine: Int) {
-    val scheme = MaterialTheme.colorScheme
-    val coverage = if (total == 0) 0f else checked.toFloat() / total
-    SpectyCard(
-        modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
-        corners = SpectyShapes.Hero,
-        color = scheme.surfaceContainerHigh,
-    ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            RingProgress(coverage, size = 104.dp, stroke = 14.dp, track = scheme.surfaceContainerHighest) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text("${(coverage * 100).toInt()}%", style = MaterialTheme.typography.titleLarge)
-                    Text("checked", style = MaterialTheme.typography.labelSmall, color = scheme.onSurfaceVariant)
-                }
-            }
-            Spacer(Modifier.width(20.dp))
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                HealthLine(scheme.outline, "$total tracks")
-                HealthLine(scheme.tertiary, "$genuine genuine")
-                HealthLine(if (suspects > 0) scheme.error else scheme.outline, if (suspects == 1) "1 needs a look" else "$suspects need a look")
-            }
-        }
-    }
-}
-
-@Composable
-private fun HealthLine(dot: Color, text: String) {
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        Surface(shape = CircleShape, color = dot, modifier = Modifier.size(10.dp)) {}
-        Spacer(Modifier.width(10.dp))
-        Text(text, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Medium)
-    }
-}
 
 // ---- search, filters, section bar ---------------------------------------------------------------
 
