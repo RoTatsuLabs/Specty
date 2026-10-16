@@ -15,6 +15,7 @@ data class Track(
     val durationMs: Long,
     val sizeBytes: Long,
     val fileName: String,
+    val modifiedSec: Long = 0L,
 ) {
     val extension: String get() = fileName.substringAfterLast('.', "").uppercase()
 }
@@ -31,6 +32,7 @@ object LibraryRepository {
             MediaStore.Audio.Media.ALBUM,
             MediaStore.Audio.Media.DURATION,
             MediaStore.Audio.Media.SIZE,
+            MediaStore.Audio.Media.DATE_MODIFIED,
         )
         val selection = "${MediaStore.Audio.Media.DURATION} >= ?"
         val args = arrayOf("10000")
@@ -45,6 +47,7 @@ object LibraryRepository {
             val albumCol = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ALBUM)
             val durationCol = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DURATION)
             val sizeCol = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.SIZE)
+            val modifiedCol = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DATE_MODIFIED)
             while (cursor.moveToNext()) {
                 val fileName = cursor.getString(fileCol) ?: continue
                 tracks += Track(
@@ -55,6 +58,7 @@ object LibraryRepository {
                     durationMs = cursor.getLong(durationCol),
                     sizeBytes = cursor.getLong(sizeCol),
                     fileName = fileName,
+                    modifiedSec = cursor.getLong(modifiedCol),
                 )
             }
         }

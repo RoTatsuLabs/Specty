@@ -10,7 +10,7 @@ import java.io.IOException
 
 /** Reads stream facts with FFprobe, working directly on content:// URIs through FFmpegKit's SAF bridge. */
 object MediaProbe {
-    data class FileMeta(val displayName: String, val sizeBytes: Long)
+    data class FileMeta(val displayName: String, val sizeBytes: Long, val modified: Long = 0L)
 
     fun queryMeta(context: Context, uri: Uri): FileMeta {
         var name: String? = null
@@ -26,7 +26,20 @@ object MediaProbe {
                 }
             }
         }
-        return FileMeta(name ?: uri.lastPathSegment ?: "Audio file", size)
+        return FileMeta(name ?: uri.lastPathSegment ?: "Audio file", size, queryModified(context, uri))
+    }
+
+    /** Last-modified time in seconds from MediaStore or a document provider, or 0 when neither knows it. */
+    private fun queryModified(context: Context, uri: Uri): Long {
+        for ((column, divisor) in listOf("date_modified" to 1L, "last_modified" to 1000L)) {
+            val value = runCatching {
+                context.contentResolver.query(uri, arrayOf(column), null, null, null)?.use { c ->
+                    if (c.moveToFirst() && !c.isNull(0)) c.getLong(0) / divisor else null
+                }
+            }.getOrNull()
+            if (value != null && value > 0) return value
+        }
+        return 0L
     }
 
     fun probe(context: Context, uri: Uri): AudioInfo {

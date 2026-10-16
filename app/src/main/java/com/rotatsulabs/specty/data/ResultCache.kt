@@ -22,7 +22,7 @@ import java.util.zip.GZIPInputStream
 import java.util.zip.GZIPOutputStream
 
 /**
- * Persists finished analyses so a file is only measured once. Entries are keyed by uri, file size and
+ * Persists finished analyses so a file is only measured once. Entries are keyed by uri, file size, modified time and
  * spectrogram window, so changing the file or the resolution setting triggers a fresh analysis.
  */
 class ResultCache private constructor(context: Context) {
@@ -37,14 +37,18 @@ class ResultCache private constructor(context: Context) {
 
     init {
         runCatching {
-            if (indexFile.exists()) {
-                indexFile.forEachLine { line ->
+            val lines = if (indexFile.exists()) indexFile.readLines() else emptyList()
+            if (lines.firstOrNull() == INDEX_HEADER) {
+                for (line in lines.drop(1)) {
                     val parts = line.split('\t')
                     // Entries stay even when their bulky result file was evicted: the verdict is still known.
                     if (parts.size == 2) {
                         Verdict.entries.firstOrNull { it.name == parts[1] }?.let { index[parts[0]] = it }
                     }
                 }
+            } else {
+                // Saved by another format or analyzer version: its verdicts and results would be stale.
+                dir.listFiles()?.forEach { it.delete() }
             }
         }
         _verdicts.value = index.toMap()
@@ -54,9 +58,9 @@ class ResultCache private constructor(context: Context) {
     fun contains(key: String): Boolean = synchronized(lock) { index.containsKey(key) }
 
     /** The default Hann window adds nothing to the key, so results saved before window choices existed stay valid. */
-    fun keyOf(uri: Uri, sizeBytes: Long, fftSize: Int, window: WindowFn = WindowFn.Hann): String {
+    fun keyOf(uri: Uri, sizeBytes: Long, modified: Long, fftSize: Int, window: WindowFn = WindowFn.Hann): String {
         val suffix = if (window == WindowFn.Hann) "" else "|w=${window.name}"
-        val digest = MessageDigest.getInstance("SHA-1").digest("$uri|$sizeBytes|$fftSize$suffix".toByteArray())
+        val digest = MessageDigest.getInstance("SHA-1").digest("$uri|$sizeBytes|$modified|$fftSize$suffix".toByteArray())
         // Called once per track on every library refresh, so avoid String.format here.
         val hex = CharArray(digest.size * 2)
         digest.forEachIndexed { i, b ->
@@ -120,7 +124,7 @@ class ResultCache private constructor(context: Context) {
     }
 
     private fun persistIndex() {
-        indexFile.writeText(index.entries.joinToString("\n") { "${it.key}\t${it.value.name}" })
+        indexFile.writeText((listOf(INDEX_HEADER) + index.entries.map { "${it.key}\t${it.value.name}" }).joinToString("\n"))
         _verdicts.value = index.toMap()
     }
 
@@ -240,7 +244,9 @@ class ResultCache private constructor(context: Context) {
 
     companion object {
         private val HEX = "0123456789abcdef".toCharArray()
-        private const val MAGIC = 0x53504335 // "SPC5": Dolby Atmos verdict
+        private const val MAGIC = 0x53504336 // "SPC6": modified time joins the key
+        /** Written first in the index, so a format change drops stale verdicts instead of showing them. */
+        private val INDEX_HEADER = "v" + Integer.toHexString(MAGIC)
         /** Verdicts remembered for library badges. */
         private const val MAX_ENTRIES = 20_000
         /** Disk budget for full results (spectrograms dominate). */

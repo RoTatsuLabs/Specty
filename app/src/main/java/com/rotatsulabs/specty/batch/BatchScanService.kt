@@ -63,7 +63,7 @@ class BatchScanService : Service() {
                 coroutines.ensureActive()
                 BatchScanner.update { it.copy(current = track.title) }
                 notify(track.title, index, queue.size, force = true)
-                val key = cache.keyOf(track.uri, track.sizeBytes, fft, window)
+                val key = cache.keyOf(track.uri, track.sizeBytes, track.modifiedSec, fft, window)
                 if (track.sizeBytes > 0 && cache.contains(key)) {
                     BatchScanner.update { it.copy(skipped = it.skipped + 1) }
                     continue
