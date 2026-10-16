@@ -14,11 +14,24 @@ android {
         applicationId = "com.rotatsulabs.specty"
         minSdk = 33
         targetSdk = 36
-        versionCode = 1
+        versionCode = System.getenv("VERSION_CODE")?.toIntOrNull() ?: 1
         versionName = "0.1.0"
 
         ndk {
             abiFilters += listOf("arm64-v8a", "x86_64")
+        }
+    }
+
+    // CI injects the keystore through env vars. Without them, release and nightly stay unsigned.
+    val ciKeystore = System.getenv("SIGNING_KEYSTORE")
+    signingConfigs {
+        if (ciKeystore != null) {
+            create("ci") {
+                storeFile = file(ciKeystore)
+                storePassword = System.getenv("SIGNING_PASSWORD")
+                keyAlias = System.getenv("SIGNING_ALIAS")
+                keyPassword = System.getenv("SIGNING_PASSWORD")
+            }
         }
     }
 
@@ -40,6 +53,15 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro",
             )
+            signingConfig = signingConfigs.findByName("ci")
+        }
+        // Installs next to release: own application id, own signing key.
+        create("nightly") {
+            initWith(getByName("release"))
+            applicationIdSuffix = ".nightly"
+            versionNameSuffix = "-nightly"
+            signingConfig = signingConfigs.findByName("ci")
+            matchingFallbacks += "release"
         }
     }
 

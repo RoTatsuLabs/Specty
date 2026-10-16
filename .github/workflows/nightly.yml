@@ -1,0 +1,95 @@
+name: Nightly Build
+
+on:
+  schedule:
+    - cron: "0 20 * * *" # 03:00 WIB
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: nightly
+  cancel-in-progress: false
+
+jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      build: ${{ steps.check.outputs.build }}
+    steps:
+      - id: check
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ]; then
+            echo "build=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          since=$(date -u -d '24 hours ago' +%Y-%m-%dT%H:%M:%SZ)
+          n=$(gh api "repos/$GITHUB_REPOSITORY/commits?sha=main&since=$since&per_page=1" --jq length)
+          if [ "$n" -gt 0 ]; then echo "build=true" >> "$GITHUB_OUTPUT"; else echo "build=false" >> "$GITHUB_OUTPUT"; fi
+
+  nightly:
+    needs: changes
+    if: needs.changes.outputs.build == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: 8.14.3
+
+      - name: Unit tests
+        run: gradle :app:testDebugUnitTest --stacktrace
+
+      - name: Decode keystore
+        env:
+          KEYSTORE_BASE64: ${{ secrets.NIGHTLY_BASE64 }}
+        run: printf '%s' "$KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/nightly.jks"
+
+      - name: Build nightly APK
+        env:
+          SIGNING_KEYSTORE: ${{ runner.temp }}/nightly.jks
+          SIGNING_PASSWORD: ${{ secrets.NIGHTLY_PASSWORD }}
+          SIGNING_ALIAS: ${{ secrets.NIGHTLY_ALIAS }}
+          VERSION_CODE: ${{ github.run_number }}
+        run: gradle :app:assembleNightly --stacktrace
+
+      - name: Verify signature
+        run: |
+          apk=$(ls app/build/outputs/apk/nightly/*.apk)
+          "$ANDROID_HOME"/build-tools/$(ls "$ANDROID_HOME/build-tools" | sort -V | tail -1)/apksigner verify "$apk"
+          cp "$apk" specty-nightly.apk
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: specty-nightly
+          path: specty-nightly.apk
+          if-no-files-found: error
+
+      - name: Publish prerelease
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete nightly --cleanup-tag --yes || true
+          gh release create nightly specty-nightly.apk \
+            --prerelease --target "$GITHUB_SHA" \
+            --title "Nightly $(date -u +%F)" \
+            --notes "Commit $GITHUB_SHA"
+
+      - name: Remove keystore
+        if: always()
+        run: rm -f "$RUNNER_TEMP/nightly.jks"

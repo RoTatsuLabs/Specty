@@ -1,4 +1,4 @@
-name: Android CI
+name: Code Quality
 
 on:
   push:
@@ -10,11 +10,11 @@ permissions:
   contents: read
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: quality-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  build:
+  quality:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -29,22 +29,21 @@ jobs:
         with:
           gradle-version: 8.14.3
 
+      - name: Lint
+        run: gradle :app:lintDebug --stacktrace
+
       - name: Unit tests
         run: gradle :app:testDebugUnitTest --stacktrace
 
-      - name: Build debug APK
+      - name: Compile debug
         run: gradle :app:assembleDebug --stacktrace
 
-      - name: Upload debug APK
+      - name: Upload reports
+        if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: specty-debug-apk
-          path: app/build/outputs/apk/debug/*.apk
-          if-no-files-found: error
-
-      - name: Upload test reports
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: test-reports
-          path: app/build/reports/
+          name: reports
+          path: |
+            app/build/reports/lint-results-debug.*
+            app/build/reports/tests/
+          if-no-files-found: ignore

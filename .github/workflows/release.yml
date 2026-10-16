@@ -1,0 +1,90 @@
+name: Release Build
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing tag to build, for example v0.1.0
+        required: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ inputs.tag || github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    permissions:
+      contents: write
+    env:
+      TAG: ${{ inputs.tag || github.ref_name }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TAG }}
+
+      - name: Check tag matches versionName
+        run: |
+          v=$(grep -oP 'versionName = "\K[^"]+' app/build.gradle.kts)
+          if [ "$TAG" != "v$v" ]; then
+            echo "::error::Tag $TAG does not match versionName $v"
+            exit 1
+          fi
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: 8.14.3
+
+      - name: Unit tests
+        run: gradle :app:testDebugUnitTest --stacktrace
+
+      - name: Decode keystore
+        env:
+          KEYSTORE_BASE64: ${{ secrets.RELEASE_BASE64 }}
+        run: printf '%s' "$KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/release.jks"
+
+      - name: Build release APK
+        env:
+          SIGNING_KEYSTORE: ${{ runner.temp }}/release.jks
+          SIGNING_PASSWORD: ${{ secrets.RELEASE_PASSWORD }}
+          SIGNING_ALIAS: ${{ secrets.RELEASE_ALIAS }}
+          VERSION_CODE: ${{ github.run_number }}
+        run: gradle :app:assembleRelease --stacktrace
+
+      - name: Verify signature
+        run: |
+          apk=$(ls app/build/outputs/apk/release/*.apk)
+          "$ANDROID_HOME"/build-tools/$(ls "$ANDROID_HOME/build-tools" | sort -V | tail -1)/apksigner verify "$apk"
+          cp "$apk" "specty-$TAG.apk"
+          sha256sum "specty-$TAG.apk" > "specty-$TAG.apk.sha256"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: specty-release
+          path: specty-${{ env.TAG }}.apk*
+          if-no-files-found: error
+
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          pre=""
+          case "$TAG" in *-*) pre="--prerelease" ;; esac
+          gh release create "$TAG" "specty-$TAG.apk" "specty-$TAG.apk.sha256" \
+            --verify-tag --generate-notes $pre
+
+      - name: Remove keystore
+        if: always()
+        run: rm -f "$RUNNER_TEMP/release.jks"
