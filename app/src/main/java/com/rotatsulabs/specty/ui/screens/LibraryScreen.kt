@@ -70,6 +70,7 @@ import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.FolderOpen
 import androidx.compose.material.icons.rounded.GridView
 import androidx.compose.material.icons.rounded.KeyboardArrowUp
+import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material.icons.rounded.MoreVert
 import androidx.compose.material.icons.rounded.Radar
 import com.rotatsulabs.specty.batch.BatchScanner
@@ -154,6 +155,7 @@ fun LibraryScreen(
     onOpen: (Track, androidx.compose.ui.geometry.Rect?, CoverSource?) -> Unit,
     onPickFile: () -> Unit,
     onOpenSettings: () -> Unit,
+    onOpenAbout: () -> Unit,
     verdicts: Map<String, Verdict>,
     keyFor: (Track) -> String,
     batch: BatchScanner.State = BatchScanner.State(),
@@ -253,6 +255,7 @@ fun LibraryScreen(
                 Header(
                     onRescan = { onLoad(true) },
                     onSettings = onOpenSettings,
+                    onAbout = onOpenAbout,
                     canRescan = granted,
                     canScan = granted && state.tracks.isNotEmpty() && !batch.running,
                     onScanAll = startScan,
@@ -370,7 +373,7 @@ fun LibraryScreen(
 // ---- header --------------------------------------------------------------------------------
 
 @Composable
-private fun Header(onRescan: () -> Unit, onSettings: () -> Unit, canRescan: Boolean, canScan: Boolean, onScanAll: () -> Unit, brandModifier: Modifier) {
+private fun Header(onRescan: () -> Unit, onSettings: () -> Unit, onAbout: () -> Unit, canRescan: Boolean, canScan: Boolean, onScanAll: () -> Unit, brandModifier: Modifier) {
     var menu by remember { mutableStateOf(false) }
     val menuTurn by animateFloatAsState(if (menu) 90f else 0f, Motion.spatial(), label = "menuTurn")
     Row(
@@ -406,6 +409,11 @@ private fun Header(onRescan: () -> Unit, onSettings: () -> Unit, canRescan: Bool
                     text = { Text("Settings") },
                     leadingIcon = { Icon(Icons.Rounded.Settings, contentDescription = null) },
                     onClick = { menu = false; onSettings() },
+                )
+                DropdownMenuItem(
+                    text = { Text("About") },
+                    leadingIcon = { Icon(Icons.Rounded.Info, contentDescription = null) },
+                    onClick = { menu = false; onAbout() },
                 )
             }
         }
