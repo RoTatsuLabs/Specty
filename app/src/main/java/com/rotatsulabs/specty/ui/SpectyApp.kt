@@ -75,6 +75,7 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit, onPickCompare: (
         lookup
     }
     val analysisOpen by viewModel.viewing.collectAsStateWithLifecycle()
+    val queued by viewModel.queued.collectAsStateWithLifecycle()
     val dockVisible = !analysisOpen && analysis !is AnalysisState.Idle
 
     // Keep the last non-idle state around so the screen can animate out with its content intact.
@@ -98,9 +99,12 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit, onPickCompare: (
                 state = library,
                 onLoad = viewModel::loadLibrary,
                 onOpen = { track, bounds, cover ->
-                    origin.bounds = bounds
-                    origin.corners = SpectyShapes.Row
-                    flight.begin(track.uri, cover)
+                    // A tap that only joins the queue must not start the cover flight.
+                    if (!viewModel.busy) {
+                        origin.bounds = bounds
+                        origin.corners = SpectyShapes.Row
+                        flight.begin(track.uri, cover)
+                    }
                     viewModel.analyze(track.uri)
                 },
                 flight = flight,
@@ -126,6 +130,7 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit, onPickCompare: (
         ) {
             AnalysisDock(
                 state = dockHeld.state,
+                queued = queued,
                 onOpen = { origin.bounds = dockBounds; origin.corners = Corners(28.dp); flight.clear(); viewModel.openResult() },
                 onDismiss = viewModel::closeAnalysis,
                 modifier = Modifier

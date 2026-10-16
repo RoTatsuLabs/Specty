@@ -41,7 +41,7 @@ import com.rotatsulabs.specty.ui.theme.Motion
 
 /** Compact progress / result card docked over the library, so analysis never blocks the screen. */
 @Composable
-fun AnalysisDock(state: AnalysisState, onOpen: () -> Unit, onDismiss: () -> Unit, modifier: Modifier = Modifier) {
+fun AnalysisDock(state: AnalysisState, onOpen: () -> Unit, onDismiss: () -> Unit, modifier: Modifier = Modifier, queued: Int = 0) {
     val scheme = MaterialTheme.colorScheme
     val done = state is AnalysisState.Done
     val failed = state is AnalysisState.Failed
@@ -62,7 +62,7 @@ fun AnalysisDock(state: AnalysisState, onOpen: () -> Unit, onDismiss: () -> Unit
         AnalysisState.Idle -> ""
     }
     val subtitle = when (state) {
-        is AnalysisState.Running -> "${state.stage}  ·  ${(state.progress * 100).toInt()}%"
+        is AnalysisState.Running -> "${state.stage}  ·  ${(state.progress * 100).toInt()}%" + if (queued > 0) "  ·  $queued waiting" else ""
         is AnalysisState.Done -> "Ready, tap to view the result"
         is AnalysisState.Failed -> state.message
         AnalysisState.Idle -> ""
