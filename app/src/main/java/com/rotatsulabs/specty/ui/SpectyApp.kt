@@ -31,6 +31,9 @@ import com.rotatsulabs.specty.ui.screens.SettingsScreen
 import com.rotatsulabs.specty.ui.design.Axis
 import com.rotatsulabs.specty.ui.design.ContainerTransform
 import com.rotatsulabs.specty.ui.design.Corners
+import com.rotatsulabs.specty.ui.design.CoverFlight
+import com.rotatsulabs.specty.ui.design.CoverFlightLayer
+import com.rotatsulabs.specty.ui.design.Springy
 import com.rotatsulabs.specty.ui.design.FadeThrough
 import com.rotatsulabs.specty.ui.design.SharedAxis
 import com.rotatsulabs.specty.ui.design.SpectyShapes
@@ -57,6 +60,7 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit, onPickCompare: (
     val compareHeld = remember { object { var state: CompareState = CompareState.Idle } }
     if (compare !is CompareState.Idle) compareHeld.state = compare
     val origin = rememberContainerOrigin()
+    val flight = remember { CoverFlight() }
     var dockBounds by remember { mutableStateOf<Rect?>(null) }
     var showSettings by rememberSaveable { mutableStateOf(false) }
     var viewerView by rememberSaveable { mutableStateOf<Int?>(null) }
@@ -90,7 +94,13 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit, onPickCompare: (
             LibraryScreen(
                 state = library,
                 onLoad = viewModel::loadLibrary,
-                onOpen = { track, bounds -> origin.bounds = bounds; origin.corners = SpectyShapes.Row; viewModel.analyze(track.uri) },
+                onOpen = { track, bounds, cover ->
+                    origin.bounds = bounds
+                    origin.corners = SpectyShapes.Row
+                    flight.begin(track.uri, cover)
+                    viewModel.analyze(track.uri)
+                },
+                flight = flight,
                 onPickFile = onPickFile,
                 onOpenSettings = { showSettings = true },
                 dockVisible = dockVisible,
@@ -112,7 +122,7 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit, onPickCompare: (
         ) {
             AnalysisDock(
                 state = dockHeld.state,
-                onOpen = { origin.bounds = dockBounds; origin.corners = Corners(28.dp); viewModel.openResult() },
+                onOpen = { origin.bounds = dockBounds; origin.corners = Corners(28.dp); flight.clear(); viewModel.openResult() },
                 onDismiss = viewModel::closeAnalysis,
                 modifier = Modifier
                     .navigationBarsPadding()
@@ -129,15 +139,17 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit, onPickCompare: (
         ) {
             Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.surface) {
                 Box(Modifier.navigationBarsPadding()) {
-                    AnalysisScreen(held.state, onBack = viewModel::closeAnalysis, onReanalyse = viewModel::reanalyze, showMetadata = showMetadata, onFullscreen = { viewerView = it }, onCompare = onPickCompare)
+                    AnalysisScreen(held.state, onBack = viewModel::closeAnalysis, onReanalyse = viewModel::reanalyze, showMetadata = showMetadata, onFullscreen = { viewerView = it }, onCompare = onPickCompare, flight = flight)
                 }
             }
         }
 
+        CoverFlightLayer(flight, open = analysisOpen, currentUri = viewerResult?.uri)
+
         AnimatedVisibility(
             visible = showSettings,
-            enter = SharedAxis.enter(Axis.X, true),
-            exit = SharedAxis.exit(Axis.X, false),
+            enter = Springy.enterX(true),
+            exit = Springy.exitX(false),
         ) {
             Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.surface) {
                 SettingsScreen(
@@ -162,8 +174,8 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit, onPickCompare: (
 
         AnimatedVisibility(
             visible = compare !is CompareState.Idle,
-            enter = SharedAxis.enter(Axis.Z, true),
-            exit = SharedAxis.exit(Axis.Z, false),
+            enter = Springy.enterZ(),
+            exit = Springy.exitZ(),
         ) {
             Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.surface) {
                 Box(Modifier.navigationBarsPadding()) {

@@ -73,6 +73,29 @@ object SharedAxis {
     }
 }
 
+/** Spring-driven screen transitions: the incoming screen overshoots a little and settles, the outgoing one gives way. */
+object Springy {
+    fun enterX(forward: Boolean): EnterTransition =
+        slideInHorizontally(Motion.spatial()) { if (forward) it / 3 else -it / 3 } +
+            fadeIn(Motion.effects()) +
+            scaleIn(Motion.spatial(), initialScale = 0.9f)
+
+    fun exitX(forward: Boolean): ExitTransition =
+        slideOutHorizontally(Motion.spatial()) { if (forward) -it / 4 else it / 3 } +
+            fadeOut(Motion.effects()) +
+            scaleOut(Motion.spatial(), targetScale = 0.9f)
+
+    fun enterZ(): EnterTransition =
+        scaleIn(Motion.spatial(), initialScale = 0.7f) +
+            fadeIn(Motion.effects()) +
+            slideInVertically(Motion.spatial()) { it / 10 }
+
+    fun exitZ(): ExitTransition =
+        scaleOut(Motion.spatial(), targetScale = 0.8f) +
+            fadeOut(Motion.effects()) +
+            slideOutVertically(Motion.spatial()) { it / 10 }
+}
+
 /** Remembers where a tapped element sits so a destination can grow out of it and shrink back into it. */
 @Stable
 class ContainerOrigin {

@@ -39,6 +39,20 @@ fun Reveal(index: Int, modifier: Modifier = Modifier, content: @Composable () ->
         modifier.graphicsLayer {
             alpha = p.coerceIn(0f, 1f)
             translationY = (1f - p) * 72f
+            val pop = 0.92f + 0.08f * p
+            scaleX = pop
+            scaleY = pop
         },
     ) { content() }
+}
+
+/** 0 → 1 on a spring shortly after the composable enters, for charts and bars that should grow in. */
+@Composable
+fun rememberGrow(delayMillis: Long = 300L): androidx.compose.runtime.State<Float> {
+    var go by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) {
+        delay(delayMillis)
+        go = true
+    }
+    return animateFloatAsState(if (go) 1f else 0f, Motion.spatial(), label = "grow")
 }

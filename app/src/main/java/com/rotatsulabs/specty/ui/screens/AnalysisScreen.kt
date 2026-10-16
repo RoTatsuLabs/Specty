@@ -104,6 +104,18 @@ import com.rotatsulabs.specty.ui.components.Fmt
 import com.rotatsulabs.specty.ui.components.Reveal
 import com.rotatsulabs.specty.ui.components.pressScale
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.foundation.background
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.unit.sp
+import com.rotatsulabs.specty.ui.design.CoverFlight
+import com.rotatsulabs.specty.ui.design.coverTarget
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
@@ -119,7 +131,7 @@ import com.rotatsulabs.specty.ui.theme.Motion
 import kotlinx.coroutines.delay
 
 @Composable
-fun AnalysisScreen(state: AnalysisState, onBack: () -> Unit, onReanalyse: () -> Unit, modifier: Modifier = Modifier, showMetadata: Boolean = false, onFullscreen: (Int) -> Unit = {}, onCompare: () -> Unit = {}) {
+fun AnalysisScreen(state: AnalysisState, onBack: () -> Unit, onReanalyse: () -> Unit, modifier: Modifier = Modifier, showMetadata: Boolean = false, onFullscreen: (Int) -> Unit = {}, onCompare: () -> Unit = {}, flight: CoverFlight? = null) {
     val title = when (state) {
         is AnalysisState.Running -> state.title
         is AnalysisState.Failed -> state.title
@@ -152,7 +164,7 @@ fun AnalysisScreen(state: AnalysisState, onBack: () -> Unit, onReanalyse: () -> 
             when (state) {
                 is AnalysisState.Running -> RunningContent(state)
                 is AnalysisState.Failed -> FailedContent(state.message, onBack)
-                is AnalysisState.Done -> ResultContent(state.result, state.cached, showMetadata, onFullscreen)
+                is AnalysisState.Done -> ResultContent(state.result, state.cached, showMetadata, onFullscreen, flight)
                 AnalysisState.Idle -> Unit
             }
         }
@@ -191,12 +203,12 @@ private fun FailedContent(message: String, onBack: () -> Unit) {
 }
 
 @Composable
-private fun ResultContent(result: AnalysisResult, cached: Boolean, showMetadata: Boolean, onFullscreen: (Int) -> Unit) {
+private fun ResultContent(result: AnalysisResult, cached: Boolean, showMetadata: Boolean, onFullscreen: (Int) -> Unit, flight: CoverFlight?) {
     Column(
         Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        Reveal(0) { Hero(result, cached) }
+        Hero(result, cached, flight)
         Reveal(1) { VerdictCard(result.authenticity) }
         Reveal(2) { MetricTiles(result) }
         Reveal(3) { ConfidenceCard(result.authenticity, result.info) }
@@ -218,10 +230,12 @@ private fun ResultContent(result: AnalysisResult, cached: Boolean, showMetadata:
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun Hero(result: AnalysisResult, cached: Boolean) {
+private fun Hero(result: AnalysisResult, cached: Boolean, flight: CoverFlight?) {
     val info = result.info
     val scheme = MaterialTheme.colorScheme
-    Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(14.dp)) {
+    // When the cover flies in from the library it must already sit at rest, so only the rest of the hero reveals.
+    val shared = flight != null && flight.shares(result.uri)
+    val cover: @Composable () -> Unit = {
         val coverSource = remember { MutableInteractionSource() }
         CoverImage(
             uri = result.uri,
@@ -229,6 +243,7 @@ private fun Hero(result: AnalysisResult, cached: Boolean) {
             modifier = Modifier
                 .fillMaxWidth(0.62f)
                 .aspectRatio(1f)
+                .coverTarget(flight, result.uri)
                 .pressScale(coverSource, 0.94f)
                 .clickable(interactionSource = coverSource, indication = null) { },
             sizePx = 768,
@@ -239,30 +254,97 @@ private fun Hero(result: AnalysisResult, cached: Boolean) {
                 }
             }
         }
-        Row(Modifier.padding(horizontal = 8.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text(
-                info.displayName.substringBeforeLast('.').withoutExplicitMark(),
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold,
-                textAlign = TextAlign.Center,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-            )
+    }
+    Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(14.dp)) {
+        if (shared) cover() else Reveal(0) { cover() }
+        Reveal(1) {
+            Row(Modifier.padding(horizontal = 8.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(
+                    info.displayName.substringBeforeLast('.').withoutExplicitMark(),
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
         }
-        FlowRow(
-            Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            val lossless = info.isLossless
-            InfoChip(Codecs.displayName(info.codec), if (lossless) scheme.tertiaryContainer else scheme.secondaryContainer, if (lossless) scheme.onTertiaryContainer else scheme.onSecondaryContainer)
-            InfoChip(Fmt.kHz(info.sampleRate.toDouble()))
-            info.bitDepth?.let { InfoChip("$it-bit") }
-            InfoChip(Fmt.size(info.sizeBytes))
-            if (info.isDolbyAtmos) Pill("Dolby Atmos", container = scheme.inverseSurface, content = scheme.inverseOnSurface, icon = Icons.Rounded.SurroundSound)
-            if (isExplicit(info.tags)) Pill("Explicit", icon = Icons.Rounded.Explicit)
-            if (cached) InfoChip("Saved result", scheme.primaryContainer, scheme.onPrimaryContainer)
+        Reveal(2) {
+            FlowRow(
+                Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                val lossless = info.isLossless
+                InfoChip(Codecs.displayName(info.codec), if (lossless) scheme.tertiaryContainer else scheme.secondaryContainer, if (lossless) scheme.onTertiaryContainer else scheme.onSecondaryContainer)
+                InfoChip(Fmt.kHz(info.sampleRate.toDouble()))
+                info.bitDepth?.let { InfoChip("$it-bit") }
+                InfoChip(Fmt.size(info.sizeBytes))
+                if (info.isDolbyAtmos) AtmosBadge()
+                if (isExplicit(info.tags)) Pill("Explicit", icon = Icons.Rounded.Explicit)
+                if (cached) InfoChip("Saved result", scheme.primaryContainer, scheme.onPrimaryContainer)
+            }
         }
+    }
+}
+
+/** Dolby Atmos tag: a gradient capsule that pops in, with a pulsing icon and a light sweep passing over it. */
+@Composable
+private fun AtmosBadge() {
+    val scheme = MaterialTheme.colorScheme
+    val transition = rememberInfiniteTransition(label = "atmos")
+    val sweep by transition.animateFloat(
+        0f, 1f,
+        infiniteRepeatable(tween(3200, easing = LinearEasing), RepeatMode.Restart),
+        label = "sweep",
+    )
+    val pulse by transition.animateFloat(
+        1f, 1.22f,
+        infiniteRepeatable(tween(900, easing = FastOutSlowInEasing), RepeatMode.Reverse),
+        label = "pulse",
+    )
+    var shown by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) { shown = true }
+    val pop by animateFloatAsState(if (shown) 1f else 0f, spring(dampingRatio = 0.45f, stiffness = 300f), label = "atmosPop")
+    Row(
+        Modifier
+            .graphicsLayer {
+                scaleX = pop
+                scaleY = pop
+            }
+            .clip(CircleShape)
+            .background(Brush.horizontalGradient(listOf(scheme.primary, scheme.tertiary)))
+            .drawWithContent {
+                drawContent()
+                val x = size.width * (sweep * 1.8f - 0.4f)
+                drawRect(
+                    Brush.horizontalGradient(
+                        listOf(Color.Transparent, Color.White.copy(alpha = 0.38f), Color.Transparent),
+                        startX = x - size.width * 0.25f,
+                        endX = x + size.width * 0.25f,
+                    ),
+                )
+            }
+            .padding(horizontal = 12.dp, vertical = 6.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Icon(
+            Icons.Rounded.SurroundSound,
+            contentDescription = null,
+            modifier = Modifier.size(16.dp).graphicsLayer {
+                scaleX = pulse
+                scaleY = pulse
+            },
+            tint = scheme.onPrimary,
+        )
+        Spacer(Modifier.width(6.dp))
+        Text(
+            "DOLBY ATMOS",
+            style = MaterialTheme.typography.labelMedium,
+            fontWeight = FontWeight.Bold,
+            letterSpacing = 1.sp,
+            color = scheme.onPrimary,
+        )
     }
 }
 
