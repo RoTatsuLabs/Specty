@@ -3,6 +3,7 @@ package com.rotatsulabs.specty.ui
 import android.app.Application
 import android.content.Context
 import android.net.Uri
+import android.widget.Toast
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.rotatsulabs.specty.audio.AnalysisResult
@@ -202,7 +203,43 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         lastUri?.let { analyze(it, force = true) }
     }
 
+    private val waiting = ArrayDeque<Uri>()
+    private val _queued = MutableStateFlow(0)
+    /** Files waiting for the running analysis to finish. */
+    val queued: StateFlow<Int> = _queued.asStateFlow()
+
+    /** True while an analysis is running, so another file would join the queue instead of replacing it. */
+    val busy: Boolean get() = analysisJob?.isActive == true && _analysis.value is AnalysisState.Running
+
+    private fun enqueue(uri: Uri) {
+        val message = if (uri == lastUri || uri in waiting) {
+            "Already in the queue"
+        } else {
+            waiting.addLast(uri)
+            _queued.value = waiting.size
+            "Added to the queue"
+        }
+        Toast.makeText(getApplication(), message, Toast.LENGTH_SHORT).show()
+    }
+
+    /** Starts the next waiting file, unless a result is open on screen (it starts once that closes). */
+    private fun advance() {
+        if (_viewing.value) return
+        val next = waiting.removeFirstOrNull() ?: return
+        _queued.value = waiting.size
+        start(next, force = false)
+    }
+
+    /** Analyses [uri] now, or queues it when another analysis is still running. */
     fun analyze(uri: Uri, force: Boolean = false) {
+        if (!force && busy) {
+            enqueue(uri)
+            return
+        }
+        start(uri, force)
+    }
+
+    private fun start(uri: Uri, force: Boolean) {
         analysisJob?.cancel()
         lastUri = uri
         _viewing.value = false
@@ -234,13 +271,20 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             } catch (e: Throwable) {
                 _analysis.value = AnalysisState.Failed(title, e.message ?: "Analysis failed")
             }
+            advance()
         }
     }
 
     fun closeAnalysis() {
+        // Cancelling a running analysis stops the whole queue; closing a finished result lets the queue go on.
+        if (_analysis.value is AnalysisState.Running) {
+            waiting.clear()
+            _queued.value = 0
+        }
         analysisJob?.cancel()
         _viewing.value = false
         _analysis.value = AnalysisState.Idle
+        advance()
     }
 
     fun loadLibrary(force: Boolean = false) {
