@@ -70,7 +70,7 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit, onPickCompare: (
     val keyFor = remember(fftSize, windowFn) {
         val memo = HashMap<com.rotatsulabs.specty.data.Track, String>()
         val lookup: (com.rotatsulabs.specty.data.Track) -> String = { track ->
-            memo.getOrPut(track) { viewModel.cacheKey(track.uri, track.sizeBytes, fftSize, windowFn) }
+            memo.getOrPut(track) { viewModel.cacheKey(track.uri, track.sizeBytes, track.modifiedSec, fftSize, windowFn) }
         }
         lookup
     }

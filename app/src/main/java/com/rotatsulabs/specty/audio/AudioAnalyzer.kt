@@ -32,10 +32,13 @@ class AudioAnalyzer(private val context: Context) {
             throw IOException("Not enough free storage to decode this file (about ${estimatedBytes / 1_000_000} MB needed)")
         }
 
+        // A header can understate the length; cap the decode so a lying file cannot fill the storage.
+        val limit = if (estimatedBytes > 0) estimatedBytes * 2 + 256L * 1024 * 1024 else 0L
         val temp = File.createTempFile("pcm_", ".f32", context.cacheDir)
         try {
             report("Decoding", 0.05f)
-            AudioDecoder.decode(context, uri, info.durationSec, temp) { p -> report("Decoding", 0.05f + 0.5f * p) }
+            AudioDecoder.decode(context, uri, info.durationSec, temp, limit) { p -> report("Decoding", 0.05f + 0.5f * p) }
+            if (limit > 0 && temp.length() >= limit) throw IOException("This file holds far more audio than its header declares")
 
             PcmFile(temp, info.channels, info.sampleRate).use { pcm ->
                 if (pcm.frames <= 0) throw IOException("The decoder produced no audio")
@@ -68,6 +71,15 @@ class AudioAnalyzer(private val context: Context) {
             }
         } finally {
             temp.delete()
+        }
+    }
+
+    companion object {
+        /** Deletes decode files left behind when the app was killed mid-analysis. */
+        fun sweepStale(context: Context, maxAgeMs: Long = 60 * 60 * 1000L) {
+            val cutoff = System.currentTimeMillis() - maxAgeMs
+            context.cacheDir.listFiles { f -> f.name.startsWith("pcm_") && f.name.endsWith(".f32") && f.lastModified() < cutoff }
+                ?.forEach { it.delete() }
         }
     }
 }

@@ -53,6 +53,10 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     private var lastUri: Uri? = null
     private val prefs = app.getSharedPreferences("specty", Context.MODE_PRIVATE)
 
+    init {
+        viewModelScope.launch(Dispatchers.IO) { AudioAnalyzer.sweepStale(app) }
+    }
+
     private val _analysis = MutableStateFlow<AnalysisState>(AnalysisState.Idle)
     val analysis: StateFlow<AnalysisState> = _analysis.asStateFlow()
 
@@ -142,7 +146,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         compareJob = viewModelScope.launch {
             val meta = withContext(Dispatchers.IO) { MediaProbe.queryMeta(getApplication(), second) }
             val fft = _fftSize.value
-            val key = cache.keyOf(second, meta.sizeBytes, fft, _windowFn.value)
+            val key = cache.keyOf(second, meta.sizeBytes, meta.modified, fft, _windowFn.value)
             if (meta.sizeBytes > 0) {
                 val hit = withContext(Dispatchers.IO) { cache.load(key, second) }
                 if (hit != null) {
@@ -189,7 +193,8 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     /** Verdicts of files analysed before, keyed by [cacheKey]. */
     val cachedVerdicts: StateFlow<Map<String, Verdict>> = cache.verdicts
 
-    fun cacheKey(uri: Uri, sizeBytes: Long, fftSize: Int, window: WindowFn): String = cache.keyOf(uri, sizeBytes, fftSize, window)
+    fun cacheKey(uri: Uri, sizeBytes: Long, modified: Long, fftSize: Int, window: WindowFn): String =
+        cache.keyOf(uri, sizeBytes, modified, fftSize, window)
 
     fun clearCache() = cache.clear()
 
@@ -206,7 +211,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             val title = meta.displayName
             val fft = _fftSize.value
             val cacheable = meta.sizeBytes > 0
-            val key = cache.keyOf(uri, meta.sizeBytes, fft, _windowFn.value)
+            val key = cache.keyOf(uri, meta.sizeBytes, meta.modified, fft, _windowFn.value)
 
             if (cacheable && !force) {
                 val hit = withContext(Dispatchers.IO) { cache.load(key, uri) }

@@ -11,8 +11,8 @@ import kotlin.math.sqrt
 
 /** Single streaming pass computing peak, RMS, LUFS, true peak, clipping and effective bit depth. */
 object LevelAnalyzer {
-    /** Samples at or above this level (about 16-bit full scale) count towards clipping runs. */
-    private const val CLIP_LEVEL = 0.99997
+    /** Samples at or above this level count towards clipping runs. Just under +32767/32768, the 16-bit positive limit. */
+    private const val CLIP_LEVEL = 0.99996
     private const val MIN_CLIP_RUN = 3
     private const val SCALE_24 = 8_388_608.0
     private const val TIMELINE_POINTS = 240
