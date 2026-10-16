@@ -60,7 +60,7 @@ fun MorphSurface(
     val squash by animateFloatAsState(if (pressed && morphOnPress && onClick != null) 1f else 0f, Motion.spatialFast(), label = "morph")
     val shape = remember(corners, squash) { corners.lerpTo(corners.pressed(), squash).toShape() }
     var m = modifier
-    if (onClick != null) m = m.pressScale(source, 0.97f)
+    if (onClick != null) m = m.pressScale(source, 0.94f)
     if (shadowElevation > 0.dp) m = m.shadow(shadowElevation, shape)
     m = m.clip(shape).background(if (animateColor) animateTone(color) else color, shape)
     if (border != null) m = m.border(border, shape)

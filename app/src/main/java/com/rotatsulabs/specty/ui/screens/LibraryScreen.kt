@@ -124,6 +124,8 @@ import com.rotatsulabs.specty.ui.LibraryState
 import com.rotatsulabs.specty.ui.components.CoverImage
 import com.rotatsulabs.specty.ui.components.Fmt
 import com.rotatsulabs.specty.ui.components.pressScale
+import com.rotatsulabs.specty.ui.design.CoverFlight
+import com.rotatsulabs.specty.ui.design.CoverSource
 import com.rotatsulabs.specty.ui.theme.Motion
 import kotlinx.coroutines.delay
 import kotlin.math.PI
@@ -149,7 +151,7 @@ private fun Verdict.isSuspect() =
 fun LibraryScreen(
     state: LibraryState,
     onLoad: (force: Boolean) -> Unit,
-    onOpen: (Track, androidx.compose.ui.geometry.Rect?) -> Unit,
+    onOpen: (Track, androidx.compose.ui.geometry.Rect?, CoverSource?) -> Unit,
     onPickFile: () -> Unit,
     onOpenSettings: () -> Unit,
     verdicts: Map<String, Verdict>,
@@ -159,6 +161,7 @@ fun LibraryScreen(
     onCancelScan: () -> Unit = {},
     onDismissScan: () -> Unit = {},
     dockVisible: Boolean = false,
+    flight: CoverFlight? = null,
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
@@ -320,15 +323,16 @@ fun LibraryScreen(
                         horizontalArrangement = Arrangement.spacedBy(14.dp),
                     ) {
                         pair.forEachIndexed { i, track ->
-                            TrackTile(track, rowIndex * 2 + i, verdictByTrack[track.uri.toString()], { b -> onOpen(track, b) }, Modifier.weight(1f))
+                            TrackTile(track, rowIndex * 2 + i, verdictByTrack[track.uri.toString()], { b, c -> onOpen(track, b, c) }, Modifier.weight(1f), flight)
                         }
                         if (pair.size == 1) Spacer(Modifier.weight(1f))
                     }
                 }
                 else -> itemsIndexed(visible, key = { _, t -> t.uri.toString() }) { index, track ->
                     TrackRow(
-                        track, index, verdictByTrack[track.uri.toString()], { b -> onOpen(track, b) },
+                        track, index, verdictByTrack[track.uri.toString()], { b, c -> onOpen(track, b, c) },
                         Modifier.padding(horizontal = 10.dp).animateItem(placementSpec = Motion.spatial()),
+                        flight,
                     )
                 }
             }
@@ -590,9 +594,17 @@ private fun CoverFallback(track: Track) {
 
 /** Flat row: no card, just cover, text and a trailing badge. Pressing morphs the corners. */
 @Composable
-private fun TrackRow(track: Track, index: Int, verdict: Verdict?, onOpen: (Rect?) -> Unit, modifier: Modifier = Modifier) {
+private fun TrackRow(
+    track: Track,
+    index: Int,
+    verdict: Verdict?,
+    onOpen: (Rect?, CoverSource?) -> Unit,
+    modifier: Modifier = Modifier,
+    flight: CoverFlight? = null,
+) {
     val appear = rememberAppear(index)
     var bounds by remember { mutableStateOf<Rect?>(null) }
+    var coverBounds by remember { mutableStateOf<Rect?>(null) }
     MorphSurface(
         modifier = modifier
             .fillMaxWidth()
@@ -600,13 +612,24 @@ private fun TrackRow(track: Track, index: Int, verdict: Verdict?, onOpen: (Rect?
             .graphicsLayer {
                 alpha = appear.value.coerceIn(0f, 1f)
                 translationY = (1f - appear.value) * 48f
+                val pop = 0.88f + 0.12f * appear.value
+                scaleX = pop
+                scaleY = pop
             },
         corners = SpectyShapes.Row,
         color = Color.Transparent,
-        onClick = { onOpen(bounds) },
+        onClick = { onOpen(bounds, CoverSource(coverBounds, SpectyShapes.Cover, 180)) },
     ) {
         Row(Modifier.padding(horizontal = 10.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-            CoverImage(uri = track.uri, shape = SpectyShapes.Cover.toShape(), modifier = Modifier.size(60.dp), sizePx = 180) { CoverFallback(track) }
+            CoverImage(
+                uri = track.uri,
+                shape = SpectyShapes.Cover.toShape(),
+                modifier = Modifier
+                    .size(60.dp)
+                    .onGloballyPositioned { coverBounds = it.boundsInRoot() }
+                    .graphicsLayer { alpha = if (flight?.hides(track.uri) == true) 0f else 1f },
+                sizePx = 180,
+            ) { CoverFallback(track) }
             Spacer(Modifier.width(16.dp))
             Column(Modifier.weight(1f)) {
                 Text(track.title.withoutExplicitMark(), style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
@@ -632,23 +655,42 @@ private fun TrackRow(track: Track, index: Int, verdict: Verdict?, onOpen: (Rect?
 
 /** Cover-first tile for the grid view, with the format and verdict laid over the artwork. */
 @Composable
-private fun TrackTile(track: Track, index: Int, verdict: Verdict?, onOpen: (Rect?) -> Unit, modifier: Modifier = Modifier) {
+private fun TrackTile(
+    track: Track,
+    index: Int,
+    verdict: Verdict?,
+    onOpen: (Rect?, CoverSource?) -> Unit,
+    modifier: Modifier = Modifier,
+    flight: CoverFlight? = null,
+) {
     val appear = rememberAppear(index / 2)
     var bounds by remember { mutableStateOf<Rect?>(null) }
+    var coverBounds by remember { mutableStateOf<Rect?>(null) }
     MorphSurface(
         modifier = modifier
             .onGloballyPositioned { bounds = it.boundsInRoot() }
             .graphicsLayer {
                 alpha = appear.value.coerceIn(0f, 1f)
                 translationY = (1f - appear.value) * 64f
+                val pop = 0.86f + 0.14f * appear.value
+                scaleX = pop
+                scaleY = pop
             },
         corners = SpectyShapes.Tile,
         color = Color.Transparent,
-        onClick = { onOpen(bounds) },
+        onClick = { onOpen(bounds, CoverSource(coverBounds, SpectyShapes.Tile, 420)) },
     ) {
         Column(Modifier.padding(bottom = 6.dp)) {
             Box(Modifier.fillMaxWidth().aspectRatio(1f)) {
-                CoverImage(uri = track.uri, shape = SpectyShapes.Tile.toShape(), modifier = Modifier.fillMaxSize(), sizePx = 420) { CoverFallback(track) }
+                CoverImage(
+                    uri = track.uri,
+                    shape = SpectyShapes.Tile.toShape(),
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .onGloballyPositioned { coverBounds = it.boundsInRoot() }
+                        .graphicsLayer { alpha = if (flight?.hides(track.uri) == true) 0f else 1f },
+                    sizePx = 420,
+                ) { CoverFallback(track) }
                 if (verdict != null) Box(Modifier.align(Alignment.TopEnd).padding(10.dp)) { VerdictBadge(verdict) }
                 if (track.extension.isNotEmpty()) {
                     Pill(
