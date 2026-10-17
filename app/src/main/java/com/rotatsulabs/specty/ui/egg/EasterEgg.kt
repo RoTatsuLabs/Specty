@@ -13,7 +13,13 @@ import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
@@ -39,12 +45,13 @@ import kotlinx.coroutines.withTimeoutOrNull
 import androidx.compose.runtime.withFrameNanos
 import kotlin.math.PI
 import kotlin.math.sin
+import kotlin.random.Random
 
 private const val HOLD_MILLIS = 5000
 private const val RECORD_FROM = 0.85f
 
 /**
- * Easter egg: holding the Specty logo shakes the whole screen harder for five seconds, then the screen shatters
+ * Easter egg: holding the Specty logo makes every item on screen shake harder for five seconds, then the screen shatters
  * like glass and a Flappy Bird game takes its place.
  */
 @Stable
@@ -99,17 +106,40 @@ fun Modifier.eggHold(egg: EasterEgg): Modifier = this
         }
     }
 
-/** Shakes the content: starts at rest, then grows in size and speed with the hold. */
-fun Modifier.eggShake(egg: EasterEgg): Modifier = graphicsLayer {
-    val k = egg.hold.value * egg.hold.value
-    val p = egg.phase.floatValue
-    val amplitude = k * 16.dp.toPx()
-    translationX = amplitude * (sin(p) + 0.55f * sin(p * 2.37f + 1.3f)) / 1.55f
-    translationY = amplitude * (sin(p * 1.31f + 0.7f) + 0.55f * sin(p * 2.91f + 2.1f)) / 1.55f
-    rotationZ = k * 1.6f * sin(p * 0.83f + 2f)
-    val scale = 1f + 0.015f * k
-    scaleX = scale
-    scaleY = scale
+/** The running egg, for components that shake on their own. Null outside the app root. */
+val LocalEasterEgg = staticCompositionLocalOf<EasterEgg?> { null }
+
+/**
+ * Shakes this component by itself: every [seed] gets its own rhythm and direction, so items jostle independently.
+ * Starts at rest and grows in size and speed with the hold.
+ */
+@Composable
+fun Modifier.eggJitter(seed: Int): Modifier {
+    val egg = LocalEasterEgg.current ?: return this
+    val shape = remember(seed) {
+        val r = Random(seed * 7919 + 13)
+        floatArrayOf(
+            r.nextFloat() * 6.28f, r.nextFloat() * 6.28f, r.nextFloat() * 6.28f,
+            0.8f + r.nextFloat() * 0.5f, 0.8f + r.nextFloat() * 0.5f,
+            if (r.nextBoolean()) 1f else -1f,
+        )
+    }
+    return graphicsLayer {
+        val k = egg.hold.value * egg.hold.value
+        val p = egg.phase.floatValue
+        val amplitude = k * 9.dp.toPx()
+        translationX = amplitude * (sin(p * shape[3] + shape[0]) + 0.5f * sin(p * 2.3f + shape[1])) / 1.5f
+        translationY = amplitude * (sin(p * shape[4] + shape[1]) + 0.5f * sin(p * 2.7f + shape[2])) / 1.5f
+        rotationZ = shape[5] * k * 1.8f * sin(p * 0.9f + shape[2])
+    }
+}
+
+/** The app root: provides the egg to [eggJitter] and records the content for the glass. */
+@Composable
+fun EasterEggBox(egg: EasterEgg, layer: GraphicsLayer, content: @Composable BoxScope.() -> Unit) {
+    CompositionLocalProvider(LocalEasterEgg provides egg) {
+        Box(Modifier.fillMaxSize().eggCapture(egg, layer), content = content)
+    }
 }
 
 /** Records the content into [layer] near the end of the hold, so the glass has a picture of the screen to break. */
