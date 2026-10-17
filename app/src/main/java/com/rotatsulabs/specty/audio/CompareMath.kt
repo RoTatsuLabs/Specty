@@ -63,10 +63,18 @@ object CompareMath {
         if (ca.verdict != cb.verdict) {
             out += "Verdicts differ: A is ${label(ca.verdict)}, B is ${label(cb.verdict)}."
         }
-        if (ca.hasCliff != cb.hasCliff || (ca.hasCliff && kotlin.math.abs(ca.cutoffHz - cb.cutoffHz) > 1000.0)) {
-            val hi = if (ca.cutoffHz >= cb.cutoffHz) "A" else "B"
-            val diff = kotlin.math.abs(ca.cutoffHz - cb.cutoffHz) / 1000.0
-            out += "$hi keeps ${String.format(java.util.Locale.US, "%.1f", diff)} kHz more top end (cutoff ${khz(ca.cutoffHz)} vs ${khz(cb.cutoffHz)})."
+        val cutA = ca.cutoffHz
+        val cutB = cb.cutoffHz
+        if (cutA != null && cutB != null) {
+            if (kotlin.math.abs(cutA - cutB) > 1000.0) {
+                val hi = if (cutA >= cutB) "A" else "B"
+                val diff = kotlin.math.abs(cutA - cutB) / 1000.0
+                out += "$hi keeps ${String.format(java.util.Locale.US, "%.1f", diff)} kHz more top end (cutoff ${khz(cutA)} vs ${khz(cutB)})."
+            }
+        } else if (cutA != null && cb.shape == SpectrumShape.FULL_BAND) {
+            out += "B reaches the top of the spectrum; A is cut off near ${khz(cutA)}."
+        } else if (cutB != null && ca.shape == SpectrumShape.FULL_BAND) {
+            out += "A reaches the top of the spectrum; B is cut off near ${khz(cutB)}."
         }
         val dra = la.drTt; val drb = lb.drTt
         if (dra != null && drb != null && kotlin.math.abs(dra - drb) >= 1.0) {

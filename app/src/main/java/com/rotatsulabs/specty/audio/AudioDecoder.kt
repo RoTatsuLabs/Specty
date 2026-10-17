@@ -11,7 +11,10 @@ import java.io.IOException
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
-/** Decodes the first audio stream to raw interleaved f32le PCM at the file's native rate and layout. */
+/**
+ * Decodes the first audio stream to raw interleaved f32le PCM at the decoder's own rate and layout, and returns the
+ * rate and layout FFmpeg reports for that output (null if its log does not show them).
+ */
 object AudioDecoder {
     suspend fun decode(
         context: Context,
@@ -20,7 +23,7 @@ object AudioDecoder {
         output: File,
         maxBytes: Long = 0L,
         onProgress: (Float) -> Unit,
-    ) {
+    ): DecodedFormat? {
         val saf = FFmpegKitConfig.getSafParameterForRead(context, uri)
             ?: throw IOException("Cannot open this file")
         val args = buildList {
@@ -30,13 +33,13 @@ object AudioDecoder {
             add(output.absolutePath)
         }.toTypedArray()
 
-        suspendCancellableCoroutine { continuation ->
+        return suspendCancellableCoroutine { continuation ->
             val session = FFmpegKit.executeWithArgumentsAsync(
                 args,
                 { finished ->
                     if (!continuation.isActive) return@executeWithArgumentsAsync
                     if (ReturnCode.isSuccess(finished.returnCode)) {
-                        continuation.resume(Unit)
+                        continuation.resume(DecodedFormat.parse(finished.output))
                     } else {
                         val detail = finished.failStackTrace ?: finished.output?.takeLast(300).orEmpty()
                         continuation.resumeWithException(IOException("Decoding failed. $detail".trim()))

@@ -319,6 +319,12 @@ private fun Legend(color: Color, label: String) {
 
 private class Row3(val label: String, val a: String, val b: String, val better: Int = -1)
 
+/** Highest frequency the file keeps, for deciding which side has more top end; null when that is not known. */
+private fun topEnd(r: AnalysisResult): Double? {
+    val report = r.authenticity
+    return report.cutoffHz ?: report.emptyAboveHz ?: r.info.nyquistHz.takeIf { report.shape == com.rotatsulabs.specty.audio.SpectrumShape.FULL_BAND }
+}
+
 @Composable
 private fun MetricsTable(a: AnalysisResult, b: AnalysisResult) {
     val la = a.levels; val lb = b.levels
@@ -344,7 +350,7 @@ private fun MetricsTable(a: AnalysisResult, b: AnalysisResult) {
             if (lb.clippedSamples == 0L) "None" else Fmt.count(lb.clippedSamples),
             pick(la.clippedSamples.toDouble(), lb.clippedSamples.toDouble(), false, 1.0),
         ),
-        Row3("Spectral cutoff", Fmt.kHz(a.authenticity.cutoffHz), Fmt.kHz(b.authenticity.cutoffHz), pick(a.authenticity.cutoffHz, b.authenticity.cutoffHz, true, 1000.0)),
+        Row3("Spectral cutoff", Fmt.spectralEdge(a.authenticity).second, Fmt.spectralEdge(b.authenticity).second, pick(topEnd(a), topEnd(b), true, 1000.0)),
         Row3("Verdict", verdictShort(a), verdictShort(b)),
         Row3(
             "Correlation",
