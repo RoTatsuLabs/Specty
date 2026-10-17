@@ -15,6 +15,8 @@ import com.rotatsulabs.specty.batch.BatchScanner
 import com.rotatsulabs.specty.data.LibraryRepository
 import com.rotatsulabs.specty.data.ResultCache
 import com.rotatsulabs.specty.data.Track
+import com.rotatsulabs.specty.sound.Fx
+import com.rotatsulabs.specty.sound.SoundFx
 import com.rotatsulabs.specty.ui.design.tonal.SeedPalette
 import com.rotatsulabs.specty.ui.theme.Appearance
 import com.rotatsulabs.specty.ui.theme.ThemeMode
@@ -56,6 +58,18 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     init {
         viewModelScope.launch(Dispatchers.IO) { AudioAnalyzer.sweepStale(app) }
+        SoundFx.enabled = prefs.getBoolean(KEY_SOUND, true)
+        SoundFx.warmUp()
+    }
+
+    private val _sound = MutableStateFlow(SoundFx.enabled)
+    val sound: StateFlow<Boolean> = _sound.asStateFlow()
+
+    fun setSound(enabled: Boolean) {
+        _sound.value = enabled
+        SoundFx.enabled = enabled
+        prefs.edit().putBoolean(KEY_SOUND, enabled).apply()
+        if (enabled) SoundFx.play(Fx.Tap)
     }
 
     private val _analysis = MutableStateFlow<AnalysisState>(AnalysisState.Idle)
@@ -217,6 +231,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         } else {
             waiting.addLast(uri)
             _queued.value = waiting.size
+            SoundFx.play(Fx.Queue)
             "Added to the queue"
         }
         Toast.makeText(getApplication(), message, Toast.LENGTH_SHORT).show()
@@ -265,11 +280,13 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                     _analysis.value = AnalysisState.Running(title, stage, progress)
                 }
                 _analysis.value = AnalysisState.Done(result)
+                SoundFx.play(Fx.Done)
                 if (cacheable) withContext(Dispatchers.IO) { cache.save(key, result) }
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Throwable) {
                 _analysis.value = AnalysisState.Failed(title, e.message ?: "Analysis failed")
+                SoundFx.play(Fx.Fail)
             }
             advance()
         }
@@ -312,5 +329,6 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         const val KEY_BLACK = "pure_black"
         const val KEY_SEED = "seed_palette"
         const val KEY_META = "show_metadata"
+        const val KEY_SOUND = "sound_fx"
     }
 }

@@ -40,6 +40,8 @@ import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.platform.LocalHapticFeedback
+import com.rotatsulabs.specty.sound.Fx
+import com.rotatsulabs.specty.sound.SoundFx
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.withTimeoutOrNull
 import androidx.compose.runtime.withFrameNanos
@@ -170,6 +172,7 @@ fun EasterEggDriver(egg: EasterEgg, layer: GraphicsLayer) {
                 if (picture != null) {
                     egg.snapshot = picture
                     egg.glass = true
+                    SoundFx.play(Fx.Glass)
                     haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                 }
                 egg.hold.snapTo(0f)
@@ -181,11 +184,15 @@ fun EasterEggDriver(egg: EasterEgg, layer: GraphicsLayer) {
 
     LaunchedEffect(egg) {
         snapshotFlow { egg.hold.value > 0f }.collectLatest { active ->
-            if (!active) return@collectLatest
+            if (!active) {
+                SoundFx.rumble(0f)
+                return@collectLatest
+            }
             var last = withFrameNanos { it }
             while (true) {
                 val now = withFrameNanos { it }
                 egg.advance(((now - last) / 1_000_000_000f).coerceAtMost(0.05f))
+                SoundFx.rumble(egg.hold.value)
                 last = now
             }
         }

@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.VolumeUp
 import androidx.compose.material.icons.rounded.Contrast
 import androidx.compose.material.icons.rounded.Palette
 import androidx.compose.material.icons.rounded.Sell
@@ -46,6 +47,8 @@ fun SettingsScreen(
     onPureBlack: (Boolean) -> Unit,
     showMetadata: Boolean,
     onShowMetadata: (Boolean) -> Unit,
+    soundEnabled: Boolean,
+    onSound: (Boolean) -> Unit,
     fftSize: Int,
     onFftSize: (Int) -> Unit,
     windowFn: WindowFn,
@@ -104,7 +107,15 @@ fun SettingsScreen(
                         checked = showMetadata,
                         onChecked = onShowMetadata,
                         icon = Icons.Rounded.Sell,
-                        corners = groupCorners(0, 1),
+                        corners = groupCorners(0, 2),
+                    )
+                    SettingToggleRow(
+                        title = "Sound effects",
+                        supporting = "Soft clicks and chimes for taps, queued files and finished analyses. Follows your system sound volume.",
+                        checked = soundEnabled,
+                        onChecked = onSound,
+                        icon = Icons.AutoMirrored.Rounded.VolumeUp,
+                        corners = groupCorners(1, 2),
                     )
                 }
             }
