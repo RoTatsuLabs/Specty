@@ -5,15 +5,16 @@ on:
     tags: ["v*"]
   workflow_dispatch:
     inputs:
-      tag:
-        description: Existing tag to build, for example v0.1.0
+      version:
+        description: Version to release, for example 0.2.0 or 0.2.0-beta.1. Builds the selected branch and creates tag v<version>.
         required: true
+        type: string
 
 permissions:
   contents: read
 
 concurrency:
-  group: release-${{ inputs.tag || github.ref_name }}
+  group: release-${{ inputs.version || github.ref_name }}
   cancel-in-progress: false
 
 jobs:
@@ -22,20 +23,30 @@ jobs:
     timeout-minutes: 40
     permissions:
       contents: write
-    env:
-      TAG: ${{ inputs.tag || github.ref_name }}
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ env.TAG }}
+          fetch-depth: 0
 
-      - name: Check tag matches versionName
+      - name: Resolve version
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
         run: |
-          v=$(grep -oP 'versionName = "\K[^"]+' app/build.gradle.kts)
-          if [ "$TAG" != "v$v" ]; then
-            echo "::error::Tag $TAG does not match versionName $v"
+          if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ]; then
+            version="${INPUT_VERSION#v}"
+          else
+            version="${GITHUB_REF_NAME#v}"
+          fi
+          if ! printf '%s' "$version" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.]+)?$'; then
+            echo "::error::'$version' is not a version like 1.2.3 or 1.2.3-beta.1"
             exit 1
           fi
+          if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ] && git rev-parse -q --verify "refs/tags/v$version" > /dev/null; then
+            echo "::error::Tag v$version already exists"
+            exit 1
+          fi
+          echo "VERSION=$version" >> "$GITHUB_ENV"
+          echo "TAG=v$version" >> "$GITHUB_ENV"
 
       - uses: actions/setup-java@v4
         with:
@@ -60,6 +71,7 @@ jobs:
           SIGNING_PASSWORD: ${{ secrets.RELEASE_PASSWORD }}
           SIGNING_ALIAS: ${{ secrets.RELEASE_ALIAS }}
           VERSION_CODE: ${{ github.run_number }}
+          VERSION_NAME: ${{ env.VERSION }}
         run: gradle :app:assembleRelease --stacktrace
 
       - name: Verify signature
@@ -80,10 +92,17 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          prev=$(git tag --list 'v*' --sort=-v:refname | grep -vx "$TAG" | head -1 || true)
+          bash .github/scripts/changelog.sh "$prev" > notes.md
           pre=""
           case "$TAG" in *-*) pre="--prerelease" ;; esac
+          if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ]; then
+            target="--target $GITHUB_SHA"
+          else
+            target="--verify-tag"
+          fi
           gh release create "$TAG" "specty-$TAG.apk" "specty-$TAG.apk.sha256" \
-            --verify-tag --generate-notes $pre
+            $target --title "Specty $VERSION" --notes-file notes.md $pre
 
       - name: Remove keystore
         if: always()

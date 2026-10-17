@@ -4,6 +4,11 @@ on:
   schedule:
     - cron: "0 20 * * *" # 03:00 WIB
   workflow_dispatch:
+    inputs:
+      version:
+        description: Optional version label, for example 0.2.0. The build shows as 0.2.0-nightly. Leave empty for the default.
+        required: false
+        type: string
 
 permissions:
   contents: read
@@ -41,6 +46,18 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: main
+          fetch-depth: 0
+
+      - name: Check version
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
+        run: |
+          version="${INPUT_VERSION#v}"
+          if [ -n "$version" ] && ! printf '%s' "$version" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "::error::'$version' is not a version like 1.2.3"
+            exit 1
+          fi
+          echo "VERSION=$version" >> "$GITHUB_ENV"
 
       - uses: actions/setup-java@v4
         with:
@@ -65,6 +82,7 @@ jobs:
           SIGNING_PASSWORD: ${{ secrets.NIGHTLY_PASSWORD }}
           SIGNING_ALIAS: ${{ secrets.NIGHTLY_ALIAS }}
           VERSION_CODE: ${{ github.run_number }}
+          VERSION_NAME: ${{ env.VERSION }}
         run: gradle :app:assembleNightly --stacktrace
 
       - name: Verify signature
@@ -84,11 +102,18 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          prev=$(git tag --list 'v*' --sort=-v:refname | head -1 || true)
+          [ -z "$prev" ] && prev=$(git rev-list --max-count=1 --skip=20 HEAD || true)
+          {
+            echo "Commit \`$GITHUB_SHA\`"
+            echo
+            bash .github/scripts/changelog.sh "$prev"
+          } > notes.md
           gh release delete nightly --cleanup-tag --yes || true
           gh release create nightly specty-nightly.apk \
             --prerelease --target "$GITHUB_SHA" \
-            --title "Nightly $(date -u +%F)" \
-            --notes "Commit $GITHUB_SHA"
+            --title "Nightly ${VERSION:+$VERSION }$(date -u +%F)" \
+            --notes-file notes.md
 
       - name: Remove keystore
         if: always()
