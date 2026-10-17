@@ -140,6 +140,23 @@ class Spectrogram(
     val views: List<ByteArray>,
     val viewLabels: List<String>,
 ) {
+    /** Tab titles: the first view is the mix, and channels carry speaker names for the common layouts. */
+    val displayLabels: List<String>
+        get() {
+            val channels = views.size - 1
+            if (channels < 1) return viewLabels
+            val names = when (channels) {
+                2 -> listOf("L", "R")
+                3 -> listOf("L", "R", "C")
+                4 -> listOf("FL", "FR", "BL", "BR")
+                5 -> listOf("L", "R", "C", "Ls", "Rs")
+                6 -> listOf("L", "R", "C", "LFE", "Ls", "Rs")
+                8 -> listOf("L", "R", "C", "LFE", "Lb", "Rb", "Ls", "Rs")
+                else -> List(channels) { "Ch ${it + 1}" }
+            }
+            return listOf("Mix") + names
+        }
+
     companion object {
         const val MIN_DB = -120.0
         const val MAX_DB = 0.0
