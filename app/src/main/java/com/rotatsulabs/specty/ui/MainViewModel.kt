@@ -169,10 +169,10 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                     return@launch
                 }
             }
-            _compare.value = CompareState.Running(meta.displayName, "Reading file", 0f)
+            _compare.value = CompareState.Running(titleOf(second, meta.displayName), "Reading file", 0f)
             try {
                 val result = analyzer.analyze(second, fft, _windowFn.value) { stage, progress ->
-                    _compare.value = CompareState.Running(meta.displayName, stage, progress)
+                    _compare.value = CompareState.Running(titleOf(second, meta.displayName), stage, progress)
                 }
                 if (meta.sizeBytes > 0) withContext(Dispatchers.IO) { cache.save(key, result) }
                 _compare.value = CompareState.Ready(first, result)
@@ -254,13 +254,17 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         start(uri, force)
     }
 
+    /** The song title the library already shows, so a running analysis is not named after its file. */
+    private fun titleOf(uri: Uri, fileName: String): String =
+        _library.value.tracks.firstOrNull { it.uri == uri }?.title?.takeIf { it.isNotBlank() } ?: fileName.substringBeforeLast('.', fileName)
+
     private fun start(uri: Uri, force: Boolean) {
         analysisJob?.cancel()
         lastUri = uri
         _viewing.value = false
         analysisJob = viewModelScope.launch {
             val meta = withContext(Dispatchers.IO) { MediaProbe.queryMeta(getApplication(), uri) }
-            val title = meta.displayName
+            val title = titleOf(uri, meta.displayName)
             val fft = _fftSize.value
             val cacheable = meta.sizeBytes > 0
             val key = cache.keyOf(uri, meta.sizeBytes, meta.modified, fft, _windowFn.value)
