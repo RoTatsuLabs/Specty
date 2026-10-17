@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.unit.dp
 import com.rotatsulabs.specty.ui.components.AnalysisDock
+import com.rotatsulabs.specty.ui.components.withoutExplicitMark
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.material3.MaterialTheme
@@ -225,7 +226,7 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit, onPickCompare: (
             Surface(Modifier.fillMaxSize(), color = androidx.compose.ui.graphics.Color.Black) {
                 com.rotatsulabs.specty.ui.spectrogram.SpectrogramViewer(
                     spectrogram = viewerResult.spectrogram,
-                    title = viewerResult.info.displayName,
+                    title = viewerResult.info.title.withoutExplicitMark(),
                     initialView = open,
                     onClose = { viewerView = null },
                     cutoffHz = viewerResult.authenticity.cutoffHz,

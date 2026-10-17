@@ -222,7 +222,7 @@ private fun ResultContent(result: AnalysisResult, showMetadata: Boolean, onFulls
         if (showMetadata) Reveal(9) { TagsCard(result.info.tags) }
         Reveal(10) { SpectrogramCard(
                 result.spectrogram,
-                title = result.info.displayName,
+                title = result.info.title.withoutExplicitMark(),
                 onFullscreen = onFullscreen,
                 cutoffHz = result.authenticity.cutoffHz,
             ) }
@@ -262,7 +262,7 @@ private fun Hero(result: AnalysisResult, flight: CoverFlight?) {
         Reveal(1) {
             Row(Modifier.padding(horizontal = 8.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(
-                    info.displayName.substringBeforeLast('.').withoutExplicitMark(),
+                    info.title.withoutExplicitMark(),
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold,
                     textAlign = TextAlign.Center,

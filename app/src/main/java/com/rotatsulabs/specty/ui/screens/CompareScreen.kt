@@ -158,7 +158,7 @@ private fun FileTag(letter: String, r: AnalysisResult, container: Color, content
             Pill(letter, container = content.copy(alpha = 0.16f), content = content)
             Column {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Text(r.info.displayName.substringBeforeLast('.').withoutExplicitMark(), style = MaterialTheme.typography.titleSmall, maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false))
+                    Text(r.info.title.withoutExplicitMark(), style = MaterialTheme.typography.titleSmall, maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false))
                     if (isExplicit(r.info.tags)) Icon(Icons.Rounded.Explicit, contentDescription = "Explicit", modifier = Modifier.size(18.dp))
                 }
                 Text(

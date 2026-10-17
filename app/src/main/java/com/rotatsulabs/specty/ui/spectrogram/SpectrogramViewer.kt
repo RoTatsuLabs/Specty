@@ -20,7 +20,26 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.displayCutoutPadding
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.material.icons.rounded.Tune
+import androidx.compose.ui.graphics.TransformOrigin
+import com.rotatsulabs.specty.ui.design.Corners
+import com.rotatsulabs.specty.ui.design.components.MorphSurface
+import com.rotatsulabs.specty.ui.design.components.Segment
+import com.rotatsulabs.specty.ui.design.components.SegmentedControl
+import com.rotatsulabs.specty.ui.theme.Motion
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Close
@@ -155,7 +174,7 @@ fun SpectrogramViewer(spectrogram: Spectrogram, title: String, initialView: Int,
     val nyquist = spectrogram.sampleRate / 2.0
     val duration = spectrogram.durationSec
 
-    Box(Modifier.fillMaxSize().background(Color.Black)) {
+    Box(Modifier.fillMaxSize().background(Color.Black).displayCutoutPadding()) {
         Canvas(
             Modifier.fillMaxSize()
                 .onSizeChanged { canvasSize = it }
@@ -163,7 +182,7 @@ fun SpectrogramViewer(spectrogram: Spectrogram, title: String, initialView: Int,
                 .pointerInput(spectrogram) {
                     awaitEachGesture {
                         // Measured per gesture so a rotation mid-session is picked up.
-                        val left = 52.dp.toPx(); val right = 12.dp.toPx(); val top = 8.dp.toPx(); val bottom = 28.dp.toPx()
+                        val left = 52.dp.toPx(); val right = 12.dp.toPx(); val top = BAR_HEIGHT.toPx(); val bottom = 28.dp.toPx()
                         val plotW = (size.width - left - right).coerceAtLeast(1f)
                         val plotH = (size.height - top - bottom).coerceAtLeast(1f)
                         val first = awaitFirstDown(requireUnconsumed = false)
@@ -208,7 +227,7 @@ fun SpectrogramViewer(spectrogram: Spectrogram, title: String, initialView: Int,
                     }
                 },
         ) {
-            val left = 52.dp.toPx(); val right = 12.dp.toPx(); val top = 8.dp.toPx(); val bottom = 28.dp.toPx()
+            val left = 52.dp.toPx(); val right = 12.dp.toPx(); val top = BAR_HEIGHT.toPx(); val bottom = 28.dp.toPx()
             val plotW = size.width - left - right
             val plotH = size.height - top - bottom
             image?.let { img ->
@@ -298,7 +317,7 @@ fun SpectrogramViewer(spectrogram: Spectrogram, title: String, initialView: Int,
         // Readout
         val readout = touch?.let { p ->
             val density = context.resources.displayMetrics.density
-            val left = 52 * density; val right = 12 * density; val top = 8 * density; val bottom = 28 * density
+            val left = 52 * density; val right = 12 * density; val top = BAR_HEIGHT.value * density; val bottom = 28 * density
             val w = canvasSize.width - left - right
             val h = canvasSize.height - top - bottom
             if (w <= 0f || h <= 0f || p.x < left || p.x > left + w || p.y < top || p.y > top + h) null else {
@@ -314,34 +333,84 @@ fun SpectrogramViewer(spectrogram: Spectrogram, title: String, initialView: Int,
             }
         }
 
+        var showOptions by remember { mutableStateOf(false) }
+        fun resetZoom() { x0 = 0f; x1 = 1f; f0 = 0f; f1 = 1f; touch = null }
+
+        // The bar owns the top strip; the plot starts below it, so nothing is covered.
         Row(
-            Modifier.fillMaxWidth().statusBarsPadding().padding(horizontal = 12.dp, vertical = 6.dp),
+            Modifier.fillMaxWidth().height(BAR_HEIGHT).padding(horizontal = 12.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             ExpressiveIconButton(Icons.Rounded.Close, "Close", onClose)
-            Pill(
-                readout ?: "$title  ·  touch to read, two fingers to zoom",
-                container = Color.Black.copy(alpha = 0.55f), content = Color.White,
-            )
-            Box(Modifier.weight(1f))
-            if (spectrogram.views.size > 1) {
-                ExpressiveButton(spectrogram.displayLabels[view], { view = (view + 1) % spectrogram.views.size }, kind = ButtonKind.Tonal)
+            Box(Modifier.weight(1f)) {
+                Pill(
+                    readout ?: title,
+                    container = Color.Black.copy(alpha = 0.55f), content = Color.White,
+                )
             }
-            ExpressiveButton(palette.label, {
-                paletteIndex = (paletteIndex + 1) % SpectrogramPalette.entries.size
-                prefs.edit().putInt("spectrogram_palette", paletteIndex).apply()
-            }, kind = ButtonKind.Tonal)
-            ExpressiveButton(if (options.log) "Log" else "Linear", { options = options.copy(log = !options.log).also { it.save(prefs) }; x0 = 0f; x1 = 1f; f0 = 0f; f1 = 1f; touch = null }, kind = ButtonKind.Tonal)
-            ExpressiveButton(options.range.label, {
-                val next = DbRange.entries[(options.range.ordinal + 1) % DbRange.entries.size]
-                options = options.copy(range = next).also { it.save(prefs) }
-            }, kind = ButtonKind.Tonal)
+            if (spectrogram.views.size > 1) {
+                ExpressiveButton(
+                    spectrogram.displayLabels[view], { view = (view + 1) % spectrogram.views.size },
+                    kind = ButtonKind.Tonal, modifier = Modifier.widthIn(min = 72.dp),
+                )
+            }
+            ExpressiveIconButton(Icons.Rounded.Tune, "Display options", { showOptions = !showOptions }, toggled = showOptions)
             ExpressiveIconButton(Icons.Rounded.CropRotate, "Toggle landscape lock", { landscape = !landscape }, toggled = landscape)
-            ExpressiveIconButton(Icons.Rounded.ZoomOutMap, "Reset zoom", { x0 = 0f; x1 = 1f; f0 = 0f; f1 = 1f; touch = null })
+            ExpressiveIconButton(Icons.Rounded.ZoomOutMap, "Reset zoom", { resetZoom() })
+        }
+
+        AnimatedVisibility(
+            visible = showOptions,
+            modifier = Modifier.align(Alignment.TopEnd).padding(top = BAR_HEIGHT, end = 12.dp),
+            enter = fadeIn(Motion.effects()) + scaleIn(Motion.spatial(), initialScale = 0.9f, transformOrigin = TransformOrigin(1f, 0f)),
+            exit = fadeOut(Motion.effects()) + scaleOut(Motion.spatial(), targetScale = 0.9f, transformOrigin = TransformOrigin(1f, 0f)),
+        ) {
+            MorphSurface(
+                Modifier.width(380.dp).heightIn(max = 280.dp),
+                Corners(24.dp), Color(0xFF1B171A).copy(alpha = 0.96f), Color.White, morphOnPress = false,
+            ) {
+                Column(
+                    Modifier.verticalScroll(rememberScrollState()).padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    val caption = MaterialTheme.typography.labelMedium
+                    Text("Colour palette", style = caption, color = Color.White.copy(alpha = 0.7f))
+                    SegmentedControl(
+                        segments = SpectrogramPalette.entries.mapIndexed { i, p -> Segment(i, p.label) },
+                        selected = paletteIndex,
+                        onSelect = { paletteIndex = it; prefs.edit().putInt("spectrogram_palette", it).apply() },
+                        scrollable = true,
+                        modifier = Modifier.fillMaxWidth(),
+                        indicator = MaterialTheme.colorScheme.secondaryContainer,
+                        onIndicator = MaterialTheme.colorScheme.onSecondaryContainer,
+                    )
+                    Text("Frequency scale", style = caption, color = Color.White.copy(alpha = 0.7f))
+                    SegmentedControl(
+                        segments = listOf(Segment(false, "Linear"), Segment(true, "Log")),
+                        selected = options.log,
+                        onSelect = { options = options.copy(log = it).also { o -> o.save(prefs) }; resetZoom() },
+                        modifier = Modifier.fillMaxWidth(),
+                        indicator = MaterialTheme.colorScheme.secondaryContainer,
+                        onIndicator = MaterialTheme.colorScheme.onSecondaryContainer,
+                    )
+                    Text("Level range", style = caption, color = Color.White.copy(alpha = 0.7f))
+                    SegmentedControl(
+                        segments = DbRange.entries.map { Segment(it, it.label) },
+                        selected = options.range,
+                        onSelect = { options = options.copy(range = it).also { o -> o.save(prefs) } },
+                        modifier = Modifier.fillMaxWidth(),
+                        indicator = MaterialTheme.colorScheme.secondaryContainer,
+                        onIndicator = MaterialTheme.colorScheme.onSecondaryContainer,
+                    )
+                }
+            }
         }
     }
 }
+
+/** Height of the control strip above the plot. */
+private val BAR_HEIGHT = 64.dp
 
 private fun ceilTo(value: Double, step: Double): Double = kotlin.math.ceil(value / step - 1e-9) * step
 
