@@ -125,6 +125,7 @@ import com.rotatsulabs.specty.ui.LibraryState
 import com.rotatsulabs.specty.ui.components.CoverImage
 import com.rotatsulabs.specty.ui.components.Fmt
 import com.rotatsulabs.specty.ui.components.pressScale
+import com.rotatsulabs.specty.ui.egg.eggJitter
 import com.rotatsulabs.specty.ui.design.CoverFlight
 import com.rotatsulabs.specty.ui.design.CoverSource
 import com.rotatsulabs.specty.ui.theme.Motion
@@ -272,10 +273,11 @@ fun LibraryScreen(
             }
             item(key = "search") {
                 Spacer(Modifier.height(14.dp))
-                SearchPill(query) { query = it }
+                Box(Modifier.eggJitter(3)) { SearchPill(query) { query = it } }
             }
             if (hasTracks) {
                 item(key = "filters") {
+                    Box(Modifier.eggJitter(4)) {
                     FilterRow(
                         selected = filter,
                         counts = mapOf(
@@ -286,8 +288,10 @@ fun LibraryScreen(
                         ),
                         onSelect = { filterIndex = it.ordinal },
                     )
+                    }
                 }
                 item(key = "section") {
+                    Box(Modifier.eggJitter(5)) {
                     SectionBar(
                         count = visible.size,
                         sort = sort,
@@ -297,6 +301,7 @@ fun LibraryScreen(
                         onToggleOrder = { ascending = !ascending },
                         onToggleGrid = { grid = !grid },
                     )
+                    }
                 }
             }
 
@@ -328,7 +333,7 @@ fun LibraryScreen(
                         horizontalArrangement = Arrangement.spacedBy(14.dp),
                     ) {
                         pair.forEachIndexed { i, track ->
-                            TrackTile(track, rowIndex * 2 + i, verdictByTrack[track.uri.toString()], { b, c -> onOpen(track, b, c) }, Modifier.weight(1f), flight)
+                            TrackTile(track, rowIndex * 2 + i, verdictByTrack[track.uri.toString()], { b, c -> onOpen(track, b, c) }, Modifier.weight(1f).eggJitter(rowIndex * 2 + i + 10), flight)
                         }
                         if (pair.size == 1) Spacer(Modifier.weight(1f))
                     }
@@ -336,7 +341,7 @@ fun LibraryScreen(
                 else -> itemsIndexed(visible, key = { _, t -> t.uri.toString() }) { index, track ->
                     TrackRow(
                         track, index, verdictByTrack[track.uri.toString()], { b, c -> onOpen(track, b, c) },
-                        Modifier.padding(horizontal = 10.dp).animateItem(placementSpec = Motion.spatial()),
+                        Modifier.padding(horizontal = 10.dp).animateItem(placementSpec = Motion.spatial()).eggJitter(index + 10),
                         flight,
                     )
                 }
@@ -354,7 +359,7 @@ fun LibraryScreen(
         ) {
             val haptic = LocalHapticFeedback.current
             MorphSurface(
-                Modifier.navigationBarsPadding().padding(20.dp),
+                Modifier.navigationBarsPadding().padding(20.dp).eggJitter(98),
                 corners = SpectyShapes.Feature,
                 color = MaterialTheme.colorScheme.primaryContainer,
                 onClick = {
@@ -392,7 +397,7 @@ private fun Header(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Row(Modifier.weight(1f).then(brandModifier), verticalAlignment = Alignment.CenterVertically) {
-            Row(brandHold, verticalAlignment = Alignment.CenterVertically) {
+            Row(brandHold.eggJitter(1), verticalAlignment = Alignment.CenterVertically) {
                 EqualizerMark()
                 Spacer(Modifier.width(14.dp))
                 Column {
@@ -401,7 +406,7 @@ private fun Header(
                 }
             }
         }
-        Box {
+        Box(Modifier.eggJitter(2)) {
             ExpressiveIconButton(Icons.Rounded.MoreVert, "More options", { menu = true }, toggled = menu, iconModifier = Modifier.rotate(menuTurn))
             DropdownMenu(expanded = menu, onDismissRequest = { menu = false }, shape = RoundedCornerShape(20.dp)) {
                 if (canRescan) {

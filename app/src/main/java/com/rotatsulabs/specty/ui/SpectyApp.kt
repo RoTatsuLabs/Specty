@@ -46,9 +46,9 @@ import androidx.compose.ui.layout.onGloballyPositioned
 import com.rotatsulabs.specty.ui.egg.EasterEgg
 import com.rotatsulabs.specty.ui.egg.EasterEggDriver
 import com.rotatsulabs.specty.ui.egg.EasterEggStage
-import com.rotatsulabs.specty.ui.egg.eggCapture
+import com.rotatsulabs.specty.ui.egg.EasterEggBox
+import com.rotatsulabs.specty.ui.egg.eggJitter
 import com.rotatsulabs.specty.ui.egg.eggHold
-import com.rotatsulabs.specty.ui.egg.eggShake
 import com.rotatsulabs.specty.ui.theme.Motion
 
 @Composable
@@ -102,7 +102,7 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit, onPickCompare: (
     val viewerResult = (held.state as? AnalysisState.Done)?.result
     if (viewerView != null && (viewerResult == null || !analysisOpen)) viewerView = null
 
-    Box(Modifier.fillMaxSize().eggShake(egg).eggCapture(egg, eggLayer)) {
+    EasterEggBox(egg, eggLayer) {
         Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.surface) {
             androidx.compose.runtime.key(permissionEpoch) {
             LibraryScreen(
@@ -147,6 +147,7 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit, onPickCompare: (
                 modifier = Modifier
                     .navigationBarsPadding()
                     .padding(horizontal = 12.dp, vertical = 12.dp)
+                    .eggJitter(97)
                     .onGloballyPositioned { dockBounds = it.boundsInRoot() },
             )
         }
