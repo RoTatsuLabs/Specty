@@ -58,7 +58,7 @@ object SpectrogramExporter {
 
         val shownTitle = TextUtils.ellipsize(title, titlePaint, WIDTH - 120f, TextUtils.TruncateAt.END).toString()
         canvas.drawText(shownTitle, 60f, 90f, titlePaint)
-        val subtitle = "${spectrogram.viewLabels[view]}  ·  ${spectrogram.sampleRate / 1000.0} kHz  ·  " +
+        val subtitle = "${spectrogram.displayLabels[view]}  ·  ${spectrogram.sampleRate / 1000.0} kHz  ·  " +
             "FFT ${spectrogram.fftSize}  ·  ${Fmt.duration(spectrogram.durationSec)}  ·  ${palette.label}" +
             if (options.log) "  ·  log scale" else ""
         canvas.drawText(subtitle, 60f, 145f, subtitlePaint)

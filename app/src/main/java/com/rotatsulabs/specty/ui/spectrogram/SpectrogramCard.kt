@@ -1,6 +1,16 @@
 package com.rotatsulabs.specty.ui.spectrogram
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.material.icons.rounded.Check
+import androidx.compose.material.icons.rounded.KeyboardArrowDown
+import androidx.compose.ui.draw.rotate
+import com.rotatsulabs.specty.ui.design.Corners
+import com.rotatsulabs.specty.ui.theme.Motion
 import com.rotatsulabs.specty.ui.design.SpectyShapes
 import com.rotatsulabs.specty.ui.design.components.ButtonKind
 import com.rotatsulabs.specty.ui.design.components.ExpressiveButton
@@ -125,12 +135,17 @@ fun SpectrogramCard(
         morphOnPress = false,
     ) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            val tonal = MaterialTheme.colorScheme.secondaryContainer
+            val onTonal = MaterialTheme.colorScheme.onSecondaryContainer
+            // Selection uses the tonal colour, so the solid primary stays free for the main action below.
             SegmentedControl(
-                segments = spectrogram.viewLabels.mapIndexed { i, l -> Segment(i, l) },
+                segments = spectrogram.displayLabels.mapIndexed { i, l -> Segment(i, l) },
                 selected = selected,
                 onSelect = { selected = it },
-                scrollable = spectrogram.viewLabels.size > 3,
+                scrollable = spectrogram.displayLabels.size > 3,
                 modifier = Modifier.fillMaxWidth(),
+                indicator = tonal,
+                onIndicator = onTonal,
             )
 
             Canvas(Modifier.fillMaxWidth().aspectRatio(16f / 9f)) {
@@ -188,39 +203,6 @@ fun SpectrogramCard(
                 }
             }
 
-            SegmentedControl(
-                segments = SpectrogramPalette.entries.mapIndexed { i, p -> Segment(i, p.label) },
-                selected = paletteIndex,
-                onSelect = {
-                    paletteIndex = it
-                    prefs.edit().putInt("spectrogram_palette", it).apply()
-                },
-                scrollable = true,
-                modifier = Modifier.fillMaxWidth(),
-            )
-
-            fun set(o: SpecOptions) { options = o; o.save(prefs) }
-            SegmentedControl(
-                segments = listOf(Segment(false, "Linear"), Segment(true, "Log")),
-                selected = options.log,
-                onSelect = { set(options.copy(log = it)) },
-                modifier = Modifier.fillMaxWidth(),
-            )
-            SegmentedControl(
-                segments = DbRange.entries.map { Segment(it, it.label) },
-                selected = options.range,
-                onSelect = { set(options.copy(range = it)) },
-                modifier = Modifier.fillMaxWidth(),
-            )
-            if (cutoffHz != null) {
-                ExpressiveButton(
-                    "Cutoff line",
-                    { set(options.copy(cutoffLine = !options.cutoffLine)) },
-                    kind = if (options.cutoffLine) ButtonKind.Filled else ButtonKind.Tonal,
-                    icon = if (options.cutoffLine) Icons.Rounded.Check else null,
-                )
-            }
-
             Row(
                 Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(10.dp),
@@ -237,11 +219,80 @@ fun SpectrogramCard(
                 Text("${options.range.ceil} dBFS", style = MaterialTheme.typography.labelMedium, color = axisColor)
             }
 
-            if (onFullscreen != null) {
-                ExpressiveButton(
-                    "Full screen, zoom and inspect", { onFullscreen(selected) },
-                    modifier = Modifier.fillMaxWidth(), icon = Icons.Rounded.Fullscreen,
-                )
+            fun set(o: SpecOptions) { options = o; o.save(prefs) }
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                if (onFullscreen != null) {
+                    ExpressiveButton(
+                        "Full screen", { onFullscreen(selected) },
+                        modifier = Modifier.weight(1f), icon = Icons.Rounded.Fullscreen,
+                    )
+                }
+                if (cutoffHz != null) {
+                    ExpressiveButton(
+                        "Cutoff",
+                        { set(options.copy(cutoffLine = !options.cutoffLine)) },
+                        kind = if (options.cutoffLine) ButtonKind.Tonal else ButtonKind.Outlined,
+                        icon = if (options.cutoffLine) Icons.Rounded.Check else null,
+                    )
+                }
+            }
+
+            var showOptions by rememberSaveable { mutableStateOf(false) }
+            val turn by animateFloatAsState(if (showOptions) 180f else 0f, Motion.spatial(), label = "optionsTurn")
+            MorphSurface(
+                modifier = Modifier.fillMaxWidth(),
+                corners = Corners(20.dp),
+                color = MaterialTheme.colorScheme.surfaceContainerHighest,
+                onClick = { showOptions = !showOptions },
+            ) {
+                Row(Modifier.padding(horizontal = 16.dp, vertical = 12.dp), verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                    Text(
+                        "Display options",
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+                        modifier = Modifier.weight(1f),
+                    )
+                    Icon(Icons.Rounded.KeyboardArrowDown, contentDescription = null, modifier = Modifier.rotate(turn))
+                }
+            }
+            AnimatedVisibility(
+                visible = showOptions,
+                enter = expandVertically(Motion.spatial()) + fadeIn(Motion.effects()),
+                exit = shrinkVertically(Motion.spatial()) + fadeOut(Motion.effects()),
+            ) {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text("Colour palette", style = MaterialTheme.typography.labelMedium, color = axisColor)
+                    SegmentedControl(
+                        segments = SpectrogramPalette.entries.mapIndexed { i, p -> Segment(i, p.label) },
+                        selected = paletteIndex,
+                        onSelect = {
+                            paletteIndex = it
+                            prefs.edit().putInt("spectrogram_palette", it).apply()
+                        },
+                        scrollable = true,
+                        modifier = Modifier.fillMaxWidth(),
+                        indicator = tonal,
+                        onIndicator = onTonal,
+                    )
+                    Text("Frequency scale", style = MaterialTheme.typography.labelMedium, color = axisColor)
+                    SegmentedControl(
+                        segments = listOf(Segment(false, "Linear"), Segment(true, "Log")),
+                        selected = options.log,
+                        onSelect = { set(options.copy(log = it)) },
+                        modifier = Modifier.fillMaxWidth(),
+                        indicator = tonal,
+                        onIndicator = onTonal,
+                    )
+                    Text("Level range", style = MaterialTheme.typography.labelMedium, color = axisColor)
+                    SegmentedControl(
+                        segments = DbRange.entries.map { Segment(it, it.label) },
+                        selected = options.range,
+                        onSelect = { set(options.copy(range = it)) },
+                        modifier = Modifier.fillMaxWidth(),
+                        indicator = tonal,
+                        onIndicator = onTonal,
+                    )
+                }
             }
 
             ExpressiveButton(
@@ -255,7 +306,7 @@ fun SpectrogramCard(
                         val uri = withContext(Dispatchers.Default) {
                             val bmp = SpectrogramExporter.render(spectrogram, view, chosen, title, options, cutoffHz)
                             try {
-                                SpectrogramExporter.saveToGallery(context, bmp, "$title ${spectrogram.viewLabels[view]}")
+                                SpectrogramExporter.saveToGallery(context, bmp, "$title ${spectrogram.displayLabels[view]}")
                             } finally {
                                 bmp.recycle()
                             }
@@ -275,8 +326,8 @@ fun SpectrogramCard(
             )
 
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Text("Sample Rate: ${spectrogram.sampleRate} Hz", style = MaterialTheme.typography.bodySmall, color = axisColor)
-                Text("Nyquist: ${Fmt.kHz(spectrogram.sampleRate / 2.0)}", style = MaterialTheme.typography.bodySmall, color = axisColor)
+                Text("Sample rate ${Fmt.kHz(spectrogram.sampleRate.toDouble())}", style = MaterialTheme.typography.bodySmall, color = axisColor)
+                Text("Nyquist ${Fmt.kHz(spectrogram.sampleRate / 2.0)}", style = MaterialTheme.typography.bodySmall, color = axisColor)
             }
         }
     }

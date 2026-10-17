@@ -326,7 +326,7 @@ fun SpectrogramViewer(spectrogram: Spectrogram, title: String, initialView: Int,
             )
             Box(Modifier.weight(1f))
             if (spectrogram.views.size > 1) {
-                ExpressiveButton(spectrogram.viewLabels[view], { view = (view + 1) % spectrogram.views.size }, kind = ButtonKind.Tonal)
+                ExpressiveButton(spectrogram.displayLabels[view], { view = (view + 1) % spectrogram.views.size }, kind = ButtonKind.Tonal)
             }
             ExpressiveButton(palette.label, {
                 paletteIndex = (paletteIndex + 1) % SpectrogramPalette.entries.size
