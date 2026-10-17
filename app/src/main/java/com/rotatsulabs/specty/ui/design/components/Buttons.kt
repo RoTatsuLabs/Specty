@@ -137,7 +137,7 @@ fun Pill(
                 Icon(icon, null, Modifier.size(14.dp))
                 Spacer(Modifier.width(4.dp))
             }
-            Text(text, style = MaterialTheme.typography.labelMedium, maxLines = 1)
+            Text(text, style = MaterialTheme.typography.labelMedium, maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
         }
     }
 }

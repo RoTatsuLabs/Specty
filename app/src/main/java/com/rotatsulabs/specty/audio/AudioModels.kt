@@ -19,6 +19,11 @@ data class AudioInfo(
     /** Codec profile as FFprobe reports it, e.g. "Dolby Digital Plus + Dolby Atmos". */
     val profile: String? = null,
 ) {
+    /** The song title from the tags, or the file name without its extension when the file carries none. */
+    val title: String
+        get() = tags.firstOrNull { it.first.equals("title", ignoreCase = true) }?.second?.trim()?.takeIf { it.isNotEmpty() }
+            ?: displayName.substringBeforeLast('.', displayName)
+
     /** Dolby Atmos is carried inside E-AC-3 (JOC) or TrueHD streams, and FFprobe names it in the profile. */
     val isDolbyAtmos: Boolean get() = profile?.contains("atmos", ignoreCase = true) == true
     val nyquistHz: Double get() = sampleRate / 2.0
