@@ -23,6 +23,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.graphics.rememberGraphicsLayer
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.rotatsulabs.specty.ui.screens.AboutScreen
@@ -42,6 +43,12 @@ import com.rotatsulabs.specty.ui.design.rememberContainerOrigin
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.layout.onGloballyPositioned
+import com.rotatsulabs.specty.ui.egg.EasterEgg
+import com.rotatsulabs.specty.ui.egg.EasterEggDriver
+import com.rotatsulabs.specty.ui.egg.EasterEggStage
+import com.rotatsulabs.specty.ui.egg.eggCapture
+import com.rotatsulabs.specty.ui.egg.eggHold
+import com.rotatsulabs.specty.ui.egg.eggShake
 import com.rotatsulabs.specty.ui.theme.Motion
 
 @Composable
@@ -62,6 +69,9 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit, onPickCompare: (
     if (compare !is CompareState.Idle) compareHeld.state = compare
     val origin = rememberContainerOrigin()
     val flight = remember { CoverFlight() }
+    val egg = remember { EasterEgg() }
+    val eggLayer = rememberGraphicsLayer()
+    EasterEggDriver(egg, eggLayer)
     var dockBounds by remember { mutableStateOf<Rect?>(null) }
     var showSettings by rememberSaveable { mutableStateOf(false) }
     var showAbout by rememberSaveable { mutableStateOf(false) }
@@ -92,7 +102,7 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit, onPickCompare: (
     val viewerResult = (held.state as? AnalysisState.Done)?.result
     if (viewerView != null && (viewerResult == null || !analysisOpen)) viewerView = null
 
-    Box(Modifier.fillMaxSize()) {
+    Box(Modifier.fillMaxSize().eggShake(egg).eggCapture(egg, eggLayer)) {
         Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.surface) {
             androidx.compose.runtime.key(permissionEpoch) {
             LibraryScreen(
@@ -111,6 +121,7 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit, onPickCompare: (
                 onPickFile = onPickFile,
                 onOpenSettings = { showSettings = true },
                 onOpenAbout = { showAbout = true },
+                brandHold = Modifier.eggHold(egg),
                 dockVisible = dockVisible,
                 verdicts = verdicts,
                 keyFor = keyFor,
@@ -228,5 +239,7 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit, onPickCompare: (
                 onPermission = { ok -> if (ok) permissionEpoch++ },
             )
         }
+
+        EasterEggStage(egg)
     }
 }

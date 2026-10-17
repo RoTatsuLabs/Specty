@@ -156,6 +156,7 @@ fun LibraryScreen(
     onPickFile: () -> Unit,
     onOpenSettings: () -> Unit,
     onOpenAbout: () -> Unit,
+    brandHold: Modifier = Modifier,
     verdicts: Map<String, Verdict>,
     keyFor: (Track) -> String,
     batch: BatchScanner.State = BatchScanner.State(),
@@ -260,6 +261,7 @@ fun LibraryScreen(
                     canScan = granted && state.tracks.isNotEmpty() && !batch.running,
                     onScanAll = startScan,
                     brandModifier = titleFx,
+                    brandHold = brandHold,
                 )
             }
 
@@ -373,7 +375,16 @@ fun LibraryScreen(
 // ---- header --------------------------------------------------------------------------------
 
 @Composable
-private fun Header(onRescan: () -> Unit, onSettings: () -> Unit, onAbout: () -> Unit, canRescan: Boolean, canScan: Boolean, onScanAll: () -> Unit, brandModifier: Modifier) {
+private fun Header(
+    onRescan: () -> Unit,
+    onSettings: () -> Unit,
+    onAbout: () -> Unit,
+    canRescan: Boolean,
+    canScan: Boolean,
+    onScanAll: () -> Unit,
+    brandModifier: Modifier,
+    brandHold: Modifier,
+) {
     var menu by remember { mutableStateOf(false) }
     val menuTurn by animateFloatAsState(if (menu) 90f else 0f, Motion.spatial(), label = "menuTurn")
     Row(
@@ -381,11 +392,13 @@ private fun Header(onRescan: () -> Unit, onSettings: () -> Unit, onAbout: () -> 
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Row(Modifier.weight(1f).then(brandModifier), verticalAlignment = Alignment.CenterVertically) {
-            EqualizerMark()
-            Spacer(Modifier.width(14.dp))
-            Column {
-                Text("Specty", style = MaterialTheme.typography.headlineLarge)
-                Text("Audio quality lab", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Row(brandHold, verticalAlignment = Alignment.CenterVertically) {
+                EqualizerMark()
+                Spacer(Modifier.width(14.dp))
+                Column {
+                    Text("Specty", style = MaterialTheme.typography.headlineLarge)
+                    Text("Audio quality lab", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
             }
         }
         Box {
