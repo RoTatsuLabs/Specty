@@ -86,6 +86,7 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit, onPickCompare: (
     }
     val analysisOpen by viewModel.viewing.collectAsStateWithLifecycle()
     val queued by viewModel.queued.collectAsStateWithLifecycle()
+    val sound by viewModel.sound.collectAsStateWithLifecycle()
     val dockVisible = !analysisOpen && analysis !is AnalysisState.Idle
 
     // Keep the last non-idle state around so the screen can animate out with its content intact.
@@ -181,6 +182,8 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit, onPickCompare: (
                     onPureBlack = viewModel::setPureBlack,
                     showMetadata = showMetadata,
                     onShowMetadata = viewModel::setShowMetadata,
+                    soundEnabled = sound,
+                    onSound = viewModel::setSound,
                     fftSize = fftSize,
                     onFftSize = viewModel::setFftSize,
                     windowFn = windowFn,
