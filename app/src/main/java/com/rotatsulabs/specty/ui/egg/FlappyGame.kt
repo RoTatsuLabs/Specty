@@ -44,6 +44,8 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.rotatsulabs.specty.sound.Fx
+import com.rotatsulabs.specty.sound.SoundFx
 import com.rotatsulabs.specty.ui.design.components.ExpressiveIconButton
 import kotlin.math.max
 import kotlin.math.min
@@ -103,8 +105,12 @@ private class FlappyState(best: Int, private val onBest: (Int) -> Unit) {
                 reset()
                 mode = Mode.Playing
                 vy = flapSpeed
+                SoundFx.play(Fx.Flap)
             }
-            Mode.Playing -> vy = flapSpeed
+            Mode.Playing -> {
+                vy = flapSpeed
+                SoundFx.play(Fx.Flap)
+            }
             Mode.Dead -> if (deadFor > 0.5f) {
                 reset()
                 mode = Mode.Ready
@@ -162,6 +168,7 @@ private class FlappyState(best: Int, private val onBest: (Int) -> Unit) {
             if (!p.passed && p.x + pipeW < birdX - r) {
                 p.passed = true
                 score++
+                SoundFx.play(Fx.Point)
             }
             val overlapsX = birdX + r > p.x && birdX - r < p.x + pipeW
             if (overlapsX && (birdY - r < p.gapY - gap / 2 || birdY + r > p.gapY + gap / 2)) {
@@ -176,6 +183,7 @@ private class FlappyState(best: Int, private val onBest: (Int) -> Unit) {
     }
 
     private fun die() {
+        SoundFx.play(Fx.Hit)
         mode = Mode.Dead
         deadFor = 0f
         if (score > best) {
