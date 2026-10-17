@@ -1,5 +1,7 @@
 package com.rotatsulabs.specty.ui.components
 
+import com.rotatsulabs.specty.audio.AuthenticityReport
+import com.rotatsulabs.specty.audio.SpectrumShape
 import java.util.Locale
 import kotlin.math.roundToInt
 
@@ -44,6 +46,21 @@ object Fmt {
         n >= 1_000_000 -> String.format(Locale.US, "%.1fM", n / 1_000_000.0)
         n >= 1_000 -> String.format(Locale.US, "%.1fK", n / 1_000.0)
         else -> n.toString()
+    }
+
+    /**
+     * Label and value for the top end of the spectrum. Only a real cutoff is shown as a frequency; a file without one
+     * says so, and the Nyquist limit is never offered as a cutoff.
+     */
+    fun spectralEdge(report: AuthenticityReport): Pair<String, String> {
+        val cutoff = report.cutoffHz
+        return when {
+            cutoff != null -> "Spectral Cutoff" to kHz(cutoff)
+            report.shape == SpectrumShape.GRADUAL_ROLLOFF && report.emptyAboveHz != null ->
+                "Spectral Roll-off" to "Empty above ${kHz(report.emptyAboveHz)}"
+            report.shape == SpectrumShape.FULL_BAND -> "Spectral Cutoff" to "None found"
+            else -> "Spectral Cutoff" to "Not determined"
+        }
     }
 
     fun perChannel(peak: Double, rms: Double, dr: Double): String =

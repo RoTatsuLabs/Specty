@@ -77,6 +77,9 @@ internal fun ConfidenceCard(report: AuthenticityReport, info: AudioInfo) {
                 drawRoundRect(fill, size = Size(size.width * animated, size.height), cornerRadius = androidx.compose.ui.geometry.CornerRadius(size.height / 2))
             }
             if (report.segmentCutoffs.size >= 2) CutoffTimeline(report, info)
+            if (report.sectionsJudged > 0 && report.verdict != Verdict.LOSSY_CODEC && report.verdict != Verdict.DOLBY_ATMOS) {
+                InsightLine("Matches the overall reading in ${report.sectionsAgreeing} of ${report.sectionsJudged} sections that could be read clearly.")
+            }
             report.encoderGuess?.let { InsightLine("Resembles: $it.") }
             report.emptyAboveHz?.let { InsightLine("Nothing above ${f1(it / 1000.0)} kHz; the band up to ${f1(info.nyquistHz / 1000.0)} kHz is empty.") }
         }
@@ -111,15 +114,15 @@ private fun CutoffTimeline(report: AuthenticityReport, info: AudioInfo) {
                     drawRoundRect(bar, Offset(x, size.height - h), Size(w, h), androidx.compose.ui.geometry.CornerRadius(w / 2))
                 }
             }
-            if (report.hasCliff) {
-                val y = size.height * (1f - (report.cutoffHz / info.nyquistHz).toFloat().coerceIn(0f, 1f))
+            report.cutoffHz?.let { hz ->
+                val y = size.height * (1f - (hz / info.nyquistHz).toFloat().coerceIn(0f, 1f))
                 drawLine(line, Offset(0f, y), Offset(size.width, y), strokeWidth = 2.dp.toPx(), cap = StrokeCap.Round)
             }
         }
         val found = cuts.count { it > 0f }
         Text(
             if (found == 0) "No cutoff found in any part of the track."
-            else "Cutoff found in $found of ${cuts.size} sections" + if (report.hasCliff) ", line marks ${f1(report.cutoffHz / 1000.0)} kHz." else ".",
+            else "Cutoff found in $found of ${cuts.size} sections" + (report.cutoffHz?.let { ", line marks ${f1(it / 1000.0)} kHz." } ?: "."),
             style = MaterialTheme.typography.bodySmall,
             color = scheme.onSurfaceVariant,
         )

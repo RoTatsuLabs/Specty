@@ -3,12 +3,6 @@ package com.rotatsulabs.specty.data
 import android.content.Context
 import android.net.Uri
 import com.rotatsulabs.specty.audio.AnalysisResult
-import com.rotatsulabs.specty.audio.AudioInfo
-import com.rotatsulabs.specty.audio.AuthenticityReport
-import com.rotatsulabs.specty.audio.ChannelStats
-import com.rotatsulabs.specty.audio.LevelStats
-import com.rotatsulabs.specty.audio.Spectrogram
-import com.rotatsulabs.specty.audio.Timeline
 import com.rotatsulabs.specty.audio.Verdict
 import com.rotatsulabs.specty.audio.WindowFn
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -17,13 +11,13 @@ import kotlinx.coroutines.flow.asStateFlow
 import java.io.DataInputStream
 import java.io.DataOutputStream
 import java.io.File
-import java.security.MessageDigest
 import java.util.zip.GZIPInputStream
 import java.util.zip.GZIPOutputStream
 
 /**
- * Persists finished analyses so a file is only measured once. Entries are keyed by uri, file size, modified time and
- * spectrogram window, so changing the file or the resolution setting triggers a fresh analysis.
+ * Persists finished analyses so a file is only measured once. Entries are keyed by uri, file size, modified time,
+ * spectrogram settings and the analysis version, so changing the file, a setting or the algorithm triggers a fresh
+ * analysis. Results saved by another version are never read.
  */
 class ResultCache private constructor(context: Context) {
     private val dir = File(context.filesDir, "results").apply { mkdirs() }
@@ -38,7 +32,7 @@ class ResultCache private constructor(context: Context) {
     init {
         runCatching {
             val lines = if (indexFile.exists()) indexFile.readLines() else emptyList()
-            if (lines.firstOrNull() == INDEX_HEADER) {
+            if (CacheVersion.isCurrentIndex(lines.firstOrNull())) {
                 for (line in lines.drop(1)) {
                     val parts = line.split('\t')
                     // Entries stay even when their bulky result file was evicted: the verdict is still known.
@@ -57,24 +51,16 @@ class ResultCache private constructor(context: Context) {
     /** True when a verdict is known for [key], even if the full result has been evicted. */
     fun contains(key: String): Boolean = synchronized(lock) { index.containsKey(key) }
 
-    /** The default Hann window adds nothing to the key, so results saved before window choices existed stay valid. */
-    fun keyOf(uri: Uri, sizeBytes: Long, modified: Long, fftSize: Int, window: WindowFn = WindowFn.Hann): String {
-        val suffix = if (window == WindowFn.Hann) "" else "|w=${window.name}"
-        val digest = MessageDigest.getInstance("SHA-1").digest("$uri|$sizeBytes|$modified|$fftSize$suffix".toByteArray())
-        // Called once per track on every library refresh, so avoid String.format here.
-        val hex = CharArray(digest.size * 2)
-        digest.forEachIndexed { i, b ->
-            hex[i * 2] = HEX[(b.toInt() shr 4) and 0xF]
-            hex[i * 2 + 1] = HEX[b.toInt() and 0xF]
-        }
-        return String(hex)
-    }
+    /** Names the file, the settings it was read with and the analysis version; see [CacheKey]. */
+    fun keyOf(uri: Uri, sizeBytes: Long, modified: Long, fftSize: Int, window: WindowFn = WindowFn.Hann): String =
+        CacheKey.of(uri.toString(), sizeBytes, modified, fftSize, window)
 
     fun load(key: String, uri: Uri): AnalysisResult? {
         val file = File(dir, "$key.bin")
         if (!file.exists()) return null
         return try {
-            DataInputStream(GZIPInputStream(file.inputStream().buffered())).use { read(it, uri) }
+            DataInputStream(GZIPInputStream(file.inputStream().buffered())).use { ResultCodec.read(it) }
+                .let { AnalysisResult(uri, it.info, it.levels, it.authenticity, it.spectrogram, it.decoded) }
         } catch (_: Exception) {
             file.delete()
             null
@@ -85,7 +71,8 @@ class ResultCache private constructor(context: Context) {
         runCatching {
             val file = File(dir, "$key.bin")
             val tmp = File(dir, "$key.tmp")
-            DataOutputStream(GZIPOutputStream(tmp.outputStream().buffered())).use { write(it, result) }
+            val stored = StoredResult(result.info, result.levels, result.authenticity, result.spectrogram, result.decoded)
+            DataOutputStream(GZIPOutputStream(tmp.outputStream().buffered())).use { ResultCodec.write(it, stored) }
             if (!tmp.renameTo(file)) { tmp.delete(); return }
             synchronized(lock) {
                 index.remove(key)
@@ -124,129 +111,11 @@ class ResultCache private constructor(context: Context) {
     }
 
     private fun persistIndex() {
-        indexFile.writeText((listOf(INDEX_HEADER) + index.entries.map { "${it.key}\t${it.value.name}" }).joinToString("\n"))
+        indexFile.writeText((listOf(CacheVersion.indexHeader) + index.entries.map { "${it.key}\t${it.value.name}" }).joinToString("\n"))
         _verdicts.value = index.toMap()
     }
 
-    // ---- binary format ---------------------------------------------------------------------
-
-    private fun write(out: DataOutputStream, r: AnalysisResult) {
-        out.writeInt(MAGIC)
-        with(r.info) {
-            out.writeUTF(displayName); out.writeUTF(codec); writeStr(out, container)
-            out.writeInt(sampleRate); out.writeInt(channels)
-            out.writeInt(bitDepth ?: -1); writeStr(out, sampleFormat)
-            out.writeLong(bitrateBps ?: -1L); out.writeDouble(durationSec); out.writeLong(sizeBytes)
-            out.writeInt(tags.size)
-            tags.forEach { out.writeUTF(it.first); writeLong(out, it.second) }
-            writeStr(out, profile)
-        }
-        with(r.levels) {
-            out.writeDouble(peakDb); out.writeDouble(rmsDb)
-            out.writeBoolean(lufs != null); out.writeDouble(lufs ?: 0.0)
-            out.writeDouble(truePeakDbtp); out.writeLong(clippedSamples); out.writeLong(framesPerChannel)
-            out.writeInt(effectiveBitDepth ?: -1)
-            out.writeInt(channels.size)
-            channels.forEach { out.writeDouble(it.peakDb); out.writeDouble(it.rmsDb) }
-            out.writeDouble(drTt ?: Double.NaN)
-            out.writeInt(dcOffsets.size); dcOffsets.forEach { out.writeDouble(it) }
-            out.writeDouble(correlation ?: Double.NaN)
-            out.writeDouble(balanceDb ?: Double.NaN)
-            val t = timeline
-            out.writeInt(t?.points ?: 0)
-            if (t != null) {
-                out.writeDouble(t.durationSec)
-                t.loudness.forEach { out.writeFloat(it) }
-                t.peakDb.forEach { out.writeFloat(it) }
-                t.clips.forEach { out.writeInt(it) }
-            }
-        }
-        with(r.authenticity) {
-            out.writeUTF(verdict.name); out.writeDouble(cutoffHz); out.writeBoolean(hasCliff)
-            out.writeDouble(cliffDropDb); out.writeUTF(note)
-            out.writeInt(confidence)
-            out.writeInt(segmentCutoffs.size); segmentCutoffs.forEach { out.writeFloat(it) }
-            writeStr(out, encoderGuess)
-            out.writeDouble(emptyAboveHz ?: Double.NaN)
-        }
-        with(r.spectrogram) {
-            out.writeInt(columns); out.writeInt(bins); out.writeInt(sampleRate); out.writeInt(fftSize)
-            out.writeDouble(durationSec)
-            out.writeInt(views.size)
-            views.forEach { out.writeInt(it.size); out.write(it) }
-            viewLabels.forEach { out.writeUTF(it) }
-        }
-    }
-
-    private fun read(inp: DataInputStream, uri: Uri): AnalysisResult {
-        require(inp.readInt() == MAGIC)
-        val info = AudioInfo(
-            displayName = inp.readUTF(), codec = inp.readUTF(), container = readStr(inp),
-            sampleRate = inp.readInt(), channels = inp.readInt(),
-            bitDepth = inp.readInt().takeIf { it >= 0 }, sampleFormat = readStr(inp),
-            bitrateBps = inp.readLong().takeIf { it >= 0 }, durationSec = inp.readDouble(), sizeBytes = inp.readLong(),
-            tags = List(inp.readInt()) { inp.readUTF() to readLong(inp) },
-            profile = readStr(inp),
-        )
-        val peak = inp.readDouble(); val rms = inp.readDouble()
-        val lufs = inp.readBoolean().let { has -> inp.readDouble().takeIf { has } }
-        val truePeak = inp.readDouble(); val clipped = inp.readLong(); val frames = inp.readLong()
-        val effective = inp.readInt().takeIf { it >= 0 }
-        val channels = List(inp.readInt()) { ChannelStats(inp.readDouble(), inp.readDouble()) }
-        val dr = inp.readDouble().takeUnless { it.isNaN() }
-        val dc = List(inp.readInt()) { inp.readDouble() }
-        val corr = inp.readDouble().takeUnless { it.isNaN() }
-        val balance = inp.readDouble().takeUnless { it.isNaN() }
-        val points = inp.readInt()
-        val timeline = if (points > 0) {
-            val duration = inp.readDouble()
-            val loud = FloatArray(points) { inp.readFloat() }
-            val peaks = FloatArray(points) { inp.readFloat() }
-            val clips = IntArray(points) { inp.readInt() }
-            Timeline(loud, peaks, clips, duration)
-        } else {
-            null
-        }
-        val levels = LevelStats(peak, rms, lufs, truePeak, clipped, frames, effective, channels, dr, dc, corr, balance, timeline)
-        val authenticity = AuthenticityReport(
-            verdict = Verdict.valueOf(inp.readUTF()), cutoffHz = inp.readDouble(), hasCliff = inp.readBoolean(),
-            cliffDropDb = inp.readDouble(), note = inp.readUTF(),
-            confidence = inp.readInt(),
-            segmentCutoffs = FloatArray(inp.readInt()).also { for (i in it.indices) it[i] = inp.readFloat() },
-            encoderGuess = readStr(inp),
-            emptyAboveHz = inp.readDouble().takeUnless { it.isNaN() },
-        )
-        val columns = inp.readInt(); val bins = inp.readInt(); val rate = inp.readInt(); val fft = inp.readInt()
-        val duration = inp.readDouble()
-        val views = List(inp.readInt()) { ByteArray(inp.readInt()).also { inp.readFully(it) } }
-        val labels = List(views.size) { inp.readUTF() }
-        return AnalysisResult(uri, info, levels, authenticity, Spectrogram(columns, bins, rate, fft, duration, views, labels))
-    }
-
-    // writeUTF is limited to 64 KB; tag values are capped well below that, but encode as bytes to be safe.
-    private fun writeLong(out: DataOutputStream, s: String) {
-        val bytes = s.toByteArray(Charsets.UTF_8)
-        out.writeInt(bytes.size)
-        out.write(bytes)
-    }
-
-    private fun readLong(inp: DataInputStream): String {
-        val bytes = ByteArray(inp.readInt())
-        inp.readFully(bytes)
-        return String(bytes, Charsets.UTF_8)
-    }
-
-    private fun writeStr(out: DataOutputStream, s: String?) {
-        out.writeBoolean(s != null); out.writeUTF(s ?: "")
-    }
-
-    private fun readStr(inp: DataInputStream): String? = inp.readBoolean().let { has -> inp.readUTF().takeIf { has } }
-
     companion object {
-        private val HEX = "0123456789abcdef".toCharArray()
-        private const val MAGIC = 0x53504336 // "SPC6": modified time joins the key
-        /** Written first in the index, so a format change drops stale verdicts instead of showing them. */
-        private val INDEX_HEADER = "v" + Integer.toHexString(MAGIC)
         /** Verdicts remembered for library badges. */
         private const val MAX_ENTRIES = 20_000
         /** Disk budget for full results (spectrograms dominate). */

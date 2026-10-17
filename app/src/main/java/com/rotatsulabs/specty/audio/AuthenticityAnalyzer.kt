@@ -1,137 +1,224 @@
 package com.rotatsulabs.specty.audio
 
 import java.util.Locale
+import kotlin.math.abs
+import kotlin.math.log10
 import kotlin.math.max
+import kotlin.math.min
 import kotlin.math.roundToInt
 
 /**
- * Decides whether a file's spectrum looks genuine or betrays a lossy / upsampled origin by looking
- * for an abrupt, brick-wall cutoff in the long-term average spectrum.
+ * Judges the top of a file's long-term spectrum for signs of a lossy or upsampled origin.
+ *
+ * A verdict needs positive evidence. A brick-wall cutoff points to a transcode, content that reaches the top of the
+ * band points to genuine audio, and anything the measurements cannot separate (silence, too little music, a faint top
+ * end, sections that disagree) is reported as inconclusive. All widths are in Hz and all levels are normalised to the
+ * fixed [AnalysisVersion.AUTH_FFT] transform, so the outcome does not depend on how the spectrogram is drawn.
  */
 object AuthenticityAnalyzer {
     private const val MIN_DYNAMIC_DB = 25.0
     private const val MIN_CLIFF_DB = 28.0
     private const val PERMANENT_DROP_DB = 20.0
-    private const val SILENT_REFERENCE_DB = -90.0
 
+    /** Mean level of the 1.5 to 5 kHz band (dB per bin at [AnalysisVersion.AUTH_FFT]) below which there is nothing to judge. */
+    private const val SILENT_REFERENCE_DB = -95.0
+
+    /** The top end this close to the mid band means content reaches the top. */
+    private const val FULL_BAND_GAP_DB = 50.0
+
+    /** The top end this far below the mid band is empty. Between the two limits nothing can be said. */
+    private const val EMPTY_TOP_GAP_DB = 65.0
+
+    /** An edge this close to Nyquist is the end of the band, not a cutoff. */
+    private const val NYQUIST_EDGE = 0.985
+
+    /** Below this the band is too narrow for a check of the top end. */
+    private const val MIN_NYQUIST_HZ = 10_000.0
+
+    /** Sections with a clear reading needed before a section-by-section statement is made. */
+    private const val MIN_CLEAR_SECTIONS = 3
+
+    /** Below this share of agreeing sections the track gets no verdict. */
+    private const val MIXED_SHARE = 0.5
+
+    const val TIMELINE_SEGMENTS = AuthSpectrumAnalyzer.SECTIONS
+
+    /** Full judgement from the spectra built by [AuthSpectrumAnalyzer]. */
+    fun assess(info: AudioInfo, spectra: AuthSpectra, effectiveBitDepth: Int?): AuthenticityReport {
+        // The spectra come from the decoded PCM, whose rate is what the frequency axis means.
+        val measured = if (spectra.sampleRate != info.sampleRate) info.copy(sampleRate = spectra.sampleRate) else info
+        val base = analyze(measured, spectra.whole, spectra.fftSize, effectiveBitDepth)
+        return withInsights(base, measured, spectra.whole, spectra.fftSize, spectra.sections)
+    }
+
+    /**
+     * Whole-track reading only: the verdict the average spectrum supports before sections are checked.
+     * [withInsights] completes it and may withdraw it.
+     */
     fun analyze(
         info: AudioInfo,
         averageDb: FloatArray,
         fftSize: Int,
         effectiveBitDepth: Int?,
     ): AuthenticityReport {
-        val nyquist = info.nyquistHz
         val d = detect(averageDb, info.sampleRate, fftSize)
-
-        if (d.reference < SILENT_REFERENCE_DB) {
-            return AuthenticityReport(
-                Verdict.INCONCLUSIVE, nyquist, false, 0.0,
-                "There is not enough audible content to judge the spectrum.",
-            )
-        }
-        val hasCliff = d.hasCliff
         val cutoff = d.cutoff
-        val bestDrop = d.drop
+        val cutoffKhz = cutoff?.let { fmt(it / 1000.0) }
 
-        val cutoffKhz = fmt(cutoff / 1000.0)
-        val bitDepthNote = bitDepthNote(info, effectiveBitDepth)
-
+        // What the container says does not depend on the audio.
         if (info.isDolbyAtmos) {
             return AuthenticityReport(
-                Verdict.DOLBY_ATMOS, cutoff, hasCliff, bestDrop,
+                Verdict.DOLBY_ATMOS, cutoff, d.drop,
                 "Dolby Atmos object audio carried in a Dolby Digital Plus (E-AC-3) stream. " +
                     "The spectrum is not judged for lossy origin.",
+                shape = d.shape,
             )
         }
-
         if (info.isLossy) {
-            val note = if (hasCliff) {
+            val note = if (cutoffKhz != null) {
                 "${Codecs.displayName(info.codec)} is a lossy codec; its encoder low-pass sits near $cutoffKhz kHz."
             } else {
                 "${Codecs.displayName(info.codec)} is a lossy codec, so this is not a lossless file."
             }
-            return AuthenticityReport(Verdict.LOSSY_CODEC, cutoff, hasCliff, bestDrop, note)
+            return AuthenticityReport(Verdict.LOSSY_CODEC, cutoff, d.drop, note, shape = d.shape)
         }
 
-        if (!hasCliff) {
-            val note = "Content extends to the top of the spectrum with no abrupt cutoff.$bitDepthNote"
-            return AuthenticityReport(Verdict.GENUINE, cutoff, false, bestDrop, note)
+        val bitNote = BitDepth.paddingNote(info.bitDepth, effectiveBitDepth)
+        return when (d.shape) {
+            SpectrumShape.NO_SIGNAL -> AuthenticityReport(
+                Verdict.INCONCLUSIVE, null, 0.0,
+                "There is not enough audible content to judge the spectrum.$bitNote",
+                shape = d.shape,
+            )
+            SpectrumShape.UNCLEAR -> AuthenticityReport(
+                Verdict.INCONCLUSIVE, null, 0.0,
+                "The top of the spectrum is faint, so quiet content and noise cannot be told apart. " +
+                    "A lossy origin is neither shown nor ruled out.$bitNote",
+                shape = d.shape,
+            )
+            SpectrumShape.FULL_BAND -> AuthenticityReport(
+                Verdict.GENUINE, null, 0.0,
+                "Content reaches the top of the spectrum, with no cutoff or roll-off found.$bitNote",
+                shape = d.shape,
+            )
+            SpectrumShape.GRADUAL_ROLLOFF -> AuthenticityReport(
+                Verdict.BAND_LIMITED, null, 0.0,
+                "The spectrum fades out near ${fmt((d.emptyAboveHz ?: 0.0) / 1000.0)} kHz without a sharp edge. " +
+                    "That can be a mastering filter, an older source or a soft low-pass.$bitNote",
+                emptyAboveHz = d.emptyAboveHz, shape = d.shape,
+            )
+            SpectrumShape.ABRUPT_CUTOFF -> {
+                val edge = cutoff ?: 0.0
+                val rateKhz = fmt(info.sampleRate / 1000.0)
+                val (verdict, note) = when {
+                    edge <= 16_800.0 -> Verdict.LOSSY_SOURCE to
+                        "Hard cutoff near $cutoffKhz kHz, typical of an MP3 or AAC low-pass. " +
+                        "This file was most likely transcoded from a lossy source."
+                    info.sampleRate > 48_000 && edge in 20_500.0..23_000.0 -> Verdict.UPSAMPLED to
+                        "Content stops near $cutoffKhz kHz inside a $rateKhz kHz file. " +
+                        "It was most likely upsampled from a 44.1 or 48 kHz source."
+                    info.sampleRate <= 48_000 && edge <= 20_800.0 -> Verdict.POSSIBLE_LOSSY_SOURCE to
+                        "Sharp cutoff near $cutoffKhz kHz. This can come from a high-bitrate lossy source, " +
+                        "but some masters are also filtered this way."
+                    else -> Verdict.BAND_LIMITED to
+                        "The spectrum is band-limited near $cutoffKhz kHz. That may be a mastering filter or an older source."
+                }
+                AuthenticityReport(verdict, cutoff, d.drop, note + bitNote, emptyAboveHz = d.emptyAboveHz, shape = d.shape)
+            }
         }
-
-        val rateKhz = fmt(info.sampleRate / 1000.0)
-        val (verdict, note) = when {
-            cutoff <= 16_800.0 -> Verdict.LOSSY_SOURCE to
-                "Hard cutoff near $cutoffKhz kHz, typical of an MP3 or AAC low-pass. " +
-                "This file was most likely transcoded from a lossy source."
-            info.sampleRate > 48_000 && cutoff in 20_500.0..23_000.0 -> Verdict.UPSAMPLED to
-                "Content stops near $cutoffKhz kHz inside a $rateKhz kHz file. " +
-                "It was most likely upsampled from a 44.1 or 48 kHz source."
-            info.sampleRate <= 48_000 && cutoff <= 20_800.0 -> Verdict.POSSIBLE_LOSSY_SOURCE to
-                "Sharp cutoff near $cutoffKhz kHz. This can come from a high-bitrate lossy source, " +
-                "but some masters are also filtered this way."
-            else -> Verdict.BAND_LIMITED to
-                "The spectrum is band-limited near $cutoffKhz kHz. That may be a mastering filter or an older source."
-        }
-        return AuthenticityReport(verdict, cutoff, true, bestDrop, note + bitDepthNote)
     }
 
-    const val TIMELINE_SEGMENTS = 24
-
     /**
-     * Adds confidence, a per-segment cutoff track, an encoder guess and the empty-band edge to a verdict.
-     * [segmentSpectra] holds one average spectrum per slice of the track (null for silent slices).
+     * Checks the verdict against sections of the track and adds confidence, a per-section cutoff track and an encoder
+     * guess. [sections] holds one average spectrum per slice of the track (null for slices without audible content).
+     * Sections that cannot be read clearly neither support nor contradict the verdict; they simply are not evidence.
      */
     fun withInsights(
         report: AuthenticityReport,
         info: AudioInfo,
         averageDb: FloatArray,
         fftSize: Int,
-        segmentSpectra: List<FloatArray?>,
+        sections: List<FloatArray?>,
     ): AuthenticityReport {
         if (report.verdict == Verdict.INCONCLUSIVE) return report.copy(confidence = 0)
         val whole = detect(averageDb, info.sampleRate, fftSize)
-        val cutoffs = FloatArray(segmentSpectra.size)
-        var judged = 0
+        val cutoffs = FloatArray(sections.size)
+        var clear = 0
         var agreeing = 0
-        for ((i, spectrum) in segmentSpectra.withIndex()) {
+        for ((i, spectrum) in sections.withIndex()) {
             if (spectrum == null) continue
             val d = detect(spectrum, info.sampleRate, fftSize)
-            if (d.reference < SILENT_REFERENCE_DB) continue
-            judged++
-            if (d.hasCliff) cutoffs[i] = d.cutoff.toFloat()
-            val consistent = if (report.hasCliff) {
-                d.hasCliff && kotlin.math.abs(d.cutoff - report.cutoffHz) <= 1000.0
-            } else {
-                !d.hasCliff
+            d.cutoff?.let { cutoffs[i] = it.toFloat() }
+            if (d.shape == SpectrumShape.NO_SIGNAL || d.shape == SpectrumShape.UNCLEAR) continue
+            clear++
+            val same = when (whole.shape) {
+                SpectrumShape.ABRUPT_CUTOFF ->
+                    d.shape == SpectrumShape.ABRUPT_CUTOFF && abs((d.cutoff ?: 0.0) - (whole.cutoff ?: 0.0)) <= 1000.0
+                else -> d.shape == whole.shape
             }
-            if (consistent) agreeing++
+            if (same) agreeing++
         }
-        val agree = if (judged == 0) 1.0 else agreeing.toDouble() / judged
+        val withCounts = report.copy(
+            segmentCutoffs = cutoffs, emptyAboveHz = whole.emptyAboveHz.takeIf { report.shape.hasEmptyTop() },
+            sectionsJudged = clear, sectionsAgreeing = agreeing,
+        )
 
-        var confidence = if (report.hasCliff) {
-            50.0 + (report.cliffDropDb - MIN_CLIFF_DB).coerceIn(0.0, 25.0) + 20.0 * agree
-        } else {
-            55.0 + 40.0 * agree
+        val fromContainer = report.verdict == Verdict.LOSSY_CODEC || report.verdict == Verdict.DOLBY_ATMOS
+        if (!fromContainer) {
+            if (clear >= MIN_CLEAR_SECTIONS && agreeing.toDouble() / clear < MIXED_SHARE) {
+                return withCounts.copy(
+                    verdict = Verdict.INCONCLUSIVE, cutoffHz = null, cliffDropDb = 0.0, confidence = 0, encoderGuess = null,
+                    note = "Sections of this track disagree about the top of the spectrum ($agreeing of $clear match the " +
+                        "average), so no verdict is given.",
+                )
+            }
+            if (clear < MIN_CLEAR_SECTIONS && report.shape != SpectrumShape.ABRUPT_CUTOFF) {
+                return withCounts.copy(
+                    verdict = Verdict.INCONCLUSIVE, cutoffHz = null, cliffDropDb = 0.0, confidence = 0, encoderGuess = null,
+                    note = "Too little of the track gives a clear reading of the top of the spectrum to rule out a lossy origin.",
+                )
+            }
         }
-        confidence -= when (report.verdict) {
+
+        val guess = if (report.shape == SpectrumShape.ABRUPT_CUTOFF && report.verdict != Verdict.UPSAMPLED) {
+            report.cutoffHz?.let { encoderGuess(it, info.codec) }
+        } else {
+            null
+        }
+        val limited = !fromContainer && clear < MIN_CLEAR_SECTIONS
+        return withCounts.copy(
+            confidence = confidence(report, whole, clear, agreeing),
+            encoderGuess = guess,
+            note = if (limited) report.note + " Only $clear section${if (clear == 1) "" else "s"} of the track could be read clearly." else report.note,
+        )
+    }
+
+    private fun SpectrumShape.hasEmptyTop() = this == SpectrumShape.ABRUPT_CUTOFF || this == SpectrumShape.GRADUAL_ROLLOFF
+
+    /**
+     * Built from measured evidence only: how strong the signature is and how much of the track shows it. Sections that
+     * could not be read add nothing, and a verdict without enough clear sections is held below 50.
+     */
+    private fun confidence(r: AuthenticityReport, d: Detection, clear: Int, agreeing: Int): Int {
+        if (r.verdict == Verdict.LOSSY_CODEC || r.verdict == Verdict.DOLBY_ATMOS) return 99
+        val agree = if (clear >= MIN_CLEAR_SECTIONS) agreeing.toDouble() / clear else null
+        var c = when (r.shape) {
+            SpectrumShape.ABRUPT_CUTOFF ->
+                35.0 + ((r.cliffDropDb - MIN_CLIFF_DB) / 32.0 * 25.0).coerceIn(0.0, 25.0) +
+                    (if (d.dynamic >= 35.0) 5.0 else 0.0) + 30.0 * (agree ?: 0.0)
+            SpectrumShape.FULL_BAND ->
+                30.0 + ((FULL_BAND_GAP_DB - d.gap) / FULL_BAND_GAP_DB * 20.0).coerceIn(0.0, 20.0) + 40.0 * (agree ?: 0.0)
+            SpectrumShape.GRADUAL_ROLLOFF ->
+                25.0 + ((d.gap - EMPTY_TOP_GAP_DB) / 30.0 * 20.0).coerceIn(0.0, 20.0) + 30.0 * (agree ?: 0.0)
+            else -> 0.0
+        }
+        c -= when (r.verdict) {
             Verdict.POSSIBLE_LOSSY_SOURCE -> 12.0
             Verdict.BAND_LIMITED -> 15.0
             else -> 0.0
         }
-        if (report.verdict == Verdict.LOSSY_CODEC || report.verdict == Verdict.DOLBY_ATMOS) confidence = 99.0
-        if (whole.dynamic < 35.0 && report.verdict != Verdict.LOSSY_CODEC && report.verdict != Verdict.DOLBY_ATMOS) confidence -= 10.0
-
-        val guess = if (report.hasCliff && report.verdict != Verdict.GENUINE && report.verdict != Verdict.UPSAMPLED) {
-            encoderGuess(report.cutoffHz, info.codec)
-        } else {
-            null
-        }
-        return report.copy(
-            confidence = confidence.roundToInt().coerceIn(5, 99),
-            segmentCutoffs = cutoffs,
-            encoderGuess = guess,
-            emptyAboveHz = whole.emptyAboveHz,
-        )
+        if (agree == null) c = min(c, 49.0)
+        return c.roundToInt().coerceIn(5, 95)
     }
 
     /** Typical low-pass frequencies of common encoders; a hint, since presets and encoders vary. */
@@ -150,74 +237,55 @@ object AuthenticityAnalyzer {
         }
     }
 
-    /**
-     * Averages the spectrogram's mixed view into [segments] slices, ignoring quiet columns.
-     * Returns an empty list when the spectrogram is too short to split.
-     */
-    fun segmentSpectra(spec: Spectrogram, segments: Int = TIMELINE_SEGMENTS): List<FloatArray?> {
-        val count = minOf(segments, spec.columns / 6)
-        if (count < 2) return emptyList()
-        val view = spec.views[0]
-        val bins = spec.bins
-        val scale = ((Spectrogram.MAX_DB - Spectrogram.MIN_DB) / 255.0).toFloat()
-        return List(count) { seg ->
-            val from = seg * spec.columns / count
-            val to = (seg + 1) * spec.columns / count
-            val sum = FloatArray(bins)
-            var active = 0
-            for (col in from until to) {
-                var loud = false
-                for (k in 0 until bins) {
-                    if ((view[col * bins + k].toInt() and 0xFF) * scale + Spectrogram.MIN_DB > -60.0) { loud = true; break }
-                }
-                if (!loud) continue
-                for (k in 0 until bins) {
-                    sum[k] += (view[col * bins + k].toInt() and 0xFF) * scale + Spectrogram.MIN_DB.toFloat()
-                }
-                active++
-            }
-            if (active == 0) {
-                null
-            } else {
-                for (k in 0 until bins) sum[k] /= active
-                sum
-            }
-        }
-    }
-
-    /** Result of searching an average spectrum for a brick-wall cutoff. */
+    /** What the search of an average spectrum found. Levels are dB per bin of the spectrum passed in. */
     class Detection(
+        /** Mean level of the 1.5 to 5 kHz band. */
         val reference: Double,
+        /** Reference minus the level of the top few percent of bins. */
         val dynamic: Double,
+        /** Reference minus the level just below Nyquist. */
+        val gap: Double,
         val drop: Double,
-        val hasCliff: Boolean,
-        val cutoff: Double,
+        val shape: SpectrumShape,
+        /** Edge of a steep cutoff, or null. Nyquist is never used as a stand-in. */
+        val cutoff: Double?,
+        /** Start of the empty top band, set only when the shape has one. */
         val emptyAboveHz: Double?,
-    )
+    ) {
+        val hasCliff: Boolean get() = cutoff != null
+    }
 
     fun detect(averageDb: FloatArray, sampleRate: Int, fftSize: Int): Detection {
         val bins = averageDb.size
         val binHz = sampleRate.toDouble() / fftSize
         val nyquist = sampleRate / 2.0
-        val s = smooth(averageDb, 3)
+        val none = Detection(-200.0, 0.0, 0.0, 0.0, SpectrumShape.NO_SIGNAL, null, null)
+        if (nyquist < MIN_NYQUIST_HZ || bins < 64) return none
 
-        val floorBins = max(8, bins * 3 / 100).coerceAtMost(bins)
-        val floor = median(s.copyOfRange(bins - floorBins, bins))
+        // Per-bin levels of noise-like signals rise by 3 dB per halving of the transform; this brings them to AUTH_FFT.
+        val norm = 10.0 * log10(fftSize.toDouble() / AnalysisVersion.AUTH_FFT)
+        val s = smooth(averageDb, max(1, (65.0 / binHz).roundToInt()))
 
         val k1 = (1500.0 / binHz).toInt().coerceIn(0, bins - 1)
         val k2 = (5000.0 / binHz).toInt().coerceIn(k1 + 1, bins)
         var reference = 0.0
         for (k in k1 until k2) reference += s[k]
         reference /= (k2 - k1)
-        if (reference < SILENT_REFERENCE_DB) {
-            return Detection(reference, 0.0, 0.0, false, nyquist, null)
-        }
+        if (reference + norm < SILENT_REFERENCE_DB) return Detection(reference, 0.0, 0.0, 0.0, SpectrumShape.NO_SIGNAL, null, null)
 
+        val floorBins = max(8, bins * 3 / 100).coerceAtMost(bins)
+        val floor = median(s.copyOfRange(bins - floorBins, bins))
         val dynamic = reference - floor
-        val window = max(3, (600.0 / binHz).roundToInt())
-        val startK = (4000.0 / binHz).roundToInt()
+
+        val topFrom = (bins * 0.92).toInt()
+        val topTo = (bins * 0.99).toInt().coerceAtLeast(topFrom + 8).coerceAtMost(bins)
+        val topLevel = median(s.copyOfRange(topFrom, topTo))
+        val gap = reference - topLevel
+
         // A cliff is a steep drop over ~600 Hz after which the spectrum never climbs back up.
         // Notches and gradual roll-off do not qualify.
+        val window = max(3, (600.0 / binHz).roundToInt())
+        val startK = (4000.0 / binHz).roundToInt()
         val suffixMax = FloatArray(bins)
         run {
             var running = Float.NEGATIVE_INFINITY
@@ -237,37 +305,36 @@ object AuthenticityAnalyzer {
                 }
             }
         }
-        val hasCliff = bestDrop >= MIN_CLIFF_DB && bestK >= 0
-
-        var cutoff = nyquist
-        if (hasCliff) {
+        var cutoff: Double? = null
+        if (bestDrop >= MIN_CLIFF_DB && bestK >= 0) {
             // Edge = first bin that falls below the midpoint of the drop.
             val mid = (s[bestK] + s[bestK + window]) / 2f
             var edge = bestK
             while (edge < bestK + window && s[edge] > mid) edge++
-            cutoff = (edge * binHz).coerceAtMost(nyquist)
+            val hz = edge * binHz
+            if (hz < nyquist * NYQUIST_EDGE) cutoff = hz
         }
 
         // Highest frequency still above the noise floor: everything past it is empty.
         var emptyAbove: Double? = null
-        val threshold = max(floor + 6.0, -110.0).toFloat()
+        val threshold = max(floor + 6.0, -110.0 - norm).toFloat()
         var top = bins - 1
         while (top > 0 && s[top] <= threshold) top--
         val topHz = (top + 1) * binHz
         if (top < bins - 1 && topHz < nyquist * 0.97 && topHz > 1000.0) emptyAbove = topHz
 
-        return Detection(reference, dynamic, bestDrop, hasCliff, cutoff, emptyAbove)
-    }
-
-    private fun bitDepthNote(info: AudioInfo, effectiveBitDepth: Int?): String {
-        val declared = info.bitDepth ?: return ""
-        val effective = effectiveBitDepth ?: return ""
-        if (!info.isLossless || declared < 24) return ""
-        return if (effective <= 16) {
-            " Only the top $effective bits carry data, so this is $effective-bit audio padded to $declared-bit."
-        } else {
-            ""
+        val shape = when {
+            cutoff != null -> SpectrumShape.ABRUPT_CUTOFF
+            gap <= FULL_BAND_GAP_DB -> SpectrumShape.FULL_BAND
+            gap >= EMPTY_TOP_GAP_DB && emptyAbove != null -> SpectrumShape.GRADUAL_ROLLOFF
+            else -> SpectrumShape.UNCLEAR
         }
+        val hasEmptyTop = shape == SpectrumShape.ABRUPT_CUTOFF || shape == SpectrumShape.GRADUAL_ROLLOFF
+        return Detection(
+            reference, dynamic, gap,
+            if (cutoff != null) bestDrop else 0.0,
+            shape, cutoff, emptyAbove.takeIf { hasEmptyTop },
+        )
     }
 
     private fun smooth(values: FloatArray, radius: Int): FloatArray {

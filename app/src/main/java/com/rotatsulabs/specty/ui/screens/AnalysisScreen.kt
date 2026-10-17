@@ -96,6 +96,8 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import com.rotatsulabs.specty.audio.AnalysisResult
 import com.rotatsulabs.specty.audio.AuthenticityReport
+import com.rotatsulabs.specty.audio.BitDepth
+import com.rotatsulabs.specty.audio.DecodedFormat
 import com.rotatsulabs.specty.audio.Codecs
 import com.rotatsulabs.specty.audio.Verdict
 import com.rotatsulabs.specty.ui.AnalysisState
@@ -222,7 +224,7 @@ private fun ResultContent(result: AnalysisResult, showMetadata: Boolean, onFulls
                 result.spectrogram,
                 title = result.info.displayName,
                 onFullscreen = onFullscreen,
-                cutoffHz = result.authenticity.cutoffHz.takeIf { result.authenticity.hasCliff },
+                cutoffHz = result.authenticity.cutoffHz,
             ) }
         Spacer(Modifier.height(12.dp))
     }
@@ -358,7 +360,7 @@ private fun InfoChip(
 private fun VerdictCard(report: AuthenticityReport) {
     val scheme = MaterialTheme.colorScheme
     val (container, content, icon, headline) = when (report.verdict) {
-        Verdict.GENUINE -> Quad(scheme.tertiaryContainer, scheme.onTertiaryContainer, Icons.Rounded.Verified, "Looks like genuine full-band audio")
+        Verdict.GENUINE -> Quad(scheme.tertiaryContainer, scheme.onTertiaryContainer, Icons.Rounded.Verified, "Full-band audio, no sign of a lossy origin")
         Verdict.LOSSY_SOURCE -> Quad(scheme.errorContainer, scheme.onErrorContainer, Icons.Rounded.Warning, "Likely transcoded from a lossy source")
         Verdict.POSSIBLE_LOSSY_SOURCE -> Quad(scheme.secondaryContainer, scheme.onSecondaryContainer, Icons.Rounded.WarningAmber, "Possibly from a lossy source")
         Verdict.UPSAMPLED -> Quad(scheme.errorContainer, scheme.onErrorContainer, Icons.Rounded.Warning, "Likely upsampled")
@@ -432,8 +434,11 @@ private fun FileCard(result: AnalysisResult) {
             listOf(
                 Stat(Icons.Rounded.Memory, "Codec", Codecs.displayName(info.codec)),
                 Stat(Icons.Rounded.GraphicEq, "Sample Rate", Fmt.kHz(info.sampleRate.toDouble())),
-                Stat(Icons.Rounded.MusicNote, "Bit Depth", info.bitDepth?.let { "$it-bit" } ?: "n/a"),
-                Stat(Icons.Rounded.DataObject, "Decoded Format", info.sampleFormat ?: "—"),
+                Stat(
+                    Icons.Rounded.MusicNote, "Source Bit Depth",
+                    info.bitDepth?.let { bits -> "$bits-bit" + (info.sampleFormat?.let { " ($it)" } ?: "") } ?: "n/a",
+                ),
+                Stat(Icons.Rounded.DataObject, "Decoded PCM", (result.decoded ?: DecodedFormat(info.sampleRate, info.channels)).summary),
                 Stat(Icons.Rounded.Speed, "Bitrate", Fmt.bitrate(info.bitrateBps)),
                 Stat(Icons.Rounded.Speaker, "Channels", info.channelLabel),
                 Stat(Icons.Rounded.Timer, "Duration", Fmt.duration(info.durationSec)),
@@ -462,12 +467,12 @@ private fun LevelsCard(result: AnalysisResult) {
                 if (levels.clippedSamples == 0L) "No clipping" else "${Fmt.count(levels.clippedSamples)} samples",
             ),
         )
-        add(Stat(Icons.Rounded.FilterAlt, "Spectral Cutoff", Fmt.kHz(result.authenticity.cutoffHz)))
+        val (edgeLabel, edgeValue) = Fmt.spectralEdge(result.authenticity)
+        add(Stat(Icons.Rounded.FilterAlt, edgeLabel, edgeValue))
         add(Stat(Icons.Rounded.Tag, "Samples", Fmt.count(levels.framesPerChannel)))
-        val declared = info.bitDepth
         val effective = levels.effectiveBitDepth
-        if (info.isLossless && declared != null && declared >= 24 && effective != null) {
-            add(Stat(Icons.Rounded.MusicNote, "Effective Depth", "$effective-bit"))
+        if (info.isLossless && effective != null) {
+            add(Stat(Icons.Rounded.MusicNote, "Effective Depth", BitDepth.label(info.bitDepth, effective, levels.bitDepthBasis)))
         }
     }
     SectionCard("Levels and dynamics") { StatGrid(stats) }

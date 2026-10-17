@@ -37,10 +37,13 @@ class AudioAnalyzer(private val context: Context) {
         val temp = File.createTempFile("pcm_", ".f32", context.cacheDir)
         try {
             report("Decoding", 0.05f)
-            AudioDecoder.decode(context, uri, info.durationSec, temp, limit) { p -> report("Decoding", 0.05f + 0.5f * p) }
+            val reported = AudioDecoder.decode(context, uri, info.durationSec, temp, limit) { p -> report("Decoding", 0.05f + 0.5f * p) }
             if (limit > 0 && temp.length() >= limit) throw IOException("This file holds far more audio than its header declares")
 
-            PcmFile(temp, info.channels, info.sampleRate).use { pcm ->
+            // Some codecs decode to another rate or layout than the container declares (HE-AAC, parametric stereo),
+            // so the PCM is read as the decoder wrote it.
+            val decoded = reported ?: DecodedFormat(info.sampleRate, info.channels)
+            PcmFile(temp, decoded.channels, decoded.sampleRate).use { pcm ->
                 if (pcm.frames <= 0) throw IOException("The decoder produced no audio")
 
                 // Level measurement (multi-threaded inside) and the spectrogram read the same file independently,
@@ -50,7 +53,7 @@ class AudioAnalyzer(private val context: Context) {
                 report(stage, 0.55f)
                 coroutineScope {
                     val spectrum = async(Dispatchers.Default) {
-                        PcmFile(temp, info.channels, info.sampleRate).use { own ->
+                        PcmFile(temp, decoded.channels, decoded.sampleRate).use { own ->
                             SpectrogramAnalyzer.analyze(own, fftSize, windowFn = windowFn) { p ->
                                 ensureActive()
                                 specProgress.set((p * 1000).toInt())
@@ -62,11 +65,8 @@ class AudioAnalyzer(private val context: Context) {
                     }
                     val out = spectrum.await()
                     report(stage, 1f)
-                    val base = AuthenticityAnalyzer.analyze(info, out.averageDb, fftSize, levels.effectiveBitDepth)
-                    val authenticity = AuthenticityAnalyzer.withInsights(
-                        base, info, out.averageDb, fftSize, AuthenticityAnalyzer.segmentSpectra(out.spectrogram),
-                    )
-                    AnalysisResult(uri, info, levels, authenticity, out.spectrogram)
+                    val authenticity = AuthenticityAnalyzer.assess(info, out.auth, levels.effectiveBitDepth)
+                    AnalysisResult(uri, info, levels, authenticity, out.spectrogram, decoded)
                 }
             }
         } finally {

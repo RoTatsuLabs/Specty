@@ -1,6 +1,7 @@
 package com.rotatsulabs.specty.audio
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -208,14 +209,17 @@ class AudioDspTest {
     fun losslessFileWithA16kHzCliffIsFlaggedAsLossySource() {
         val r = report("alac", 44100, 16_000.0)
         assertEquals(Verdict.LOSSY_SOURCE, r.verdict)
-        assertTrue("cutoff ${r.cutoffHz}", abs(r.cutoffHz - 16_000) < 700)
+        assertTrue("cutoff ${r.cutoffHz}", abs(r.cutoffHz!! - 16_000) < 700)
     }
 
     @Test
-    fun fullBandFileIsGenuine() {
+    fun contentUpToTheTopIsGenuineWithoutAnyCutoff() {
         val r = report("flac", 44100, 21_900.0)
         assertEquals(Verdict.GENUINE, r.verdict)
-        assertTrue(r.cutoffHz > 22_000)
+        assertEquals(SpectrumShape.FULL_BAND, r.shape)
+        // Nyquist is the end of the band, never a detected cutoff.
+        assertNull(r.cutoffHz)
+        assertFalse(r.hasCliff)
     }
 
     @Test
@@ -227,7 +231,7 @@ class AudioDspTest {
     fun highRateFileThatStopsAt22kHzIsUpsampled() {
         val r = report("flac", 96000, 21_900.0)
         assertEquals(Verdict.UPSAMPLED, r.verdict)
-        assertTrue("cutoff ${r.cutoffHz}", abs(r.cutoffHz - 22_000) < 900)
+        assertTrue("cutoff ${r.cutoffHz}", abs(r.cutoffHz!! - 22_000) < 900)
     }
 
     @Test
@@ -359,10 +363,7 @@ class AudioDspTest {
         val file = multitone(rate, 12, 16000.0, 60.0)
         PcmFile(file, 2, rate).use { pcm ->
             val out = SpectrogramAnalyzer.analyze(pcm, 2048)
-            val base = AuthenticityAnalyzer.analyze(info("flac", rate), out.averageDb, 2048, null)
-            val full = AuthenticityAnalyzer.withInsights(
-                base, info("flac", rate), out.averageDb, 2048, AuthenticityAnalyzer.segmentSpectra(out.spectrogram),
-            )
+            val full = AuthenticityAnalyzer.assess(info("flac", rate), out.auth, null)
             assertEquals(Verdict.LOSSY_SOURCE, full.verdict)
             assertTrue("conf ${full.confidence}", full.confidence >= 80)
             assertTrue(full.segmentCutoffs.isNotEmpty() && full.segmentCutoffs.all { abs(it - 16000f) < 700f })
@@ -378,10 +379,7 @@ class AudioDspTest {
         val file = multitone(rate, 12, 21_900.0, 60.0)
         PcmFile(file, 2, rate).use { pcm ->
             val out = SpectrogramAnalyzer.analyze(pcm, 2048)
-            val base = AuthenticityAnalyzer.analyze(info("flac", rate), out.averageDb, 2048, null)
-            val full = AuthenticityAnalyzer.withInsights(
-                base, info("flac", rate), out.averageDb, 2048, AuthenticityAnalyzer.segmentSpectra(out.spectrogram),
-            )
+            val full = AuthenticityAnalyzer.assess(info("flac", rate), out.auth, null)
             assertEquals(Verdict.GENUINE, full.verdict)
             assertTrue("conf ${full.confidence}", full.confidence >= 80)
             assertNull(full.encoderGuess)
