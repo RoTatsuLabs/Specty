@@ -164,7 +164,7 @@ fun AnalysisScreen(state: AnalysisState, onBack: () -> Unit, onReanalyse: () -> 
             when (state) {
                 is AnalysisState.Running -> RunningContent(state)
                 is AnalysisState.Failed -> FailedContent(state.message, onBack)
-                is AnalysisState.Done -> ResultContent(state.result, state.cached, showMetadata, onFullscreen, flight)
+                is AnalysisState.Done -> ResultContent(state.result, showMetadata, onFullscreen, flight)
                 AnalysisState.Idle -> Unit
             }
         }
@@ -203,12 +203,12 @@ private fun FailedContent(message: String, onBack: () -> Unit) {
 }
 
 @Composable
-private fun ResultContent(result: AnalysisResult, cached: Boolean, showMetadata: Boolean, onFullscreen: (Int) -> Unit, flight: CoverFlight?) {
+private fun ResultContent(result: AnalysisResult, showMetadata: Boolean, onFullscreen: (Int) -> Unit, flight: CoverFlight?) {
     Column(
         Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        Hero(result, cached, flight)
+        Hero(result, flight)
         Reveal(1) { VerdictCard(result.authenticity) }
         Reveal(2) { MetricTiles(result) }
         Reveal(3) { ConfidenceCard(result.authenticity, result.info) }
@@ -230,7 +230,7 @@ private fun ResultContent(result: AnalysisResult, cached: Boolean, showMetadata:
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun Hero(result: AnalysisResult, cached: Boolean, flight: CoverFlight?) {
+private fun Hero(result: AnalysisResult, flight: CoverFlight?) {
     val info = result.info
     val scheme = MaterialTheme.colorScheme
     // When the cover flies in from the library it must already sit at rest, so only the rest of the hero reveals.
@@ -282,7 +282,6 @@ private fun Hero(result: AnalysisResult, cached: Boolean, flight: CoverFlight?) 
                 InfoChip(Fmt.size(info.sizeBytes))
                 if (info.isDolbyAtmos) AtmosBadge()
                 if (isExplicit(info.tags)) Pill("Explicit", icon = Icons.Rounded.Explicit)
-                if (cached) InfoChip("Saved result", scheme.primaryContainer, scheme.onPrimaryContainer)
             }
         }
     }
