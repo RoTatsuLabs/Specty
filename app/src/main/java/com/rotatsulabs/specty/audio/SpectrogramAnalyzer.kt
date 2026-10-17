@@ -9,7 +9,11 @@ import kotlin.math.sqrt
 
 /** Builds a quantised STFT spectrogram plus a long-term average spectrum for cutoff detection. */
 object SpectrogramAnalyzer {
-    class Output(val spectrogram: Spectrogram, val averageDb: FloatArray)
+    /**
+     * [averageDb] is the average spectrum at the drawn resolution (used for comparing files); [auth] is the fixed-size
+     * spectrum set the verdict is judged on.
+     */
+    class Output(val spectrogram: Spectrogram, val averageDb: FloatArray, val auth: AuthSpectra)
 
     /** Frames quieter than this (dBFS, summed power) are ignored when averaging the spectrum. */
     private const val ACTIVE_FRAME_DB = -70.0
@@ -78,7 +82,7 @@ object SpectrogramAnalyzer {
                 activeCount++
             }
 
-            if (col % 16 == 0) onProgress(col.toFloat() / columns)
+            if (col % 16 == 0) onProgress(col.toFloat() / columns * 0.7f)
         }
 
         val average = FloatArray(bins)
@@ -102,7 +106,8 @@ object SpectrogramAnalyzer {
             views = views,
             viewLabels = labels,
         )
-        return Output(spectrogram, average)
+        val auth = AuthSpectrumAnalyzer.compute(pcm) { onProgress(0.7f + it * 0.3f) }
+        return Output(spectrogram, average, auth)
     }
 
     private fun toDb(power: Double): Double = 10.0 * log10(power + 1e-18)

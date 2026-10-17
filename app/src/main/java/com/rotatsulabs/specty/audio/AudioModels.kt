@@ -83,8 +83,96 @@ data class LevelStats(
     /** Left RMS minus right RMS in dB (positive = left louder); null unless stereo or wider. */
     val balanceDb: Double? = null,
     val timeline: Timeline? = null,
+    /** How [effectiveBitDepth] was established from the decoded samples. */
+    val bitDepthBasis: BitDepthBasis = BitDepthBasis.UNKNOWN,
 ) {
     val dynamicRangeDb: Double get() = abs(peakDb - rmsDb)
+}
+
+/** What the decoded PCM samples reveal about the real resolution of the signal. */
+enum class BitDepthBasis {
+    /** Too few non-zero samples to say anything. */
+    UNKNOWN,
+    /** The low bits of the decoded samples are in use. This shows precision, not that the file was recorded at that depth. */
+    ALL_BITS,
+    /** The low bits are always zero: lower-bit-depth audio stored in a wider format. */
+    ZERO_PADDED,
+    /** Samples sit on a coarse grid that is not a power of two, e.g. 16-bit audio after a gain change. */
+    LEVEL_GRID,
+}
+
+/** Reading the effective depth against what the file declares, shared by the verdict and the screens. */
+object BitDepth {
+    /** A float32 decode keeps 24 bits, so wider integer formats can never show more than that. */
+    fun capacity(declared: Int?): Int? = declared?.let { minOf(it, 24) }
+
+    /** True when the samples carry at least 4 bits fewer than the format can hold. */
+    fun isPadded(declared: Int?, effective: Int?): Boolean {
+        val cap = capacity(declared) ?: return false
+        return effective != null && effective <= cap - 4
+    }
+
+    /** One sentence for the verdict note, or empty when nothing is wrong. */
+    fun paddingNote(declared: Int?, effective: Int?): String =
+        if (isPadded(declared, effective)) {
+            " Only the top $effective bits carry data, so this looks like $effective-bit audio stored as $declared-bit."
+        } else {
+            ""
+        }
+
+    /** Value for the "Effective depth" stat. */
+    fun label(declared: Int?, effective: Int, basis: BitDepthBasis): String = when {
+        isPadded(declared, effective) -> "$effective-bit data in $declared-bit file"
+        basis == BitDepthBasis.ALL_BITS -> "Uses all ${capacity(declared) ?: effective} bits"
+        else -> "$effective-bit"
+    }
+}
+
+/** The PCM that was actually analysed: always 32-bit float, at the rate and layout the decoder produced. */
+data class DecodedFormat(val sampleRate: Int, val channels: Int) {
+    val summary: String
+        get() = "32-bit float, ${String.format(java.util.Locale.US, "%.1f", sampleRate / 1000.0)} kHz, " +
+            if (channels == 1) "mono" else if (channels == 2) "stereo" else "$channels ch"
+
+    companion object {
+        private val OUTPUT = Regex("""Output #0.*?Audio: pcm_f32le, (\d+) Hz, ([^,\n]+)""", RegexOption.DOT_MATCHES_ALL)
+        private val COUNT = Regex("""(\d+) channels""")
+        private val LAYOUT = Regex("""(\d+)\.(\d+)""")
+
+        /** Reads rate and layout of the output stream from FFmpeg's log, or null when the log does not show them. */
+        fun parse(log: String?): DecodedFormat? {
+            val m = OUTPUT.find(log ?: return null) ?: return null
+            val rate = m.groupValues[1].toIntOrNull() ?: return null
+            val channels = channelsOf(m.groupValues[2].trim()) ?: return null
+            return if (rate > 0 && channels > 0) DecodedFormat(rate, channels) else null
+        }
+
+        private fun channelsOf(layout: String): Int? {
+            val l = layout.lowercase()
+            COUNT.find(l)?.let { return it.groupValues[1].toIntOrNull() }
+            LAYOUT.find(l)?.let { return it.groupValues[1].toInt() + it.groupValues[2].toInt() }
+            return when {
+                l == "mono" -> 1
+                l == "stereo" -> 2
+                l.startsWith("quad") -> 4
+                else -> null
+            }
+        }
+    }
+}
+
+/** Shape of the long-term spectrum towards its top end. */
+enum class SpectrumShape {
+    /** Content reaches the top of the band. */
+    FULL_BAND,
+    /** A steep, permanent drop: a brick-wall low-pass. */
+    ABRUPT_CUTOFF,
+    /** The top of the band is empty without a sharp edge. */
+    GRADUAL_ROLLOFF,
+    /** The top is faint, so noise and quiet content cannot be told apart. */
+    UNCLEAR,
+    /** Too little audible content to look at the spectrum. */
+    NO_SIGNAL,
 }
 
 enum class Verdict {
@@ -100,19 +188,25 @@ enum class Verdict {
 
 data class AuthenticityReport(
     val verdict: Verdict,
-    val cutoffHz: Double,
-    val hasCliff: Boolean,
+    /** The edge of an abrupt cutoff. Null when none was found: the Nyquist limit is never reported here. */
+    val cutoffHz: Double?,
     val cliffDropDb: Double,
     val note: String,
-    /** 0..100, how sure the verdict is. */
+    /** 0..100, how sure the verdict is. Zero when the verdict is inconclusive. */
     val confidence: Int = 0,
     /** Cutoff per equal slice of the track in Hz; 0 where no cliff was found. */
     val segmentCutoffs: FloatArray = FloatArray(0),
     /** Likely encoder / bitrate class matching the cutoff, when the file looks like a transcode. */
     val encoderGuess: String? = null,
-    /** Frequency above which the spectrum is empty (at the noise floor); null if content reaches the top. */
+    /** Frequency above which the spectrum is empty (at the noise floor); null if content reaches the top or it is unclear. */
     val emptyAboveHz: Double? = null,
-)
+    val shape: SpectrumShape = SpectrumShape.UNCLEAR,
+    /** Sections of the track that could be judged, and how many of them agree with the overall shape. */
+    val sectionsJudged: Int = 0,
+    val sectionsAgreeing: Int = 0,
+) {
+    val hasCliff: Boolean get() = cutoffHz != null
+}
 
 /** Coarse time series (equal slices of the track) for the dynamics graph. */
 class Timeline(

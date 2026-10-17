@@ -228,7 +228,7 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit, onPickCompare: (
                     title = viewerResult.info.displayName,
                     initialView = open,
                     onClose = { viewerView = null },
-                    cutoffHz = viewerResult.authenticity.cutoffHz.takeIf { viewerResult.authenticity.hasCliff },
+                    cutoffHz = viewerResult.authenticity.cutoffHz,
                 )
             }
         }
