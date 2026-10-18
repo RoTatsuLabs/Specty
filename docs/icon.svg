@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 108 108" width="512" height="512" role="img" aria-label="Specty app icon">
+  <rect width="108" height="108" rx="26" fill="#1B1226"/>
+  <g fill="#FFFFFF">
+    <rect x="26" y="44" width="8" height="20"/>
+    <rect x="38" y="36" width="8" height="36"/>
+    <rect x="50" y="30" width="8" height="48"/>
+    <rect x="62" y="39" width="8" height="30"/>
+    <rect x="74" y="46" width="8" height="16"/>
+  </g>
+</svg>

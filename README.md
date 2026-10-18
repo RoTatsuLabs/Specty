@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="docs/icon.png" alt="Specty app icon" width="128" height="128">
+<img src="docs/icon.svg" alt="Specty app icon" width="128" height="128">
 
 # Specty
 
