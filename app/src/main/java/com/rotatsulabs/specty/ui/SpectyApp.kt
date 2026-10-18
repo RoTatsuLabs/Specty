@@ -1,6 +1,6 @@
 package com.rotatsulabs.specty.ui
 
-import androidx.activity.compose.BackHandler
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -36,7 +36,12 @@ import com.rotatsulabs.specty.ui.design.ContainerTransform
 import com.rotatsulabs.specty.ui.design.Corners
 import com.rotatsulabs.specty.ui.design.CoverFlight
 import com.rotatsulabs.specty.ui.design.CoverFlightLayer
-import com.rotatsulabs.specty.ui.design.Springy
+import com.rotatsulabs.specty.ui.design.BackGesture
+import com.rotatsulabs.specty.ui.design.OverlayDepth
+import com.rotatsulabs.specty.ui.design.OverlayScreen
+import com.rotatsulabs.specty.ui.design.OverlayStyle
+import com.rotatsulabs.specty.ui.design.PredictiveBack
+import com.rotatsulabs.specty.ui.design.underlay
 import com.rotatsulabs.specty.ui.design.FadeThrough
 import com.rotatsulabs.specty.ui.design.SharedAxis
 import com.rotatsulabs.specty.ui.design.SpectyShapes
@@ -51,6 +56,7 @@ import com.rotatsulabs.specty.ui.egg.EasterEggBox
 import com.rotatsulabs.specty.ui.egg.eggJitter
 import com.rotatsulabs.specty.ui.egg.eggHold
 import com.rotatsulabs.specty.ui.theme.Motion
+import com.rotatsulabs.specty.ui.theme.MotionTokens
 
 @Composable
 fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit, onPickFolder: () -> Unit, onPickCompare: () -> Unit) {
@@ -94,16 +100,27 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit, onPickFolder: ()
     val dockHeld = remember { object { var state: AnalysisState = AnalysisState.Idle } }
     if (dockVisible) dockHeld.state = analysis
 
-    BackHandler(enabled = analysisOpen) { viewModel.closeAnalysis() }
-    BackHandler(enabled = showSettings) { showSettings = false }
-    BackHandler(enabled = showAbout) { showAbout = false }
-    BackHandler(enabled = compare !is CompareState.Idle) { viewModel.closeCompare() }
     // Drop a stale viewer request if the analysis it belonged to is gone.
     val viewerResult = (held.state as? AnalysisState.Done)?.result
     if (viewerView != null && (viewerResult == null || !analysisOpen)) viewerView = null
+    val viewerHeld = remember { object { var view: Int = 0 } }
+    viewerView?.let { viewerHeld.view = it }
+
+    // Each screen that covers another follows its own back swipe. Registered bottom to top: the last one enabled wins.
+    val depth = remember { OverlayDepth() }
+    val analysisBack = remember { BackGesture() }
+    val settingsBack = remember { BackGesture() }
+    val aboutBack = remember { BackGesture() }
+    val compareBack = remember { BackGesture() }
+    val viewerBack = remember { BackGesture() }
+    PredictiveBack(analysisBack, enabled = analysisOpen) { viewModel.closeAnalysis() }
+    PredictiveBack(settingsBack, enabled = showSettings) { showSettings = false }
+    PredictiveBack(aboutBack, enabled = showAbout) { showAbout = false }
+    PredictiveBack(compareBack, enabled = compare !is CompareState.Idle) { viewModel.closeCompare() }
+    PredictiveBack(viewerBack, enabled = viewerView != null) { viewerView = null }
 
     EasterEggBox(egg, eggLayer) {
-        Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.surface) {
+        Surface(Modifier.fillMaxSize().underlay(depth), color = MaterialTheme.colorScheme.surface) {
             LibraryScreen(
                 state = library,
                 onLoad = viewModel::loadLibrary,
@@ -157,6 +174,7 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit, onPickFolder: ()
             origin = origin,
             modifier = Modifier.fillMaxSize(),
             endCorners = Corners(0.dp),
+            gesture = analysisBack,
         ) {
             Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.surface) {
                 Box(Modifier.navigationBarsPadding()) {
@@ -167,11 +185,7 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit, onPickFolder: ()
 
         CoverFlightLayer(flight, open = analysisOpen, currentUri = viewerResult?.uri)
 
-        AnimatedVisibility(
-            visible = showSettings,
-            enter = Springy.enterX(true),
-            exit = Springy.exitX(false),
-        ) {
+        OverlayScreen(visible = showSettings, gesture = settingsBack, depth = depth, id = "settings") {
             Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.surface) {
                 SettingsScreen(
                     appearance = appearance,
@@ -194,11 +208,7 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit, onPickFolder: ()
             }
         }
 
-        AnimatedVisibility(
-            visible = showAbout,
-            enter = Springy.enterX(true),
-            exit = Springy.exitX(false),
-        ) {
+        OverlayScreen(visible = showAbout, gesture = aboutBack, depth = depth, id = "about") {
             Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.surface) {
                 AboutScreen(
                     onReplayIntro = { showAbout = false; viewModel.replayOnboarding() },
@@ -207,10 +217,12 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit, onPickFolder: ()
             }
         }
 
-        AnimatedVisibility(
+        OverlayScreen(
             visible = compare !is CompareState.Idle,
-            enter = Springy.enterZ(),
-            exit = Springy.exitZ(),
+            gesture = compareBack,
+            depth = depth,
+            id = "compare",
+            style = OverlayStyle.Rise,
         ) {
             Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.surface) {
                 Box(Modifier.navigationBarsPadding()) {
@@ -219,16 +231,25 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit, onPickFolder: ()
             }
         }
 
-        val open = viewerView
-        if (open != null && viewerResult != null) {
-            Surface(Modifier.fillMaxSize(), color = androidx.compose.ui.graphics.Color.Black) {
-                com.rotatsulabs.specty.ui.spectrogram.SpectrogramViewer(
-                    spectrogram = viewerResult.spectrogram,
-                    title = viewerResult.info.title.withoutExplicitMark(),
-                    initialView = open,
-                    onClose = { viewerView = null },
-                    cutoffHz = viewerResult.authenticity.cutoffHz,
-                )
+        // Leaves quickly: the viewer holds the screen in landscape until it is gone.
+        OverlayScreen(
+            visible = viewerView != null && viewerResult != null,
+            gesture = viewerBack,
+            depth = depth,
+            id = "viewer",
+            style = OverlayStyle.Rise,
+            exit = tween(220, easing = MotionTokens.EmphasizedAccelerate),
+        ) {
+            if (viewerResult != null) {
+                Surface(Modifier.fillMaxSize(), color = androidx.compose.ui.graphics.Color.Black) {
+                    com.rotatsulabs.specty.ui.spectrogram.SpectrogramViewer(
+                        spectrogram = viewerResult.spectrogram,
+                        title = viewerResult.info.title.withoutExplicitMark(),
+                        initialView = viewerHeld.view,
+                        onClose = { viewerView = null },
+                        cutoffHz = viewerResult.authenticity.cutoffHz,
+                    )
+                }
             }
         }
 

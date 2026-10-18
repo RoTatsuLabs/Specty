@@ -8,7 +8,6 @@ import android.app.Activity
 import android.content.Context
 import android.content.ContextWrapper
 import android.content.pm.ActivityInfo
-import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.awaitEachGesture
@@ -144,7 +143,6 @@ fun SpectrogramViewer(spectrogram: Spectrogram, title: String, initialView: Int,
             activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
         }
     }
-    BackHandler(onBack = onClose)
 
     val prefs = remember { context.getSharedPreferences("specty", Context.MODE_PRIVATE) }
     var view by remember { mutableIntStateOf(initialView.coerceIn(0, spectrogram.views.lastIndex)) }
