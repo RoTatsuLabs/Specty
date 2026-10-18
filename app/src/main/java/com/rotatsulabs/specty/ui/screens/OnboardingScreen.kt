@@ -17,11 +17,7 @@ import com.rotatsulabs.specty.ui.design.Corners
 import com.rotatsulabs.specty.ui.design.components.ButtonKind
 import com.rotatsulabs.specty.ui.design.components.ExpressiveButton
 import com.rotatsulabs.specty.ui.design.components.MorphSurface
-import android.Manifest
-import android.content.pm.PackageManager
 import androidx.activity.compose.BackHandler
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Animatable
@@ -62,7 +58,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.automirrored.rounded.ArrowForward
 import androidx.compose.material.icons.rounded.CheckCircle
-import androidx.compose.material.icons.rounded.Lock
+import androidx.compose.material.icons.rounded.FolderOpen
 import androidx.compose.material.icons.rounded.Verified
 import androidx.compose.material.icons.rounded.Warning
 import androidx.compose.material3.Button
@@ -89,13 +85,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.core.content.ContextCompat
 import com.rotatsulabs.specty.ui.components.pressScale
 import com.rotatsulabs.specty.ui.spectrogram.SpectrogramPalette
 import com.rotatsulabs.specty.ui.spectrogram.SpectrogramRenderer
@@ -111,22 +105,13 @@ private const val PAGES = 4
 
 /**
  * First-run introduction: four swipeable pages, each with a looping illustration on a slowly turning lobed
- * stage, a tonal wash that changes colour from page to page, and the library permission on the last one.
- * [onFinish] is called when the person leaves it by any route; [onPermission] after the system dialog so the
- * library can reload.
+ * stage, a tonal wash that changes colour from page to page, and the library folder choice on the last one.
+ * [onFinish] is called when the person leaves it by any route.
  */
 @Composable
-fun OnboardingScreen(onFinish: () -> Unit, onPermission: (Boolean) -> Unit, modifier: Modifier = Modifier) {
+fun OnboardingScreen(onFinish: () -> Unit, hasFolders: Boolean, onPickFolder: () -> Unit, modifier: Modifier = Modifier) {
     val pager = rememberPagerState { PAGES }
     val scope = rememberCoroutineScope()
-    val context = LocalContext.current
-    var granted by remember {
-        mutableStateOf(ContextCompat.checkSelfPermission(context, Manifest.permission.READ_MEDIA_AUDIO) == PackageManager.PERMISSION_GRANTED)
-    }
-    val launcher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { ok ->
-        granted = ok
-        onPermission(ok)
-    }
 
     BackHandler {
         if (pager.currentPage > 0) scope.launch { pager.animateScrollToPage(pager.currentPage - 1) } else onFinish()
@@ -198,7 +183,7 @@ fun OnboardingScreen(onFinish: () -> Unit, onPermission: (Boolean) -> Unit, modi
                     Text(body, style = MaterialTheme.typography.bodyLarge, color = scheme.onSurfaceVariant, textAlign = TextAlign.Center)
                     if (page == PAGES - 1) {
                         Spacer(Modifier.height(4.dp))
-                        PermissionBlock(granted, onAllow = { launcher.launch(Manifest.permission.READ_MEDIA_AUDIO) })
+                        FolderBlock(hasFolders, onPick = onPickFolder)
                     }
                 }
             }
@@ -265,7 +250,7 @@ private fun Dot(selected: Boolean) {
 }
 
 @Composable
-private fun PermissionBlock(granted: Boolean, onAllow: () -> Unit) {
+private fun FolderBlock(granted: Boolean, onPick: () -> Unit) {
     val scheme = MaterialTheme.colorScheme
     SpectyCard(
         modifier = Modifier.fillMaxWidth(),
@@ -275,14 +260,14 @@ private fun PermissionBlock(granted: Boolean, onAllow: () -> Unit) {
     ) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
             IconBadge(
-                if (granted) Icons.Rounded.CheckCircle else Icons.Rounded.Lock,
+                if (granted) Icons.Rounded.CheckCircle else Icons.Rounded.FolderOpen,
                 container = if (granted) scheme.onTertiaryContainer.copy(alpha = 0.14f) else scheme.secondaryContainer,
                 content = if (granted) scheme.onTertiaryContainer else scheme.onSecondaryContainer,
             )
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                Text(if (granted) "Library access allowed" else "Library access", style = MaterialTheme.typography.titleSmall)
+                Text(if (granted) "Folder added" else "Library folders", style = MaterialTheme.typography.titleSmall)
                 Text(
-                    if (granted) "Your music will be listed as soon as you start." else "Needed to list your music. Files never leave your device.",
+                    if (granted) "Your music will be listed as soon as you start." else "Pick the folders with your music. Files never leave your device.",
                     style = MaterialTheme.typography.bodySmall,
                     color = if (granted) scheme.onTertiaryContainer else scheme.onSurfaceVariant,
                 )
@@ -290,7 +275,7 @@ private fun PermissionBlock(granted: Boolean, onAllow: () -> Unit) {
         }
         if (!granted) {
             Spacer(Modifier.height(12.dp))
-            ExpressiveButton("Allow library access", onAllow, kind = ButtonKind.Tonal, modifier = Modifier.fillMaxWidth())
+            ExpressiveButton("Choose folder", onPick, kind = ButtonKind.Tonal, modifier = Modifier.fillMaxWidth())
         }
     }
 }

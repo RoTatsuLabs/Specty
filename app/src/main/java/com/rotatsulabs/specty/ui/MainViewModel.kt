@@ -2,6 +2,7 @@ package com.rotatsulabs.specty.ui
 
 import android.app.Application
 import android.content.Context
+import android.content.Intent
 import android.net.Uri
 import android.widget.Toast
 import androidx.lifecycle.AndroidViewModel
@@ -15,6 +16,8 @@ import com.rotatsulabs.specty.audio.MediaProbe
 import com.rotatsulabs.specty.audio.Verdict
 import com.rotatsulabs.specty.audio.WindowFn
 import com.rotatsulabs.specty.batch.BatchScanner
+import com.rotatsulabs.specty.data.LibraryFolder
+import com.rotatsulabs.specty.data.LibraryFolders
 import com.rotatsulabs.specty.data.LibraryRepository
 import com.rotatsulabs.specty.data.ResultCache
 import com.rotatsulabs.specty.data.Track
@@ -53,6 +56,8 @@ data class LibraryState(
     val loading: Boolean = false,
     val tracks: List<Track> = emptyList(),
     val error: String? = null,
+    /** The folders the library is built from. Empty until the person picks one. */
+    val folders: List<LibraryFolder> = emptyList(),
 )
 
 class MainViewModel(app: Application) : AndroidViewModel(app) {
@@ -88,7 +93,9 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         if (_analysis.value.let { it is AnalysisState.Done || it is AnalysisState.Limited }) _viewing.value = true
     }
 
-    private val _library = MutableStateFlow(LibraryState())
+    private val folderStore = LibraryFolders(app)
+    private var libraryJob: Job? = null
+    private val _library = MutableStateFlow(LibraryState(folders = folderStore.list()))
     val library: StateFlow<LibraryState> = _library.asStateFlow()
 
     private val _fftSize = MutableStateFlow(prefs.getInt(KEY_FFT, 2048))
@@ -316,18 +323,49 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         advance()
     }
 
+    /** Adds a folder picked with the system picker and keeps access to it across restarts. */
+    fun addFolder(uri: Uri) {
+        runCatching {
+            getApplication<Application>().contentResolver
+                .takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        }
+        folderStore.add(uri)
+        _library.value = _library.value.copy(folders = folderStore.list())
+        loadLibrary(force = true)
+    }
+
+    fun removeFolder(uri: Uri) {
+        runCatching {
+            getApplication<Application>().contentResolver
+                .releasePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        }
+        folderStore.remove(uri)
+        _library.value = _library.value.copy(folders = folderStore.list())
+        loadLibrary(force = true)
+    }
+
     fun loadLibrary(force: Boolean = false) {
         val current = _library.value
-        if (current.loading || (current.loaded && !force)) return
-        _library.value = current.copy(loading = true, error = null)
-        viewModelScope.launch {
+        if (!force && (current.loading || current.loaded)) return
+        libraryJob?.cancel()
+        val folders = folderStore.list()
+        if (folders.isEmpty()) {
+            _library.value = LibraryState(loaded = true, folders = folders)
+            return
+        }
+        _library.value = current.copy(loading = true, error = null, folders = folders)
+        libraryJob = viewModelScope.launch {
             try {
-                val tracks = LibraryRepository.scan(getApplication())
-                _library.value = LibraryState(loaded = true, loading = false, tracks = tracks)
+                val tracks = LibraryRepository.scan(getApplication(), folders.map { it.uri }) { partial ->
+                    _library.value = _library.value.copy(tracks = partial)
+                }
+                _library.value = LibraryState(loaded = true, loading = false, tracks = tracks, folders = folders)
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Throwable) {
-                _library.value = LibraryState(loaded = true, loading = false, error = e.message ?: "Could not read the library")
+                _library.value = LibraryState(
+                    loaded = true, loading = false, error = e.message ?: "Could not read the library", folders = folders,
+                )
             }
         }
     }
