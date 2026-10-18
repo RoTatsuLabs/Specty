@@ -39,12 +39,16 @@ data class AudioInfo(
 
 object Codecs {
     private val lossy = setOf(
-        "mp3", "mp2", "aac", "opus", "vorbis", "wmav1", "wmav2", "ac3", "eac3",
+        "mp3", "mp2", "aac", "opus", "vorbis", "wmav1", "wmav2", "ac3", "eac3", "ac4",
         "amr_nb", "amr_wb", "atrac3", "atrac3p", "musepack7", "musepack8",
     )
+    /** Codecs FFmpeg cannot decode; they are tried with the device's own decoders instead. */
+    private val platformOnly = setOf("ac4")
     private val lossless = setOf("alac", "flac", "wavpack", "ape", "tta", "tak", "mlp", "truehd", "shorten", "wmalossless")
 
     fun isLossy(codec: String): Boolean = codec.lowercase() in lossy
+
+    fun needsPlatformDecoder(codec: String): Boolean = codec.lowercase() in platformOnly
 
     fun isLossless(codec: String): Boolean {
         val c = codec.lowercase()
@@ -55,6 +59,7 @@ object Codecs {
         "alac" -> "ALAC"
         "ac3" -> "Dolby Digital"
         "eac3" -> "Dolby Digital Plus"
+        "ac4" -> "Dolby AC-4"
         "truehd" -> "Dolby TrueHD"
         "flac" -> "FLAC"
         "mp3" -> "MP3"

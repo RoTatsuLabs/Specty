@@ -43,6 +43,14 @@ object AuthenticityAnalyzer {
 
     const val TIMELINE_SEGMENTS = AuthSpectrumAnalyzer.SECTIONS
 
+    /** What the container alone shows for a lossy file whose audio could not be decoded, so nothing was measured. */
+    fun unmeasured(info: AudioInfo): AuthenticityReport = AuthenticityReport(
+        Verdict.LOSSY_CODEC, null, 0.0,
+        "${Codecs.displayName(info.codec)} is a lossy codec, so this is not a lossless file. " +
+            "This device has no decoder for it, so the spectrum and levels could not be measured.",
+        confidence = 99,
+    )
+
     /** Full judgement from the spectra built by [AuthSpectrumAnalyzer]. */
     fun assess(info: AudioInfo, spectra: AuthSpectra, effectiveBitDepth: Int?): AuthenticityReport {
         // The spectra come from the decoded PCM, whose rate is what the frequency axis means.

@@ -8,6 +8,9 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.rotatsulabs.specty.audio.AnalysisResult
 import com.rotatsulabs.specty.audio.AudioAnalyzer
+import com.rotatsulabs.specty.audio.AudioInfo
+import com.rotatsulabs.specty.audio.AuthenticityReport
+import com.rotatsulabs.specty.audio.LimitedAnalysisException
 import com.rotatsulabs.specty.audio.MediaProbe
 import com.rotatsulabs.specty.audio.Verdict
 import com.rotatsulabs.specty.audio.WindowFn
@@ -34,6 +37,8 @@ sealed interface AnalysisState {
     data class Running(val title: String, val stage: String, val progress: Float) : AnalysisState
     data class Done(val result: AnalysisResult, val cached: Boolean = false) : AnalysisState
     data class Failed(val title: String, val message: String) : AnalysisState
+    /** The file was read, but its audio cannot be decoded here, so only what the container shows is reported. */
+    data class Limited(val title: String, val info: AudioInfo, val report: AuthenticityReport) : AnalysisState
 }
 
 sealed interface CompareState {
@@ -80,7 +85,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     val viewing: StateFlow<Boolean> = _viewing.asStateFlow()
 
     fun openResult() {
-        if (_analysis.value is AnalysisState.Done) _viewing.value = true
+        if (_analysis.value.let { it is AnalysisState.Done || it is AnalysisState.Limited }) _viewing.value = true
     }
 
     private val _library = MutableStateFlow(LibraryState())
@@ -288,6 +293,9 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                 if (cacheable) withContext(Dispatchers.IO) { cache.save(key, result) }
             } catch (e: CancellationException) {
                 throw e
+            } catch (e: LimitedAnalysisException) {
+                _analysis.value = AnalysisState.Limited(title, e.info, e.report)
+                SoundFx.play(Fx.Done)
             } catch (e: Throwable) {
                 _analysis.value = AnalysisState.Failed(title, e.message ?: "Analysis failed")
                 SoundFx.play(Fx.Fail)

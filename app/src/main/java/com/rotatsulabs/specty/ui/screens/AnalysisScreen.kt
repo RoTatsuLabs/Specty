@@ -95,6 +95,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import com.rotatsulabs.specty.audio.AnalysisResult
+import com.rotatsulabs.specty.audio.AudioInfo
 import com.rotatsulabs.specty.audio.AuthenticityReport
 import com.rotatsulabs.specty.audio.BitDepth
 import com.rotatsulabs.specty.audio.DecodedFormat
@@ -167,6 +168,7 @@ fun AnalysisScreen(state: AnalysisState, onBack: () -> Unit, onReanalyse: () -> 
                 is AnalysisState.Running -> RunningContent(state)
                 is AnalysisState.Failed -> FailedContent(state.message, onBack)
                 is AnalysisState.Done -> ResultContent(state.result, showMetadata, onFullscreen, flight)
+                is AnalysisState.Limited -> LimitedContent(state.info, state.report)
                 AnalysisState.Idle -> Unit
             }
         }
@@ -204,6 +206,21 @@ private fun FailedContent(message: String, onBack: () -> Unit) {
     }
 }
 
+/** A lossy file this device cannot decode: file facts and the container-based verdict, with the reason nothing else is shown. */
+@Composable
+private fun LimitedContent(info: AudioInfo, report: AuthenticityReport) {
+    Column(
+        Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+    ) {
+        Spacer(Modifier.height(8.dp))
+        Text(info.title.withoutExplicitMark(), style = MaterialTheme.typography.headlineSmall, maxLines = 2, overflow = TextOverflow.Ellipsis)
+        VerdictCard(report)
+        FileCard(info, decoded = null, showDecoded = false)
+        Spacer(Modifier.height(16.dp))
+    }
+}
+
 @Composable
 private fun ResultContent(result: AnalysisResult, showMetadata: Boolean, onFullscreen: (Int) -> Unit, flight: CoverFlight?) {
     Column(
@@ -214,7 +231,7 @@ private fun ResultContent(result: AnalysisResult, showMetadata: Boolean, onFulls
         Reveal(1) { VerdictCard(result.authenticity) }
         Reveal(2) { MetricTiles(result) }
         Reveal(3) { ConfidenceCard(result.authenticity, result.info) }
-        Reveal(4) { FileCard(result) }
+        Reveal(4) { FileCard(result.info, result.decoded) }
         Reveal(5) { LevelsCard(result) }
         Reveal(6) { TimelineCard(result.levels) }
         Reveal(7) { ChannelsCard(result) }
@@ -427,18 +444,21 @@ internal fun SectionCard(title: String, content: @Composable () -> Unit) {
 }
 
 @Composable
-private fun FileCard(result: AnalysisResult) {
-    val info = result.info
+private fun FileCard(info: AudioInfo, decoded: DecodedFormat?, showDecoded: Boolean = true) {
     SectionCard("File") {
         StatGrid(
-            listOf(
+            listOfNotNull(
                 Stat(Icons.Rounded.Memory, "Codec", Codecs.displayName(info.codec)),
                 Stat(Icons.Rounded.GraphicEq, "Sample Rate", Fmt.kHz(info.sampleRate.toDouble())),
                 Stat(
                     Icons.Rounded.MusicNote, "Source Bit Depth",
                     info.bitDepth?.let { bits -> "$bits-bit" + (info.sampleFormat?.let { " ($it)" } ?: "") } ?: "n/a",
                 ),
-                Stat(Icons.Rounded.DataObject, "Decoded PCM", (result.decoded ?: DecodedFormat(info.sampleRate, info.channels)).summary),
+                if (showDecoded) {
+                    Stat(Icons.Rounded.DataObject, "Decoded PCM", (decoded ?: DecodedFormat(info.sampleRate, info.channels)).summary)
+                } else {
+                    null
+                },
                 Stat(Icons.Rounded.Speed, "Bitrate", Fmt.bitrate(info.bitrateBps)),
                 Stat(Icons.Rounded.Speaker, "Channels", info.channelLabel),
                 Stat(Icons.Rounded.Timer, "Duration", Fmt.duration(info.durationSec)),
