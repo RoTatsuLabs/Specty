@@ -14,6 +14,10 @@ import androidx.compose.runtime.getValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.rotatsulabs.specty.ui.MainViewModel
 import com.rotatsulabs.specty.ui.SpectyApp
+import androidx.compose.runtime.CompositionLocalProvider
+import com.rotatsulabs.specty.ui.design.LocalThemeReveal
+import com.rotatsulabs.specty.ui.design.ThemeRevealHost
+import com.rotatsulabs.specty.ui.design.rememberThemeReveal
 import com.rotatsulabs.specty.ui.theme.SpectyTheme
 import com.rotatsulabs.specty.ui.theme.isDarkFor
 
@@ -45,13 +49,18 @@ class MainActivity : ComponentActivity() {
                 enableEdgeToEdge(statusBarStyle = style, navigationBarStyle = style)
                 onDispose {}
             }
-            SpectyTheme(appearance) {
-                SpectyApp(
-                    viewModel = viewModel,
-                    onPickFile = { picker.launch(arrayOf("audio/*", "application/ogg")) },
-                    onPickFolder = { folderPicker.launch(null) },
-                    onPickCompare = { comparePicker.launch(arrayOf("audio/*", "application/ogg")) },
-                )
+            val reveal = rememberThemeReveal()
+            CompositionLocalProvider(LocalThemeReveal provides reveal) {
+                ThemeRevealHost(reveal) {
+                    SpectyTheme(appearance) {
+                        SpectyApp(
+                            viewModel = viewModel,
+                            onPickFile = { picker.launch(arrayOf("audio/*", "application/ogg")) },
+                            onPickFolder = { folderPicker.launch(null) },
+                            onPickCompare = { comparePicker.launch(arrayOf("audio/*", "application/ogg")) },
+                        )
+                    }
+                }
             }
         }
     }
