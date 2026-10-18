@@ -186,7 +186,10 @@ enum class SpectrumShape {
 }
 
 enum class Verdict {
+    /** Full-band lossless audio at 48 kHz or below. */
     GENUINE,
+    /** Full-band lossless audio above 48 kHz. */
+    HI_RES,
     LOSSY_SOURCE,
     POSSIBLE_LOSSY_SOURCE,
     UPSAMPLED,

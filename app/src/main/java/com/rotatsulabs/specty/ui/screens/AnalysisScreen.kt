@@ -52,6 +52,7 @@ import androidx.compose.material.icons.rounded.Memory
 import androidx.compose.material.icons.rounded.MusicNote
 import androidx.compose.material.icons.rounded.Refresh
 import androidx.compose.material.icons.rounded.ShowChart
+import androidx.compose.material.icons.rounded.HighQuality
 import androidx.compose.material.icons.rounded.Speaker
 import androidx.compose.material.icons.rounded.Speed
 import androidx.compose.material.icons.rounded.Storage
@@ -251,6 +252,7 @@ private fun ResultContent(result: AnalysisResult, showMetadata: Boolean, onFulls
 @Composable
 private fun Hero(result: AnalysisResult, flight: CoverFlight?) {
     val info = result.info
+    val verdict = result.authenticity.verdict
     val scheme = MaterialTheme.colorScheme
     // When the cover flies in from the library it must already sit at rest, so only the rest of the hero reveals.
     val shared = flight != null && flight.shares(result.uri)
@@ -299,18 +301,22 @@ private fun Hero(result: AnalysisResult, flight: CoverFlight?) {
                 InfoChip(Fmt.kHz(info.sampleRate.toDouble()))
                 info.bitDepth?.let { InfoChip("$it-bit") }
                 InfoChip(Fmt.size(info.sizeBytes))
-                if (info.isDolbyAtmos) AtmosBadge()
+                when {
+                    info.isDolbyAtmos -> QualityBadge("DOLBY ATMOS", Icons.Rounded.SurroundSound, scheme.primary, scheme.tertiary)
+                    verdict == Verdict.HI_RES -> QualityBadge("HI-RES LOSSLESS", Icons.Rounded.HighQuality, scheme.primary, scheme.secondary)
+                    verdict == Verdict.GENUINE -> QualityBadge("LOSSLESS", Icons.Rounded.Verified, scheme.tertiary, scheme.secondary)
+                }
                 if (isExplicit(info.tags)) Pill("Explicit", icon = Icons.Rounded.Explicit)
             }
         }
     }
 }
 
-/** Dolby Atmos tag: a gradient capsule that pops in, with a pulsing icon and a light sweep passing over it. */
+/** Quality tag (Dolby Atmos, Lossless, Hi-Res Lossless): a gradient capsule that pops in, with a pulsing icon and a light sweep. */
 @Composable
-private fun AtmosBadge() {
+private fun QualityBadge(label: String, icon: androidx.compose.ui.graphics.vector.ImageVector, from: Color, to: Color) {
     val scheme = MaterialTheme.colorScheme
-    val transition = rememberInfiniteTransition(label = "atmos")
+    val transition = rememberInfiniteTransition(label = "quality")
     val sweep by transition.animateFloat(
         0f, 1f,
         infiniteRepeatable(tween(3200, easing = LinearEasing), RepeatMode.Restart),
@@ -331,7 +337,7 @@ private fun AtmosBadge() {
                 scaleY = pop
             }
             .clip(CircleShape)
-            .background(Brush.horizontalGradient(listOf(scheme.primary, scheme.tertiary)))
+            .background(Brush.horizontalGradient(listOf(from, to)))
             .drawWithContent {
                 drawContent()
                 val x = size.width * (sweep * 1.8f - 0.4f)
@@ -347,7 +353,7 @@ private fun AtmosBadge() {
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Icon(
-            Icons.Rounded.SurroundSound,
+            icon,
             contentDescription = null,
             modifier = Modifier.size(16.dp).graphicsLayer {
                 scaleX = pulse
@@ -357,7 +363,7 @@ private fun AtmosBadge() {
         )
         Spacer(Modifier.width(6.dp))
         Text(
-            "DOLBY ATMOS",
+            label,
             style = MaterialTheme.typography.labelMedium,
             fontWeight = FontWeight.Bold,
             letterSpacing = 1.sp,
@@ -377,7 +383,8 @@ private fun InfoChip(
 private fun VerdictCard(report: AuthenticityReport) {
     val scheme = MaterialTheme.colorScheme
     val (container, content, icon, headline) = when (report.verdict) {
-        Verdict.GENUINE -> Quad(scheme.tertiaryContainer, scheme.onTertiaryContainer, Icons.Rounded.Verified, "Full-band audio, no sign of a lossy origin")
+        Verdict.GENUINE -> Quad(scheme.tertiaryContainer, scheme.onTertiaryContainer, Icons.Rounded.Verified, "Lossless, no sign of a lossy origin")
+        Verdict.HI_RES -> Quad(scheme.primaryContainer, scheme.onPrimaryContainer, Icons.Rounded.HighQuality, "Hi-Res lossless, no sign of a lossy origin")
         Verdict.LOSSY_SOURCE -> Quad(scheme.errorContainer, scheme.onErrorContainer, Icons.Rounded.Warning, "Likely transcoded from a lossy source")
         Verdict.POSSIBLE_LOSSY_SOURCE -> Quad(scheme.secondaryContainer, scheme.onSecondaryContainer, Icons.Rounded.WarningAmber, "Possibly from a lossy source")
         Verdict.UPSAMPLED -> Quad(scheme.errorContainer, scheme.onErrorContainer, Icons.Rounded.Warning, "Likely upsampled")

@@ -28,7 +28,8 @@ object LevelAnalyzer {
 
     fun toDb(linear: Double): Double = if (linear <= 1e-10) -200.0 else 20.0 * log10(linear)
 
-    fun analyze(pcm: PcmFile, onProgress: (Float) -> Unit = {}): LevelStats {
+    /** [maxThreads] bounds the true-peak workers; a background scan uses fewer so the phone stays cool. */
+    fun analyze(pcm: PcmFile, maxThreads: Int = 8, onProgress: (Float) -> Unit = {}): LevelStats {
         val channels = pcm.channels
         val peaks = DoubleArray(channels)
         val sumSquares = DoubleArray(channels)
@@ -49,7 +50,7 @@ object LevelAnalyzer {
         val tpDone = Array(channels) { AtomicLong() }
         val tpPeaks = DoubleArray(channels)
         val cancelled = java.util.concurrent.atomic.AtomicBoolean(false)
-        val pool = Executors.newFixedThreadPool(channels.coerceAtMost(8))
+        val pool = Executors.newFixedThreadPool(channels.coerceIn(1, maxThreads.coerceAtLeast(1)))
         val futures = (0 until channels).map { c ->
             pool.submit(
                 Callable {

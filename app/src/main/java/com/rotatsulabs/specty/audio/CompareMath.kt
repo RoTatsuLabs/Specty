@@ -95,7 +95,8 @@ object CompareMath {
     private fun khz(hz: Double) = String.format(java.util.Locale.US, "%.1f kHz", hz / 1000.0)
 
     private fun label(v: Verdict) = when (v) {
-        Verdict.GENUINE -> "genuine"
+        Verdict.GENUINE -> "lossless"
+        Verdict.HI_RES -> "hi-res lossless"
         Verdict.LOSSY_SOURCE -> "from a lossy source"
         Verdict.POSSIBLE_LOSSY_SOURCE -> "possibly from a lossy source"
         Verdict.UPSAMPLED -> "upsampled"

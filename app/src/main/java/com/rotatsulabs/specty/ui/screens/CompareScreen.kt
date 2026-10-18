@@ -392,7 +392,8 @@ private fun Cell(text: String, better: Boolean, modifier: Modifier) {
 
 private fun verdictShort(r: AnalysisResult): String {
     val v = when (r.authenticity.verdict) {
-        com.rotatsulabs.specty.audio.Verdict.GENUINE -> "Genuine"
+        com.rotatsulabs.specty.audio.Verdict.GENUINE -> "Lossless"
+        com.rotatsulabs.specty.audio.Verdict.HI_RES -> "Hi-Res Lossless"
         com.rotatsulabs.specty.audio.Verdict.LOSSY_SOURCE -> "Lossy source"
         com.rotatsulabs.specty.audio.Verdict.POSSIBLE_LOSSY_SOURCE -> "Possibly lossy"
         com.rotatsulabs.specty.audio.Verdict.UPSAMPLED -> "Upsampled"
