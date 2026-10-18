@@ -20,6 +20,7 @@ import com.rotatsulabs.specty.ui.design.components.SpectyCard
 import com.rotatsulabs.specty.ui.design.components.VerdictPill
 import com.rotatsulabs.specty.ui.design.components.WavyProgressBar
 import android.Manifest
+import android.net.Uri
 import android.content.pm.PackageManager
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -88,6 +89,7 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -120,6 +122,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import com.rotatsulabs.specty.audio.Verdict
+import com.rotatsulabs.specty.data.LibraryFolder
 import com.rotatsulabs.specty.data.Track
 import com.rotatsulabs.specty.ui.LibraryState
 import com.rotatsulabs.specty.ui.components.CoverImage
@@ -155,6 +158,8 @@ fun LibraryScreen(
     onLoad: (force: Boolean) -> Unit,
     onOpen: (Track, androidx.compose.ui.geometry.Rect?, CoverSource?) -> Unit,
     onPickFile: () -> Unit,
+    onPickFolder: () -> Unit,
+    onRemoveFolder: (Uri) -> Unit,
     onOpenSettings: () -> Unit,
     onOpenAbout: () -> Unit,
     brandHold: Modifier = Modifier,
@@ -169,14 +174,9 @@ fun LibraryScreen(
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
-    var granted by remember {
-        mutableStateOf(
-            ContextCompat.checkSelfPermission(context, Manifest.permission.READ_MEDIA_AUDIO) ==
-                PackageManager.PERMISSION_GRANTED,
-        )
-    }
-    val launcher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { ok -> granted = ok }
-    LaunchedEffect(granted) { if (granted) onLoad(false) }
+    val hasFolders = state.folders.isNotEmpty()
+    var showFolders by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) { onLoad(false) }
     // Notifications are optional: the scan runs either way, the permission only shows its progress.
     val notificationLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { onScanAll() }
     val startScan = {
@@ -226,7 +226,7 @@ fun LibraryScreen(
         }
         if (ascending) sorted else sorted.reversed()
     }
-    val hasTracks = granted && !state.loading && state.error == null && state.tracks.isNotEmpty()
+    val hasTracks = hasFolders && state.error == null && state.tracks.isNotEmpty()
 
     val listState = rememberLazyListState()
     var fabVisible by remember { mutableStateOf(true) }
@@ -239,6 +239,9 @@ fun LibraryScreen(
     }
 
     Box(modifier.fillMaxSize()) {
+        if (showFolders) {
+            FoldersDialog(state.folders, onAdd = onPickFolder, onRemove = onRemoveFolder, onDismiss = { showFolders = false })
+        }
         LazyColumn(
             Modifier.fillMaxSize(),
             state = listState,
@@ -258,8 +261,9 @@ fun LibraryScreen(
                     onRescan = { onLoad(true) },
                     onSettings = onOpenSettings,
                     onAbout = onOpenAbout,
-                    canRescan = granted,
-                    canScan = granted && state.tracks.isNotEmpty() && !batch.running,
+                    onFolders = { showFolders = true },
+                    canRescan = hasFolders,
+                    canScan = state.tracks.isNotEmpty() && !batch.running,
                     onScanAll = startScan,
                     brandModifier = titleFx,
                     brandHold = brandHold,
@@ -306,10 +310,8 @@ fun LibraryScreen(
             }
 
             when {
-                !granted -> item(key = "permission") {
-                    Box(Modifier.fillParentMaxHeight(0.6f).fillMaxWidth()) {
-                        PermissionPrompt { launcher.launch(Manifest.permission.READ_MEDIA_AUDIO) }
-                    }
+                !hasFolders -> item(key = "folders") {
+                    Box(Modifier.fillParentMaxHeight(0.6f).fillMaxWidth()) { FolderPrompt(onPickFolder) }
                 }
                 state.loading && state.tracks.isEmpty() -> item(key = "loading") {
                     Box(Modifier.fillParentMaxHeight(0.6f).fillMaxWidth(), contentAlignment = Alignment.Center) {
@@ -321,7 +323,7 @@ fun LibraryScreen(
                 }
                 state.tracks.isEmpty() -> item(key = "empty") {
                     Box(Modifier.fillParentMaxHeight(0.5f).fillMaxWidth()) {
-                        Message("No audio files found on this device. Use the button below to pick one.")
+                        Message("No audio files found in your folders. Add another folder from the menu, or pick a single file with the button below.")
                     }
                 }
                 visible.isEmpty() -> item(key = "nomatch") {
@@ -384,6 +386,7 @@ private fun Header(
     onRescan: () -> Unit,
     onSettings: () -> Unit,
     onAbout: () -> Unit,
+    onFolders: () -> Unit,
     canRescan: Boolean,
     canScan: Boolean,
     onScanAll: () -> Unit,
@@ -423,6 +426,11 @@ private fun Header(
                         onClick = { menu = false; onScanAll() },
                     )
                 }
+                DropdownMenuItem(
+                    text = { Text("Library folders") },
+                    leadingIcon = { Icon(Icons.Rounded.FolderOpen, contentDescription = null) },
+                    onClick = { menu = false; onFolders() },
+                )
                 DropdownMenuItem(
                     text = { Text("Settings") },
                     leadingIcon = { Icon(Icons.Rounded.Settings, contentDescription = null) },
@@ -761,13 +769,44 @@ private fun rememberAppear(index: Int): androidx.compose.runtime.State<Float> {
 private fun VerdictBadge(verdict: Verdict) = VerdictPill(verdict)
 
 @Composable
-private fun PermissionPrompt(onGrant: () -> Unit) {
+private fun FolderPrompt(onPick: () -> Unit) {
     EmptyState(
-        icon = Icons.Rounded.MusicNote,
-        title = "Allow access to your music",
-        message = "Specty reads your audio files on this device to list them here. Nothing leaves your phone.",
+        icon = Icons.Rounded.FolderOpen,
+        title = "Choose your music folders",
+        message = "Pick the folders that hold your music. Specty only reads inside them, so ringtones and voice notes stay out. Nothing leaves your phone.",
         modifier = Modifier.fillMaxSize(),
-        action = { ExpressiveButton("Grant access", onGrant) },
+        action = { ExpressiveButton("Choose folder", onPick) },
+    )
+}
+
+/** The folders the library is built from, with a way to add another or drop one. */
+@Composable
+private fun FoldersDialog(folders: List<LibraryFolder>, onAdd: () -> Unit, onRemove: (Uri) -> Unit, onDismiss: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        shape = RoundedCornerShape(28.dp),
+        title = { Text("Library folders") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                if (folders.isEmpty()) {
+                    Text("No folders yet.", style = MaterialTheme.typography.bodyMedium)
+                }
+                folders.forEach { folder ->
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Column(Modifier.weight(1f)) {
+                            Text(folder.name, style = MaterialTheme.typography.titleSmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                            Text(
+                                folder.path, style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis,
+                            )
+                        }
+                        ExpressiveIconButton(Icons.Rounded.Close, "Remove ${folder.name}", { onRemove(folder.uri) }, tonal = false)
+                    }
+                }
+            }
+        },
+        confirmButton = { TextButton(onClick = { onDismiss(); onAdd() }) { Text("Add folder") } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text("Done") } },
     )
 }
 

@@ -53,7 +53,7 @@ import com.rotatsulabs.specty.ui.egg.eggHold
 import com.rotatsulabs.specty.ui.theme.Motion
 
 @Composable
-fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit, onPickCompare: () -> Unit) {
+fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit, onPickFolder: () -> Unit, onPickCompare: () -> Unit) {
     val analysis by viewModel.analysis.collectAsStateWithLifecycle()
     val library by viewModel.library.collectAsStateWithLifecycle()
     val fftSize by viewModel.fftSize.collectAsStateWithLifecycle()
@@ -64,8 +64,6 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit, onPickCompare: (
     val batch by viewModel.batch.collectAsStateWithLifecycle()
     val compare by viewModel.compare.collectAsStateWithLifecycle()
     val onboarding by viewModel.onboarding.collectAsStateWithLifecycle()
-    // Bumped when the intro obtains library access, so the library screen re-reads the permission.
-    var permissionEpoch by remember { mutableStateOf(0) }
     val compareHeld = remember { object { var state: CompareState = CompareState.Idle } }
     if (compare !is CompareState.Idle) compareHeld.state = compare
     val origin = rememberContainerOrigin()
@@ -106,7 +104,6 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit, onPickCompare: (
 
     EasterEggBox(egg, eggLayer) {
         Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.surface) {
-            androidx.compose.runtime.key(permissionEpoch) {
             LibraryScreen(
                 state = library,
                 onLoad = viewModel::loadLibrary,
@@ -121,6 +118,8 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit, onPickCompare: (
                 },
                 flight = flight,
                 onPickFile = onPickFile,
+                onPickFolder = onPickFolder,
+                onRemoveFolder = viewModel::removeFolder,
                 onOpenSettings = { showSettings = true },
                 onOpenAbout = { showAbout = true },
                 brandHold = Modifier.eggHold(egg),
@@ -132,7 +131,6 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit, onPickCompare: (
                 onCancelScan = viewModel::cancelScan,
                 onDismissScan = viewModel::dismissScanSummary,
             )
-            }
         }
 
         AnimatedVisibility(
@@ -241,7 +239,8 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit, onPickCompare: (
         ) {
             com.rotatsulabs.specty.ui.screens.OnboardingScreen(
                 onFinish = viewModel::finishOnboarding,
-                onPermission = { ok -> if (ok) permissionEpoch++ },
+                hasFolders = library.folders.isNotEmpty(),
+                onPickFolder = onPickFolder,
             )
         }
 
