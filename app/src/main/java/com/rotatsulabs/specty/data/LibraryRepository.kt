@@ -58,7 +58,7 @@ object LibraryRepository {
         fun emit() = synchronized(lock) { onUpdate(snapshot()) }
 
         emit()
-        val missing = entries.filter { it.key !in meta }
+        val missing = entries.filter { !meta.containsKey(it.key) }
         if (missing.isNotEmpty()) {
             val done = AtomicInteger()
             missing.map { e ->
