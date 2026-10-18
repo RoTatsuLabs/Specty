@@ -366,7 +366,7 @@ private fun VerdictArt() {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                     Icon(if (isGenuine) Icons.Rounded.Verified else Icons.Rounded.Warning, contentDescription = null, modifier = Modifier.size(30.dp))
                     Column {
-                        Text(if (isGenuine) "Genuine full-band" else "Likely transcoded", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                        Text(if (isGenuine) "Lossless full-band" else "Likely transcoded", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                         Text(if (isGenuine) "Content reaches 22 kHz" else "Hard cutoff near 16 kHz", style = MaterialTheme.typography.bodySmall)
                     }
                 }

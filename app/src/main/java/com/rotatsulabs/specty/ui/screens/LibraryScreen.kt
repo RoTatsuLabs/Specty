@@ -13,8 +13,6 @@ import com.rotatsulabs.specty.ui.design.components.MorphSurface
 import com.rotatsulabs.specty.ui.design.components.Pill
 import com.rotatsulabs.specty.ui.design.components.RingProgress
 import com.rotatsulabs.specty.ui.design.components.SearchField
-import com.rotatsulabs.specty.ui.design.components.Segment
-import com.rotatsulabs.specty.ui.design.components.SegmentedControl
 import com.rotatsulabs.specty.ui.design.components.ShapeLoader
 import com.rotatsulabs.specty.ui.design.components.SpectyCard
 import com.rotatsulabs.specty.ui.design.components.VerdictPill
@@ -141,12 +139,10 @@ private enum class SortKey(val label: String) {
     Title("Title"), Artist("Artist"), Duration("Length"), Size("Size"),
 }
 
-private enum class Filter(val label: String) {
-    All("All"), Unchecked("Unchecked"), Genuine("Genuine"), Suspect("Suspect"),
+/** Only clean results can be filtered on. With none chosen the whole library shows. */
+private enum class Filter(val label: String, val verdict: Verdict) {
+    Lossless("Lossless", Verdict.GENUINE), HiRes("Hi-Res", Verdict.HI_RES),
 }
-
-private fun Verdict.isSuspect() =
-    this == Verdict.LOSSY_SOURCE || this == Verdict.UPSAMPLED || this == Verdict.POSSIBLE_LOSSY_SOURCE
 
 /**
  * The main screen. A single scrolling page: brand header, a library health ring, search, filters and either a
@@ -187,17 +183,15 @@ fun LibraryScreen(
     var query by rememberSaveable { mutableStateOf("") }
     var sortIndex by rememberSaveable { mutableStateOf(0) }
     var ascending by rememberSaveable { mutableStateOf(true) }
-    var filterIndex by rememberSaveable { mutableStateOf(0) }
+    var filterIndex by rememberSaveable { mutableStateOf(-1) }
     var grid by rememberSaveable { mutableStateOf(false) }
     val sort = SortKey.entries[sortIndex]
-    val filter = Filter.entries[filterIndex]
+    val filter = Filter.entries.getOrNull(filterIndex)
 
     val verdictByTrack = remember(state.tracks, verdicts, keyFor) {
         state.tracks.associate { it.uri.toString() to verdicts[keyFor(it)] }
     }
-    val checked = verdictByTrack.values.count { it != null }
-    val suspects = verdictByTrack.values.count { it != null && it.isSuspect() }
-    val genuine = verdictByTrack.values.count { it == Verdict.GENUINE }
+    val filterCounts = Filter.entries.associateWith { f -> verdictByTrack.values.count { it == f.verdict } }
 
     val visible = remember(state.tracks, verdictByTrack, query, sort, ascending, filter) {
         val searched = if (query.isBlank()) {
@@ -211,12 +205,7 @@ fun LibraryScreen(
         }
         val filtered = searched.filter {
             val v = verdictByTrack[it.uri.toString()]
-            when (filter) {
-                Filter.All -> true
-                Filter.Unchecked -> v == null
-                Filter.Genuine -> v == Verdict.GENUINE
-                Filter.Suspect -> v != null && v.isSuspect()
-            }
+            filter == null || v == filter.verdict
         }
         val sorted = when (sort) {
             SortKey.Title -> filtered.sortedBy { it.title.lowercase() }
@@ -284,13 +273,8 @@ fun LibraryScreen(
                     Box(Modifier.eggJitter(4)) {
                     FilterRow(
                         selected = filter,
-                        counts = mapOf(
-                            Filter.All to state.tracks.size,
-                            Filter.Unchecked to state.tracks.size - checked,
-                            Filter.Genuine to genuine,
-                            Filter.Suspect to suspects,
-                        ),
-                        onSelect = { filterIndex = it.ordinal },
+                        counts = filterCounts,
+                        onSelect = { filterIndex = if (it == filter) -1 else it.ordinal },
                     )
                     }
                 }
@@ -532,17 +516,23 @@ private fun SearchPill(query: String, onChange: (String) -> Unit) {
 }
 
 @Composable
-private fun FilterRow(selected: Filter, counts: Map<Filter, Int>, onSelect: (Filter) -> Unit) {
+private fun FilterRow(selected: Filter?, counts: Map<Filter, Int>, onSelect: (Filter) -> Unit) {
     val haptic = LocalHapticFeedback.current
-    SegmentedControl(
-        segments = Filter.entries.map { Segment(it, it.label, badge = "${counts[it] ?: 0}") },
-        selected = selected,
-        onSelect = {
-            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-            onSelect(it)
-        },
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
-    )
+    Row(
+        Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        for (f in Filter.entries) {
+            FilterChip(
+                selected = selected == f,
+                onClick = {
+                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                    onSelect(f)
+                },
+                label = { Text("${f.label} ${counts[f] ?: 0}") },
+            )
+        }
+    }
 }
 
 @Composable
