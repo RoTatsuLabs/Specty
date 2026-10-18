@@ -9,8 +9,6 @@ See what your audio files really contain.
 An open-source audio quality analyzer for Android. It shows the spectrogram, loudness and dynamics, and codec facts, and it checks whether a "lossless" file started life as a lossy one.
 
 [![Code Quality](https://github.com/RoTatsuLabs/Specty/actions/workflows/quality.yml/badge.svg)](https://github.com/RoTatsuLabs/Specty/actions/workflows/quality.yml)
-[![Nightly Build](https://github.com/RoTatsuLabs/Specty/actions/workflows/nightly.yml/badge.svg)](https://github.com/RoTatsuLabs/Specty/actions/workflows/nightly.yml)
-[![Release](https://img.shields.io/github/v/release/RoTatsuLabs/Specty?include_prereleases&label=release)](https://github.com/RoTatsuLabs/Specty/releases)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
 ![Platform](https://img.shields.io/badge/platform-Android%2013%2B-3DDC84?logo=android&logoColor=white)
 ![Kotlin](https://img.shields.io/badge/Kotlin-Jetpack%20Compose-7F52FF?logo=kotlin&logoColor=white)
@@ -90,12 +88,7 @@ The DSP code in `app/src/main/java/com/rotatsulabs/specty/audio/` has no Android
 
 ## Install
 
-Releases are on the [Releases page](https://github.com/RoTatsuLabs/Specty/releases). Each release has the APK and a SHA-256 checksum.
-
-1. Download the APK from the latest release.
-2. Install it on a device running Android 13 or newer. You may need to allow installs from your browser or file manager.
-
-A nightly build is published as a rolling prerelease called `nightly`. It is built at 03:00 WIB when `main` changed in the last 24 hours, and it installs next to the release build because it uses its own application ID (`com.rotatsulabs.specty.nightly`).
+This repository does not publish APKs. Build Specty from source as described below, then install the APK on a device running Android 13 or newer. You may need to allow installs from your file manager.
 
 ## Using the library
 
@@ -119,7 +112,7 @@ gradle :app:assembleDebug       # debug APK in app/build/outputs/apk/debug/
 | Decoding | FFmpeg through [`dev.ffmpegkit-maintained:ffmpeg-kit-min`](https://github.com/ffmpegkit-maintained/ffmpeg), a maintained continuation of the retired `arthenica/ffmpeg-kit`. Formats it cannot decode, such as AC-4, go through the device's `MediaCodec`. |
 | ABIs | `arm64-v8a`, `x86_64` |
 
-GitHub Actions runs three workflows. Code Quality runs lint, the unit tests and a debug build on every push to `main` and on pull requests. Nightly Build and Release Build produce signed APKs when signing secrets are configured.
+GitHub Actions runs one workflow, Code Quality. It runs lint, the unit tests and a debug build on every push to `main` and on pull requests.
 
 ## Project layout
 
