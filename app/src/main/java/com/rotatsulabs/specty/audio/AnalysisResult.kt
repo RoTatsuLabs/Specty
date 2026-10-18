@@ -11,3 +11,7 @@ data class AnalysisResult(
     /** The PCM the measurements were taken from; null only when it is not known. */
     val decoded: DecodedFormat? = null,
 )
+
+/** The file was read but its audio cannot be decoded here; [report] is what the container alone shows. */
+class LimitedAnalysisException(val info: AudioInfo, val report: AuthenticityReport) :
+    java.io.IOException("${Codecs.displayName(info.codec)} audio cannot be decoded on this device, so it could not be measured.")

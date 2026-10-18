@@ -43,7 +43,7 @@ import com.rotatsulabs.specty.ui.theme.Motion
 @Composable
 fun AnalysisDock(state: AnalysisState, onOpen: () -> Unit, onDismiss: () -> Unit, modifier: Modifier = Modifier, queued: Int = 0) {
     val scheme = MaterialTheme.colorScheme
-    val done = state is AnalysisState.Done
+    val done = state is AnalysisState.Done || state is AnalysisState.Limited
     val failed = state is AnalysisState.Failed
     val container = when {
         failed -> scheme.errorContainer
@@ -59,12 +59,14 @@ fun AnalysisDock(state: AnalysisState, onOpen: () -> Unit, onDismiss: () -> Unit
         is AnalysisState.Running -> state.title.withoutExplicitMark()
         is AnalysisState.Done -> state.result.info.title.withoutExplicitMark()
         is AnalysisState.Failed -> state.title.withoutExplicitMark()
+        is AnalysisState.Limited -> state.info.title.withoutExplicitMark()
         AnalysisState.Idle -> ""
     }
     val subtitle = when (state) {
         is AnalysisState.Running -> "${state.stage}  ·  ${(state.progress * 100).toInt()}%" + if (queued > 0) "  ·  $queued waiting" else ""
         is AnalysisState.Done -> "Ready, tap to view the result"
         is AnalysisState.Failed -> state.message
+        is AnalysisState.Limited -> "Lossy format, audio could not be decoded. Tap for details"
         AnalysisState.Idle -> ""
     }
     val progress by animateFloatAsState((state as? AnalysisState.Running)?.progress ?: 0f, Motion.effects(), label = "dockProgress")
