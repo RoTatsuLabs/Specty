@@ -19,6 +19,8 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -33,6 +35,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.lerp
 import com.rotatsulabs.specty.ui.theme.Motion
 import com.rotatsulabs.specty.ui.theme.MotionTokens
+import kotlinx.coroutines.launch
 
 /** Material "fade through": the old content fades out, then the new content fades in while scaling up slightly. */
 object FadeThrough {
@@ -119,10 +122,29 @@ fun ContainerTransform(
     modifier: Modifier = Modifier,
     endCorners: Corners = Corners(0.dp),
     onGone: () -> Unit = {},
+    gesture: BackGesture? = null,
     content: @Composable () -> Unit,
 ) {
     val progress = remember { Animatable(0f) }
     var gone by remember { mutableStateOf(true) }
+    val isVisible by rememberUpdatedState(visible)
+    if (gesture != null) {
+        // The back swipe shrinks the container toward its origin. Releasing continues from there: a cancelled swipe
+        // springs open again, a committed one is closed by [visible] turning false.
+        LaunchedEffect(gesture) {
+            val scope = this
+            var following = false
+            snapshotFlow { gesture.active to gesture.progress }.collect { (active, swipe) ->
+                if (active) {
+                    following = true
+                    if (isVisible) progress.snapTo(BackMath.containerOpen(swipe))
+                } else if (following) {
+                    following = false
+                    if (!gesture.committed && isVisible) scope.launch { progress.animateTo(1f, Motion.spatial()) }
+                }
+            }
+        }
+    }
     LaunchedEffect(visible) {
         if (visible) gone = false
         progress.animateTo(if (visible) 1f else 0f, Motion.spatial())
