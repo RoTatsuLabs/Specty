@@ -83,7 +83,6 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExtendedFloatingActionButton
-import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
@@ -139,11 +138,6 @@ private enum class SortKey(val label: String) {
     Title("Title"), Artist("Artist"), Duration("Length"), Size("Size"),
 }
 
-/** Only clean results can be filtered on. With none chosen the whole library shows. */
-private enum class Filter(val label: String, val verdict: Verdict) {
-    Lossless("Lossless", Verdict.GENUINE), HiRes("Hi-Res", Verdict.HI_RES),
-}
-
 /**
  * The main screen. A single scrolling page: brand header, a library health ring, search, filters and either a
  * list or a cover grid of tracks. Analysing a file is a floating action rather than a navigation tab.
@@ -183,17 +177,14 @@ fun LibraryScreen(
     var query by rememberSaveable { mutableStateOf("") }
     var sortIndex by rememberSaveable { mutableStateOf(0) }
     var ascending by rememberSaveable { mutableStateOf(true) }
-    var filterIndex by rememberSaveable { mutableStateOf(-1) }
     var grid by rememberSaveable { mutableStateOf(false) }
     val sort = SortKey.entries[sortIndex]
-    val filter = Filter.entries.getOrNull(filterIndex)
 
     val verdictByTrack = remember(state.tracks, verdicts, keyFor) {
         state.tracks.associate { it.uri.toString() to verdicts[keyFor(it)] }
     }
-    val filterCounts = Filter.entries.associateWith { f -> verdictByTrack.values.count { it == f.verdict } }
 
-    val visible = remember(state.tracks, verdictByTrack, query, sort, ascending, filter) {
+    val visible = remember(state.tracks, query, sort, ascending) {
         val searched = if (query.isBlank()) {
             state.tracks
         } else {
@@ -203,15 +194,11 @@ fun LibraryScreen(
                     (it.album?.contains(query, ignoreCase = true) == true)
             }
         }
-        val filtered = searched.filter {
-            val v = verdictByTrack[it.uri.toString()]
-            filter == null || v == filter.verdict
-        }
         val sorted = when (sort) {
-            SortKey.Title -> filtered.sortedBy { it.title.lowercase() }
-            SortKey.Artist -> filtered.sortedBy { (it.artist ?: "￿").lowercase() }
-            SortKey.Duration -> filtered.sortedBy { it.durationMs }
-            SortKey.Size -> filtered.sortedBy { it.sizeBytes }
+            SortKey.Title -> searched.sortedBy { it.title.lowercase() }
+            SortKey.Artist -> searched.sortedBy { (it.artist ?: "￿").lowercase() }
+            SortKey.Duration -> searched.sortedBy { it.durationMs }
+            SortKey.Size -> searched.sortedBy { it.sizeBytes }
         }
         if (ascending) sorted else sorted.reversed()
     }
@@ -269,15 +256,6 @@ fun LibraryScreen(
                 Box(Modifier.eggJitter(3)) { SearchPill(query) { query = it } }
             }
             if (hasTracks) {
-                item(key = "filters") {
-                    Box(Modifier.eggJitter(4)) {
-                    FilterRow(
-                        selected = filter,
-                        counts = filterCounts,
-                        onSelect = { filterIndex = if (it == filter) -1 else it.ordinal },
-                    )
-                    }
-                }
                 item(key = "section") {
                     Box(Modifier.eggJitter(5)) {
                     SectionBar(
@@ -519,26 +497,6 @@ private fun SearchPill(query: String, onChange: (String) -> Unit) {
 }
 
 @Composable
-private fun FilterRow(selected: Filter?, counts: Map<Filter, Int>, onSelect: (Filter) -> Unit) {
-    val haptic = LocalHapticFeedback.current
-    Row(
-        Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
-        for (f in Filter.entries) {
-            FilterChip(
-                selected = selected == f,
-                onClick = {
-                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                    onSelect(f)
-                },
-                label = { Text("${f.label} ${counts[f] ?: 0}") },
-            )
-        }
-    }
-}
-
-@Composable
 private fun SectionBar(
     count: Int,
     sort: SortKey,
@@ -552,7 +510,7 @@ private fun SectionBar(
     val haptic = LocalHapticFeedback.current
     val rotation by animateFloatAsState(if (ascending) 0f else 180f, Motion.spatial(), label = "sortArrow")
     Row(
-        Modifier.fillMaxWidth().padding(start = 24.dp, end = 12.dp, top = 4.dp, bottom = 8.dp),
+        Modifier.fillMaxWidth().padding(start = 24.dp, end = 12.dp, top = 12.dp, bottom = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         AnimatedContent(
