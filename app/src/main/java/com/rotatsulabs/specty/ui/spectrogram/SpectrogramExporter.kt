@@ -125,8 +125,13 @@ object SpectrogramExporter {
     fun saveToGallery(context: Context, bitmap: Bitmap, baseName: String): Uri? {
         val safe = baseName.substringBeforeLast('.').replace(Regex("[^A-Za-z0-9._ -]"), "_").trim().ifEmpty { "spectrogram" }
         val stamp = SimpleDateFormat("yyyyMMdd-HHmmss", Locale.US).format(Date())
+        return savePng(context, bitmap, "$safe-spectrogram-$stamp.png")
+    }
+
+    /** Writes [bitmap] as [fileName] into Pictures/Specty; null when the write fails. */
+    fun savePng(context: Context, bitmap: Bitmap, fileName: String): Uri? {
         val values = ContentValues().apply {
-            put(MediaStore.Images.Media.DISPLAY_NAME, "$safe-spectrogram-$stamp.png")
+            put(MediaStore.Images.Media.DISPLAY_NAME, fileName)
             put(MediaStore.Images.Media.MIME_TYPE, "image/png")
             put(MediaStore.Images.Media.RELATIVE_PATH, Environment.DIRECTORY_PICTURES + "/Specty")
             put(MediaStore.Images.Media.IS_PENDING, 1)

@@ -14,6 +14,22 @@ import com.rotatsulabs.specty.ui.design.components.Pill
 import com.rotatsulabs.specty.ui.design.components.ShapeLoader
 import com.rotatsulabs.specty.ui.design.components.SpectyCard
 import com.rotatsulabs.specty.ui.design.components.WavyProgressBar
+import android.content.Intent
+import android.widget.Toast
+import androidx.compose.material.icons.rounded.Download
+import androidx.compose.material.icons.rounded.IosShare
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.platform.LocalContext
+import com.rotatsulabs.specty.ui.spectrogram.ReportExporter
+import com.rotatsulabs.specty.ui.spectrogram.ReportFacts
+import com.rotatsulabs.specty.ui.spectrogram.SpectrogramExporter
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.text.SimpleDateFormat
+import java.util.Date
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -152,6 +168,7 @@ fun AnalysisScreen(state: AnalysisState, onBack: () -> Unit, onReanalyse: () -> 
                 modifier = Modifier,
                 actions = {
                     if (state is AnalysisState.Done) {
+                        ExportMenu(state.result)
                         ExpressiveIconButton(Icons.Rounded.Compare, "Compare with another file", onCompare, tonal = false)
                         var spins by remember { mutableStateOf(0) }
                         val spin by animateFloatAsState(spins * 360f, spring(dampingRatio = 0.6f, stiffness = 120f), label = "spin")
@@ -172,6 +189,64 @@ fun AnalysisScreen(state: AnalysisState, onBack: () -> Unit, onReanalyse: () -> 
                 is AnalysisState.Limited -> LimitedContent(state.info, state.report)
                 AnalysisState.Idle -> Unit
             }
+        }
+    }
+}
+
+/** Top-bar action that saves or shares the whole result as one image. */
+@Composable
+private fun ExportMenu(result: AnalysisResult) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    var open by remember { mutableStateOf(false) }
+    var busy by remember { mutableStateOf(false) }
+    fun export(share: Boolean) {
+        if (busy) return
+        busy = true
+        scope.launch {
+            val uri = withContext(Dispatchers.Default) {
+                val bmp = try { ReportExporter.render(context, result) } catch (_: OutOfMemoryError) { null }
+                try {
+                    bmp?.let {
+                        val stamp = SimpleDateFormat("yyyyMMdd-HHmmss", Locale.US).format(Date())
+                        SpectrogramExporter.savePng(context, it, ReportFacts.fileName(result.info.title, stamp))
+                    }
+                } finally {
+                    bmp?.recycle()
+                }
+            }
+            busy = false
+            when {
+                uri == null -> Toast.makeText(context, "Could not create the image", Toast.LENGTH_SHORT).show()
+                share -> context.startActivity(
+                    Intent.createChooser(
+                        Intent(Intent.ACTION_SEND).apply {
+                            type = "image/png"
+                            putExtra(Intent.EXTRA_STREAM, uri)
+                            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                        },
+                        "Share analysis",
+                    ),
+                )
+                else -> Toast.makeText(context, "Saved to Pictures/Specty", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+    Box {
+        ExpressiveIconButton(Icons.Rounded.IosShare, "Export as image", { open = true }, tonal = false)
+        DropdownMenu(expanded = open, onDismissRequest = { open = false }, shape = RoundedCornerShape(20.dp)) {
+            DropdownMenuItem(
+                text = { Text(if (busy) "Working…" else "Save image to gallery") },
+                leadingIcon = { Icon(Icons.Rounded.Download, null) },
+                enabled = !busy,
+                onClick = { open = false; export(false) },
+            )
+            DropdownMenuItem(
+                text = { Text("Share image") },
+                leadingIcon = { Icon(Icons.Rounded.IosShare, null) },
+                enabled = !busy,
+                onClick = { open = false; export(true) },
+            )
         }
     }
 }
