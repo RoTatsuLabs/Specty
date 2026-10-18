@@ -21,9 +21,13 @@ import java.util.zip.GZIPOutputStream
  */
 class ResultCache private constructor(context: Context) {
     private val dir = File(context.filesDir, "results").apply { mkdirs() }
-    private val indexFile = File(dir, "index.txt")
     private val lock = Any()
-    private val index = LinkedHashMap<String, Verdict>()
+    private val index = VerdictIndex(File(dir, "index.txt"), CacheVersion.indexHeader, MAX_ENTRIES)
+    /** Size of each saved result file, so the disk budget is checked without touching the folder. */
+    private val sizes = HashMap<String, Long>()
+    private var totalBytes = 0L
+    private var unpublished = 0
+    private var lastPublish = 0L
 
     private val _verdicts = MutableStateFlow<Map<String, Verdict>>(emptyMap())
     /** Verdict per cache key, for badges in the library. */
@@ -31,25 +35,24 @@ class ResultCache private constructor(context: Context) {
 
     init {
         runCatching {
-            val lines = if (indexFile.exists()) indexFile.readLines() else emptyList()
-            if (CacheVersion.isCurrentIndex(lines.firstOrNull())) {
-                for (line in lines.drop(1)) {
-                    val parts = line.split('\t')
-                    // Entries stay even when their bulky result file was evicted: the verdict is still known.
-                    if (parts.size == 2) {
-                        Verdict.entries.firstOrNull { it.name == parts[1] }?.let { index[parts[0]] = it }
-                    }
-                }
-            } else {
+            if (!index.load()) {
                 // Saved by another format or analyzer version: its verdicts and results would be stale.
-                dir.listFiles()?.forEach { it.delete() }
+                dir.listFiles()?.filter { it.name != "index.txt" }?.forEach { it.delete() }
+            }
+            dir.listFiles()?.forEach { f ->
+                if (f.extension == "bin") {
+                    sizes[f.nameWithoutExtension] = f.length()
+                    totalBytes += f.length()
+                } else if (f.extension == "tmp") {
+                    f.delete()
+                }
             }
         }
-        _verdicts.value = index.toMap()
+        _verdicts.value = index.snapshot()
     }
 
     /** True when a verdict is known for [key], even if the full result has been evicted. */
-    fun contains(key: String): Boolean = synchronized(lock) { index.containsKey(key) }
+    fun contains(key: String): Boolean = synchronized(lock) { key in index }
 
     /** Names the file, the settings it was read with and the analysis version; see [CacheKey]. */
     fun keyOf(uri: Uri, sizeBytes: Long, modified: Long, fftSize: Int, window: WindowFn = WindowFn.Hann): String =
@@ -63,56 +66,70 @@ class ResultCache private constructor(context: Context) {
                 .let { AnalysisResult(uri, it.info, it.levels, it.authenticity, it.spectrogram, it.decoded) }
         } catch (_: Exception) {
             file.delete()
+            synchronized(lock) { sizes.remove(key)?.let { totalBytes -= it } }
             null
         }
     }
 
-    fun save(key: String, result: AnalysisResult) {
-        runCatching {
-            val file = File(dir, "$key.bin")
-            val tmp = File(dir, "$key.tmp")
+    /**
+     * Saves [result]. The library's badge list is told right away unless [publish] is false, which a long scan uses
+     * to announce every few results with [publishNow] instead of rebuilding the list for each one.
+     */
+    fun save(key: String, result: AnalysisResult, publish: Boolean = true) {
+        val file = File(dir, "$key.bin")
+        val tmp = File(dir, "$key.tmp")
+        try {
             val stored = StoredResult(result.info, result.levels, result.authenticity, result.spectrogram, result.decoded)
             DataOutputStream(GZIPOutputStream(tmp.outputStream().buffered())).use { ResultCodec.write(it, stored) }
-            if (!tmp.renameTo(file)) { tmp.delete(); return }
-            synchronized(lock) {
-                index.remove(key)
-                index[key] = result.authenticity.verdict
-                while (index.size > MAX_ENTRIES) {
-                    val oldest = index.keys.first()
-                    index.remove(oldest)
-                    File(dir, "$oldest.bin").delete()
-                }
-                trimToBudget()
-                persistIndex()
+            if (!tmp.renameTo(file)) {
+                tmp.delete()
+                return
             }
+        } catch (_: Exception) {
+            tmp.delete()
+            return
+        }
+        synchronized(lock) {
+            totalBytes += file.length() - (sizes.put(key, file.length()) ?: 0L)
+            for (gone in index.put(key, result.authenticity.verdict)) {
+                File(dir, "$gone.bin").delete()
+                sizes.remove(gone)?.let { totalBytes -= it }
+            }
+            trimToBudget()
+            unpublished++
+            if (publish || unpublished >= PUBLISH_EVERY) publishLocked()
         }
     }
 
-    /** Deletes the oldest result files (not their verdicts) until the folder fits the size budget. */
+    /** Announces verdicts saved since the last announcement. */
+    fun publishNow() = synchronized(lock) { if (unpublished > 0) publishLocked() }
+
+    private fun publishLocked() {
+        unpublished = 0
+        _verdicts.value = index.snapshot()
+    }
+
+    /** Deletes the oldest result files (not their verdicts) once over budget, down to 90% so it does not repeat. */
     private fun trimToBudget() {
-        val files = dir.listFiles { f -> f.extension == "bin" } ?: return
-        var total = files.sumOf { it.length() }
-        if (total <= MAX_BYTES) return
-        for (key in index.keys.toList()) {
-            val f = File(dir, "$key.bin")
-            if (!f.exists()) continue
-            total -= f.length()
-            f.delete()
-            if (total <= MAX_BYTES) break
+        if (totalBytes <= MAX_BYTES) return
+        val target = MAX_BYTES / 10 * 9
+        for (key in index.keysOldestFirst()) {
+            if (totalBytes <= target) break
+            val size = sizes.remove(key) ?: continue
+            File(dir, "$key.bin").delete()
+            totalBytes -= size
         }
     }
 
     fun clear() {
         synchronized(lock) {
-            dir.listFiles()?.forEach { it.delete() }
+            dir.listFiles()?.filter { it.name != "index.txt" }?.forEach { it.delete() }
             index.clear()
+            sizes.clear()
+            totalBytes = 0L
+            unpublished = 0
             _verdicts.value = emptyMap()
         }
-    }
-
-    private fun persistIndex() {
-        indexFile.writeText((listOf(CacheVersion.indexHeader) + index.entries.map { "${it.key}\t${it.value.name}" }).joinToString("\n"))
-        _verdicts.value = index.toMap()
     }
 
     companion object {
@@ -120,6 +137,8 @@ class ResultCache private constructor(context: Context) {
         private const val MAX_ENTRIES = 20_000
         /** Disk budget for full results (spectrograms dominate). */
         private const val MAX_BYTES = 600L * 1024 * 1024
+        /** During a scan the badge list is rebuilt once per this many saved results. */
+        private const val PUBLISH_EVERY = 25
 
         @Volatile private var instance: ResultCache? = null
 

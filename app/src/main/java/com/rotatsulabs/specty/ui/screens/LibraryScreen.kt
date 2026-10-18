@@ -478,16 +478,19 @@ private fun BatchCard(batch: BatchScanner.State, onCancel: () -> Unit, onDismiss
                         when {
                             batch.running -> "Scanning library"
                             batch.cancelled -> "Scan cancelled"
+                            batch.note.isNotEmpty() -> "Scan stopped"
                             else -> "Scan finished"
                         },
                         style = MaterialTheme.typography.titleMedium,
                     )
                     Text(
+                        if (batch.running && batch.note.isNotEmpty()) batch.note else
                         if (batch.running && batch.current.isNotEmpty()) batch.current else
                             "${batch.done} analysed" + (if (batch.skipped > 0) ", ${batch.skipped} already saved" else "") +
                                 (if (batch.flagged > 0) ", ${batch.flagged} need a look" else "") +
-                                (if (batch.failed > 0) ", ${batch.failed} failed" else ""),
-                        style = MaterialTheme.typography.bodyMedium, maxLines = 1, overflow = TextOverflow.Ellipsis,
+                                (if (batch.failed > 0) ", ${batch.failed} failed" else "") +
+                                (if (batch.note.isNotEmpty()) ". ${batch.note}" else ""),
+                        style = MaterialTheme.typography.bodyMedium, maxLines = 3, overflow = TextOverflow.Ellipsis,
                     )
                 }
                 if (batch.running) {
