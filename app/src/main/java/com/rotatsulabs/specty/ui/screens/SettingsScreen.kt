@@ -18,9 +18,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.unit.dp
 import com.rotatsulabs.specty.audio.WindowFn
 import com.rotatsulabs.specty.ui.components.Reveal
+import com.rotatsulabs.specty.ui.design.LocalThemeReveal
 import com.rotatsulabs.specty.ui.design.components.ButtonKind
 import com.rotatsulabs.specty.ui.design.components.ExpressiveButton
 import com.rotatsulabs.specty.ui.design.components.ExpressiveTopBar
@@ -59,6 +61,11 @@ fun SettingsScreen(
     modifier: Modifier = Modifier,
 ) {
     val dark = isDarkFor(appearance)
+    // A change of look spreads out from where it was touched. Picking what is already chosen changes nothing.
+    val reveal = LocalThemeReveal.current
+    fun themed(origin: Offset? = null, change: () -> Unit) {
+        if (reveal == null) change() else if (origin != null) reveal.start(origin, change) else reveal.start(change = change)
+    }
     Column(modifier.fillMaxSize()) {
         ExpressiveTopBar("Settings", onBack = onBack)
 
@@ -72,19 +79,22 @@ fun SettingsScreen(
             Reveal(0) {
                 SettingGroup("Appearance") {
                     SettingBlock("Theme", corners = groupCorners(0, if (appearance.dynamicColor) 3 else 4)) {
-                        OptionSegmentedControl(ThemeMode.entries, appearance.mode, onThemeMode, { it.label })
+                        OptionSegmentedControl(ThemeMode.entries, appearance.mode, { if (it != appearance.mode) themed { onThemeMode(it) } }, { it.label })
                     }
                     SettingToggleRow(
                         title = "Dynamic colour",
                         supporting = "Use colours from your wallpaper. Off lets you pick a tonal palette.",
                         checked = appearance.dynamicColor,
-                        onChecked = onDynamicColor,
+                        onChecked = { checked -> themed { onDynamicColor(checked) } },
                         icon = Icons.Rounded.Palette,
                         corners = groupCorners(1, if (appearance.dynamicColor) 3 else 4),
                     )
                     if (!appearance.dynamicColor) {
                         SettingBlock("Tonal palette", supporting = "Every colour in the app is derived from this one.", corners = groupCorners(2, 4)) {
-                            SwatchRow(appearance.seed, onSeed, dark = dark)
+                            SwatchRow(
+                                appearance.seed, onSeed, dark = dark,
+                                onSelectAt = { seed, at -> if (seed != appearance.seed) themed(at) { onSeed(seed) } },
+                            )
                         }
                     }
                     SettingToggleRow(
@@ -92,7 +102,7 @@ fun SettingsScreen(
                         supporting = "True black backgrounds in dark mode, easier on OLED screens.",
                         checked = appearance.pureBlack,
                         enabled = dark,
-                        onChecked = onPureBlack,
+                        onChecked = { checked -> themed { onPureBlack(checked) } },
                         icon = Icons.Rounded.Contrast,
                         corners = groupCorners(if (appearance.dynamicColor) 2 else 3, if (appearance.dynamicColor) 3 else 4),
                     )

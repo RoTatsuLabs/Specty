@@ -33,11 +33,14 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.layout.boundsInRoot
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import com.rotatsulabs.specty.ui.design.SpectyShapes
@@ -100,6 +103,8 @@ fun SwatchRow(
     onSelect: (SeedPalette) -> Unit,
     modifier: Modifier = Modifier,
     dark: Boolean = false,
+    /** Also told where the swatch is on screen, so a colour change can spread out from it. */
+    onSelectAt: ((SeedPalette, androidx.compose.ui.geometry.Offset) -> Unit)? = null,
 ) {
     Row(
         modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
@@ -109,11 +114,12 @@ fun SwatchRow(
             val roles = remember(seed, dark) { SeedScheme(seed).roles(dark) }
             val active = seed == selected
             val size by animateDpAsState(if (active) 56.dp else 48.dp, Motion.spatialFast(), label = "swatch")
+            var center by remember(seed) { androidx.compose.runtime.mutableStateOf(androidx.compose.ui.geometry.Offset.Unspecified) }
             Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.clickable(
                 interactionSource = remember { MutableInteractionSource() }, indication = null,
-            ) { onSelect(seed) }) {
+            ) { if (onSelectAt != null) onSelectAt(seed, center) else onSelect(seed) }) {
                 Box(
-                    Modifier.size(58.dp),
+                    Modifier.size(58.dp).onGloballyPositioned { center = it.boundsInRoot().center },
                     contentAlignment = Alignment.Center,
                 ) {
                     Box(
