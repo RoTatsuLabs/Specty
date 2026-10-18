@@ -440,7 +440,7 @@ private fun Header(
 
 /** The app mark: four bars that keep dancing out of phase. */
 @Composable
-private fun EqualizerMark() {
+internal fun EqualizerMark() {
     val transition = rememberInfiniteTransition(label = "equalizer")
     val phase = transition.animateFloat(
         initialValue = 0f,
