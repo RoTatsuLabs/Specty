@@ -48,6 +48,12 @@ class AuthenticityRegressionTest {
     private fun assess(whole: FloatArray, sections: List<FloatArray?>, info: AudioInfo = info(), bits: Int? = null) =
         AuthenticityAnalyzer.assess(info, spectra(whole, sections, info.sampleRate), bits)
 
+    @Test
+    fun fullBandLosslessAboveFortyEightKilohertzIsHiRes() {
+        assertEquals(Verdict.HI_RES, assess(fullBand, same(fullBand), info(sampleRate = 96000)).verdict)
+        assertEquals(Verdict.GENUINE, assess(fullBand, same(fullBand), info(sampleRate = 48000)).verdict)
+    }
+
     // ---- cutoffs and the Nyquist limit ------------------------------------------------------
 
     @Test

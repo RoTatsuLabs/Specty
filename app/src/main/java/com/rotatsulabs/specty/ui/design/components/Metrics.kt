@@ -62,7 +62,8 @@ data class VerdictStyle(val label: String, val container: Color, val content: Co
 fun verdictStyle(verdict: Verdict): VerdictStyle? {
     val s = MaterialTheme.colorScheme
     return when (verdict) {
-        Verdict.GENUINE -> VerdictStyle("Genuine", s.tertiaryContainer, s.onTertiaryContainer)
+        Verdict.GENUINE -> VerdictStyle("Lossless", s.tertiaryContainer, s.onTertiaryContainer)
+        Verdict.HI_RES -> VerdictStyle("Hi-Res", s.primaryContainer, s.onPrimaryContainer)
         Verdict.LOSSY_SOURCE, Verdict.UPSAMPLED -> VerdictStyle("Fake", s.errorContainer, s.onErrorContainer)
         Verdict.POSSIBLE_LOSSY_SOURCE, Verdict.BAND_LIMITED -> VerdictStyle("Maybe", s.secondaryContainer, s.onSecondaryContainer)
         Verdict.LOSSY_CODEC -> VerdictStyle("Lossy", s.surfaceContainerHighest, s.onSurfaceVariant)

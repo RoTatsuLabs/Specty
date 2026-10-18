@@ -13,8 +13,6 @@ import com.rotatsulabs.specty.ui.design.components.MorphSurface
 import com.rotatsulabs.specty.ui.design.components.Pill
 import com.rotatsulabs.specty.ui.design.components.RingProgress
 import com.rotatsulabs.specty.ui.design.components.SearchField
-import com.rotatsulabs.specty.ui.design.components.Segment
-import com.rotatsulabs.specty.ui.design.components.SegmentedControl
 import com.rotatsulabs.specty.ui.design.components.ShapeLoader
 import com.rotatsulabs.specty.ui.design.components.SpectyCard
 import com.rotatsulabs.specty.ui.design.components.VerdictPill
@@ -85,7 +83,6 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExtendedFloatingActionButton
-import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
@@ -141,13 +138,6 @@ private enum class SortKey(val label: String) {
     Title("Title"), Artist("Artist"), Duration("Length"), Size("Size"),
 }
 
-private enum class Filter(val label: String) {
-    All("All"), Unchecked("Unchecked"), Genuine("Genuine"), Suspect("Suspect"),
-}
-
-private fun Verdict.isSuspect() =
-    this == Verdict.LOSSY_SOURCE || this == Verdict.UPSAMPLED || this == Verdict.POSSIBLE_LOSSY_SOURCE
-
 /**
  * The main screen. A single scrolling page: brand header, a library health ring, search, filters and either a
  * list or a cover grid of tracks. Analysing a file is a floating action rather than a navigation tab.
@@ -187,19 +177,14 @@ fun LibraryScreen(
     var query by rememberSaveable { mutableStateOf("") }
     var sortIndex by rememberSaveable { mutableStateOf(0) }
     var ascending by rememberSaveable { mutableStateOf(true) }
-    var filterIndex by rememberSaveable { mutableStateOf(0) }
     var grid by rememberSaveable { mutableStateOf(false) }
     val sort = SortKey.entries[sortIndex]
-    val filter = Filter.entries[filterIndex]
 
     val verdictByTrack = remember(state.tracks, verdicts, keyFor) {
         state.tracks.associate { it.uri.toString() to verdicts[keyFor(it)] }
     }
-    val checked = verdictByTrack.values.count { it != null }
-    val suspects = verdictByTrack.values.count { it != null && it.isSuspect() }
-    val genuine = verdictByTrack.values.count { it == Verdict.GENUINE }
 
-    val visible = remember(state.tracks, verdictByTrack, query, sort, ascending, filter) {
+    val visible = remember(state.tracks, query, sort, ascending) {
         val searched = if (query.isBlank()) {
             state.tracks
         } else {
@@ -209,20 +194,11 @@ fun LibraryScreen(
                     (it.album?.contains(query, ignoreCase = true) == true)
             }
         }
-        val filtered = searched.filter {
-            val v = verdictByTrack[it.uri.toString()]
-            when (filter) {
-                Filter.All -> true
-                Filter.Unchecked -> v == null
-                Filter.Genuine -> v == Verdict.GENUINE
-                Filter.Suspect -> v != null && v.isSuspect()
-            }
-        }
         val sorted = when (sort) {
-            SortKey.Title -> filtered.sortedBy { it.title.lowercase() }
-            SortKey.Artist -> filtered.sortedBy { (it.artist ?: "￿").lowercase() }
-            SortKey.Duration -> filtered.sortedBy { it.durationMs }
-            SortKey.Size -> filtered.sortedBy { it.sizeBytes }
+            SortKey.Title -> searched.sortedBy { it.title.lowercase() }
+            SortKey.Artist -> searched.sortedBy { (it.artist ?: "￿").lowercase() }
+            SortKey.Duration -> searched.sortedBy { it.durationMs }
+            SortKey.Size -> searched.sortedBy { it.sizeBytes }
         }
         if (ascending) sorted else sorted.reversed()
     }
@@ -280,20 +256,6 @@ fun LibraryScreen(
                 Box(Modifier.eggJitter(3)) { SearchPill(query) { query = it } }
             }
             if (hasTracks) {
-                item(key = "filters") {
-                    Box(Modifier.eggJitter(4)) {
-                    FilterRow(
-                        selected = filter,
-                        counts = mapOf(
-                            Filter.All to state.tracks.size,
-                            Filter.Unchecked to state.tracks.size - checked,
-                            Filter.Genuine to genuine,
-                            Filter.Suspect to suspects,
-                        ),
-                        onSelect = { filterIndex = it.ordinal },
-                    )
-                    }
-                }
                 item(key = "section") {
                     Box(Modifier.eggJitter(5)) {
                     SectionBar(
@@ -494,16 +456,19 @@ private fun BatchCard(batch: BatchScanner.State, onCancel: () -> Unit, onDismiss
                         when {
                             batch.running -> "Scanning library"
                             batch.cancelled -> "Scan cancelled"
+                            batch.note.isNotEmpty() -> "Scan stopped"
                             else -> "Scan finished"
                         },
                         style = MaterialTheme.typography.titleMedium,
                     )
                     Text(
+                        if (batch.running && batch.note.isNotEmpty()) batch.note else
                         if (batch.running && batch.current.isNotEmpty()) batch.current else
                             "${batch.done} analysed" + (if (batch.skipped > 0) ", ${batch.skipped} already saved" else "") +
                                 (if (batch.flagged > 0) ", ${batch.flagged} need a look" else "") +
-                                (if (batch.failed > 0) ", ${batch.failed} failed" else ""),
-                        style = MaterialTheme.typography.bodyMedium, maxLines = 1, overflow = TextOverflow.Ellipsis,
+                                (if (batch.failed > 0) ", ${batch.failed} failed" else "") +
+                                (if (batch.note.isNotEmpty()) ". ${batch.note}" else ""),
+                        style = MaterialTheme.typography.bodyMedium, maxLines = 3, overflow = TextOverflow.Ellipsis,
                     )
                 }
                 if (batch.running) {
@@ -532,20 +497,6 @@ private fun SearchPill(query: String, onChange: (String) -> Unit) {
 }
 
 @Composable
-private fun FilterRow(selected: Filter, counts: Map<Filter, Int>, onSelect: (Filter) -> Unit) {
-    val haptic = LocalHapticFeedback.current
-    SegmentedControl(
-        segments = Filter.entries.map { Segment(it, it.label, badge = "${counts[it] ?: 0}") },
-        selected = selected,
-        onSelect = {
-            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-            onSelect(it)
-        },
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
-    )
-}
-
-@Composable
 private fun SectionBar(
     count: Int,
     sort: SortKey,
@@ -559,7 +510,7 @@ private fun SectionBar(
     val haptic = LocalHapticFeedback.current
     val rotation by animateFloatAsState(if (ascending) 0f else 180f, Motion.spatial(), label = "sortArrow")
     Row(
-        Modifier.fillMaxWidth().padding(start = 24.dp, end = 12.dp, top = 4.dp, bottom = 8.dp),
+        Modifier.fillMaxWidth().padding(start = 24.dp, end = 12.dp, top = 12.dp, bottom = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         AnimatedContent(

@@ -16,6 +16,8 @@ import kotlin.math.roundToInt
  * fixed [AnalysisVersion.AUTH_FFT] transform, so the outcome does not depend on how the spectrogram is drawn.
  */
 object AuthenticityAnalyzer {
+    /** Lossless above this sample rate is called Hi-Res. */
+    private const val HI_RES_ABOVE_HZ = 48_000
     private const val MIN_DYNAMIC_DB = 25.0
     private const val MIN_CLIFF_DB = 28.0
     private const val PERMANENT_DROP_DB = 20.0
@@ -105,7 +107,7 @@ object AuthenticityAnalyzer {
                 shape = d.shape,
             )
             SpectrumShape.FULL_BAND -> AuthenticityReport(
-                Verdict.GENUINE, null, 0.0,
+                if (info.sampleRate > HI_RES_ABOVE_HZ) Verdict.HI_RES else Verdict.GENUINE, null, 0.0,
                 "Content reaches the top of the spectrum, with no cutoff or roll-off found.$bitNote",
                 shape = d.shape,
             )
