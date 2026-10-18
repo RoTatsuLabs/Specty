@@ -37,7 +37,17 @@ class AudioAnalyzer(private val context: Context) {
         val temp = File.createTempFile("pcm_", ".f32", context.cacheDir)
         try {
             report("Decoding", 0.05f)
-            val reported = AudioDecoder.decode(context, uri, info.durationSec, temp, limit) { p -> report("Decoding", 0.05f + 0.5f * p) }
+            val reported = if (Codecs.needsPlatformDecoder(info.codec)) {
+                try {
+                    PlatformDecoder.decode(context, uri, info.durationSec, temp, limit, { ensureActive() }) { p ->
+                        report("Decoding", 0.05f + 0.5f * p)
+                    }
+                } catch (e: PlatformDecoder.Unavailable) {
+                    throw LimitedAnalysisException(info, AuthenticityAnalyzer.unmeasured(info))
+                }
+            } else {
+                AudioDecoder.decode(context, uri, info.durationSec, temp, limit) { p -> report("Decoding", 0.05f + 0.5f * p) }
+            }
             if (limit > 0 && temp.length() >= limit) throw IOException("This file holds far more audio than its header declares")
 
             // Some codecs decode to another rate or layout than the container declares (HE-AAC, parametric stereo),
