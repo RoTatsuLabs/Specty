@@ -29,6 +29,7 @@ import com.rotatsulabs.specty.ui.theme.ThemeMode
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import com.rotatsulabs.specty.dev.AppLog
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -70,6 +71,25 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         viewModelScope.launch(Dispatchers.IO) { AudioAnalyzer.sweepStale(app) }
         SoundFx.enabled = prefs.getBoolean(KEY_SOUND, true)
         SoundFx.warmUp()
+    }
+
+    private val _developer = MutableStateFlow(prefs.getBoolean(AppLog.KEY_DEVELOPER, false))
+    val developer: StateFlow<Boolean> = _developer.asStateFlow()
+    private val _logging = MutableStateFlow(prefs.getBoolean(AppLog.KEY_DEVELOPER, false) && prefs.getBoolean(AppLog.KEY_LOGGING, false))
+    val logging: StateFlow<Boolean> = _logging.asStateFlow()
+
+    fun setDeveloper(enabled: Boolean) {
+        _developer.value = enabled
+        prefs.edit().putBoolean(AppLog.KEY_DEVELOPER, enabled).apply()
+        if (!enabled) setLogging(false)
+    }
+
+    fun setLogging(enabled: Boolean) {
+        if (enabled) AppLog.enabled = true
+        AppLog.i("Dev") { "Logging ${if (enabled) "on" else "off"}" }
+        _logging.value = enabled
+        AppLog.enabled = enabled
+        prefs.edit().putBoolean(AppLog.KEY_LOGGING, enabled).apply()
     }
 
     private val _sound = MutableStateFlow(SoundFx.enabled)
@@ -291,19 +311,24 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             }
 
             _analysis.value = AnalysisState.Running(title, "Reading file", 0f)
+            val began = System.currentTimeMillis()
+            AppLog.i("Analyze") { "Start \"$title\" (${meta.sizeBytes / 1024} KB, FFT $fft)" }
             try {
                 val result = analyzer.analyze(uri, fft, _windowFn.value) { stage, progress ->
                     _analysis.value = AnalysisState.Running(title, stage, progress)
                 }
                 _analysis.value = AnalysisState.Done(result)
+                AppLog.i("Analyze") { "Done \"$title\" in ${System.currentTimeMillis() - began} ms: ${result.authenticity.verdict}" }
                 SoundFx.play(Fx.Done)
                 if (cacheable) withContext(Dispatchers.IO) { cache.save(key, result) }
             } catch (e: CancellationException) {
                 throw e
             } catch (e: LimitedAnalysisException) {
+                AppLog.w("Analyze") { "Limited \"$title\": ${e.report.verdict}" }
                 _analysis.value = AnalysisState.Limited(title, e.info, e.report)
                 SoundFx.play(Fx.Done)
             } catch (e: Throwable) {
+                AppLog.e("Analyze", e) { "Failed \"$title\" after ${System.currentTimeMillis() - began} ms" }
                 _analysis.value = AnalysisState.Failed(title, e.message ?: "Analysis failed")
                 SoundFx.play(Fx.Fail)
             }
@@ -356,13 +381,16 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         _library.value = current.copy(loading = true, error = null, folders = folders)
         libraryJob = viewModelScope.launch {
             try {
+                val scanBegan = System.currentTimeMillis()
                 val tracks = LibraryRepository.scan(getApplication(), folders.map { it.uri }) { partial ->
                     _library.value = _library.value.copy(tracks = partial)
                 }
+                AppLog.i("Library") { "Scanned ${tracks.size} tracks in ${folders.size} folders, ${System.currentTimeMillis() - scanBegan} ms" }
                 _library.value = LibraryState(loaded = true, loading = false, tracks = tracks, folders = folders)
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Throwable) {
+                AppLog.e("Library", e) { "Library scan failed" }
                 _library.value = LibraryState(
                     loaded = true, loading = false, error = e.message ?: "Could not read the library", folders = folders,
                 )

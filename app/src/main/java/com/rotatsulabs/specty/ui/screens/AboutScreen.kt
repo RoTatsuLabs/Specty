@@ -50,6 +50,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.rotatsulabs.specty.BuildConfig
+import android.os.SystemClock
+import android.widget.Toast
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import com.rotatsulabs.specty.dev.TapCounter
 import com.rotatsulabs.specty.about.Library
 import com.rotatsulabs.specty.about.LicenseKind
 import com.rotatsulabs.specty.about.OpenSource
@@ -74,6 +79,8 @@ import kotlinx.coroutines.withContext
 @Composable
 fun AboutScreen(
     onReplayIntro: () -> Unit,
+    developer: Boolean,
+    onUnlockDeveloper: () -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -95,7 +102,7 @@ fun AboutScreen(
                 .padding(horizontal = 16.dp, vertical = 8.dp),
             verticalArrangement = Arrangement.spacedBy(24.dp),
         ) {
-            Reveal(0) { Hero() }
+            Reveal(0) { Hero(developer, onUnlockDeveloper) }
 
             Reveal(1) {
                 SettingGroup("Project") {
@@ -171,8 +178,15 @@ fun AboutScreen(
 }
 
 @Composable
-private fun Hero() {
+private fun Hero(developer: Boolean, onUnlockDeveloper: () -> Unit) {
     val scheme = MaterialTheme.colorScheme
+    val context = LocalContext.current
+    val taps = remember { TapCounter() }
+    var toast by remember { mutableStateOf<Toast?>(null) }
+    fun say(text: String) {
+        toast?.cancel()
+        toast = Toast.makeText(context, text, Toast.LENGTH_SHORT).also { it.show() }
+    }
     SpectyCard(Modifier.fillMaxWidth(), corners = SpectyShapes.Hero) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             EqualizerMark()
@@ -191,7 +205,19 @@ private fun Hero() {
         )
         Spacer(Modifier.height(16.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Pill("Version ${BuildConfig.VERSION_NAME}")
+            Pill(
+                "Version ${BuildConfig.VERSION_NAME}",
+                Modifier.clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) {
+                    when (val r = taps.tap(SystemClock.elapsedRealtime())) {
+                        TapCounter.Result.Idle -> Unit
+                        is TapCounter.Result.Remaining -> if (!developer) say("${r.taps} more ${if (r.taps == 1) "tap" else "taps"} to become a developer")
+                        TapCounter.Result.Unlocked -> if (developer) say("Developer mode is already on") else {
+                            onUnlockDeveloper()
+                            say("Developer mode is on. Find it in Settings.")
+                        }
+                    }
+                },
+            )
             Pill(OpenSource.app.license.spdx, icon = Icons.Rounded.Gavel)
         }
     }

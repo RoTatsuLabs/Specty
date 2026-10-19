@@ -1,5 +1,6 @@
 package com.rotatsulabs.specty
 
+import com.rotatsulabs.specty.dev.AppLog
 import android.content.Intent
 import android.os.Bundle
 import android.graphics.Color
@@ -38,6 +39,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        AppLog.init(applicationContext)
         enableEdgeToEdge()
         if (savedInstanceState == null) handleIntent(intent)
         setContent {

@@ -29,6 +29,10 @@ import com.rotatsulabs.specty.ui.design.components.ExpressiveTopBar
 import com.rotatsulabs.specty.ui.design.components.OptionSegmentedControl
 import com.rotatsulabs.specty.ui.design.components.SettingBlock
 import com.rotatsulabs.specty.ui.design.components.SettingGroup
+import androidx.compose.material.icons.rounded.BugReport
+import androidx.compose.material.icons.rounded.Terminal
+import androidx.compose.material.icons.rounded.Close
+import com.rotatsulabs.specty.ui.design.components.ListRow
 import com.rotatsulabs.specty.ui.design.components.SettingToggleRow
 import com.rotatsulabs.specty.ui.design.components.SwatchRow
 import com.rotatsulabs.specty.ui.design.components.groupCorners
@@ -57,6 +61,11 @@ fun SettingsScreen(
     onWindowFn: (WindowFn) -> Unit,
     savedCount: Int,
     onClearCache: () -> Unit,
+    developer: Boolean,
+    logging: Boolean,
+    onLogging: (Boolean) -> Unit,
+    onOpenLog: () -> Unit,
+    onDeveloperOff: () -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -159,6 +168,35 @@ fun SettingsScreen(
                         corners = groupCorners(0, 1),
                     ) {
                         ExpressiveButton("Clear saved results", onClearCache, kind = ButtonKind.Tonal, enabled = savedCount > 0)
+                    }
+                }
+            }
+
+            if (developer) {
+                Reveal(4) {
+                    SettingGroup("Developer") {
+                        SettingToggleRow(
+                            title = "Logging",
+                            supporting = "Records scans, analyses and failures, with file names, in a log on this device. Nothing is sent anywhere.",
+                            checked = logging,
+                            onChecked = onLogging,
+                            icon = Icons.Rounded.BugReport,
+                            corners = groupCorners(0, 3),
+                        )
+                        ListRow(
+                            title = "Log and diagnostics",
+                            supporting = "Read, copy or share the log, the last crash and device details.",
+                            icon = Icons.Rounded.Terminal,
+                            corners = groupCorners(1, 3),
+                            onClick = onOpenLog,
+                        )
+                        ListRow(
+                            title = "Turn off developer mode",
+                            supporting = "Hides this section and stops logging.",
+                            icon = Icons.Rounded.Close,
+                            corners = groupCorners(2, 3),
+                            onClick = onDeveloperOff,
+                        )
                     }
                 }
             }
