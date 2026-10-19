@@ -8,6 +8,12 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.compositionLocalOf
+import androidx.compose.ui.graphics.GraphicsLayerScope
+import androidx.compose.ui.graphics.Color
+import androidx.compose.foundation.background
+import kotlinx.coroutines.coroutineScope
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
@@ -101,8 +107,29 @@ fun Modifier.underlay(depth: OverlayDepth): Modifier = graphicsLayer {
     scaleY = s
 }
 
+/**
+ * How far the screen the reader is looking at has left, shared down to its components. Each component reads it
+ * through [followBack] and moves on its own, instead of the whole screen moving as one sheet.
+ */
+@Stable
+class BackPose(val leave: () -> Float, val direction: () -> Float = { 1f })
+
+val LocalBackPose = compositionLocalOf<BackPose?> { null }
+
+/** Applies the part of a screen's exit that belongs to the component at [index]. Call at the end of a graphicsLayer. */
+fun GraphicsLayerScope.followBack(back: BackPose?, index: Int) {
+    if (back == null) return
+    val part = BackMath.part(back.leave(), index)
+    if (part <= 0f) return
+    alpha *= BackMath.partAlpha(part)
+    val k = BackMath.partScale(part)
+    scaleX *= k
+    scaleY *= k
+    translationX += back.direction() * size.width * BackMath.partDrift(part)
+}
+
 enum class OverlayStyle {
-    /** Comes in from the side and goes back out the way the swipe points. */
+    /** Fades in over the screen below; its components arrive and leave one by one along the swipe. */
     Side,
 
     /** Grows in from slightly below and settles back down. */
@@ -123,20 +150,27 @@ fun OverlayScreen(
     modifier: Modifier = Modifier,
     style: OverlayStyle = OverlayStyle.Side,
     exit: AnimationSpec<Float> = Motion.spatial(),
+    backdrop: Color = Color.Transparent,
     content: @Composable () -> Unit,
 ) {
     val pose = remember { Animatable(if (visible) 0f else 1f) }
+    val leave = remember { Animatable(if (visible) 0f else 1f) }
     var composed by remember { mutableStateOf(visible) }
     var direction by remember { mutableFloatStateOf(1f) }
     val isVisible by rememberUpdatedState(visible)
+    val backPose = remember { BackPose({ leave.value }, { direction }) }
 
     LaunchedEffect(visible) {
         if (visible) {
             direction = 1f
             composed = true
+            leave.snapTo(0f)
             pose.animateTo(0f, Motion.spatial())
         } else {
-            pose.animateTo(1f, exit)
+            coroutineScope {
+                launch { leave.animateTo(1f, exit) }
+                pose.animateTo(1f, exit)
+            }
             composed = false
         }
     }
@@ -149,12 +183,17 @@ fun OverlayScreen(
                 following = true
                 if (isVisible) {
                     direction = if (fromRight) -1f else 1f
-                    pose.snapTo(BackMath.pose(progress))
+                    val at = BackMath.pose(progress)
+                    pose.snapTo(at)
+                    leave.snapTo(at)
                 }
             } else if (following) {
                 following = false
                 // A cancelled swipe springs back. A committed one is closed by `visible` turning false.
-                if (!gesture.committed && isVisible) scope.launch { pose.animateTo(0f, Motion.spatial()) }
+                if (!gesture.committed && isVisible) {
+                    scope.launch { pose.animateTo(0f, Motion.spatial()) }
+                    scope.launch { leave.animateTo(0f, Motion.spatial()) }
+                }
             }
         }
     }
@@ -167,32 +206,33 @@ fun OverlayScreen(
     }
 
     if (!composed) return
-    Box(
-        modifier
-            .fillMaxSize()
-            .graphicsLayer {
-                val p = pose.value
-                when (style) {
-                    OverlayStyle.Side -> {
-                        val s = BackMath.sideScale(p)
-                        scaleX = s
-                        scaleY = s
-                        translationX = direction * size.width * BackMath.sideTravel(p)
+    when (style) {
+        // The surface stays put and opaque; the components on it leave one by one.
+        OverlayStyle.Side -> Box(modifier.fillMaxSize()) {
+            if (backdrop != Color.Transparent) {
+                Box(Modifier.fillMaxSize().graphicsLayer { alpha = BackMath.alpha(pose.value) }.background(backdrop))
+            }
+            Box(Modifier.fillMaxSize().graphicsLayer { alpha = BackMath.alpha(pose.value) }) {
+                CompositionLocalProvider(LocalBackPose provides backPose) { content() }
+            }
+        }
+        OverlayStyle.Rise -> Box(
+            modifier
+                .fillMaxSize()
+                .graphicsLayer {
+                    val p = pose.value
+                    val s = BackMath.riseScale(p)
+                    scaleX = s
+                    scaleY = s
+                    translationY = size.height * BackMath.riseTravel(p)
+                    transformOrigin = TransformOrigin.Center
+                    alpha = BackMath.alpha(p)
+                    val corner = BackMath.cornerShare(p)
+                    if (corner > 0f) {
+                        shape = RoundedCornerShape((32.dp * corner).toPx())
+                        clip = true
                     }
-                    OverlayStyle.Rise -> {
-                        val s = BackMath.riseScale(p)
-                        scaleX = s
-                        scaleY = s
-                        translationY = size.height * BackMath.riseTravel(p)
-                    }
-                }
-                transformOrigin = TransformOrigin.Center
-                alpha = BackMath.alpha(p)
-                val corner = BackMath.cornerShare(p)
-                if (corner > 0f) {
-                    shape = RoundedCornerShape((32.dp * corner).toPx())
-                    clip = true
-                }
-            },
-    ) { content() }
+                },
+        ) { content() }
+    }
 }

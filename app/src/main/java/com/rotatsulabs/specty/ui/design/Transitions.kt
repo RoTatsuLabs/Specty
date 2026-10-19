@@ -14,7 +14,10 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.background
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.graphics.Color
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
@@ -123,6 +126,7 @@ fun ContainerTransform(
     endCorners: Corners = Corners(0.dp),
     onGone: () -> Unit = {},
     gesture: BackGesture? = null,
+    background: Color = Color.Transparent,
     content: @Composable () -> Unit,
 ) {
     val progress = remember { Animatable(0f) }
@@ -154,6 +158,9 @@ fun ContainerTransform(
         }
     }
     if (gone && !visible) return
+    val backPose = remember(gesture) {
+        BackPose({ 1f - progress.value }, { if (gesture?.fromRight == true) -1f else 1f })
+    }
     val from = origin.bounds
     val startCorners = origin.corners
     Box(
@@ -163,27 +170,27 @@ fun ContainerTransform(
             transformOrigin = TransformOrigin(0f, 0f)
             val p = progress.value
             if (from != null && w > 0f && h > 0f) {
-                val sx = lerpF(from.width / w, 1f, p)
-                val sy = lerpF(from.height / h, 1f, p)
-                scaleX = sx
-                scaleY = sy
-                translationX = lerpF(from.left, 0f, p)
-                translationY = lerpF(from.top, 0f, p)
+                val box = BackMath.container(p, from.left, from.top, from.width, from.height, w, h)
+                scaleX = box.scaleX
+                scaleY = box.scaleY
+                translationX = box.x
+                translationY = box.y
                 val r = lerp(startCorners.topStart, endCorners.topStart, p.coerceIn(0f, 1f))
                 shape = androidx.compose.foundation.shape.RoundedCornerShape(
-                    (r.toPx() / ((sx + sy) / 2f)).coerceAtLeast(0f),
+                    (r.toPx() / ((box.scaleX + box.scaleY) / 2f)).coerceAtLeast(0f),
                 )
                 clip = true
             } else {
                 alpha = p.coerceIn(0f, 1f)
             }
-        },
+        }.background(background),
     ) {
-        Box(Modifier.graphicsLayer { alpha = ((progress.value - 0.25f) / 0.5f).coerceIn(0f, 1f) }) { content() }
+        // The surface behind stays solid; only the content comes in as the container opens and goes as it closes.
+        Box(Modifier.graphicsLayer { alpha = (progress.value / 0.3f).coerceIn(0f, 1f) }) {
+            CompositionLocalProvider(LocalBackPose provides backPose) { content() }
+        }
     }
 }
-
-private fun lerpF(a: Float, b: Float, t: Float) = a + (b - a) * t
 
 /** Colour that crossfades with the effects spring, for state changes (selected, enabled, pressed). */
 @Composable
