@@ -82,7 +82,7 @@ object AudioDecoder {
                 { /* log output is not needed */ },
                 { statistics ->
                     if (durationSec > 0) {
-                        val seconds = statistics.time.toDouble() / 1000.0
+                        val seconds = statistics.time / 1000.0
                         onProgress((seconds / durationSec).toFloat().coerceIn(0f, 1f))
                     }
                 },
