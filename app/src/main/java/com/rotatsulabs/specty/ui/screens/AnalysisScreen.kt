@@ -69,7 +69,7 @@ import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material.icons.rounded.Memory
 import androidx.compose.material.icons.rounded.MusicNote
 import androidx.compose.material.icons.rounded.Refresh
-import androidx.compose.material.icons.rounded.ShowChart
+import androidx.compose.material.icons.automirrored.rounded.ShowChart
 import androidx.compose.material.icons.rounded.HighQuality
 import androidx.compose.material.icons.rounded.Speaker
 import androidx.compose.material.icons.rounded.Speed
@@ -572,8 +572,8 @@ private fun LevelsCard(result: AnalysisResult) {
     val info = result.info
     val levels = result.levels
     val stats = buildList {
-        add(Stat(Icons.Rounded.ShowChart, "Dynamic Range", Fmt.db(levels.dynamicRangeDb)))
-        levels.drTt?.let { add(Stat(Icons.Rounded.ShowChart, "DR meter", "DR${it.roundToInt()}")) }
+        add(Stat(Icons.AutoMirrored.Rounded.ShowChart, "Dynamic Range", Fmt.db(levels.dynamicRangeDb)))
+        levels.drTt?.let { add(Stat(Icons.AutoMirrored.Rounded.ShowChart, "DR meter", "DR${it.roundToInt()}")) }
         add(Stat(Icons.Rounded.Equalizer, "Peak", Fmt.db(levels.peakDb)))
         add(Stat(Icons.Rounded.BarChart, "RMS", Fmt.db(levels.rmsDb)))
         add(Stat(Icons.AutoMirrored.Rounded.VolumeUp, "LUFS", Fmt.lufs(levels.lufs)))
