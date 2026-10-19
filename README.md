@@ -88,7 +88,7 @@ The DSP code in `app/src/main/java/com/rotatsulabs/specty/audio/` has no Android
 
 ## Install
 
-This repository does not publish APKs. Build Specty from source as described below, then install the APK on a device running Android 13 or newer. You may need to allow installs from your file manager.
+This repository does not publish APKs. Build Specty from source as described below, then install the APK on a device running Android 8 or newer. You may need to allow installs from your file manager.
 
 ## Using the library
 
@@ -106,7 +106,7 @@ gradle :app:assembleDebug       # debug APK in app/build/outputs/apk/debug/
 | | |
 | --- | --- |
 | Package ID | `com.rotatsulabs.specty` |
-| Min SDK | 33 (Android 13) |
+| Min SDK | 26 (Android 8) |
 | Target and compile SDK | 36 |
 | Language | Kotlin, Jetpack Compose |
 | Decoding | FFmpeg through [`dev.ffmpegkit-maintained:ffmpeg-kit-min`](https://github.com/ffmpegkit-maintained/ffmpeg), a maintained continuation of the retired `arthenica/ffmpeg-kit`. Formats it cannot decode, such as AC-4, go through the device's `MediaCodec`. |

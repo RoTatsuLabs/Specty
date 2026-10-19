@@ -34,6 +34,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.ui.graphics.drawscope.clipRect
 import com.rotatsulabs.specty.ui.components.pressScale
+import com.rotatsulabs.specty.ui.components.rememberStorageGate
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.mutableStateOf
@@ -107,6 +108,27 @@ fun SpectrogramCard(
     }
     val palette = SpectrogramPalette.entries[paletteIndex]
     var options by remember { mutableStateOf(SpecOptions.load(prefs)) }
+    val save = rememberStorageGate {
+        saving = true
+        val view = selected
+        val chosen = palette
+        scope.launch {
+            val uri = withContext(Dispatchers.Default) {
+                val bmp = SpectrogramExporter.render(spectrogram, view, chosen, title, options, cutoffHz)
+                try {
+                    SpectrogramExporter.saveToGallery(context, bmp, "$title ${spectrogram.displayLabels[view]}")
+                } finally {
+                    bmp.recycle()
+                }
+            }
+            saving = false
+            Toast.makeText(
+                context,
+                if (uri != null) "Saved to Pictures/Specty" else "Could not save the image",
+                Toast.LENGTH_SHORT,
+            ).show()
+        }
+    }
 
     val image by produceState<ImageBitmap?>(initialValue = null, spectrogram, selected, palette, options.log, options.range) {
         value = withContext(Dispatchers.Default) {
@@ -297,28 +319,7 @@ fun SpectrogramCard(
 
             ExpressiveButton(
                 text = if (saving) "Saving…" else "Save image to gallery",
-                onClick = {
-                    if (saving) return@ExpressiveButton
-                    saving = true
-                    val view = selected
-                    val chosen = palette
-                    scope.launch {
-                        val uri = withContext(Dispatchers.Default) {
-                            val bmp = SpectrogramExporter.render(spectrogram, view, chosen, title, options, cutoffHz)
-                            try {
-                                SpectrogramExporter.saveToGallery(context, bmp, "$title ${spectrogram.displayLabels[view]}")
-                            } finally {
-                                bmp.recycle()
-                            }
-                        }
-                        saving = false
-                        Toast.makeText(
-                            context,
-                            if (uri != null) "Saved to Pictures/Specty" else "Could not save the image",
-                            Toast.LENGTH_SHORT,
-                        ).show()
-                    }
-                },
+                onClick = { if (!saving) save() },
                 kind = ButtonKind.Tonal,
                 icon = Icons.Rounded.Download,
                 enabled = !saving,

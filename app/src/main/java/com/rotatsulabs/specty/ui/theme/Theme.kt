@@ -1,5 +1,6 @@
 package com.rotatsulabs.specty.ui.theme
 
+import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
@@ -34,14 +35,17 @@ private fun ColorScheme.asPureBlack(): ColorScheme = copy(
     surfaceContainerHighest = Color(0xFF282828),
 )
 
-/** Material 3 with optional wallpaper-derived dynamic colour (minSdk 33 guarantees support). */
+/** Wallpaper-derived colour needs Android 12. */
+val DYNAMIC_COLOR_SUPPORTED: Boolean = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
+
+/** Material 3 with optional wallpaper-derived dynamic colour (Android 12 and newer). */
 @Composable
 fun SpectyTheme(appearance: Appearance, content: @Composable () -> Unit) {
     val context = LocalContext.current
     val dark = isDarkFor(appearance)
     // The tonal maths is not free, so derive the scheme only when one of its inputs changes.
     val scheme = remember(appearance.dynamicColor, appearance.seed, appearance.pureBlack, dark) {
-        val base = if (appearance.dynamicColor) {
+        val base = if (appearance.dynamicColor && DYNAMIC_COLOR_SUPPORTED) {
             if (dark) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
         } else {
             SeedScheme(appearance.seed).roles(dark).toColorScheme(dark)
