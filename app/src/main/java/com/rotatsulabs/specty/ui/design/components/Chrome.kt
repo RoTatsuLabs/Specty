@@ -1,5 +1,8 @@
 package com.rotatsulabs.specty.ui.design.components
 
+import com.rotatsulabs.specty.ui.design.followBack
+import com.rotatsulabs.specty.ui.design.LocalBackPose
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
@@ -28,8 +31,9 @@ fun ExpressiveTopBar(
     onBack: (() -> Unit)? = null,
     actions: @Composable RowScope.() -> Unit = {},
 ) {
+    val back = LocalBackPose.current
     Row(
-        modifier.fillMaxWidth().statusBarsPadding().padding(horizontal = 12.dp, vertical = 8.dp),
+        modifier.graphicsLayer { followBack(back, 0) }.fillMaxWidth().statusBarsPadding().padding(horizontal = 12.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(4.dp),
     ) {
