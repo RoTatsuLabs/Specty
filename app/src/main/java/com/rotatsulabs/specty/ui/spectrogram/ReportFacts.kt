@@ -13,9 +13,9 @@ object ReportFacts {
 
     /** The tag shown beside the file facts; Atmos wins over the lossless tags. */
     enum class Quality(val label: String) {
-        Lossless("LOSSLESS"),
-        HiRes("HI-RES LOSSLESS"),
-        Atmos("DOLBY ATMOS"),
+        Lossless("Lossless"),
+        HiRes("Hi-Res Lossless"),
+        Atmos("Dolby Atmos"),
     }
 
     fun quality(info: AudioInfo, verdict: Verdict): Quality? = when {

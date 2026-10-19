@@ -35,6 +35,12 @@ object SpectrogramExporter {
     private const val TEXT = 0xFFF2F0F4.toInt()
     private const val MUTED = 0xFFB4B0BA.toInt()
 
+    /** The part of a [render]ed image worth reusing elsewhere: the plot, its axes and the colour legend, without the title. */
+    fun plotCrop(): android.graphics.Rect {
+        val plotH = (WIDTH - LEFT - RIGHT) * 9f / 16f
+        return android.graphics.Rect(40, (TOP - 24f).roundToInt(), WIDTH - 20, (TOP + plotH + 185f).roundToInt())
+    }
+
     fun render(
         spectrogram: Spectrogram,
         view: Int,
