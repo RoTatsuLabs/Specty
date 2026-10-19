@@ -14,7 +14,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Equalizer
-import androidx.compose.material.icons.rounded.ShowChart
+import androidx.compose.material.icons.automirrored.rounded.ShowChart
 import androidx.compose.material.icons.rounded.Tune
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -198,7 +198,7 @@ internal fun TimelineCard(levels: LevelStats) {
                 levels.drTt?.let { add(Stat(Icons.Rounded.Equalizer, "DR meter", "DR${it.roundToInt()}")) }
                 val loudest = t.loudness.withIndex().maxByOrNull { it.value }
                 if (loudest != null && loudest.value > -69.9f) {
-                    add(Stat(Icons.Rounded.ShowChart, "Loudest part", Fmt.duration((loudest.index + 0.5) / t.points * t.durationSec)))
+                    add(Stat(Icons.AutoMirrored.Rounded.ShowChart, "Loudest part", Fmt.duration((loudest.index + 0.5) / t.points * t.durationSec)))
                 }
                 val clipSlices = t.clips.count { it > 0 }
                 add(Stat(Icons.Rounded.Tune, "Clipped sections", if (clipSlices == 0) "None" else "$clipSlices of ${t.points}"))
