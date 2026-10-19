@@ -9,6 +9,7 @@ import android.graphics.Path
 import android.graphics.Picture
 import android.graphics.RectF
 import android.graphics.Typeface
+import android.os.Build
 import android.text.Layout
 import android.text.StaticLayout
 import android.text.TextPaint
@@ -74,7 +75,12 @@ object ReportExporter {
         val shot = SpectrogramExporter.render(spec, 0, palette, info.title, options, report.cutoffHz)
         val crop = SpectrogramExporter.plotCrop()
 
-        fun weight(w: Int) = Typeface.create(Typeface.DEFAULT, w, false)
+        fun weight(w: Int): Typeface = when {
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.P -> Typeface.create(Typeface.DEFAULT, w, false)
+            w >= 700 -> Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+            w >= 500 -> Typeface.create("sans-serif-medium", Typeface.NORMAL)
+            else -> Typeface.DEFAULT
+        }
         fun text(sp: Float, color: Int, w: Int = 400, tracking: Float = 0f) = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
             this.color = color; textSize = dp(sp); typeface = weight(w); letterSpacing = tracking
         }

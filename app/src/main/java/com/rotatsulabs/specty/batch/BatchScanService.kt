@@ -11,9 +11,11 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.ServiceInfo
 import android.os.BatteryManager
+import android.os.Build
 import android.os.IBinder
 import android.os.PowerManager
 import androidx.core.app.NotificationCompat
+import androidx.core.app.ServiceCompat
 import com.rotatsulabs.specty.MainActivity
 import com.rotatsulabs.specty.R
 import com.rotatsulabs.specty.audio.AudioAnalyzer
@@ -65,7 +67,8 @@ class BatchScanService : Service() {
         // Every startForegroundService call must be answered with startForeground, even when a scan is already running.
         createChannel()
         val total = BatchScanner.state.value.total
-        startForeground(
+        ServiceCompat.startForeground(
+            this,
             NOTIFICATION_ID,
             progressNotification("Preparing", 0, total, indeterminate = true),
             ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC,
@@ -145,7 +148,7 @@ class BatchScanService : Service() {
     private suspend fun waitUntilSafe(total: Int) {
         val power = getSystemService(PowerManager::class.java)
         var paused = false
-        while (power.currentThermalStatus >= PowerManager.THERMAL_STATUS_SEVERE || batteryLow()) {
+        while (tooHot(power) || batteryLow()) {
             if (!paused) {
                 paused = true
                 BatchScanner.update { it.copy(note = "Paused while the phone cools down or charges") }
@@ -156,6 +159,10 @@ class BatchScanService : Service() {
         }
         if (paused) BatchScanner.update { it.copy(note = "") }
     }
+
+    /** Thermal status exists from Android 10; older versions only wait on the battery. */
+    private fun tooHot(power: PowerManager): Boolean =
+        Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && power.currentThermalStatus >= PowerManager.THERMAL_STATUS_SEVERE
 
     private fun batteryLow(): Boolean {
         val status = registerReceiver(null, IntentFilter(Intent.ACTION_BATTERY_CHANGED)) ?: return false

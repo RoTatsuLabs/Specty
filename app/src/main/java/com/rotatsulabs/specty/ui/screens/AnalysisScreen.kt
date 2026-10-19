@@ -123,6 +123,7 @@ import com.rotatsulabs.specty.audio.Verdict
 import com.rotatsulabs.specty.ui.AnalysisState
 import com.rotatsulabs.specty.ui.components.CoverImage
 import com.rotatsulabs.specty.ui.components.Fmt
+import com.rotatsulabs.specty.ui.components.rememberStorageGate
 import com.rotatsulabs.specty.ui.components.Reveal
 import com.rotatsulabs.specty.ui.components.pressScale
 import androidx.compose.animation.core.Animatable
@@ -216,8 +217,8 @@ private fun ExportMenu(result: AnalysisResult) {
     val scope = rememberCoroutineScope()
     var open by remember { mutableStateOf(false) }
     var busy by remember { mutableStateOf(false) }
+    var sharing by remember { mutableStateOf(false) }
     fun export(share: Boolean) {
-        if (busy) return
         busy = true
         scope.launch {
             val uri = withContext(Dispatchers.Default) {
@@ -248,6 +249,12 @@ private fun ExportMenu(result: AnalysisResult) {
             }
         }
     }
+    val gate = rememberStorageGate { export(sharing) }
+    fun request(share: Boolean) {
+        if (busy) return
+        sharing = share
+        gate()
+    }
     Box {
         ExpressiveIconButton(Icons.Rounded.IosShare, "Export as image", { open = true }, tonal = false)
         DropdownMenu(expanded = open, onDismissRequest = { open = false }, shape = RoundedCornerShape(20.dp)) {
@@ -255,13 +262,13 @@ private fun ExportMenu(result: AnalysisResult) {
                 text = { Text(if (busy) "Working…" else "Save image to gallery") },
                 leadingIcon = { Icon(Icons.Rounded.Download, null) },
                 enabled = !busy,
-                onClick = { open = false; export(false) },
+                onClick = { open = false; request(false) },
             )
             DropdownMenuItem(
                 text = { Text("Share image") },
                 leadingIcon = { Icon(Icons.Rounded.IosShare, null) },
                 enabled = !busy,
-                onClick = { open = false; export(true) },
+                onClick = { open = false; request(true) },
             )
         }
     }
