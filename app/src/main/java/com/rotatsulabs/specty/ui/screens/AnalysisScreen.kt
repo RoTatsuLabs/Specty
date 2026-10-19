@@ -22,7 +22,9 @@ import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalContext
+import com.rotatsulabs.specty.ui.design.components.verdictStyle
 import com.rotatsulabs.specty.ui.spectrogram.ReportExporter
+import com.rotatsulabs.specty.ui.spectrogram.ReportTheme
 import com.rotatsulabs.specty.ui.spectrogram.ReportFacts
 import com.rotatsulabs.specty.ui.spectrogram.SpectrogramExporter
 import kotlinx.coroutines.Dispatchers
@@ -197,6 +199,20 @@ fun AnalysisScreen(state: AnalysisState, onBack: () -> Unit, onReanalyse: () -> 
 @Composable
 private fun ExportMenu(result: AnalysisResult) {
     val context = LocalContext.current
+    // The image is drawn in the colours the screen has right now, so it matches the app's theme.
+    val scheme = MaterialTheme.colorScheme
+    val verdict = verdictStyle(result.authenticity.verdict)
+    val tags = mapOf(
+        ReportFacts.Quality.Lossless to verdictStyle(Verdict.GENUINE),
+        ReportFacts.Quality.HiRes to verdictStyle(Verdict.HI_RES),
+        ReportFacts.Quality.Atmos to verdictStyle(Verdict.DOLBY_ATMOS),
+    )
+    val tag = ReportFacts.quality(result.info, result.authenticity.verdict)?.let { tags[it] }
+    val theme = ReportTheme.of(
+        scheme,
+        verdict = (verdict?.container ?: scheme.surfaceContainerHigh) to (verdict?.content ?: scheme.onSurface),
+        tag = (tag?.container ?: scheme.surfaceContainerHigh) to (tag?.content ?: scheme.onSurface),
+    )
     val scope = rememberCoroutineScope()
     var open by remember { mutableStateOf(false) }
     var busy by remember { mutableStateOf(false) }
@@ -205,7 +221,7 @@ private fun ExportMenu(result: AnalysisResult) {
         busy = true
         scope.launch {
             val uri = withContext(Dispatchers.Default) {
-                val bmp = try { ReportExporter.render(context, result) } catch (_: OutOfMemoryError) { null }
+                val bmp = try { ReportExporter.render(context, result, theme) } catch (_: OutOfMemoryError) { null }
                 try {
                     bmp?.let {
                         val stamp = SimpleDateFormat("yyyyMMdd-HHmmss", Locale.US).format(Date())
