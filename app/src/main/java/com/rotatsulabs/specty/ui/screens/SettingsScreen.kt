@@ -38,6 +38,7 @@ import com.rotatsulabs.specty.ui.design.components.SwatchRow
 import com.rotatsulabs.specty.ui.design.components.groupCorners
 import com.rotatsulabs.specty.ui.design.tonal.SeedPalette
 import com.rotatsulabs.specty.ui.theme.Appearance
+import com.rotatsulabs.specty.ui.theme.DYNAMIC_COLOR_SUPPORTED
 import com.rotatsulabs.specty.ui.theme.ThemeMode
 import com.rotatsulabs.specty.ui.theme.isDarkFor
 
@@ -86,20 +87,26 @@ fun SettingsScreen(
             verticalArrangement = Arrangement.spacedBy(24.dp),
         ) {
             Reveal(0) {
+                // Dynamic colour needs Android 12, so older versions skip that row and always show the palette.
+                val dynamic = appearance.dynamicColor && DYNAMIC_COLOR_SUPPORTED
+                val paletteAt = if (DYNAMIC_COLOR_SUPPORTED) 2 else 1
+                val rows = 2 + (if (DYNAMIC_COLOR_SUPPORTED) 1 else 0) + (if (dynamic) 0 else 1)
                 SettingGroup("Appearance") {
-                    SettingBlock("Theme", corners = groupCorners(0, if (appearance.dynamicColor) 3 else 4)) {
+                    SettingBlock("Theme", corners = groupCorners(0, rows)) {
                         OptionSegmentedControl(ThemeMode.entries, appearance.mode, { if (it != appearance.mode) themed { onThemeMode(it) } }, { it.label })
                     }
-                    SettingToggleRow(
-                        title = "Dynamic colour",
-                        supporting = "Use colours from your wallpaper. Off lets you pick a tonal palette.",
-                        checked = appearance.dynamicColor,
-                        onChecked = { checked -> themed { onDynamicColor(checked) } },
-                        icon = Icons.Rounded.Palette,
-                        corners = groupCorners(1, if (appearance.dynamicColor) 3 else 4),
-                    )
-                    if (!appearance.dynamicColor) {
-                        SettingBlock("Tonal palette", supporting = "Every colour in the app is derived from this one.", corners = groupCorners(2, 4)) {
+                    if (DYNAMIC_COLOR_SUPPORTED) {
+                        SettingToggleRow(
+                            title = "Dynamic colour",
+                            supporting = "Use colours from your wallpaper. Off lets you pick a tonal palette.",
+                            checked = appearance.dynamicColor,
+                            onChecked = { checked -> themed { onDynamicColor(checked) } },
+                            icon = Icons.Rounded.Palette,
+                            corners = groupCorners(1, rows),
+                        )
+                    }
+                    if (!dynamic) {
+                        SettingBlock("Tonal palette", supporting = "Every colour in the app is derived from this one.", corners = groupCorners(paletteAt, rows)) {
                             SwatchRow(
                                 appearance.seed, onSeed, dark = dark,
                                 onSelectAt = { seed, at -> if (seed != appearance.seed) themed(at) { onSeed(seed) } },
@@ -113,7 +120,7 @@ fun SettingsScreen(
                         enabled = dark,
                         onChecked = { checked -> themed { onPureBlack(checked) } },
                         icon = Icons.Rounded.Contrast,
-                        corners = groupCorners(if (appearance.dynamicColor) 2 else 3, if (appearance.dynamicColor) 3 else 4),
+                        corners = groupCorners(rows - 1, rows),
                     )
                 }
             }

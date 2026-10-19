@@ -10,6 +10,7 @@ import android.graphics.RectF
 import android.graphics.Shader
 import android.graphics.Typeface
 import android.net.Uri
+import android.os.Build
 import android.os.Environment
 import android.provider.MediaStore
 import android.text.TextPaint
@@ -18,6 +19,7 @@ import androidx.compose.ui.graphics.toArgb
 import com.rotatsulabs.specty.audio.FreqScale
 import com.rotatsulabs.specty.audio.Spectrogram
 import com.rotatsulabs.specty.ui.components.Fmt
+import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -136,6 +138,7 @@ object SpectrogramExporter {
 
     /** Writes [bitmap] as [fileName] into Pictures/Specty; null when the write fails. */
     fun savePng(context: Context, bitmap: Bitmap, fileName: String): Uri? {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) return savePngLegacy(context, bitmap, fileName)
         val values = ContentValues().apply {
             put(MediaStore.Images.Media.DISPLAY_NAME, fileName)
             put(MediaStore.Images.Media.MIME_TYPE, "image/png")
@@ -152,6 +155,26 @@ object SpectrogramExporter {
             uri
         } catch (_: Exception) {
             resolver.delete(uri, null, null)
+            null
+        }
+    }
+
+    /** Android 9 and older have no RELATIVE_PATH or IS_PENDING: write the file, then register it with MediaStore. */
+    @Suppress("DEPRECATION")
+    private fun savePngLegacy(context: Context, bitmap: Bitmap, fileName: String): Uri? {
+        val dir = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), "Specty")
+        if (!dir.isDirectory && !dir.mkdirs()) return null
+        val file = File(dir, fileName)
+        return try {
+            file.outputStream().use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
+            val values = ContentValues().apply {
+                put(MediaStore.Images.Media.DISPLAY_NAME, fileName)
+                put(MediaStore.Images.Media.MIME_TYPE, "image/png")
+                put(MediaStore.Images.Media.DATA, file.absolutePath)
+            }
+            context.contentResolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values) ?: error("Not registered")
+        } catch (_: Exception) {
+            file.delete()
             null
         }
     }

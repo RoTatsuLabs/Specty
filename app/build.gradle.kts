@@ -12,7 +12,7 @@ android {
 
     defaultConfig {
         applicationId = "com.rotatsulabs.specty"
-        minSdk = 33
+        minSdk = 26
         targetSdk = 36
         versionCode = System.getenv("VERSION_CODE")?.toIntOrNull() ?: 1
         versionName = System.getenv("VERSION_NAME")?.takeIf { it.isNotBlank() } ?: "0.1.0"
