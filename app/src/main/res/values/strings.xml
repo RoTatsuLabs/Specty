@@ -190,4 +190,174 @@
     <string name="verdict_maybe">Maybe</string>
     <string name="verdict_lossy">Lossy</string>
     <string name="verdict_atmos" translatable="false">Dolby Atmos</string>
+
+    <!-- Common -->
+    <string name="working">Working…</string>
+    <string name="save_image">Save image to gallery</string>
+    <string name="toast_saved_gallery">Saved to Pictures/Specty</string>
+    <string name="toast_save_failed">Could not save the image</string>
+    <string name="toast_image_failed">Could not create the image</string>
+    <string name="toast_storage_permission">Storage permission is needed to save images</string>
+    <string name="explicit_label">Explicit</string>
+    <string name="channel_short">Ch %1$d</string>
+    <string name="count_of">%1$d of %2$d</string>
+    <string name="sentence_sep">" "</string>
+
+    <!-- Analysis -->
+    <string name="analysis_compare">Compare with another file</string>
+    <string name="analysis_again">Analyse again</string>
+    <string name="analysis_export">Export as image</string>
+    <string name="analysis_share_image">Share image</string>
+    <string name="analysis_share_title">Share analysis</string>
+    <string name="analysis_failed_title">Could not analyse this file</string>
+    <string name="badge_atmos" translatable="false">DOLBY ATMOS</string>
+    <string name="badge_hires_lossless">HI-RES LOSSLESS</string>
+    <string name="badge_lossless">LOSSLESS</string>
+    <string name="verdict_head_genuine">Lossless, no sign of a lossy origin</string>
+    <string name="verdict_head_hires">Hi-Res lossless, no sign of a lossy origin</string>
+    <string name="verdict_head_lossy_source">Likely transcoded from a lossy source</string>
+    <string name="verdict_head_possible">Possibly from a lossy source</string>
+    <string name="verdict_head_upsampled">Likely upsampled</string>
+    <string name="verdict_head_band">Band-limited spectrum</string>
+    <string name="verdict_head_codec">Lossy format</string>
+    <string name="verdict_head_inconclusive">Inconclusive</string>
+    <string name="verdict_short_hires">Hi-Res Lossless</string>
+    <string name="verdict_short_lossy_source">Lossy source</string>
+    <string name="verdict_short_possible">Possibly lossy</string>
+    <string name="verdict_short_upsampled">Upsampled</string>
+    <string name="verdict_short_band">Band-limited</string>
+    <string name="verdict_short_codec">Lossy format</string>
+    <string name="card_file">File</string>
+    <string name="card_levels">Levels and dynamics</string>
+    <string name="card_channels">Per-channel stats</string>
+
+    <!-- Stats -->
+    <string name="stat_dynamic_range">Dynamic Range</string>
+    <string name="stat_loudness">Loudness</string>
+    <string name="stat_true_peak">True Peak</string>
+    <string name="stat_codec">Codec</string>
+    <string name="stat_sample_rate">Sample Rate</string>
+    <string name="stat_source_bit_depth">Source Bit Depth</string>
+    <string name="stat_na">n/a</string>
+    <string name="stat_decoded">Decoded PCM</string>
+    <string name="stat_bitrate">Bitrate</string>
+    <string name="stat_channels">Channels</string>
+    <string name="stat_duration">Duration</string>
+    <string name="stat_nyquist">Nyquist</string>
+    <string name="stat_size">Size</string>
+    <string name="stat_dr_meter">DR meter</string>
+    <string name="stat_peak">Peak</string>
+    <string name="stat_rms" translatable="false">RMS</string>
+    <string name="stat_lufs" translatable="false">LUFS</string>
+    <string name="stat_clipping">Clipping</string>
+    <string name="stat_no_clipping">No clipping</string>
+    <string name="stat_clip_samples">%1$s samples</string>
+    <string name="stat_samples">Samples</string>
+    <string name="stat_effective_depth">Effective Depth</string>
+    <string name="stat_none">None</string>
+    <string name="stat_loudest">Loudest part</string>
+    <string name="stat_clipped_sections">Clipped sections</string>
+    <string name="edge_cutoff">Spectral Cutoff</string>
+    <string name="edge_rolloff">Spectral Roll-off</string>
+    <string name="edge_empty_above">Empty above %1$s</string>
+    <string name="edge_none">None found</string>
+    <string name="edge_unknown">Not determined</string>
+
+    <!-- Insight cards -->
+    <string name="insight_conf_high">High confidence</string>
+    <string name="insight_conf_medium">Medium confidence</string>
+    <string name="insight_conf_low">Low confidence</string>
+    <string name="insight_confidence_title">Verdict confidence</string>
+    <string name="insight_sections_match">Matches the overall reading in %1$d of %2$d sections that could be read clearly.</string>
+    <string name="insight_resembles">Resembles: %1$s.</string>
+    <string name="insight_empty_above">Nothing above %1$s kHz; the band up to %2$s kHz is empty.</string>
+    <string name="insight_cutoff_timeline">Cutoff across the track</string>
+    <string name="insight_cutoff_none">No cutoff found in any part of the track.</string>
+    <string name="insight_cutoff_found">Cutoff found in %1$d of %2$d sections.</string>
+    <string name="insight_cutoff_found_line">Cutoff found in %1$d of %2$d sections, line marks %3$s kHz.</string>
+    <string name="timeline_title">Loudness over time</string>
+    <string name="timeline_silence">silence</string>
+    <string name="timeline_readout">"%1$s  ·  %2$s  ·  peak %3$s dBFS"</string>
+    <string name="timeline_readout_clip">"%1$s  ·  %2$s  ·  peak %3$s dBFS  ·  %4$d clipped"</string>
+    <string name="timeline_hint">Touch the graph to read a point. Line: loudness, shaded: peak, red ticks: clipping.</string>
+    <string name="stereo_title">Stereo and offset</string>
+    <string name="stereo_correlation">Correlation</string>
+    <string name="stereo_out_of_phase">-1 out of phase</string>
+    <string name="stereo_mono">+1 mono</string>
+    <string name="stereo_note_phase">Strong phase cancellation: this can lose level or vanish when summed to mono.</string>
+    <string name="stereo_note_wide">Very wide image with little in common between the channels.</string>
+    <string name="stereo_note_normal">Normal stereo width.</string>
+    <string name="stereo_note_mono">Nearly identical channels; effectively mono.</string>
+    <string name="stereo_balance">Balance</string>
+    <string name="stereo_centred">Centred</string>
+    <string name="stereo_balance_left">%1$s dB left</string>
+    <string name="stereo_balance_right">%1$s dB right</string>
+    <string name="stereo_dc">DC offset</string>
+    <string name="stereo_dc_note">A DC offset above 0.5% wastes headroom and can cause clicks; a high-pass filter removes it.</string>
+
+    <!-- Tags -->
+    <string name="tags_title">Tags and metadata</string>
+    <string name="tags_none">This file has no tags.</string>
+    <string name="tags_hide">Hide other tags</string>
+    <string name="tags_show_other">All other tags (%1$d)</string>
+    <string name="tags_custom">Custom tags</string>
+    <string name="tag_title">Title</string>
+    <string name="tag_artist">Artist</string>
+    <string name="tag_album_artist">Album artist</string>
+    <string name="tag_album">Album</string>
+    <string name="tag_date">Date</string>
+    <string name="tag_track">Track</string>
+    <string name="tag_disc">Disc</string>
+    <string name="tag_genre">Genre</string>
+    <string name="tag_composer">Composer</string>
+    <string name="tag_label">Label</string>
+    <string name="tag_encoder">Encoder</string>
+    <string name="tag_comment">Comment</string>
+    <string name="tag_isrc" translatable="false">ISRC</string>
+    <string name="tag_upc" translatable="false">UPC</string>
+    <string name="tag_rating">Rating</string>
+    <string name="tag_copyright">Copyright</string>
+
+    <!-- Compare -->
+    <string name="compare_title">Compare</string>
+    <string name="compare_failed">Could not compare</string>
+    <string name="compare_differs">What differs</string>
+    <string name="compare_spectrograms">Spectrograms</string>
+    <string name="compare_same_scale">Same palette and level scale for both. Each runs from 0 Hz at the bottom to its own Nyquist at the top.</string>
+    <string name="compare_spec_cd">Spectrogram %1$s</string>
+    <string name="compare_top_pill">%1$s · %2$s top</string>
+    <string name="compare_diff_title">Difference (B minus A)</string>
+    <string name="compare_diff_cd">Difference between the two spectrograms</string>
+    <string name="compare_b_quieter">"B quieter  -30 dB"</string>
+    <string name="compare_same">same</string>
+    <string name="compare_b_louder">"+30 dB  B louder"</string>
+    <string name="compare_diff_avg">Average difference %1$s dB.</string>
+    <string name="compare_diff_freq">Frequency runs to %1$s, the lower Nyquist of the two.</string>
+    <string name="compare_diff_length">The files differ in length, so each is stretched to the full width.</string>
+    <string name="compare_avg_title">Average spectrum</string>
+    <string name="compare_avg_note">Mean level of the audible parts, -110 to -10 dB. A shelf that ends early shows where a file was low-passed.</string>
+    <string name="compare_bit_depth">Bit depth</string>
+    <string name="compare_verdict">Verdict</string>
+    <string name="compare_side_title">Side by side</string>
+    <string name="compare_better_note">Highlighted values are the better of the two for dynamics, clipping and top-end extension.</string>
+
+    <!-- Spectrogram -->
+    <string name="spec_title">Spectrogram</string>
+    <string name="spec_cutoff_tag">cutoff %1$s</string>
+    <string name="spec_fullscreen">Full screen</string>
+    <string name="spec_cutoff">Cutoff</string>
+    <string name="spec_display_options">Display options</string>
+    <string name="spec_palette">Colour palette</string>
+    <string name="spec_freq_scale">Frequency scale</string>
+    <string name="spec_linear">Linear</string>
+    <string name="spec_log">Log</string>
+    <string name="spec_level_range">Level range</string>
+    <string name="range_wide">Wide</string>
+    <string name="range_standard">Standard</string>
+    <string name="range_tight">Tight</string>
+    <string name="spec_saving">Saving…</string>
+    <string name="spec_sample_rate">Sample rate %1$s</string>
+    <string name="spec_nyquist">Nyquist %1$s</string>
+    <string name="spec_landscape">Toggle landscape lock</string>
+    <string name="spec_reset_zoom">Reset zoom</string>
 </resources>

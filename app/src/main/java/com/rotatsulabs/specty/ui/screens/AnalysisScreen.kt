@@ -106,6 +106,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -113,6 +114,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
+import com.rotatsulabs.specty.R
 import com.rotatsulabs.specty.audio.AnalysisResult
 import com.rotatsulabs.specty.audio.AudioInfo
 import com.rotatsulabs.specty.audio.AuthenticityReport
@@ -123,6 +125,7 @@ import com.rotatsulabs.specty.audio.Verdict
 import com.rotatsulabs.specty.ui.AnalysisState
 import com.rotatsulabs.specty.ui.components.CoverImage
 import com.rotatsulabs.specty.ui.components.Fmt
+import com.rotatsulabs.specty.ui.components.spectralEdge
 import com.rotatsulabs.specty.ui.components.rememberStorageGate
 import com.rotatsulabs.specty.ui.components.Reveal
 import com.rotatsulabs.specty.ui.components.pressScale
@@ -172,11 +175,11 @@ fun AnalysisScreen(state: AnalysisState, onBack: () -> Unit, onReanalyse: () -> 
                 actions = {
                     if (state is AnalysisState.Done) {
                         ExportMenu(state.result)
-                        ExpressiveIconButton(Icons.Rounded.Compare, "Compare with another file", onCompare, tonal = false)
+                        ExpressiveIconButton(Icons.Rounded.Compare, stringResource(R.string.analysis_compare), onCompare, tonal = false)
                         var spins by remember { mutableStateOf(0) }
                         val spin by animateFloatAsState(spins * 360f, spring(dampingRatio = 0.6f, stiffness = 120f), label = "spin")
                         ExpressiveIconButton(
-                            Icons.Rounded.Refresh, "Analyse again", { spins++; onReanalyse() },
+                            Icons.Rounded.Refresh, stringResource(R.string.analysis_again), { spins++; onReanalyse() },
                             tonal = false, iconModifier = Modifier.graphicsLayer { rotationZ = spin },
                         )
                     }
@@ -234,7 +237,7 @@ private fun ExportMenu(result: AnalysisResult) {
             }
             busy = false
             when {
-                uri == null -> Toast.makeText(context, "Could not create the image", Toast.LENGTH_SHORT).show()
+                uri == null -> Toast.makeText(context, context.getString(R.string.toast_image_failed), Toast.LENGTH_SHORT).show()
                 share -> context.startActivity(
                     Intent.createChooser(
                         Intent(Intent.ACTION_SEND).apply {
@@ -242,10 +245,10 @@ private fun ExportMenu(result: AnalysisResult) {
                             putExtra(Intent.EXTRA_STREAM, uri)
                             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                         },
-                        "Share analysis",
+                        context.getString(R.string.analysis_share_title),
                     ),
                 )
-                else -> Toast.makeText(context, "Saved to Pictures/Specty", Toast.LENGTH_SHORT).show()
+                else -> Toast.makeText(context, context.getString(R.string.toast_saved_gallery), Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -256,16 +259,16 @@ private fun ExportMenu(result: AnalysisResult) {
         gate()
     }
     Box {
-        ExpressiveIconButton(Icons.Rounded.IosShare, "Export as image", { open = true }, tonal = false)
+        ExpressiveIconButton(Icons.Rounded.IosShare, stringResource(R.string.analysis_export), { open = true }, tonal = false)
         DropdownMenu(expanded = open, onDismissRequest = { open = false }, shape = RoundedCornerShape(20.dp)) {
             DropdownMenuItem(
-                text = { Text(if (busy) "Working…" else "Save image to gallery") },
+                text = { Text(stringResource(if (busy) R.string.working else R.string.save_image)) },
                 leadingIcon = { Icon(Icons.Rounded.Download, null) },
                 enabled = !busy,
                 onClick = { open = false; request(false) },
             )
             DropdownMenuItem(
-                text = { Text("Share image") },
+                text = { Text(stringResource(R.string.analysis_share_image)) },
                 leadingIcon = { Icon(Icons.Rounded.IosShare, null) },
                 enabled = !busy,
                 onClick = { open = false; request(true) },
@@ -296,11 +299,11 @@ private fun FailedContent(message: String, onBack: () -> Unit) {
         SpectyCard(corners = SpectyShapes.Hero, color = scheme.errorContainer) {
             Icon(Icons.Rounded.ErrorOutline, contentDescription = null, tint = scheme.onErrorContainer)
             Spacer(Modifier.height(8.dp))
-            Text("Could not analyse this file", style = MaterialTheme.typography.titleMedium, color = scheme.onErrorContainer)
+            Text(stringResource(R.string.analysis_failed_title), style = MaterialTheme.typography.titleMedium, color = scheme.onErrorContainer)
             Spacer(Modifier.height(4.dp))
             Text(message, style = MaterialTheme.typography.bodyMedium, color = scheme.onErrorContainer)
             Spacer(Modifier.height(12.dp))
-            ExpressiveButton("Back", onBack, kind = ButtonKind.Tonal)
+            ExpressiveButton(stringResource(R.string.action_back), onBack, kind = ButtonKind.Tonal)
         }
     }
 }
@@ -400,11 +403,11 @@ private fun Hero(result: AnalysisResult, flight: CoverFlight?) {
                 info.bitDepth?.let { InfoChip("$it-bit") }
                 InfoChip(Fmt.size(info.sizeBytes))
                 when {
-                    info.isDolbyAtmos -> QualityBadge("DOLBY ATMOS", Icons.Rounded.SurroundSound, scheme.primary, scheme.tertiary)
-                    verdict == Verdict.HI_RES -> QualityBadge("HI-RES LOSSLESS", Icons.Rounded.HighQuality, scheme.primary, scheme.secondary)
-                    verdict == Verdict.GENUINE -> QualityBadge("LOSSLESS", Icons.Rounded.Verified, scheme.tertiary, scheme.secondary)
+                    info.isDolbyAtmos -> QualityBadge(stringResource(R.string.badge_atmos), Icons.Rounded.SurroundSound, scheme.primary, scheme.tertiary)
+                    verdict == Verdict.HI_RES -> QualityBadge(stringResource(R.string.badge_hires_lossless), Icons.Rounded.HighQuality, scheme.primary, scheme.secondary)
+                    verdict == Verdict.GENUINE -> QualityBadge(stringResource(R.string.badge_lossless), Icons.Rounded.Verified, scheme.tertiary, scheme.secondary)
                 }
-                if (isExplicit(info.tags)) Pill("Explicit", icon = Icons.Rounded.Explicit)
+                if (isExplicit(info.tags)) Pill(stringResource(R.string.explicit_label), icon = Icons.Rounded.Explicit)
             }
         }
     }
@@ -481,15 +484,15 @@ private fun InfoChip(
 private fun VerdictCard(report: AuthenticityReport) {
     val scheme = MaterialTheme.colorScheme
     val (container, content, icon, headline) = when (report.verdict) {
-        Verdict.GENUINE -> Quad(scheme.tertiaryContainer, scheme.onTertiaryContainer, Icons.Rounded.Verified, "Lossless, no sign of a lossy origin")
-        Verdict.HI_RES -> Quad(scheme.primaryContainer, scheme.onPrimaryContainer, Icons.Rounded.HighQuality, "Hi-Res lossless, no sign of a lossy origin")
-        Verdict.LOSSY_SOURCE -> Quad(scheme.errorContainer, scheme.onErrorContainer, Icons.Rounded.Warning, "Likely transcoded from a lossy source")
-        Verdict.POSSIBLE_LOSSY_SOURCE -> Quad(scheme.secondaryContainer, scheme.onSecondaryContainer, Icons.Rounded.WarningAmber, "Possibly from a lossy source")
-        Verdict.UPSAMPLED -> Quad(scheme.errorContainer, scheme.onErrorContainer, Icons.Rounded.Warning, "Likely upsampled")
-        Verdict.BAND_LIMITED -> Quad(scheme.secondaryContainer, scheme.onSecondaryContainer, Icons.Rounded.WarningAmber, "Band-limited spectrum")
-        Verdict.LOSSY_CODEC -> Quad(scheme.surfaceContainerHigh, scheme.onSurface, Icons.Rounded.Info, "Lossy format")
-        Verdict.DOLBY_ATMOS -> Quad(scheme.inverseSurface, scheme.inverseOnSurface, Icons.Rounded.SurroundSound, "Dolby Atmos")
-        Verdict.INCONCLUSIVE -> Quad(scheme.surfaceContainerHigh, scheme.onSurface, Icons.Rounded.Info, "Inconclusive")
+        Verdict.GENUINE -> Quad(scheme.tertiaryContainer, scheme.onTertiaryContainer, Icons.Rounded.Verified, stringResource(R.string.verdict_head_genuine))
+        Verdict.HI_RES -> Quad(scheme.primaryContainer, scheme.onPrimaryContainer, Icons.Rounded.HighQuality, stringResource(R.string.verdict_head_hires))
+        Verdict.LOSSY_SOURCE -> Quad(scheme.errorContainer, scheme.onErrorContainer, Icons.Rounded.Warning, stringResource(R.string.verdict_head_lossy_source))
+        Verdict.POSSIBLE_LOSSY_SOURCE -> Quad(scheme.secondaryContainer, scheme.onSecondaryContainer, Icons.Rounded.WarningAmber, stringResource(R.string.verdict_head_possible))
+        Verdict.UPSAMPLED -> Quad(scheme.errorContainer, scheme.onErrorContainer, Icons.Rounded.Warning, stringResource(R.string.verdict_head_upsampled))
+        Verdict.BAND_LIMITED -> Quad(scheme.secondaryContainer, scheme.onSecondaryContainer, Icons.Rounded.WarningAmber, stringResource(R.string.verdict_head_band))
+        Verdict.LOSSY_CODEC -> Quad(scheme.surfaceContainerHigh, scheme.onSurface, Icons.Rounded.Info, stringResource(R.string.verdict_head_codec))
+        Verdict.DOLBY_ATMOS -> Quad(scheme.inverseSurface, scheme.inverseOnSurface, Icons.Rounded.SurroundSound, stringResource(R.string.verdict_atmos))
+        Verdict.INCONCLUSIVE -> Quad(scheme.surfaceContainerHigh, scheme.onSurface, Icons.Rounded.Info, stringResource(R.string.verdict_head_inconclusive))
     }
     var popped by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) {
@@ -519,9 +522,9 @@ private fun MetricTiles(result: AnalysisResult) {
     val scheme = MaterialTheme.colorScheme
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(3.dp)) {
         val tiles = listOf(
-            Triple("Dynamic Range", Fmt.db(levels.dynamicRangeDb), SpectyShapes.TileStart),
-            Triple("Loudness", Fmt.lufs(levels.lufs), SpectyShapes.TileMiddle),
-            Triple("True Peak", Fmt.dbtp(levels.truePeakDbtp), SpectyShapes.TileEnd),
+            Triple(stringResource(R.string.stat_dynamic_range), Fmt.db(levels.dynamicRangeDb), SpectyShapes.TileStart),
+            Triple(stringResource(R.string.stat_loudness), Fmt.lufs(levels.lufs), SpectyShapes.TileMiddle),
+            Triple(stringResource(R.string.stat_true_peak), Fmt.dbtp(levels.truePeakDbtp), SpectyShapes.TileEnd),
         )
         val colours = listOf(
             scheme.primaryContainer to scheme.onPrimaryContainer,
@@ -550,25 +553,25 @@ internal fun SectionCard(title: String, content: @Composable () -> Unit) {
 
 @Composable
 private fun FileCard(info: AudioInfo, decoded: DecodedFormat?, showDecoded: Boolean = true) {
-    SectionCard("File") {
+    SectionCard(stringResource(R.string.card_file)) {
         StatGrid(
             listOfNotNull(
-                Stat(Icons.Rounded.Memory, "Codec", Codecs.displayName(info.codec)),
-                Stat(Icons.Rounded.GraphicEq, "Sample Rate", Fmt.kHz(info.sampleRate.toDouble())),
+                Stat(Icons.Rounded.Memory, stringResource(R.string.stat_codec), Codecs.displayName(info.codec)),
+                Stat(Icons.Rounded.GraphicEq, stringResource(R.string.stat_sample_rate), Fmt.kHz(info.sampleRate.toDouble())),
                 Stat(
-                    Icons.Rounded.MusicNote, "Source Bit Depth",
-                    info.bitDepth?.let { bits -> "$bits-bit" + (info.sampleFormat?.let { " ($it)" } ?: "") } ?: "n/a",
+                    Icons.Rounded.MusicNote, stringResource(R.string.stat_source_bit_depth),
+                    info.bitDepth?.let { bits -> "$bits-bit" + (info.sampleFormat?.let { " ($it)" } ?: "") } ?: stringResource(R.string.stat_na),
                 ),
                 if (showDecoded) {
-                    Stat(Icons.Rounded.DataObject, "Decoded PCM", (decoded ?: DecodedFormat(info.sampleRate, info.channels)).summary)
+                    Stat(Icons.Rounded.DataObject, stringResource(R.string.stat_decoded), (decoded ?: DecodedFormat(info.sampleRate, info.channels)).summary)
                 } else {
                     null
                 },
-                Stat(Icons.Rounded.Speed, "Bitrate", Fmt.bitrate(info.bitrateBps)),
-                Stat(Icons.Rounded.Speaker, "Channels", info.channelLabel),
-                Stat(Icons.Rounded.Timer, "Duration", Fmt.duration(info.durationSec)),
-                Stat(Icons.Rounded.Waves, "Nyquist", Fmt.kHz(info.nyquistHz)),
-                Stat(Icons.Rounded.Storage, "Size", Fmt.size(info.sizeBytes)),
+                Stat(Icons.Rounded.Speed, stringResource(R.string.stat_bitrate), Fmt.bitrate(info.bitrateBps)),
+                Stat(Icons.Rounded.Speaker, stringResource(R.string.stat_channels), info.channelLabel),
+                Stat(Icons.Rounded.Timer, stringResource(R.string.stat_duration), Fmt.duration(info.durationSec)),
+                Stat(Icons.Rounded.Waves, stringResource(R.string.stat_nyquist), Fmt.kHz(info.nyquistHz)),
+                Stat(Icons.Rounded.Storage, stringResource(R.string.stat_size), Fmt.size(info.sizeBytes)),
             ),
         )
     }
@@ -579,38 +582,38 @@ private fun LevelsCard(result: AnalysisResult) {
     val info = result.info
     val levels = result.levels
     val stats = buildList {
-        add(Stat(Icons.AutoMirrored.Rounded.ShowChart, "Dynamic Range", Fmt.db(levels.dynamicRangeDb)))
-        levels.drTt?.let { add(Stat(Icons.AutoMirrored.Rounded.ShowChart, "DR meter", "DR${it.roundToInt()}")) }
-        add(Stat(Icons.Rounded.Equalizer, "Peak", Fmt.db(levels.peakDb)))
-        add(Stat(Icons.Rounded.BarChart, "RMS", Fmt.db(levels.rmsDb)))
-        add(Stat(Icons.AutoMirrored.Rounded.VolumeUp, "LUFS", Fmt.lufs(levels.lufs)))
-        add(Stat(Icons.Rounded.WarningAmber, "True Peak", Fmt.dbtp(levels.truePeakDbtp)))
+        add(Stat(Icons.AutoMirrored.Rounded.ShowChart, stringResource(R.string.stat_dynamic_range), Fmt.db(levels.dynamicRangeDb)))
+        levels.drTt?.let { add(Stat(Icons.AutoMirrored.Rounded.ShowChart, stringResource(R.string.stat_dr_meter), "DR${it.roundToInt()}")) }
+        add(Stat(Icons.Rounded.Equalizer, stringResource(R.string.stat_peak), Fmt.db(levels.peakDb)))
+        add(Stat(Icons.Rounded.BarChart, stringResource(R.string.stat_rms), Fmt.db(levels.rmsDb)))
+        add(Stat(Icons.AutoMirrored.Rounded.VolumeUp, stringResource(R.string.stat_lufs), Fmt.lufs(levels.lufs)))
+        add(Stat(Icons.Rounded.WarningAmber, stringResource(R.string.stat_true_peak), Fmt.dbtp(levels.truePeakDbtp)))
         add(
             Stat(
                 Icons.Rounded.ErrorOutline,
-                "Clipping",
-                if (levels.clippedSamples == 0L) "No clipping" else "${Fmt.count(levels.clippedSamples)} samples",
+                stringResource(R.string.stat_clipping),
+                if (levels.clippedSamples == 0L) stringResource(R.string.stat_no_clipping) else stringResource(R.string.stat_clip_samples, Fmt.count(levels.clippedSamples)),
             ),
         )
-        val (edgeLabel, edgeValue) = Fmt.spectralEdge(result.authenticity)
+        val (edgeLabel, edgeValue) = spectralEdge(result.authenticity)
         add(Stat(Icons.Rounded.FilterAlt, edgeLabel, edgeValue))
-        add(Stat(Icons.Rounded.Tag, "Samples", Fmt.count(levels.framesPerChannel)))
+        add(Stat(Icons.Rounded.Tag, stringResource(R.string.stat_samples), Fmt.count(levels.framesPerChannel)))
         val effective = levels.effectiveBitDepth
         if (info.isLossless && effective != null) {
-            add(Stat(Icons.Rounded.MusicNote, "Effective Depth", BitDepth.label(info.bitDepth, effective, levels.bitDepthBasis)))
+            add(Stat(Icons.Rounded.MusicNote, stringResource(R.string.stat_effective_depth), BitDepth.label(info.bitDepth, effective, levels.bitDepthBasis)))
         }
     }
-    SectionCard("Levels and dynamics") { StatGrid(stats) }
+    SectionCard(stringResource(R.string.card_levels)) { StatGrid(stats) }
 }
 
 @Composable
 private fun ChannelsCard(result: AnalysisResult) {
-    SectionCard("Per-channel stats") {
+    SectionCard(stringResource(R.string.card_channels)) {
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             result.levels.channels.forEachIndexed { index, channel ->
                 MorphSurface(Modifier.fillMaxWidth(), Corners(20.dp), MaterialTheme.colorScheme.surfaceContainerHigh, morphOnPress = false) {
                     Row(Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
-                        Pill("Ch ${index + 1}")
+                        Pill(stringResource(R.string.channel_short, index + 1))
                         Spacer(Modifier.width(14.dp))
                         Text(
                             buildAnnotatedString {

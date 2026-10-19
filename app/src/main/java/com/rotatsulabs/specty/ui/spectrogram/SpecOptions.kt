@@ -1,12 +1,14 @@
 package com.rotatsulabs.specty.ui.spectrogram
 
 import android.content.SharedPreferences
+import androidx.annotation.StringRes
+import com.rotatsulabs.specty.R
 
 /** Level window mapped onto the colour ramp. A tighter window brings out faint detail. */
-enum class DbRange(val label: String, val floor: Int, val ceil: Int) {
-    Wide("Wide", -120, 0),
-    Standard("Standard", -100, -10),
-    Tight("Tight", -80, -20),
+enum class DbRange(@StringRes val labelRes: Int, val floor: Int, val ceil: Int) {
+    Wide(R.string.range_wide, -120, 0),
+    Standard(R.string.range_standard, -100, -10),
+    Tight(R.string.range_tight, -80, -20),
 }
 
 /** How the spectrogram image is drawn; the analysis itself is unaffected. Saved so every view agrees. */

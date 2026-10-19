@@ -34,8 +34,11 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.rotatsulabs.specty.R
 import com.rotatsulabs.specty.audio.AuthenticityReport
 import com.rotatsulabs.specty.audio.AudioInfo
 import com.rotatsulabs.specty.audio.LevelStats
@@ -60,11 +63,11 @@ internal fun ConfidenceCard(report: AuthenticityReport, info: AudioInfo) {
     val grow by rememberGrow(450)
     val animated = (target * grow).coerceIn(0f, 1f)
     val label = when {
-        report.confidence >= 80 -> "High confidence"
-        report.confidence >= 55 -> "Medium confidence"
-        else -> "Low confidence"
+        report.confidence >= 80 -> stringResource(R.string.insight_conf_high)
+        report.confidence >= 55 -> stringResource(R.string.insight_conf_medium)
+        else -> stringResource(R.string.insight_conf_low)
     }
-    SectionCard("Verdict confidence") {
+    SectionCard(stringResource(R.string.insight_confidence_title)) {
         Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
             Row(verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 Text("${(animated * 100).roundToInt()}%", style = MaterialTheme.typography.displaySmall, fontWeight = FontWeight.Bold)
@@ -78,10 +81,10 @@ internal fun ConfidenceCard(report: AuthenticityReport, info: AudioInfo) {
             }
             if (report.segmentCutoffs.size >= 2) CutoffTimeline(report, info)
             if (report.sectionsJudged > 0 && report.verdict != Verdict.LOSSY_CODEC && report.verdict != Verdict.DOLBY_ATMOS) {
-                InsightLine("Matches the overall reading in ${report.sectionsAgreeing} of ${report.sectionsJudged} sections that could be read clearly.")
+                InsightLine(stringResource(R.string.insight_sections_match, report.sectionsAgreeing, report.sectionsJudged))
             }
-            report.encoderGuess?.let { InsightLine("Resembles: $it.") }
-            report.emptyAboveHz?.let { InsightLine("Nothing above ${f1(it / 1000.0)} kHz; the band up to ${f1(info.nyquistHz / 1000.0)} kHz is empty.") }
+            report.encoderGuess?.let { InsightLine(stringResource(R.string.insight_resembles, it)) }
+            report.emptyAboveHz?.let { InsightLine(stringResource(R.string.insight_empty_above, f1(it / 1000.0), f1(info.nyquistHz / 1000.0))) }
         }
     }
 }
@@ -100,7 +103,7 @@ private fun CutoffTimeline(report: AuthenticityReport, info: AudioInfo) {
     val line = scheme.tertiary
     val cuts = report.segmentCutoffs
     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-        Text("Cutoff across the track", style = MaterialTheme.typography.labelLarge, color = scheme.onSurfaceVariant)
+        Text(stringResource(R.string.insight_cutoff_timeline), style = MaterialTheme.typography.labelLarge, color = scheme.onSurfaceVariant)
         val reveal by rememberGrow(600)
         Canvas(Modifier.fillMaxWidth().height(72.dp)) {
             val gap = 3.dp.toPx()
@@ -121,8 +124,9 @@ private fun CutoffTimeline(report: AuthenticityReport, info: AudioInfo) {
         }
         val found = cuts.count { it > 0f }
         Text(
-            if (found == 0) "No cutoff found in any part of the track."
-            else "Cutoff found in $found of ${cuts.size} sections" + (report.cutoffHz?.let { ", line marks ${f1(it / 1000.0)} kHz." } ?: "."),
+            if (found == 0) stringResource(R.string.insight_cutoff_none)
+            else report.cutoffHz?.let { stringResource(R.string.insight_cutoff_found_line, found, cuts.size, f1(it / 1000.0)) }
+                ?: stringResource(R.string.insight_cutoff_found, found, cuts.size),
             style = MaterialTheme.typography.bodySmall,
             color = scheme.onSurfaceVariant,
         )
@@ -145,7 +149,7 @@ internal fun TimelineCard(levels: LevelStats) {
     val lo = if (audible.isEmpty()) -60f else (((audible.min() - 6f) / 10f).toInt() * 10f - 10f).coerceAtLeast(-70f)
     val hi = 0f
 
-    SectionCard("Loudness over time") {
+    SectionCard(stringResource(R.string.timeline_title)) {
         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Canvas(
                 Modifier.fillMaxWidth().height(150.dp)
@@ -187,21 +191,26 @@ internal fun TimelineCard(levels: LevelStats) {
             }
             val readout = if (sel >= 0) {
                 val time = (sel + 0.5) / t.points * t.durationSec
-                "${Fmt.duration(time)}  ·  ${if (t.loudness[sel] <= -69.9f) "silence" else f1(t.loudness[sel].toDouble()) + " LUFS"}  ·  peak ${f1(t.peakDb[sel].toDouble())} dBFS" +
-                    if (t.clips[sel] > 0) "  ·  ${t.clips[sel]} clipped" else ""
+                val level = if (t.loudness[sel] <= -69.9f) stringResource(R.string.timeline_silence) else f1(t.loudness[sel].toDouble()) + " LUFS"
+                val peak = f1(t.peakDb[sel].toDouble())
+                if (t.clips[sel] > 0) {
+                    stringResource(R.string.timeline_readout_clip, Fmt.duration(time), level, peak, t.clips[sel])
+                } else {
+                    stringResource(R.string.timeline_readout, Fmt.duration(time), level, peak)
+                }
             } else {
-                "Touch the graph to read a point. Line: loudness, shaded: peak, red ticks: clipping."
+                stringResource(R.string.timeline_hint)
             }
             Text(readout, style = MaterialTheme.typography.bodySmall, color = scheme.onSurfaceVariant)
 
             val stats = buildList {
-                levels.drTt?.let { add(Stat(Icons.Rounded.Equalizer, "DR meter", "DR${it.roundToInt()}")) }
+                levels.drTt?.let { add(Stat(Icons.Rounded.Equalizer, stringResource(R.string.stat_dr_meter), "DR${it.roundToInt()}")) }
                 val loudest = t.loudness.withIndex().maxByOrNull { it.value }
                 if (loudest != null && loudest.value > -69.9f) {
-                    add(Stat(Icons.AutoMirrored.Rounded.ShowChart, "Loudest part", Fmt.duration((loudest.index + 0.5) / t.points * t.durationSec)))
+                    add(Stat(Icons.AutoMirrored.Rounded.ShowChart, stringResource(R.string.stat_loudest), Fmt.duration((loudest.index + 0.5) / t.points * t.durationSec)))
                 }
                 val clipSlices = t.clips.count { it > 0 }
-                add(Stat(Icons.Rounded.Tune, "Clipped sections", if (clipSlices == 0) "None" else "$clipSlices of ${t.points}"))
+                add(Stat(Icons.Rounded.Tune, stringResource(R.string.stat_clipped_sections), if (clipSlices == 0) stringResource(R.string.stat_none) else stringResource(R.string.count_of, clipSlices, t.points)))
             }
             StatGrid(stats)
         }
@@ -217,43 +226,44 @@ internal fun StereoCard(levels: LevelStats) {
     val worstDc = dc.maxOfOrNull { abs(it) } ?: 0.0
     if (corr == null && balance == null && worstDc < 1e-6) return
     val scheme = MaterialTheme.colorScheme
-    SectionCard("Stereo and offset") {
+    val context = LocalContext.current
+    SectionCard(stringResource(R.string.stereo_title)) {
         Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
             if (corr != null) {
                 MeterRow(
-                    title = "Correlation",
+                    title = stringResource(R.string.stereo_correlation),
                     value = String.format(Locale.US, "%+.2f", corr),
                     position = ((corr + 1.0) / 2.0).toFloat(),
-                    left = "-1 out of phase", right = "+1 mono",
+                    left = stringResource(R.string.stereo_out_of_phase), right = stringResource(R.string.stereo_mono),
                     accent = if (corr < 0.0) scheme.error else scheme.primary,
                 )
                 Text(
                     when {
-                        corr < -0.3 -> "Strong phase cancellation: this can lose level or vanish when summed to mono."
-                        corr < 0.2 -> "Very wide image with little in common between the channels."
-                        corr < 0.9 -> "Normal stereo width."
-                        else -> "Nearly identical channels; effectively mono."
+                        corr < -0.3 -> stringResource(R.string.stereo_note_phase)
+                        corr < 0.2 -> stringResource(R.string.stereo_note_wide)
+                        corr < 0.9 -> stringResource(R.string.stereo_note_normal)
+                        else -> stringResource(R.string.stereo_note_mono)
                     },
                     style = MaterialTheme.typography.bodySmall, color = scheme.onSurfaceVariant,
                 )
             }
             if (balance != null) {
                 MeterRow(
-                    title = "Balance",
-                    value = if (abs(balance) < 0.05) "Centred" else "${f1(abs(balance))} dB ${if (balance > 0) "left" else "right"}",
+                    title = stringResource(R.string.stereo_balance),
+                    value = if (abs(balance) < 0.05) stringResource(R.string.stereo_centred) else stringResource(if (balance > 0) R.string.stereo_balance_left else R.string.stereo_balance_right, f1(abs(balance))),
                     position = ((balance.coerceIn(-12.0, 12.0) + 12.0) / 24.0).toFloat(),
                     left = "L", right = "R",
                     accent = if (abs(balance) > 3.0) scheme.tertiary else scheme.primary,
                     invert = true,
                 )
             }
-            val dcText = dc.withIndex().joinToString("  ") { (i, v) -> "Ch${i + 1} ${String.format(Locale.US, "%+.4f", v * 100)}%" }
+            val dcText = dc.withIndex().joinToString("  ") { (i, v) -> "${context.getString(R.string.channel_short, i + 1)} ${String.format(Locale.US, "%+.4f", v * 100)}%" }
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                Text("DC offset", style = MaterialTheme.typography.labelLarge, color = scheme.onSurfaceVariant)
+                Text(stringResource(R.string.stereo_dc), style = MaterialTheme.typography.labelLarge, color = scheme.onSurfaceVariant)
                 Text(dcText, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
             }
             if (worstDc > 0.005) {
-                Text("A DC offset above 0.5% wastes headroom and can cause clicks; a high-pass filter removes it.", style = MaterialTheme.typography.bodySmall, color = scheme.onSurfaceVariant)
+                Text(stringResource(R.string.stereo_dc_note), style = MaterialTheme.typography.bodySmall, color = scheme.onSurfaceVariant)
             }
         }
     }
