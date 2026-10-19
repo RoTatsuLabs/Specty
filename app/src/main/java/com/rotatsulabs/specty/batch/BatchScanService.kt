@@ -1,5 +1,6 @@
 package com.rotatsulabs.specty.batch
 
+import com.rotatsulabs.specty.dev.AppLog
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -50,6 +51,7 @@ class BatchScanService : Service() {
 
     override fun onCreate() {
         super.onCreate()
+        AppLog.init(this)
         BatchScanner.serviceAlive = true
     }
 
@@ -117,14 +119,16 @@ class BatchScanService : Service() {
                         when (outcome) {
                             BatchOutcome.Skipped -> it.copy(skipped = it.skipped + 1)
                             is BatchOutcome.Done -> it.copy(done = it.done + 1, flagged = it.flagged + if (outcome.flagged) 1 else 0)
-                            is BatchOutcome.Failed -> it.copy(failed = it.failed + 1)
+                            is BatchOutcome.Failed -> { AppLog.w("Scan") { "Failed: ${item.title}" }; it.copy(failed = it.failed + 1) }
                         }
                     }
                 }
             })
             note = stop.note
+            AppLog.i("Scan") { "Stopped: ${stop.note.ifEmpty { "finished" }}" }
         } catch (e: CancellationException) {
             cancelled = true
+            AppLog.w("Scan") { "Cancelled${if (timedOut) " by the system time limit" else ""}" }
             if (timedOut) note = "Paused by Android's time limit for background work. Scan again to continue."
         } finally {
             cache.publishNow()
@@ -145,6 +149,7 @@ class BatchScanService : Service() {
             if (!paused) {
                 paused = true
                 BatchScanner.update { it.copy(note = "Paused while the phone cools down or charges") }
+                AppLog.w("Scan") { "Paused: thermal or battery" }
                 notify("Paused: cooling down or low battery", BatchScanner.state.value.processed, total, force = true)
             }
             delay(PAUSE_POLL_MS)

@@ -68,6 +68,8 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit, onPickFolder: ()
     val showMetadata by viewModel.showMetadata.collectAsStateWithLifecycle()
     val verdicts by viewModel.cachedVerdicts.collectAsStateWithLifecycle()
     val batch by viewModel.batch.collectAsStateWithLifecycle()
+    val developer by viewModel.developer.collectAsStateWithLifecycle()
+    val logging by viewModel.logging.collectAsStateWithLifecycle()
     val compare by viewModel.compare.collectAsStateWithLifecycle()
     val onboarding by viewModel.onboarding.collectAsStateWithLifecycle()
     val compareHeld = remember { object { var state: CompareState = CompareState.Idle } }
@@ -80,6 +82,7 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit, onPickFolder: ()
     var dockBounds by remember { mutableStateOf<Rect?>(null) }
     var showSettings by rememberSaveable { mutableStateOf(false) }
     var showAbout by rememberSaveable { mutableStateOf(false) }
+    var showLog by rememberSaveable { mutableStateOf(false) }
     var viewerView by rememberSaveable { mutableStateOf<Int?>(null) }
     // Hashing every track is not free, so remember each key for as long as the settings it depends on stay put.
     val keyFor = remember(fftSize, windowFn) {
@@ -113,9 +116,11 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit, onPickFolder: ()
     val aboutBack = remember { BackGesture() }
     val compareBack = remember { BackGesture() }
     val viewerBack = remember { BackGesture() }
+    val logBack = remember { BackGesture() }
     PredictiveBack(analysisBack, enabled = analysisOpen) { viewModel.closeAnalysis() }
     PredictiveBack(settingsBack, enabled = showSettings) { showSettings = false }
     PredictiveBack(aboutBack, enabled = showAbout) { showAbout = false }
+    PredictiveBack(logBack, enabled = showLog) { showLog = false }
     PredictiveBack(compareBack, enabled = compare !is CompareState.Idle) { viewModel.closeCompare() }
     PredictiveBack(viewerBack, enabled = viewerView != null) { viewerView = null }
 
@@ -203,6 +208,11 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit, onPickFolder: ()
                     onWindowFn = viewModel::setWindowFn,
                     savedCount = verdicts.size,
                     onClearCache = viewModel::clearCache,
+                    developer = developer,
+                    logging = logging,
+                    onLogging = viewModel::setLogging,
+                    onOpenLog = { showLog = true },
+                    onDeveloperOff = { viewModel.setDeveloper(false); showLog = false },
                     onBack = { showSettings = false },
                 )
             }
@@ -212,8 +222,16 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit, onPickFolder: ()
             Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.surface) {
                 AboutScreen(
                     onReplayIntro = { showAbout = false; viewModel.replayOnboarding() },
+                    developer = developer,
+                    onUnlockDeveloper = { viewModel.setDeveloper(true) },
                     onBack = { showAbout = false },
                 )
+            }
+        }
+
+        OverlayScreen(visible = showLog, gesture = logBack, depth = depth, id = "log") {
+            Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.surface) {
+                com.rotatsulabs.specty.ui.screens.DeveloperLogScreen(onBack = { showLog = false })
             }
         }
 
