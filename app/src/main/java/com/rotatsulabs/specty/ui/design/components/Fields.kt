@@ -57,7 +57,7 @@ fun SearchField(
     query: String,
     onChange: (String) -> Unit,
     modifier: Modifier = Modifier,
-    placeholder: String = "Search",
+    placeholder: String = stringResource(R.string.search_default),
 ) {
     val source = remember { MutableInteractionSource() }
     val focused by source.collectIsFocusedAsState()
@@ -90,7 +90,7 @@ fun SearchField(
         }
         AnimatedVisibility(query.isNotEmpty(), enter = scaleIn(Motion.spatialFast()) + fadeIn(), exit = scaleOut() + fadeOut()) {
             Icon(
-                Icons.Rounded.Close, "Clear search",
+                Icons.Rounded.Close, stringResource(R.string.search_clear),
                 Modifier.size(24.dp).clip(CircleShape).clickable { onChange("") },
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
             )

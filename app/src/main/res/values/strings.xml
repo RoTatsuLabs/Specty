@@ -129,4 +129,65 @@
     <string name="onboarding_tile_dynamics">Dynamics</string>
     <string name="onboarding_tile_meter">meter</string>
     <string name="onboarding_tile_peak">True peak</string>
+
+    <!-- Library -->
+    <string name="action_cancel">Cancel</string>
+    <string name="action_dismiss">Dismiss</string>
+    <string name="action_done">Done</string>
+    <string name="library_menu_rescan">Rescan library</string>
+    <string name="library_menu_scan">Scan whole library</string>
+    <string name="library_menu_folders">Library folders</string>
+    <string name="library_more">More options</string>
+    <string name="library_analyse">Analyse a file</string>
+    <string name="library_search">Search your library</string>
+    <plurals name="library_tracks">
+        <item quantity="one">%1$d track</item>
+        <item quantity="other">%1$d tracks</item>
+    </plurals>
+    <string name="sort_title">Title</string>
+    <string name="sort_artist">Artist</string>
+    <string name="sort_length">Length</string>
+    <string name="sort_size">Size</string>
+    <string name="library_ascending">Ascending</string>
+    <string name="library_descending">Descending</string>
+    <string name="library_show_list">Show as list</string>
+    <string name="library_show_grid">Show as grid</string>
+    <string name="library_empty_title">Nothing to show</string>
+    <string name="library_empty_folders">No audio files found in your folders. Add another folder from the menu, or pick a single file with the button below.</string>
+    <string name="library_no_match">Nothing here yet for this filter.</string>
+    <string name="library_prompt_title">Choose your music folders</string>
+    <string name="library_prompt_message">Pick the folders that hold your music. Specty only reads inside them, so ringtones and voice notes stay out. Nothing leaves your phone.</string>
+    <string name="library_no_folders">No folders yet.</string>
+    <string name="library_remove_folder">Remove %1$s</string>
+    <string name="library_add_folder">Add folder</string>
+
+    <string name="search_default">Search</string>
+    <string name="search_clear">Clear search</string>
+
+    <!-- Batch scan card -->
+    <string name="scan_running">Scanning library</string>
+    <string name="scan_cancelled">Scan cancelled</string>
+    <string name="scan_stopped">Scan stopped</string>
+    <string name="scan_finished">Scan finished</string>
+    <string name="scan_analysed">%1$d analysed</string>
+    <string name="scan_skipped">%1$d already saved</string>
+    <string name="scan_flagged">%1$d need a look</string>
+    <string name="scan_failed">%1$d failed</string>
+    <string name="scan_sep">", "</string>
+    <string name="scan_with_note">%1$s. %2$s</string>
+    <string name="scan_progress">%1$d of %2$d</string>
+
+    <!-- Analysis dock -->
+    <string name="dock_ready">Ready, tap to view the result</string>
+    <string name="dock_limited">Lossy format, audio could not be decoded. Tap for details</string>
+    <string name="dock_progress">"%1$s  ·  %2$d%%"</string>
+    <string name="dock_progress_queued">"%1$s  ·  %2$d%%  ·  %3$d waiting"</string>
+
+    <!-- Verdict pills -->
+    <string name="verdict_lossless">Lossless</string>
+    <string name="verdict_hires" translatable="false">Hi-Res</string>
+    <string name="verdict_fake">Fake</string>
+    <string name="verdict_maybe">Maybe</string>
+    <string name="verdict_lossy">Lossy</string>
+    <string name="verdict_atmos" translatable="false">Dolby Atmos</string>
 </resources>

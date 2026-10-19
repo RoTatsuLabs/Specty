@@ -33,9 +33,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.rotatsulabs.specty.R
 import com.rotatsulabs.specty.ui.AnalysisState
 import com.rotatsulabs.specty.ui.theme.Motion
 
@@ -63,10 +65,12 @@ fun AnalysisDock(state: AnalysisState, onOpen: () -> Unit, onDismiss: () -> Unit
         AnalysisState.Idle -> ""
     }
     val subtitle = when (state) {
-        is AnalysisState.Running -> "${state.stage}  ·  ${(state.progress * 100).toInt()}%" + if (queued > 0) "  ·  $queued waiting" else ""
-        is AnalysisState.Done -> "Ready, tap to view the result"
+        is AnalysisState.Running -> (state.progress * 100).toInt().let { pct ->
+            if (queued > 0) stringResource(R.string.dock_progress_queued, state.stage, pct, queued) else stringResource(R.string.dock_progress, state.stage, pct)
+        }
+        is AnalysisState.Done -> stringResource(R.string.dock_ready)
         is AnalysisState.Failed -> state.message
-        is AnalysisState.Limited -> "Lossy format, audio could not be decoded. Tap for details"
+        is AnalysisState.Limited -> stringResource(R.string.dock_limited)
         AnalysisState.Idle -> ""
     }
     val progress by animateFloatAsState((state as? AnalysisState.Running)?.progress ?: 0f, Motion.effects(), label = "dockProgress")
@@ -95,7 +99,7 @@ fun AnalysisDock(state: AnalysisState, onOpen: () -> Unit, onDismiss: () -> Unit
                     Text(title, style = MaterialTheme.typography.titleSmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     Text(subtitle, style = MaterialTheme.typography.bodySmall, maxLines = 2, overflow = TextOverflow.Ellipsis)
                 }
-                ExpressiveIconButton(Icons.Rounded.Close, if (done || failed) "Dismiss" else "Cancel", onDismiss, tonal = false)
+                ExpressiveIconButton(Icons.Rounded.Close, stringResource(if (done || failed) R.string.action_dismiss else R.string.action_cancel), onDismiss, tonal = false)
             }
             if (state is AnalysisState.Running) {
                 WavyProgressBar(

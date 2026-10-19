@@ -125,4 +125,62 @@
     <string name="onboarding_tile_dynamics">Dinamika</string>
     <string name="onboarding_tile_meter">meter</string>
     <string name="onboarding_tile_peak">True peak</string>
+
+    <!-- Library -->
+    <string name="action_cancel">Batal</string>
+    <string name="action_dismiss">Tutup</string>
+    <string name="action_done">Selesai</string>
+    <string name="library_menu_rescan">Pindai ulang pustaka</string>
+    <string name="library_menu_scan">Pindai seluruh pustaka</string>
+    <string name="library_menu_folders">Folder pustaka</string>
+    <string name="library_more">Opsi lainnya</string>
+    <string name="library_analyse">Analisis file</string>
+    <string name="library_search">Cari di pustaka Anda</string>
+    <plurals name="library_tracks">
+        <item quantity="other">%1$d lagu</item>
+    </plurals>
+    <string name="sort_title">Judul</string>
+    <string name="sort_artist">Artis</string>
+    <string name="sort_length">Durasi</string>
+    <string name="sort_size">Ukuran</string>
+    <string name="library_ascending">Urut naik</string>
+    <string name="library_descending">Urut turun</string>
+    <string name="library_show_list">Tampilkan sebagai daftar</string>
+    <string name="library_show_grid">Tampilkan sebagai grid</string>
+    <string name="library_empty_title">Tidak ada yang ditampilkan</string>
+    <string name="library_empty_folders">Tidak ada file audio di folder Anda. Tambahkan folder lain dari menu, atau pilih satu file dengan tombol di bawah.</string>
+    <string name="library_no_match">Belum ada yang cocok dengan filter ini.</string>
+    <string name="library_prompt_title">Pilih folder musik Anda</string>
+    <string name="library_prompt_message">Pilih folder yang berisi musik Anda. Specty hanya membaca isi folder tersebut, sehingga nada dering dan catatan suara tidak ikut. Tidak ada yang keluar dari ponsel Anda.</string>
+    <string name="library_no_folders">Belum ada folder.</string>
+    <string name="library_remove_folder">Hapus %1$s</string>
+    <string name="library_add_folder">Tambah folder</string>
+
+    <string name="search_default">Cari</string>
+    <string name="search_clear">Hapus pencarian</string>
+
+    <!-- Batch scan card -->
+    <string name="scan_running">Memindai pustaka</string>
+    <string name="scan_cancelled">Pemindaian dibatalkan</string>
+    <string name="scan_stopped">Pemindaian berhenti</string>
+    <string name="scan_finished">Pemindaian selesai</string>
+    <string name="scan_analysed">%1$d dianalisis</string>
+    <string name="scan_skipped">%1$d sudah tersimpan</string>
+    <string name="scan_flagged">%1$d perlu dicek</string>
+    <string name="scan_failed">%1$d gagal</string>
+    <string name="scan_sep">", "</string>
+    <string name="scan_with_note">%1$s. %2$s</string>
+    <string name="scan_progress">%1$d dari %2$d</string>
+
+    <!-- Analysis dock -->
+    <string name="dock_ready">Siap, ketuk untuk melihat hasil</string>
+    <string name="dock_limited">Format lossy, audio tidak dapat didekode. Ketuk untuk detail</string>
+    <string name="dock_progress">"%1$s  ·  %2$d%%"</string>
+    <string name="dock_progress_queued">"%1$s  ·  %2$d%%  ·  %3$d menunggu"</string>
+
+    <!-- Verdict pills -->
+    <string name="verdict_lossless">Lossless</string>
+    <string name="verdict_fake">Palsu</string>
+    <string name="verdict_maybe">Mungkin</string>
+    <string name="verdict_lossy">Lossy</string>
 </resources>

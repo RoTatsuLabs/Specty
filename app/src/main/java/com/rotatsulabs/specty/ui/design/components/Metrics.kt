@@ -16,6 +16,8 @@ import java.util.Locale
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.res.stringResource
+import com.rotatsulabs.specty.R
 import com.rotatsulabs.specty.audio.Verdict
 import com.rotatsulabs.specty.ui.design.Corners
 import com.rotatsulabs.specty.ui.design.SpectyShapes
@@ -62,12 +64,12 @@ data class VerdictStyle(val label: String, val container: Color, val content: Co
 fun verdictStyle(verdict: Verdict): VerdictStyle? {
     val s = MaterialTheme.colorScheme
     return when (verdict) {
-        Verdict.GENUINE -> VerdictStyle("Lossless", s.tertiaryContainer, s.onTertiaryContainer)
-        Verdict.HI_RES -> VerdictStyle("Hi-Res", s.primaryContainer, s.onPrimaryContainer)
-        Verdict.LOSSY_SOURCE, Verdict.UPSAMPLED -> VerdictStyle("Fake", s.errorContainer, s.onErrorContainer)
-        Verdict.POSSIBLE_LOSSY_SOURCE, Verdict.BAND_LIMITED -> VerdictStyle("Maybe", s.secondaryContainer, s.onSecondaryContainer)
-        Verdict.LOSSY_CODEC -> VerdictStyle("Lossy", s.surfaceContainerHighest, s.onSurfaceVariant)
-        Verdict.DOLBY_ATMOS -> VerdictStyle("Dolby Atmos", s.inverseSurface, s.inverseOnSurface)
+        Verdict.GENUINE -> VerdictStyle(stringResource(R.string.verdict_lossless), s.tertiaryContainer, s.onTertiaryContainer)
+        Verdict.HI_RES -> VerdictStyle(stringResource(R.string.verdict_hires), s.primaryContainer, s.onPrimaryContainer)
+        Verdict.LOSSY_SOURCE, Verdict.UPSAMPLED -> VerdictStyle(stringResource(R.string.verdict_fake), s.errorContainer, s.onErrorContainer)
+        Verdict.POSSIBLE_LOSSY_SOURCE, Verdict.BAND_LIMITED -> VerdictStyle(stringResource(R.string.verdict_maybe), s.secondaryContainer, s.onSecondaryContainer)
+        Verdict.LOSSY_CODEC -> VerdictStyle(stringResource(R.string.verdict_lossy), s.surfaceContainerHighest, s.onSurfaceVariant)
+        Verdict.DOLBY_ATMOS -> VerdictStyle(stringResource(R.string.verdict_atmos), s.inverseSurface, s.inverseOnSurface)
         Verdict.INCONCLUSIVE -> null
     }
 }
