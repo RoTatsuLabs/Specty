@@ -180,8 +180,9 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit, onPickFolder: ()
             modifier = Modifier.fillMaxSize(),
             endCorners = Corners(0.dp),
             gesture = analysisBack,
+            background = MaterialTheme.colorScheme.surface,
         ) {
-            Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.surface) {
+            Surface(Modifier.fillMaxSize(), color = androidx.compose.ui.graphics.Color.Transparent, contentColor = MaterialTheme.colorScheme.onSurface) {
                 Box(Modifier.navigationBarsPadding()) {
                     AnalysisScreen(held.state, onBack = viewModel::closeAnalysis, onReanalyse = viewModel::reanalyze, showMetadata = showMetadata, onFullscreen = { viewerView = it }, onCompare = onPickCompare, flight = flight)
                 }
@@ -190,8 +191,8 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit, onPickFolder: ()
 
         CoverFlightLayer(flight, open = analysisOpen, currentUri = viewerResult?.uri)
 
-        OverlayScreen(visible = showSettings, gesture = settingsBack, depth = depth, id = "settings") {
-            Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.surface) {
+        OverlayScreen(visible = showSettings, gesture = settingsBack, depth = depth, id = "settings", backdrop = MaterialTheme.colorScheme.surface) {
+            Surface(Modifier.fillMaxSize(), color = androidx.compose.ui.graphics.Color.Transparent, contentColor = MaterialTheme.colorScheme.onSurface) {
                 SettingsScreen(
                     appearance = appearance,
                     onThemeMode = viewModel::setThemeMode,
@@ -218,8 +219,8 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit, onPickFolder: ()
             }
         }
 
-        OverlayScreen(visible = showAbout, gesture = aboutBack, depth = depth, id = "about") {
-            Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.surface) {
+        OverlayScreen(visible = showAbout, gesture = aboutBack, depth = depth, id = "about", backdrop = MaterialTheme.colorScheme.surface) {
+            Surface(Modifier.fillMaxSize(), color = androidx.compose.ui.graphics.Color.Transparent, contentColor = MaterialTheme.colorScheme.onSurface) {
                 AboutScreen(
                     onReplayIntro = { showAbout = false; viewModel.replayOnboarding() },
                     developer = developer,
@@ -229,8 +230,8 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit, onPickFolder: ()
             }
         }
 
-        OverlayScreen(visible = showLog, gesture = logBack, depth = depth, id = "log") {
-            Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.surface) {
+        OverlayScreen(visible = showLog, gesture = logBack, depth = depth, id = "log", backdrop = MaterialTheme.colorScheme.surface) {
+            Surface(Modifier.fillMaxSize(), color = androidx.compose.ui.graphics.Color.Transparent, contentColor = MaterialTheme.colorScheme.onSurface) {
                 com.rotatsulabs.specty.ui.screens.DeveloperLogScreen(onBack = { showLog = false })
             }
         }
