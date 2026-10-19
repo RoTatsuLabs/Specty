@@ -1,4 +1,132 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Specty</string>
+    <string name="app_name" translatable="false">Specty</string>
+
+    <!-- Common -->
+    <string name="action_back">Back</string>
+    <string name="action_close">Close</string>
+
+    <!-- Settings -->
+    <string name="settings_title">Settings</string>
+    <string name="settings_appearance">Appearance</string>
+    <string name="settings_theme">Theme</string>
+    <string name="theme_system">System</string>
+    <string name="theme_light">Light</string>
+    <string name="theme_dark">Dark</string>
+    <string name="settings_dynamic_colour">Dynamic colour</string>
+    <string name="settings_dynamic_colour_desc">Use colours from your wallpaper. Off lets you pick a tonal palette.</string>
+    <string name="settings_palette">Tonal palette</string>
+    <string name="settings_palette_desc">Every colour in the app is derived from this one.</string>
+    <string name="palette_violet">Violet</string>
+    <string name="palette_azure">Azure</string>
+    <string name="palette_teal">Teal</string>
+    <string name="palette_lime">Lime</string>
+    <string name="palette_amber">Amber</string>
+    <string name="palette_rose">Rose</string>
+    <string name="settings_pure_black">Pure black</string>
+    <string name="settings_pure_black_desc">True black backgrounds in dark mode, easier on OLED screens.</string>
+    <string name="settings_results">Results</string>
+    <string name="settings_metadata">Show tags and metadata</string>
+    <string name="settings_metadata_desc">Adds a read-only card with the file\'s tags, including custom and unfamiliar ones. Lyrics are never shown.</string>
+    <string name="settings_sound">Sound effects</string>
+    <string name="settings_sound_desc">Soft clicks and chimes for taps, queued files and finished analyses. Follows your system sound volume.</string>
+    <string name="settings_spectrogram">Spectrogram</string>
+    <string name="settings_window_size">Window size</string>
+    <string name="settings_window_size_desc">Larger windows resolve frequency more finely; smaller ones resolve time more finely.</string>
+    <string name="settings_window_fn">Window function</string>
+    <string name="window_hann_note">Balanced default.</string>
+    <string name="window_hamming_note">Narrower main lobe, slightly higher distant leakage.</string>
+    <string name="window_blackman_harris_note">Lowest leakage close to strong tones, so faint content beside them stands out. Frequency detail is a little softer.</string>
+    <string name="settings_window_apply">Applies to the next file you analyse. Files already checked with another size or window are analysed again.</string>
+    <string name="settings_saved">Saved results</string>
+    <string name="settings_cache">Cache</string>
+    <string name="settings_cache_empty">No saved results yet.</string>
+    <plurals name="settings_cache_count">
+        <item quantity="one">%1$d analysis saved on this device, so a file you already checked opens instantly.</item>
+        <item quantity="other">%1$d analyses saved on this device, so files you already checked open instantly.</item>
+    </plurals>
+    <string name="settings_clear_saved">Clear saved results</string>
+    <string name="settings_developer">Developer</string>
+    <string name="settings_logging">Logging</string>
+    <string name="settings_logging_desc">Records scans, analyses and failures, with file names, in a log on this device. Nothing is sent anywhere.</string>
+    <string name="settings_log">Log and diagnostics</string>
+    <string name="settings_log_desc">Read, copy or share the log, the last crash and device details.</string>
+    <string name="settings_dev_off">Turn off developer mode</string>
+    <string name="settings_dev_off_desc">Hides this section and stops logging.</string>
+
+    <!-- About -->
+    <string name="about_title">About</string>
+    <string name="about_project">Project</string>
+    <string name="about_source">Source code</string>
+    <string name="about_report">Report a problem</string>
+    <string name="about_report_desc">Open an issue on GitHub</string>
+    <string name="about_intro">Show the intro again</string>
+    <string name="about_privacy">Privacy</string>
+    <string name="about_privacy_title">Stays on your device</string>
+    <string name="about_privacy_desc">All analysis runs on your device and nothing is uploaded. Specty does not declare the internet permission.</string>
+    <string name="about_licence">Licence</string>
+    <string name="about_licence_tap">%1$s. Tap to read it.</string>
+    <string name="about_libraries">Open source libraries</string>
+    <string name="about_libraries_hint">Specty is built on the work of these projects. Tap one for details and its licence.</string>
+    <string name="about_made_by">Made by RoTatsu Labs</string>
+    <string name="about_tagline">Audio quality lab</string>
+    <string name="about_hero">See what an audio file really contains: its spectrum, loudness and dynamics, and whether a lossless file started life as a lossy one.</string>
+    <string name="about_version">Version %1$s</string>
+    <plurals name="about_dev_taps">
+        <item quantity="one">%1$d more tap to become a developer</item>
+        <item quantity="other">%1$d more taps to become a developer</item>
+    </plurals>
+    <string name="about_dev_already">Developer mode is already on</string>
+    <string name="about_dev_on">Developer mode is on. Find it in Settings.</string>
+    <string name="about_collapse">Collapse</string>
+    <string name="about_expand">Expand</string>
+    <string name="about_by">By %1$s</string>
+    <string name="about_licence_button">Licence</string>
+    <string name="about_website">Website</string>
+    <string name="about_licence_missing">The licence text could not be loaded. You can read it online instead.</string>
+    <string name="about_read_online">Read online</string>
+
+    <!-- Library credits -->
+    <string name="lib_specty_summary">Audio quality analyser for Android.</string>
+    <string name="lib_specty_note">Specty is free software under the GNU General Public License, version 3. You can use, study, change and share it under those terms.</string>
+    <string name="lib_ffmpeg_summary">FFmpeg for Android, a continuation of the retired Arthenica ffmpeg-kit.</string>
+    <string name="lib_ffmpeg_note">Reads and decodes every audio file Specty analyses. It includes the FFmpeg libraries (libavcodec, libavformat, libavutil and others), also under the LGPL. The source is available from the link above.</string>
+    <string name="lib_compose_summary">UI toolkit: UI, Graphics, Foundation, Material 3 and Material Icons Extended.</string>
+    <string name="lib_compose_note">Draws the whole interface. The icons come from the Material Icons set.</string>
+    <string name="lib_activity_summary">Compose integration for activities, result contracts and edge-to-edge.</string>
+    <string name="lib_lifecycle_summary">ViewModel and lifecycle-aware state for Compose.</string>
+    <string name="lib_core_summary">Kotlin extensions for the Android framework.</string>
+    <string name="lib_androidx_summary">Annotation, Collection, Saved State, Startup and other AndroidX libraries that the ones above depend on.</string>
+    <string name="lib_kotlin_summary">The Kotlin runtime.</string>
+    <string name="lib_coroutines_summary">Background work and cancellation for analysis and library scanning.</string>
+
+    <!-- Onboarding -->
+    <string name="onboarding_progress">%1$d of %2$d</string>
+    <string name="onboarding_skip">Skip</string>
+    <string name="onboarding_previous">Previous page</string>
+    <string name="onboarding_start">Get started</string>
+    <string name="onboarding_next">Next</string>
+    <string name="onboarding_0_title">Meet Specty</string>
+    <string name="onboarding_0_body">A quality lab for your music. Look inside any audio file and see what it really contains.</string>
+    <string name="onboarding_1_title">See the spectrum</string>
+    <string name="onboarding_1_body">The spectrogram shows every frequency over time. Open it fullscreen, pinch to zoom into the top end and touch it to read exact values.</string>
+    <string name="onboarding_2_title">Catch fake lossless</string>
+    <string name="onboarding_2_body">A lossless file made from an MP3 keeps the MP3\'s cutoff. Specty finds that edge, says how sure it is and which encoder it resembles.</string>
+    <string name="onboarding_3_title">Measure everything</string>
+    <string name="onboarding_3_body">Loudness, true peak, dynamic range, clipping and stereo health, plus a background scan of your whole library. It all runs on your device.</string>
+    <string name="onboarding_folder_added">Folder added</string>
+    <string name="onboarding_folder_title">Library folders</string>
+    <string name="onboarding_folder_added_desc">Your music will be listed as soon as you start.</string>
+    <string name="onboarding_folder_desc">Pick the folders with your music. Files never leave your device.</string>
+    <string name="onboarding_choose_folder">Choose folder</string>
+    <string name="onboarding_cutoff_chip">16 kHz cutoff</string>
+    <string name="onboarding_verdict_genuine">Lossless full-band</string>
+    <string name="onboarding_verdict_genuine_desc">Content reaches 22 kHz</string>
+    <string name="onboarding_verdict_transcoded">Likely transcoded</string>
+    <string name="onboarding_verdict_transcoded_desc">Hard cutoff near 16 kHz</string>
+    <string name="onboarding_confidence">%1$d%% confidence</string>
+    <string name="onboarding_tile_loudness">Loudness</string>
+    <string name="onboarding_tile_dynamics">Dynamics</string>
+    <string name="onboarding_tile_meter">meter</string>
+    <string name="onboarding_tile_peak">True peak</string>
 </resources>

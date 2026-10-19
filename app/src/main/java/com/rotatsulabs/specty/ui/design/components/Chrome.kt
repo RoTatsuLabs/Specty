@@ -1,5 +1,7 @@
 package com.rotatsulabs.specty.ui.design.components
 
+import androidx.compose.ui.res.stringResource
+import com.rotatsulabs.specty.R
 import com.rotatsulabs.specty.ui.design.followBack
 import com.rotatsulabs.specty.ui.design.LocalBackPose
 import androidx.compose.ui.graphics.graphicsLayer
@@ -38,7 +40,7 @@ fun ExpressiveTopBar(
         horizontalArrangement = Arrangement.spacedBy(4.dp),
     ) {
         if (onBack != null) {
-            ExpressiveIconButton(Icons.AutoMirrored.Rounded.ArrowBack, "Back", onBack)
+            ExpressiveIconButton(Icons.AutoMirrored.Rounded.ArrowBack, stringResource(R.string.action_back), onBack)
             Spacer(Modifier.width(8.dp))
         } else {
             Spacer(Modifier.width(8.dp))

@@ -62,7 +62,7 @@ class OpenSourceTest {
         assertEquals(all.size, all.map { it.name }.toSet().size)
         for (lib in all) {
             assertTrue(lib.name, lib.url.startsWith("https://"))
-            assertTrue(lib.name, lib.summary.isNotBlank() && lib.author.isNotBlank())
+            assertTrue(lib.name, lib.summary != 0 && lib.author.isNotBlank())
         }
         assertEquals(LicenseKind.Gpl3, OpenSource.app.license)
         assertEquals(LicenseKind.Lgpl3, OpenSource.libraries.first { it.name.startsWith("FFmpegKit") }.license)

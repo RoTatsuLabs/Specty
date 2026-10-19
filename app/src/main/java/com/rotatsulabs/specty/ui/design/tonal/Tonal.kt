@@ -1,5 +1,7 @@
 package com.rotatsulabs.specty.ui.design.tonal
 
+import androidx.annotation.StringRes
+import com.rotatsulabs.specty.R
 import kotlin.math.abs
 import kotlin.math.atan2
 import kotlin.math.cbrt
@@ -111,13 +113,13 @@ class TonalPalette(val hue: Double, val chroma: Double) {
 }
 
 /** Seed colours offered in settings. [hue] is the OKLCH hue in degrees. */
-enum class SeedPalette(val label: String, val hue: Double, val chroma: Double = 0.15) {
-    Violet("Violet", 295.0),
-    Azure("Azure", 250.0),
-    Teal("Teal", 190.0, 0.12),
-    Lime("Lime", 128.0, 0.15),
-    Amber("Amber", 75.0, 0.14),
-    Rose("Rose", 355.0),
+enum class SeedPalette(@StringRes val labelRes: Int, val hue: Double, val chroma: Double = 0.15) {
+    Violet(R.string.palette_violet, 295.0),
+    Azure(R.string.palette_azure, 250.0),
+    Teal(R.string.palette_teal, 190.0, 0.12),
+    Lime(R.string.palette_lime, 128.0, 0.15),
+    Amber(R.string.palette_amber, 75.0, 0.14),
+    Rose(R.string.palette_rose, 355.0),
 }
 
 /** All colour roles as ARGB ints, ready to map onto a Compose ColorScheme. */

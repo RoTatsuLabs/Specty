@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Common -->
+    <string name="action_back">返回</string>
+    <string name="action_close">关闭</string>
+
+    <!-- Settings -->
+    <string name="settings_title">设置</string>
+    <string name="settings_appearance">外观</string>
+    <string name="settings_theme">主题</string>
+    <string name="theme_system">跟随系统</string>
+    <string name="theme_light">浅色</string>
+    <string name="theme_dark">深色</string>
+    <string name="settings_dynamic_colour">动态取色</string>
+    <string name="settings_dynamic_colour_desc">使用壁纸中的颜色。关闭后可自选色调调色板。</string>
+    <string name="settings_palette">色调调色板</string>
+    <string name="settings_palette_desc">应用中的所有颜色均由此颜色派生。</string>
+    <string name="palette_violet">紫罗兰</string>
+    <string name="palette_azure">天蓝</string>
+    <string name="palette_teal">青绿</string>
+    <string name="palette_lime">青柠</string>
+    <string name="palette_amber">琥珀</string>
+    <string name="palette_rose">玫瑰</string>
+    <string name="settings_pure_black">纯黑</string>
+    <string name="settings_pure_black_desc">深色模式下使用纯黑背景，对 OLED 屏幕更友好。</string>
+    <string name="settings_results">结果</string>
+    <string name="settings_metadata">显示标签和元数据</string>
+    <string name="settings_metadata_desc">添加一张只读卡片，显示文件的标签，包括自定义标签和不常见的标签。不会显示歌词。</string>
+    <string name="settings_sound">音效</string>
+    <string name="settings_sound_desc">点按、文件加入队列和分析完成时播放轻柔的点击声与提示音。跟随系统音量。</string>
+    <string name="settings_spectrogram">频谱图</string>
+    <string name="settings_window_size">窗口大小</string>
+    <string name="settings_window_size_desc">窗口越大，频率分辨越精细；窗口越小，时间分辨越精细。</string>
+    <string name="settings_window_fn">窗函数</string>
+    <string name="window_hann_note">均衡的默认选项。</string>
+    <string name="window_hamming_note">主瓣更窄，远端泄漏略高。</string>
+    <string name="window_blackman_harris_note">强音附近的泄漏最低，因此其旁边的微弱内容更突出。频率细节略显柔和。</string>
+    <string name="settings_window_apply">将应用于你分析的下一个文件。已用其他大小或窗口检查过的文件会重新分析。</string>
+    <string name="settings_saved">已保存的结果</string>
+    <string name="settings_cache">缓存</string>
+    <string name="settings_cache_empty">还没有已保存的结果。</string>
+    <plurals name="settings_cache_count">
+        <item quantity="other">已在此设备上保存 %1$d 条分析结果，因此检查过的文件可以立即打开。</item>
+    </plurals>
+    <string name="settings_clear_saved">清除已保存的结果</string>
+    <string name="settings_developer">开发者</string>
+    <string name="settings_logging">日志记录</string>
+    <string name="settings_logging_desc">在此设备的日志中记录扫描、分析和失败情况，包含文件名。不会向任何地方发送数据。</string>
+    <string name="settings_log">日志与诊断</string>
+    <string name="settings_log_desc">查看、复制或分享日志、最近一次崩溃和设备详情。</string>
+    <string name="settings_dev_off">关闭开发者模式</string>
+    <string name="settings_dev_off_desc">隐藏此部分并停止记录日志。</string>
+
+    <!-- About -->
+    <string name="about_title">关于</string>
+    <string name="about_project">项目</string>
+    <string name="about_source">源代码</string>
+    <string name="about_report">报告问题</string>
+    <string name="about_report_desc">在 GitHub 上提交 issue</string>
+    <string name="about_intro">再次显示引导页</string>
+    <string name="about_privacy">隐私</string>
+    <string name="about_privacy_title">数据留在你的设备上</string>
+    <string name="about_privacy_desc">所有分析都在你的设备上运行，不会上传任何内容。Specty 未声明联网权限。</string>
+    <string name="about_licence">许可证</string>
+    <string name="about_licence_tap">%1$s。点按阅读全文。</string>
+    <string name="about_libraries">开源库</string>
+    <string name="about_libraries_hint">Specty 建立在这些项目的成果之上。点按任意一项可查看详情及其许可证。</string>
+    <string name="about_made_by">由 RoTatsu Labs 制作</string>
+    <string name="about_tagline">音频质量实验室</string>
+    <string name="about_hero">看清音频文件的真实内容：频谱、响度与动态，以及无损文件是否原本来自有损音源。</string>
+    <string name="about_version">版本 %1$s</string>
+    <plurals name="about_dev_taps">
+        <item quantity="other">再点按 %1$d 次即可成为开发者</item>
+    </plurals>
+    <string name="about_dev_already">开发者模式已处于开启状态</string>
+    <string name="about_dev_on">开发者模式已开启。可在“设置”中找到。</string>
+    <string name="about_collapse">收起</string>
+    <string name="about_expand">展开</string>
+    <string name="about_by">作者：%1$s</string>
+    <string name="about_licence_button">许可证</string>
+    <string name="about_website">网站</string>
+    <string name="about_licence_missing">无法加载许可证文本。你可以改为在线阅读。</string>
+    <string name="about_read_online">在线阅读</string>
+
+    <!-- Library credits -->
+    <string name="lib_specty_summary">Android 音频质量分析工具。</string>
+    <string name="lib_specty_note">Specty 是自由软件，遵循 GNU 通用公共许可证第 3 版。你可以依据这些条款使用、研究、修改和分享它。</string>
+    <string name="lib_ffmpeg_summary">适用于 Android 的 FFmpeg，是已停止维护的 Arthenica ffmpeg-kit 的延续。</string>
+    <string name="lib_ffmpeg_note">读取并解码 Specty 分析的每一个音频文件。其中包含 FFmpeg 库（libavcodec、libavformat、libavutil 等），同样遵循 LGPL。源代码可通过上方链接获取。</string>
+    <string name="lib_compose_summary">UI 工具包：UI、Graphics、Foundation、Material 3 和 Material Icons Extended。</string>
+    <string name="lib_compose_note">绘制整个界面。图标来自 Material Icons 图标集。</string>
+    <string name="lib_activity_summary">面向 Activity、结果协定和边到边显示的 Compose 集成。</string>
+    <string name="lib_lifecycle_summary">适用于 Compose 的 ViewModel 与生命周期感知状态。</string>
+    <string name="lib_core_summary">Android 框架的 Kotlin 扩展。</string>
+    <string name="lib_androidx_summary">Annotation、Collection、Saved State、Startup 以及上述库所依赖的其他 AndroidX 库。</string>
+    <string name="lib_kotlin_summary">Kotlin 运行时。</string>
+    <string name="lib_coroutines_summary">用于分析和曲库扫描的后台任务与取消机制。</string>
+
+    <!-- Onboarding -->
+    <string name="onboarding_progress">%1$d / %2$d</string>
+    <string name="onboarding_skip">跳过</string>
+    <string name="onboarding_previous">上一页</string>
+    <string name="onboarding_start">开始使用</string>
+    <string name="onboarding_next">下一步</string>
+    <string name="onboarding_0_title">认识 Specty</string>
+    <string name="onboarding_0_body">为你的音乐打造的质量实验室。深入任意音频文件内部，看清它真正包含什么。</string>
+    <string name="onboarding_1_title">查看频谱</string>
+    <string name="onboarding_1_body">频谱图显示各个频率随时间的变化。可全屏打开，双指张开放大高频部分，触摸即可读取精确数值。</string>
+    <string name="onboarding_2_title">揪出伪无损</string>
+    <string name="onboarding_2_body">由 MP3 转成的无损文件会保留 MP3 的截止频率。Specty 能找到这条边界，告诉你判断的把握有多大，以及它类似哪种编码器。</string>
+    <string name="onboarding_3_title">全面测量</string>
+    <string name="onboarding_3_body">响度、真峰值、动态范围、削波和立体声状况，外加对整个曲库的后台扫描。一切都在你的设备上运行。</string>
+    <string name="onboarding_folder_added">已添加文件夹</string>
+    <string name="onboarding_folder_title">曲库文件夹</string>
+    <string name="onboarding_folder_added_desc">一开始使用，你的音乐就会列出来。</string>
+    <string name="onboarding_folder_desc">选择存放音乐的文件夹。文件绝不会离开你的设备。</string>
+    <string name="onboarding_choose_folder">选择文件夹</string>
+    <string name="onboarding_cutoff_chip">16 kHz 截止</string>
+    <string name="onboarding_verdict_genuine">真无损全频段</string>
+    <string name="onboarding_verdict_genuine_desc">内容可达 22 kHz</string>
+    <string name="onboarding_verdict_transcoded">疑似转码</string>
+    <string name="onboarding_verdict_transcoded_desc">16 kHz 附近陡然截止</string>
+    <string name="onboarding_confidence">把握度 %1$d%%</string>
+    <string name="onboarding_tile_loudness">响度</string>
+    <string name="onboarding_tile_dynamics">动态</string>
+    <string name="onboarding_tile_meter">表</string>
+    <string name="onboarding_tile_peak">真峰值</string>
+</resources>

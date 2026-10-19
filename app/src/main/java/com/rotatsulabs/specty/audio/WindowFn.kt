@@ -1,13 +1,15 @@
 package com.rotatsulabs.specty.audio
 
+import androidx.annotation.StringRes
+import com.rotatsulabs.specty.R
 import kotlin.math.PI
 import kotlin.math.cos
 
 /** Analysis window for the spectrogram. Tighter side lobes show weak content next to loud tones more cleanly. */
-enum class WindowFn(val label: String, val note: String) {
-    Hann("Hann", "Balanced default."),
-    Hamming("Hamming", "Narrower main lobe, slightly higher distant leakage."),
-    BlackmanHarris("Blackman-Harris", "Lowest leakage close to strong tones, so faint content beside them stands out. Frequency detail is a little softer.");
+enum class WindowFn(val label: String, @StringRes val noteRes: Int) {
+    Hann("Hann", R.string.window_hann_note),
+    Hamming("Hamming", R.string.window_hamming_note),
+    BlackmanHarris("Blackman-Harris", R.string.window_blackman_harris_note);
 
     /** Periodic window of [n] samples. */
     fun coefficients(n: Int): DoubleArray = DoubleArray(n) { i ->
