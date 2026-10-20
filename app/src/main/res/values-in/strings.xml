@@ -435,4 +435,30 @@
     <string name="settings_app_language">Bahasa aplikasi</string>
     <string name="settings_language_desc">Pilih bahasa aplikasi. Bawaan sistem mengikuti ponsel Anda.</string>
     <string name="language_system">Bawaan sistem</string>
+
+    <!-- Library filter -->
+    <string name="filter_open">Filter menurut hasil</string>
+    <string name="filter_title">Filter menurut hasil</string>
+    <string name="filter_subtitle">Pilih satu atau lebih. Lagu tampil jika cocok dengan salah satunya.</string>
+    <string name="filter_unchecked">Belum diperiksa</string>
+    <string name="filter_unchecked_hint">Belum dianalisis</string>
+    <string name="filter_lossless">Lossless</string>
+    <string name="filter_lossless_hint">Audio lossless asli</string>
+    <string name="filter_hires_hint">Lossless di atas 48 kHz</string>
+    <string name="filter_needs_look">Perlu dicek</string>
+    <string name="filter_needs_look_hint">Kemungkinan berasal dari sumber lossy atau hasil upsample</string>
+    <string name="filter_lossy_format">Format lossy</string>
+    <string name="filter_lossy_format_hint">MP3, AAC, dan codec lossy lainnya</string>
+    <string name="filter_atmos">Dolby Atmos</string>
+    <string name="filter_atmos_hint">Audio objek, tidak dinilai untuk asal lossy</string>
+    <string name="filter_unclear">Belum jelas</string>
+    <string name="filter_unclear_hint">Terbatas pita, atau bukti kurang</string>
+    <string name="filter_reset">Atur ulang</string>
+    <string name="filter_clear">Hapus filter</string>
+    <string name="filter_remove">Hapus filter %1$s</string>
+    <string name="filter_empty_title">Tidak ada lagu yang cocok</string>
+    <string name="filter_empty_message">Belum ada lagu di pustaka Anda dengan hasil ini. Hapus filter untuk melihat semuanya.</string>
+    <plurals name="filter_show">
+        <item quantity="other">Tampilkan %1$d lagu</item>
+    </plurals>
 </resources>

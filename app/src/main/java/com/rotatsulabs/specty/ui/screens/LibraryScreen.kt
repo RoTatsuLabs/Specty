@@ -187,13 +187,18 @@ fun LibraryScreen(
     var sortIndex by rememberSaveable { mutableStateOf(0) }
     var ascending by rememberSaveable { mutableStateOf(true) }
     var grid by rememberSaveable { mutableStateOf(false) }
+    var filterMask by rememberSaveable { mutableStateOf(0) }
+    var showFilter by rememberSaveable { mutableStateOf(false) }
     val sort = SortKey.entries[sortIndex]
+    val filters = remember(filterMask) { ResultFilter.fromMask(filterMask) }
 
     val verdictByTrack = remember(state.tracks, verdicts, keyFor) {
         state.tracks.associate { it.uri.toString() to verdicts[keyFor(it)] }
     }
 
-    val visible = remember(state.tracks, query, sort, ascending) {
+    val filterCounts = remember(verdictByTrack) { ResultFilter.counts(verdictByTrack.values) }
+
+    val visible = remember(state.tracks, verdictByTrack, query, sort, ascending, filters) {
         val searched = if (query.isBlank()) {
             state.tracks
         } else {
@@ -203,11 +208,12 @@ fun LibraryScreen(
                     (it.album?.contains(query, ignoreCase = true) == true)
             }
         }
+        val filtered = searched.filter { filters.accepts(verdictByTrack[it.uri.toString()]) }
         val sorted = when (sort) {
-            SortKey.Title -> searched.sortedBy { it.title.lowercase() }
-            SortKey.Artist -> searched.sortedBy { (it.artist ?: "￿").lowercase() }
-            SortKey.Duration -> searched.sortedBy { it.durationMs }
-            SortKey.Size -> searched.sortedBy { it.sizeBytes }
+            SortKey.Title -> filtered.sortedBy { it.title.lowercase() }
+            SortKey.Artist -> filtered.sortedBy { (it.artist ?: "￿").lowercase() }
+            SortKey.Duration -> filtered.sortedBy { it.durationMs }
+            SortKey.Size -> filtered.sortedBy { it.sizeBytes }
         }
         if (ascending) sorted else sorted.reversed()
     }
@@ -226,6 +232,16 @@ fun LibraryScreen(
     Box(modifier.fillMaxSize()) {
         if (showFolders) {
             FoldersDialog(state.folders, onAdd = onPickFolder, onRemove = onRemoveFolder, onDismiss = { showFolders = false })
+        }
+        if (showFilter && hasTracks) {
+            FilterSheet(
+                selected = filters,
+                counts = filterCounts,
+                shown = visible.size,
+                onToggle = { f -> filterMask = ResultFilter.toMask(if (f in filters) filters - f else filters + f) },
+                onClear = { filterMask = 0 },
+                onDismiss = { showFilter = false },
+            )
         }
         LazyColumn(
             Modifier.fillMaxSize(),
@@ -262,7 +278,23 @@ fun LibraryScreen(
             }
             item(key = "search") {
                 Spacer(Modifier.height(14.dp))
-                Box(Modifier.eggJitter(3)) { SearchPill(query) { query = it } }
+                Box(Modifier.eggJitter(3)) {
+                    SearchPill(query, { query = it }) {
+                        if (hasTracks) {
+                            Spacer(Modifier.width(8.dp))
+                            FilterButton(filters.size, { showFilter = true })
+                        }
+                    }
+                }
+            }
+            if (hasTracks) {
+                item(key = "activeFilters") {
+                    ActiveFilters(
+                        selected = filters,
+                        onRemove = { f -> filterMask = ResultFilter.toMask(filters - f) },
+                        onClear = { filterMask = 0 },
+                    )
+                }
             }
             if (hasTracks) {
                 item(key = "section") {
@@ -296,6 +328,9 @@ fun LibraryScreen(
                     Box(Modifier.fillParentMaxHeight(0.5f).fillMaxWidth()) {
                         Message(stringResource(R.string.library_empty_folders))
                     }
+                }
+                visible.isEmpty() && filters.isNotEmpty() -> item(key = "nofilter") {
+                    Box(Modifier.fillParentMaxHeight(0.5f).fillMaxWidth()) { FilterEmpty(onClear = { filterMask = 0 }) }
                 }
                 visible.isEmpty() -> item(key = "nomatch") {
                     Box(Modifier.fillParentMaxHeight(0.4f).fillMaxWidth()) { Message(stringResource(R.string.library_no_match)) }
@@ -505,8 +540,11 @@ private fun BatchCard(batch: BatchScanner.State, onCancel: () -> Unit, onDismiss
 // ---- search, filters, section bar ---------------------------------------------------------------
 
 @Composable
-private fun SearchPill(query: String, onChange: (String) -> Unit) {
-    SearchField(query, onChange, Modifier.padding(horizontal = 16.dp), placeholder = stringResource(R.string.library_search))
+private fun SearchPill(query: String, onChange: (String) -> Unit, trailing: @Composable () -> Unit = {}) {
+    Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), verticalAlignment = Alignment.CenterVertically) {
+        SearchField(query, onChange, Modifier.weight(1f), placeholder = stringResource(R.string.library_search))
+        trailing()
+    }
 }
 
 @Composable
