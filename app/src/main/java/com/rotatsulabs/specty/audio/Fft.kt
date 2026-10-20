@@ -35,24 +35,48 @@ class Fft(val n: Int) {
         while (size <= n) {
             val half = size / 2
             val step = n / size
-            var start = 0
-            while (start < n) {
-                var k = 0
-                for (j in start until start + half) {
-                    val wr = cosTable[k]
-                    val wi = sinTable[k]
-                    val l = j + half
-                    val tr = re[l] * wr - im[l] * wi
-                    val ti = re[l] * wi + im[l] * wr
-                    re[l] = re[j] - tr
-                    im[l] = im[j] - ti
-                    re[j] += tr
-                    im[j] += ti
-                    k += step
+            if (half < SHORT_BLOCK) {
+                // Blocks this small hold only a few butterflies, so take one twiddle at a time and walk it down every
+                // block. The same butterflies run, just in another order, so the output is unchanged.
+                for (k in 0 until half) {
+                    val wr = cosTable[k * step]
+                    val wi = sinTable[k * step]
+                    var j = k
+                    while (j < n) {
+                        val l = j + half
+                        val tr = re[l] * wr - im[l] * wi
+                        val ti = re[l] * wi + im[l] * wr
+                        re[l] = re[j] - tr
+                        im[l] = im[j] - ti
+                        re[j] += tr
+                        im[j] += ti
+                        j += size
+                    }
                 }
-                start += size
+            } else {
+                var start = 0
+                while (start < n) {
+                    var k = 0
+                    for (j in start until start + half) {
+                        val wr = cosTable[k]
+                        val wi = sinTable[k]
+                        val l = j + half
+                        val tr = re[l] * wr - im[l] * wi
+                        val ti = re[l] * wi + im[l] * wr
+                        re[l] = re[j] - tr
+                        im[l] = im[j] - ti
+                        re[j] += tr
+                        im[j] += ti
+                        k += step
+                    }
+                    start += size
+                }
             }
             size = size shl 1
         }
+    }
+
+    private companion object {
+        const val SHORT_BLOCK = 8
     }
 }

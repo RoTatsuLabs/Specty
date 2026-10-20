@@ -44,6 +44,7 @@ object SpectrogramAnalyzer {
         val re = DoubleArray(fftSize)
         val im = DoubleArray(fftSize)
         val mixPower = DoubleArray(bins)
+        val mixDb = DoubleArray(bins)
 
         val activeSum = DoubleArray(bins)
         var activeCount = 0
@@ -66,7 +67,7 @@ object SpectrogramAnalyzer {
                     val magnitude = sqrt(re[k] * re[k] + im[k] * im[k]) * 2.0 / windowSum
                     val power = magnitude * magnitude
                     mixPower[k] += power
-                    target[col * bins + k] = quantize(power)
+                    target[col * bins + k] = quantizeDb(toDb(power))
                 }
             }
 
@@ -74,11 +75,14 @@ object SpectrogramAnalyzer {
             for (k in 0 until bins) {
                 val power = mixPower[k] / channels
                 framePower += power
-                if (channels > 1) views[0][col * bins + k] = quantize(power)
-                allSum[k] += toDb(power)
+                // One logarithm per bin serves the mixed view and both averages.
+                val db = toDb(power)
+                mixDb[k] = db
+                if (channels > 1) views[0][col * bins + k] = quantizeDb(db)
+                allSum[k] += db
             }
             if (toDb(framePower) > ACTIVE_FRAME_DB) {
-                for (k in 0 until bins) activeSum[k] += toDb(mixPower[k] / channels)
+                for (k in 0 until bins) activeSum[k] += mixDb[k]
                 activeCount++
             }
 
@@ -112,8 +116,8 @@ object SpectrogramAnalyzer {
 
     private fun toDb(power: Double): Double = 10.0 * log10(power + 1e-18)
 
-    private fun quantize(power: Double): Byte {
-        val t = (toDb(power) - Spectrogram.MIN_DB) / (Spectrogram.MAX_DB - Spectrogram.MIN_DB)
+    private fun quantizeDb(db: Double): Byte {
+        val t = (db - Spectrogram.MIN_DB) / (Spectrogram.MAX_DB - Spectrogram.MIN_DB)
         return (t.coerceIn(0.0, 1.0) * 255.0).roundToInt().toByte()
     }
 }

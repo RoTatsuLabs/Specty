@@ -42,20 +42,22 @@ class BatchEngine<T>(
     /** Runs before each item; may suspend to wait out heat or a low battery. */
     private val gate: suspend () -> Unit = {},
     private val maxConsecutiveFailures: Int = 25,
-    /** Pause after each analysed item so a long run lets the CPU rest. */
-    private val cooldownMs: Long = 0L,
+    /** Pause after each analysed item so a long run lets the CPU rest; asked again each time, so it can follow the heat. */
+    private val cooldownMs: () -> Long = { 0L },
 ) {
     /** Returns why the run ended; a cancelled run throws [CancellationException] as usual. */
     suspend fun run(items: List<T>, listener: BatchListener<T>): BatchStop {
         var failuresInARow = 0
         for ((index, item) in items.withIndex()) {
             currentCoroutineContext().ensureActive()
-            gate()
-            listener.onStart(index, item)
+            // A saved item costs nothing, so it never waits for the gate; a long library of them passes in one go.
             if (isSaved(item)) {
+                listener.onStart(index, item)
                 listener.onOutcome(index, item, BatchOutcome.Skipped)
                 continue
             }
+            gate()
+            listener.onStart(index, item)
             try {
                 val flagged = process(item) { listener.onProgress(index, it) }
                 failuresInARow = 0
@@ -69,7 +71,8 @@ class BatchEngine<T>(
                 listener.onOutcome(index, item, BatchOutcome.Failed(e.message ?: e.javaClass.simpleName))
                 if (++failuresInARow >= maxConsecutiveFailures) return BatchStop.TooManyFailures
             }
-            if (cooldownMs > 0) delay(cooldownMs) else yield()
+            val rest = cooldownMs()
+            if (rest > 0) delay(rest) else yield()
         }
         return BatchStop.Finished
     }
