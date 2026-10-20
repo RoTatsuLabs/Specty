@@ -5,6 +5,7 @@ import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.layout.onGloballyPositioned
 import com.rotatsulabs.specty.ui.design.SpectyShapes
+import com.rotatsulabs.specty.ui.design.components.ExpressiveMenuItem
 import com.rotatsulabs.specty.ui.design.components.ButtonKind
 import com.rotatsulabs.specty.ui.design.components.EmptyState
 import com.rotatsulabs.specty.ui.design.components.ExpressiveButton
@@ -84,13 +85,11 @@ import androidx.compose.material.icons.rounded.ViewAgenda
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -419,30 +418,30 @@ private fun Header(
             ExpressiveIconButton(Icons.Rounded.MoreVert, stringResource(R.string.library_more), { menu = true }, toggled = menu, iconModifier = Modifier.rotate(menuTurn))
             DropdownMenu(expanded = menu, onDismissRequest = { menu = false }, shape = RoundedCornerShape(20.dp)) {
                 if (canRescan) {
-                    DropdownMenuItem(
+                    ExpressiveMenuItem(
                         text = { Text(stringResource(R.string.library_menu_rescan)) },
                         leadingIcon = { Icon(Icons.Rounded.Refresh, contentDescription = null) },
                         onClick = { menu = false; onRescan() },
                     )
                 }
                 if (canScan) {
-                    DropdownMenuItem(
+                    ExpressiveMenuItem(
                         text = { Text(stringResource(R.string.library_menu_scan)) },
                         leadingIcon = { Icon(Icons.Rounded.Radar, contentDescription = null) },
                         onClick = { menu = false; onScanAll() },
                     )
                 }
-                DropdownMenuItem(
+                ExpressiveMenuItem(
                     text = { Text(stringResource(R.string.library_menu_folders)) },
                     leadingIcon = { Icon(Icons.Rounded.FolderOpen, contentDescription = null) },
                     onClick = { menu = false; onFolders() },
                 )
-                DropdownMenuItem(
+                ExpressiveMenuItem(
                     text = { Text(stringResource(R.string.settings_title)) },
                     leadingIcon = { Icon(Icons.Rounded.Settings, contentDescription = null) },
                     onClick = { menu = false; onSettings() },
                 )
-                DropdownMenuItem(
+                ExpressiveMenuItem(
                     text = { Text(stringResource(R.string.about_title)) },
                     leadingIcon = { Icon(Icons.Rounded.Info, contentDescription = null) },
                     onClick = { menu = false; onAbout() },
@@ -589,7 +588,7 @@ private fun SectionBar(
             }
             DropdownMenu(expanded = menu, onDismissRequest = { menu = false }, shape = RoundedCornerShape(20.dp)) {
                 SortKey.entries.forEach { key ->
-                    DropdownMenuItem(
+                    ExpressiveMenuItem(
                         text = { Text(stringResource(key.labelRes), fontWeight = if (key == sort) FontWeight.Bold else FontWeight.Normal) },
                         onClick = { menu = false; onSort(key) },
                     )
@@ -807,8 +806,8 @@ private fun FoldersDialog(folders: List<LibraryFolder>, onAdd: () -> Unit, onRem
                 }
             }
         },
-        confirmButton = { TextButton(onClick = { onDismiss(); onAdd() }) { Text(stringResource(R.string.library_add_folder)) } },
-        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_done)) } },
+        confirmButton = { ExpressiveButton(stringResource(R.string.library_add_folder), { onDismiss(); onAdd() }, kind = ButtonKind.Text) },
+        dismissButton = { ExpressiveButton(stringResource(R.string.action_done), onDismiss, kind = ButtonKind.Text) },
     )
 }
 

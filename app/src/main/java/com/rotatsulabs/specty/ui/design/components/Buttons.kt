@@ -16,6 +16,12 @@ import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.runtime.remember
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Close
+import com.rotatsulabs.specty.ui.components.pressScale
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -142,3 +148,52 @@ fun Pill(
     }
 }
 
+
+/** Menu row that squashes under the finger like the rest of the app's controls. */
+@Composable
+fun ExpressiveMenuItem(
+    text: @Composable () -> Unit,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    leadingIcon: (@Composable () -> Unit)? = null,
+    trailingIcon: (@Composable () -> Unit)? = null,
+    enabled: Boolean = true,
+) {
+    val source = remember { MutableInteractionSource() }
+    DropdownMenuItem(
+        text = text,
+        onClick = onClick,
+        modifier = modifier.pressScale(source, 0.96f),
+        leadingIcon = leadingIcon,
+        trailingIcon = trailingIcon,
+        enabled = enabled,
+        interactionSource = source,
+    )
+}
+
+/** Removable chip: a capsule that squashes when pressed, with a close icon. */
+@Composable
+fun ExpressiveChip(
+    text: String,
+    closeDescription: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    MorphSurface(
+        modifier = modifier.defaultMinSize(minHeight = 32.dp),
+        corners = SpectyShapes.Pill,
+        color = MaterialTheme.colorScheme.secondaryContainer,
+        contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+        onClick = onClick,
+        role = Role.Button,
+    ) {
+        Row(
+            Modifier.padding(start = 14.dp, end = 8.dp, top = 6.dp, bottom = 6.dp),
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(text, style = MaterialTheme.typography.labelLarge, maxLines = 1)
+            Icon(Icons.Rounded.Close, closeDescription, Modifier.size(18.dp))
+        }
+    }
+}

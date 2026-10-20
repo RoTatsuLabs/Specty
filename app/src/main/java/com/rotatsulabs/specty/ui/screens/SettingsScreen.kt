@@ -34,6 +34,7 @@ import com.rotatsulabs.specty.ui.design.LocalThemeReveal
 import com.rotatsulabs.specty.ui.design.components.ButtonKind
 import com.rotatsulabs.specty.ui.design.components.ExpressiveButton
 import com.rotatsulabs.specty.ui.design.components.ExpressiveTopBar
+import com.rotatsulabs.specty.ui.design.components.OptionDropdown
 import com.rotatsulabs.specty.ui.design.components.OptionSegmentedControl
 import com.rotatsulabs.specty.ui.design.components.SettingBlock
 import com.rotatsulabs.specty.ui.design.components.SettingGroup
@@ -136,11 +137,10 @@ fun SettingsScreen(
                 var language by remember { mutableStateOf(AppLanguage.current(context)) }
                 SettingGroup(stringResource(R.string.settings_language)) {
                     SettingBlock(stringResource(R.string.settings_app_language), supporting = stringResource(R.string.settings_language_desc), corners = groupCorners(0, 1)) {
-                        OptionSegmentedControl(
+                        OptionDropdown(
                             AppLanguage.Choice.entries, language,
-                            { if (it != language) { language = it; AppLanguage.set(context, it) } },
+                            { language = it; AppLanguage.set(context, it) },
                             { stringResource(it.labelRes) },
-                            scrollable = true,
                         )
                     }
                 }
