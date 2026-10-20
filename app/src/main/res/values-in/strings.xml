@@ -429,4 +429,10 @@
     <string name="fail_no_stream">Tidak ada aliran audio di file ini.</string>
     <string name="fail_no_format">Aliran audio tidak punya sample rate atau tata letak kanal yang dapat dipakai.</string>
     <string name="fail_decode">Pendekodean gagal. %1$s</string>
+
+    <!-- Language setting -->
+    <string name="settings_language">Bahasa</string>
+    <string name="settings_app_language">Bahasa aplikasi</string>
+    <string name="settings_language_desc">Pilih bahasa aplikasi. Bawaan sistem mengikuti ponsel Anda.</string>
+    <string name="language_system">Bawaan sistem</string>
 </resources>

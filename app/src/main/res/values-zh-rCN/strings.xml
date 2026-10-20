@@ -429,4 +429,10 @@
     <string name="fail_no_stream">此文件中没有音频流。</string>
     <string name="fail_no_format">音频流没有可用的采样率或声道布局。</string>
     <string name="fail_decode">解码失败。%1$s</string>
+
+    <!-- Language setting -->
+    <string name="settings_language">语言</string>
+    <string name="settings_app_language">应用语言</string>
+    <string name="settings_language_desc">选择应用语言。“跟随系统”将使用手机的语言。</string>
+    <string name="language_system">跟随系统</string>
 </resources>

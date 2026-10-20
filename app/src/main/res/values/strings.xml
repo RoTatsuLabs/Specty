@@ -442,4 +442,13 @@
     <string name="fail_no_stream">No audio stream found in this file.</string>
     <string name="fail_no_format">The audio stream has no usable sample rate or channel layout.</string>
     <string name="fail_decode">Decoding failed. %1$s</string>
+
+    <!-- Language setting -->
+    <string name="settings_language">Language</string>
+    <string name="settings_app_language">App language</string>
+    <string name="settings_language_desc">Choose the app language. System default follows your phone.</string>
+    <string name="language_system">System default</string>
+    <string name="language_en" translatable="false">English</string>
+    <string name="language_id" translatable="false">Bahasa Indonesia</string>
+    <string name="language_zh" translatable="false">简体中文</string>
 </resources>

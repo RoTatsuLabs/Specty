@@ -51,6 +51,10 @@ class BatchScanService : Service() {
 
     override fun onBind(intent: Intent?): IBinder? = null
 
+    override fun attachBaseContext(newBase: Context) {
+        super.attachBaseContext(com.rotatsulabs.specty.ui.AppLanguage.wrap(newBase))
+    }
+
     override fun onCreate() {
         super.onCreate()
         AppLog.init(this)

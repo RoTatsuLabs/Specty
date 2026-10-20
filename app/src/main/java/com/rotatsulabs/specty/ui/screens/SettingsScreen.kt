@@ -17,6 +17,11 @@ import androidx.compose.material.icons.rounded.Sell
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.res.pluralStringResource
@@ -24,6 +29,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.rotatsulabs.specty.R
 import com.rotatsulabs.specty.audio.WindowFn
+import com.rotatsulabs.specty.ui.AppLanguage
 import com.rotatsulabs.specty.ui.components.Reveal
 import com.rotatsulabs.specty.ui.design.LocalThemeReveal
 import com.rotatsulabs.specty.ui.design.components.ButtonKind
@@ -125,6 +131,21 @@ fun SettingsScreen(
                         icon = Icons.Rounded.Contrast,
                         corners = groupCorners(rows - 1, rows),
                     )
+                }
+            }
+
+            Reveal(0) {
+                val context = LocalContext.current
+                var language by remember { mutableStateOf(AppLanguage.current(context)) }
+                SettingGroup(stringResource(R.string.settings_language)) {
+                    SettingBlock(stringResource(R.string.settings_app_language), supporting = stringResource(R.string.settings_language_desc), corners = groupCorners(0, 1)) {
+                        OptionSegmentedControl(
+                            AppLanguage.Choice.entries, language,
+                            { if (it != language) { language = it; AppLanguage.set(context, it) } },
+                            { stringResource(it.labelRes) },
+                            scrollable = true,
+                        )
+                    }
                 }
             }
 
