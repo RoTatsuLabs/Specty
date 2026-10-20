@@ -348,4 +348,52 @@
     <string name="spec_nyquist">Nyquist %1$s</string>
     <string name="spec_landscape">Aktifkan/nonaktifkan kunci lanskap</string>
     <string name="spec_reset_zoom">Reset zoom</string>
+
+    <!-- Engine notes and compare highlights -->
+    <string name="note_atmos">Audio objek Dolby Atmos yang dibawa dalam aliran Dolby Digital Plus (E-AC-3). Spektrum tidak dinilai untuk asal lossy.</string>
+    <string name="note_lossy_codec_edge">%1$s adalah codec lossy; low-pass encodernya berada di sekitar %2$s kHz.</string>
+    <string name="note_lossy_codec">%1$s adalah codec lossy, jadi ini bukan file lossless.</string>
+    <string name="note_no_decoder">Perangkat ini tidak punya decoder untuknya, jadi spektrum dan level tidak dapat diukur.</string>
+    <string name="note_no_signal">Konten yang terdengar tidak cukup untuk menilai spektrum.</string>
+    <string name="note_faint_top">Bagian atas spektrum lemah, sehingga konten pelan dan derau tidak dapat dibedakan. Asal lossy tidak terbukti maupun disingkirkan.</string>
+    <string name="note_full_band">Konten mencapai bagian atas spektrum, tanpa cutoff atau roll-off yang ditemukan.</string>
+    <string name="note_rolloff">Spektrum memudar di sekitar %1$s kHz tanpa tepi tajam. Itu bisa berupa filter mastering, sumber lama, atau low-pass lembut.</string>
+    <string name="note_hard_cutoff">Cutoff tajam di sekitar %1$s kHz, khas low-pass MP3 atau AAC. File ini kemungkinan besar ditranskode dari sumber lossy.</string>
+    <string name="note_upsampled">Konten berhenti di sekitar %1$s kHz dalam file %2$s kHz. Kemungkinan besar di-upsample dari sumber 44.1 atau 48 kHz.</string>
+    <string name="note_sharp_cutoff">Cutoff tajam di sekitar %1$s kHz. Ini bisa berasal dari sumber lossy berbitrate tinggi, tetapi beberapa master juga difilter seperti ini.</string>
+    <string name="note_band_limited">Spektrum dibatasi di sekitar %1$s kHz. Itu bisa berupa filter mastering atau sumber lama.</string>
+    <string name="note_bits_padded">Hanya %1$s bit teratas yang berisi data, jadi ini tampak seperti audio %1$s-bit yang disimpan sebagai %2$s-bit.</string>
+    <string name="note_sections_disagree">Bagian-bagian lagu ini tidak sepakat tentang bagian atas spektrum (%1$s dari %2$s cocok dengan rata-rata), jadi tidak ada vonis.</string>
+    <string name="note_too_little_clear">Terlalu sedikit bagian lagu yang memberi bacaan jelas pada bagian atas spektrum untuk menyingkirkan asal lossy.</string>
+    <string name="hl_verdicts_differ">Vonis berbeda: A %1$s, B %2$s.</string>
+    <string name="hl_more_top_end">%1$s mempertahankan %2$s kHz lebih banyak di sisi atas (cutoff %3$s kHz vs %4$s kHz).</string>
+    <string name="hl_b_reaches_top">B mencapai bagian atas spektrum; A terpotong di sekitar %1$s kHz.</string>
+    <string name="hl_a_reaches_top">A mencapai bagian atas spektrum; B terpotong di sekitar %1$s kHz.</string>
+    <string name="hl_more_dynamic">%1$s lebih dinamis (DR%2$s vs DR%3$s).</string>
+    <string name="hl_louder">%1$s lebih keras %2$s LU.</string>
+    <string name="hl_more_clipping">%1$s lebih banyak clipping.</string>
+    <string name="hl_almost_same">Kedua file ini hampir sama hasil ukurnya.</string>
+    <string name="hl_verdict_genuine">lossless</string>
+    <string name="hl_verdict_hi_res">lossless hi-res</string>
+    <string name="hl_verdict_lossy_source">berasal dari sumber lossy</string>
+    <string name="hl_verdict_possible_lossy">mungkin berasal dari sumber lossy</string>
+    <string name="hl_verdict_upsampled">hasil upsample</string>
+    <string name="hl_verdict_band_limited">terbatas pita</string>
+    <string name="hl_verdict_lossy_codec">format lossy</string>
+    <string name="hl_verdict_atmos">Dolby Atmos</string>
+    <string name="hl_verdict_inconclusive">belum meyakinkan</string>
+    <string name="depth_padded">Data %1$d-bit dalam file %2$d-bit</string>
+    <string name="depth_all">Memakai semua %1$d bit</string>
+    <string name="depth_n">%1$d-bit</string>
+    <string name="decoded_summary">Float 32-bit, %1$s kHz, %2$s</string>
+    <string name="decoded_mono">mono</string>
+    <string name="decoded_stereo">stereo</string>
+    <string name="decoded_channels">%1$d kanal</string>
+    <string name="view_mix">Mix</string>
+    <string name="view_channels">Kanal</string>
+    <string name="view_mono">Mono</string>
+    <string name="view_channel">Kn %1$s</string>
+    <plurals name="note_few_sections">
+        <item quantity="other">Hanya %1$d bagian lagu yang dapat dibaca dengan jelas.</item>
+    </plurals>
 </resources>

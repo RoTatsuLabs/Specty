@@ -360,4 +360,53 @@
     <string name="spec_nyquist">Nyquist %1$s</string>
     <string name="spec_landscape">Toggle landscape lock</string>
     <string name="spec_reset_zoom">Reset zoom</string>
+
+    <!-- Engine notes and compare highlights -->
+    <string name="note_atmos">Dolby Atmos object audio carried in a Dolby Digital Plus (E-AC-3) stream. The spectrum is not judged for lossy origin.</string>
+    <string name="note_lossy_codec_edge">%1$s is a lossy codec; its encoder low-pass sits near %2$s kHz.</string>
+    <string name="note_lossy_codec">%1$s is a lossy codec, so this is not a lossless file.</string>
+    <string name="note_no_decoder">This device has no decoder for it, so the spectrum and levels could not be measured.</string>
+    <string name="note_no_signal">There is not enough audible content to judge the spectrum.</string>
+    <string name="note_faint_top">The top of the spectrum is faint, so quiet content and noise cannot be told apart. A lossy origin is neither shown nor ruled out.</string>
+    <string name="note_full_band">Content reaches the top of the spectrum, with no cutoff or roll-off found.</string>
+    <string name="note_rolloff">The spectrum fades out near %1$s kHz without a sharp edge. That can be a mastering filter, an older source or a soft low-pass.</string>
+    <string name="note_hard_cutoff">Hard cutoff near %1$s kHz, typical of an MP3 or AAC low-pass. This file was most likely transcoded from a lossy source.</string>
+    <string name="note_upsampled">Content stops near %1$s kHz inside a %2$s kHz file. It was most likely upsampled from a 44.1 or 48 kHz source.</string>
+    <string name="note_sharp_cutoff">Sharp cutoff near %1$s kHz. This can come from a high-bitrate lossy source, but some masters are also filtered this way.</string>
+    <string name="note_band_limited">The spectrum is band-limited near %1$s kHz. That may be a mastering filter or an older source.</string>
+    <string name="note_bits_padded">Only the top %1$s bits carry data, so this looks like %1$s-bit audio stored as %2$s-bit.</string>
+    <string name="note_sections_disagree">Sections of this track disagree about the top of the spectrum (%1$s of %2$s match the average), so no verdict is given.</string>
+    <string name="note_too_little_clear">Too little of the track gives a clear reading of the top of the spectrum to rule out a lossy origin.</string>
+    <string name="hl_verdicts_differ">Verdicts differ: A is %1$s, B is %2$s.</string>
+    <string name="hl_more_top_end">%1$s keeps %2$s kHz more top end (cutoff %3$s kHz vs %4$s kHz).</string>
+    <string name="hl_b_reaches_top">B reaches the top of the spectrum; A is cut off near %1$s kHz.</string>
+    <string name="hl_a_reaches_top">A reaches the top of the spectrum; B is cut off near %1$s kHz.</string>
+    <string name="hl_more_dynamic">%1$s is more dynamic (DR%2$s vs DR%3$s).</string>
+    <string name="hl_louder">%1$s is %2$s LU louder.</string>
+    <string name="hl_more_clipping">%1$s has more clipping.</string>
+    <string name="hl_almost_same">These two files measure almost the same.</string>
+    <string name="hl_verdict_genuine">lossless</string>
+    <string name="hl_verdict_hi_res">hi-res lossless</string>
+    <string name="hl_verdict_lossy_source">from a lossy source</string>
+    <string name="hl_verdict_possible_lossy">possibly from a lossy source</string>
+    <string name="hl_verdict_upsampled">upsampled</string>
+    <string name="hl_verdict_band_limited">band-limited</string>
+    <string name="hl_verdict_lossy_codec">a lossy format</string>
+    <string name="hl_verdict_atmos">Dolby Atmos</string>
+    <string name="hl_verdict_inconclusive">inconclusive</string>
+    <string name="depth_padded">%1$d-bit data in %2$d-bit file</string>
+    <string name="depth_all">Uses all %1$d bits</string>
+    <string name="depth_n">%1$d-bit</string>
+    <string name="decoded_summary">32-bit float, %1$s kHz, %2$s</string>
+    <string name="decoded_mono">mono</string>
+    <string name="decoded_stereo">stereo</string>
+    <string name="decoded_channels">%1$d ch</string>
+    <string name="view_mix">Mix</string>
+    <string name="view_channels">Channels</string>
+    <string name="view_mono">Mono</string>
+    <string name="view_channel">Ch %1$s</string>
+    <plurals name="note_few_sections">
+        <item quantity="one">Only %1$d section of the track could be read clearly.</item>
+        <item quantity="other">Only %1$d sections of the track could be read clearly.</item>
+    </plurals>
 </resources>

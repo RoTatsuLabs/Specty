@@ -79,6 +79,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import androidx.compose.ui.res.stringResource
 import com.rotatsulabs.specty.R
+import com.rotatsulabs.specty.ui.components.noteText
 import com.rotatsulabs.specty.ui.components.spectralEdge
 import java.util.Locale
 import kotlin.math.abs
@@ -141,7 +142,7 @@ private fun ReadyContent(a: AnalysisResult, b: AnalysisResult) {
             SectionCard(stringResource(R.string.compare_differs)) {
                 Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     CompareMath.highlights(a.authenticity, a.levels, b.authenticity, b.levels).forEach {
-                        Text(it, style = MaterialTheme.typography.bodyMedium)
+                        Text(noteText(it), style = MaterialTheme.typography.bodyMedium)
                     }
                 }
             }

@@ -87,6 +87,7 @@ import androidx.core.view.WindowInsetsControllerCompat
 import com.rotatsulabs.specty.audio.FreqScale
 import com.rotatsulabs.specty.audio.Spectrogram
 import com.rotatsulabs.specty.ui.components.Fmt
+import com.rotatsulabs.specty.ui.components.viewLabels
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.util.Locale
@@ -352,7 +353,7 @@ fun SpectrogramViewer(spectrogram: Spectrogram, title: String, initialView: Int,
             }
             if (spectrogram.views.size > 1) {
                 ExpressiveButton(
-                    spectrogram.displayLabels[view], { view = (view + 1) % spectrogram.views.size },
+                    viewLabels(spectrogram)[view], { view = (view + 1) % spectrogram.views.size },
                     kind = ButtonKind.Tonal, modifier = Modifier.widthIn(min = 72.dp),
                 )
             }

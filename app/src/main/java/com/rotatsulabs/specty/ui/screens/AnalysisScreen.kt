@@ -118,13 +118,15 @@ import com.rotatsulabs.specty.R
 import com.rotatsulabs.specty.audio.AnalysisResult
 import com.rotatsulabs.specty.audio.AudioInfo
 import com.rotatsulabs.specty.audio.AuthenticityReport
-import com.rotatsulabs.specty.audio.BitDepth
 import com.rotatsulabs.specty.audio.DecodedFormat
 import com.rotatsulabs.specty.audio.Codecs
 import com.rotatsulabs.specty.audio.Verdict
 import com.rotatsulabs.specty.ui.AnalysisState
 import com.rotatsulabs.specty.ui.components.CoverImage
 import com.rotatsulabs.specty.ui.components.Fmt
+import com.rotatsulabs.specty.ui.components.decodedSummary
+import com.rotatsulabs.specty.ui.components.effectiveDepthLabel
+import com.rotatsulabs.specty.ui.components.noteText
 import com.rotatsulabs.specty.ui.components.spectralEdge
 import com.rotatsulabs.specty.ui.components.rememberStorageGate
 import com.rotatsulabs.specty.ui.components.Reveal
@@ -506,7 +508,7 @@ private fun VerdictCard(report: AuthenticityReport) {
                 IconBadge(icon, Modifier.scale(pop), container = content.copy(alpha = 0.14f), content = content, corners = Corners(24.dp), size = 52.dp)
                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     Text(headline, style = MaterialTheme.typography.titleMedium)
-                    Text(report.note, style = MaterialTheme.typography.bodyMedium)
+                    Text(noteText(report.notes), style = MaterialTheme.typography.bodyMedium)
                 }
             }
         }
@@ -563,7 +565,7 @@ private fun FileCard(info: AudioInfo, decoded: DecodedFormat?, showDecoded: Bool
                     info.bitDepth?.let { bits -> "$bits-bit" + (info.sampleFormat?.let { " ($it)" } ?: "") } ?: stringResource(R.string.stat_na),
                 ),
                 if (showDecoded) {
-                    Stat(Icons.Rounded.DataObject, stringResource(R.string.stat_decoded), (decoded ?: DecodedFormat(info.sampleRate, info.channels)).summary)
+                    Stat(Icons.Rounded.DataObject, stringResource(R.string.stat_decoded), decodedSummary(decoded ?: DecodedFormat(info.sampleRate, info.channels)))
                 } else {
                     null
                 },
@@ -600,7 +602,7 @@ private fun LevelsCard(result: AnalysisResult) {
         add(Stat(Icons.Rounded.Tag, stringResource(R.string.stat_samples), Fmt.count(levels.framesPerChannel)))
         val effective = levels.effectiveBitDepth
         if (info.isLossless && effective != null) {
-            add(Stat(Icons.Rounded.MusicNote, stringResource(R.string.stat_effective_depth), BitDepth.label(info.bitDepth, effective, levels.bitDepthBasis)))
+            add(Stat(Icons.Rounded.MusicNote, stringResource(R.string.stat_effective_depth), effectiveDepthLabel(info.bitDepth, effective, levels.bitDepthBasis)))
         }
     }
     SectionCard(stringResource(R.string.card_levels)) { StatGrid(stats) }

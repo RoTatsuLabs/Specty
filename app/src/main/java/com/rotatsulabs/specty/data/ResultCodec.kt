@@ -7,6 +7,8 @@ import com.rotatsulabs.specty.audio.BitDepthBasis
 import com.rotatsulabs.specty.audio.ChannelStats
 import com.rotatsulabs.specty.audio.DecodedFormat
 import com.rotatsulabs.specty.audio.LevelStats
+import com.rotatsulabs.specty.audio.Note
+import com.rotatsulabs.specty.audio.NoteKey
 import com.rotatsulabs.specty.audio.Spectrogram
 import com.rotatsulabs.specty.audio.SpectrumShape
 import com.rotatsulabs.specty.audio.Timeline
@@ -105,7 +107,9 @@ object ResultCodec {
         }
         with(r.authenticity) {
             out.writeUTF(verdict.name); out.writeDouble(cutoffHz ?: Double.NaN)
-            out.writeDouble(cliffDropDb); out.writeUTF(note)
+            out.writeDouble(cliffDropDb)
+            out.writeInt(notes.size)
+            notes.forEach { n -> out.writeUTF(n.key.name); out.writeInt(n.args.size); n.args.forEach { out.writeUTF(it) } }
             out.writeInt(confidence)
             out.writeInt(segmentCutoffs.size); segmentCutoffs.forEach { out.writeFloat(it) }
             writeStr(out, encoderGuess)
@@ -157,7 +161,8 @@ object ResultCodec {
         val levels = LevelStats(peak, rms, lufs, truePeak, clipped, frames, effective, channels, dr, dc, corr, balance, timeline, basis)
         val authenticity = AuthenticityReport(
             verdict = Verdict.valueOf(inp.readUTF()), cutoffHz = inp.readDouble().takeUnless { it.isNaN() },
-            cliffDropDb = inp.readDouble(), note = inp.readUTF(),
+            cliffDropDb = inp.readDouble(),
+            notes = List(inp.readInt()) { Note(NoteKey.valueOf(inp.readUTF()), List(inp.readInt()) { inp.readUTF() }) },
             confidence = inp.readInt(),
             segmentCutoffs = FloatArray(inp.readInt()).also { for (i in it.indices) it[i] = inp.readFloat() },
             encoderGuess = readStr(inp),

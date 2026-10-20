@@ -348,4 +348,52 @@
     <string name="spec_nyquist">奈奎斯特 %1$s</string>
     <string name="spec_landscape">切换横屏锁定</string>
     <string name="spec_reset_zoom">重置缩放</string>
+
+    <!-- Engine notes and compare highlights -->
+    <string name="note_atmos">封装在杜比数字+（E-AC-3）流中的杜比全景声对象音频。不对频谱进行有损来源判断。</string>
+    <string name="note_lossy_codec_edge">%1$s 是有损编码，其编码器低通截止频率约在 %2$s kHz。</string>
+    <string name="note_lossy_codec">%1$s 是有损编码，因此这不是无损文件。</string>
+    <string name="note_no_decoder">此设备没有对应的解码器，因此无法测量频谱和电平。</string>
+    <string name="note_no_signal">可听内容不足，无法判断频谱。</string>
+    <string name="note_faint_top">频谱高频部分很弱，无法区分安静内容与噪声。既不能证明也不能排除有损来源。</string>
+    <string name="note_full_band">内容延伸到频谱顶端，未发现截止或衰减。</string>
+    <string name="note_rolloff">频谱在约 %1$s kHz 附近逐渐衰减，没有锐利边缘。这可能是母带滤波、较旧的音源或平缓的低通。</string>
+    <string name="note_hard_cutoff">在约 %1$s kHz 处出现陡峭截止，是 MP3 或 AAC 低通的典型特征。此文件很可能由有损来源转码而来。</string>
+    <string name="note_upsampled">内容在 %2$s kHz 文件中止于约 %1$s kHz。很可能由 44.1 或 48 kHz 音源升采样而来。</string>
+    <string name="note_sharp_cutoff">在约 %1$s kHz 处出现陡峭截止。这可能来自高码率的有损来源，但部分母带也会这样滤波。</string>
+    <string name="note_band_limited">频谱在约 %1$s kHz 处受限。这可能是母带滤波或较旧的音源。</string>
+    <string name="note_bits_padded">只有最高 %1$s 位携带数据，看起来是以 %2$s 位存储的 %1$s 位音频。</string>
+    <string name="note_sections_disagree">此曲目各段对频谱高频部分的判断不一致（%2$s 段中有 %1$s 段与平均结果相符），因此不给出结论。</string>
+    <string name="note_too_little_clear">能清晰读取频谱高频部分的片段太少，无法排除有损来源。</string>
+    <string name="hl_verdicts_differ">结论不同：A 为%1$s，B 为%2$s。</string>
+    <string name="hl_more_top_end">%1$s 多保留 %2$s kHz 的高频（截止 %3$s kHz 对 %4$s kHz）。</string>
+    <string name="hl_b_reaches_top">B 延伸到频谱顶端；A 在约 %1$s kHz 处被截断。</string>
+    <string name="hl_a_reaches_top">A 延伸到频谱顶端；B 在约 %1$s kHz 处被截断。</string>
+    <string name="hl_more_dynamic">%1$s 动态更大（DR%2$s 对 DR%3$s）。</string>
+    <string name="hl_louder">%1$s 响 %2$s LU。</string>
+    <string name="hl_more_clipping">%1$s 的削波更多。</string>
+    <string name="hl_almost_same">这两个文件的测量结果几乎相同。</string>
+    <string name="hl_verdict_genuine">无损</string>
+    <string name="hl_verdict_hi_res">高解析度无损</string>
+    <string name="hl_verdict_lossy_source">来自有损来源</string>
+    <string name="hl_verdict_possible_lossy">可能来自有损来源</string>
+    <string name="hl_verdict_upsampled">升采样</string>
+    <string name="hl_verdict_band_limited">频段受限</string>
+    <string name="hl_verdict_lossy_codec">有损格式</string>
+    <string name="hl_verdict_atmos">杜比全景声</string>
+    <string name="hl_verdict_inconclusive">无定论</string>
+    <string name="depth_padded">%2$d 位文件中的 %1$d 位数据</string>
+    <string name="depth_all">使用全部 %1$d 位</string>
+    <string name="depth_n">%1$d 位</string>
+    <string name="decoded_summary">32 位浮点，%1$s kHz，%2$s</string>
+    <string name="decoded_mono">单声道</string>
+    <string name="decoded_stereo">立体声</string>
+    <string name="decoded_channels">%1$d 声道</string>
+    <string name="view_mix">混音</string>
+    <string name="view_channels">声道</string>
+    <string name="view_mono">单声道</string>
+    <string name="view_channel">声道 %1$s</string>
+    <plurals name="note_few_sections">
+        <item quantity="other">只有 %1$d 段能被清晰读取。</item>
+    </plurals>
 </resources>

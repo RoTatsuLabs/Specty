@@ -86,6 +86,7 @@ import androidx.compose.ui.unit.sp
 import com.rotatsulabs.specty.audio.FreqScale
 import com.rotatsulabs.specty.audio.Spectrogram
 import com.rotatsulabs.specty.ui.components.Fmt
+import com.rotatsulabs.specty.ui.components.viewLabels
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlin.math.roundToInt
@@ -164,7 +165,7 @@ fun SpectrogramCard(
             val onTonal = MaterialTheme.colorScheme.onSecondaryContainer
             // Selection uses the tonal colour, so the solid primary stays free for the main action below.
             SegmentedControl(
-                segments = spectrogram.displayLabels.mapIndexed { i, l -> Segment(i, l) },
+                segments = viewLabels(spectrogram).mapIndexed { i, l -> Segment(i, l) },
                 selected = selected,
                 onSelect = { selected = it },
                 scrollable = spectrogram.displayLabels.size > 3,
