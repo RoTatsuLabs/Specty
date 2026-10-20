@@ -28,8 +28,6 @@
     <string name="settings_results">Results</string>
     <string name="settings_metadata">Show tags and metadata</string>
     <string name="settings_metadata_desc">Adds a read-only card with the file\'s tags, including custom and unfamiliar ones. Lyrics are never shown.</string>
-    <string name="settings_sound">Sound effects</string>
-    <string name="settings_sound_desc">Soft clicks and chimes for taps, queued files and finished analyses. Follows your system sound volume.</string>
     <string name="settings_spectrogram">Spectrogram</string>
     <string name="settings_window_size">Window size</string>
     <string name="settings_window_size_desc">Larger windows resolve frequency more finely; smaller ones resolve time more finely.</string>

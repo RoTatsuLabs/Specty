@@ -36,7 +36,7 @@ Everything runs locally. There is no account, Specty declares no internet permis
 | Saved results | Finished analyses are stored on the device, so a file you already checked opens instantly. Library rows show a verdict badge. |
 | Dolby formats | Dolby Atmos in E-AC-3 MP4 files is recognised and labelled. Dolby AC-4 is decoded with the device's own codec when it has one. |
 | Export | Save the spectrogram as a PNG with axes, legend and title to `Pictures/Specty` |
-| Look and feel | Material 3 with large rounded shapes and spring-based motion. Wallpaper colours, six tonal palettes, light, dark and pure-black themes, and optional sound effects. |
+| Look and feel | Material 3 with large rounded shapes and spring-based motion. Wallpaper colours, six tonal palettes, and light, dark and pure-black themes. |
 
 ## How the analysis works
 
@@ -122,7 +122,7 @@ app/src/main/java/com/rotatsulabs/specty/
 ├── audio/        DSP and analysis (pure Kotlin), plus FFmpeg and MediaCodec glue
 ├── batch/        Background library scan and its foreground service
 ├── data/         Folder library, cover art loader, saved-result cache
-├── sound/        Synthesised sound effects
+├── sound/        Synthesised Easter egg sounds
 └── ui/
     ├── components/   Cover image, stat grid, progress dock
     ├── design/       Shapes, type, motion and reusable components

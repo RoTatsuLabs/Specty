@@ -9,17 +9,15 @@ import kotlin.math.min
 import kotlin.math.sin
 import kotlin.random.Random
 
-enum class Fx { Tap, Queue, Done, Fail, Glass, Flap, Point, Hit }
+/** The sounds of the Easter egg. The rest of the app is silent. */
+enum class Fx { Glass, Flap, Point, Hit }
 
 /**
- * Small interface sounds, synthesised at start so the app ships no audio files. They play on the system sound-effect
- * stream, so they follow that volume and stay quiet in silent mode.
+ * Sounds for the Easter egg, synthesised at start so the app ships no audio files. They play on the system
+ * sound-effect stream, so they follow that volume and stay quiet in silent mode.
  */
 object SoundFx {
     private const val RATE = 44100
-
-    @Volatile
-    var enabled = true
 
     @Volatile
     private var ready = false
@@ -42,7 +40,7 @@ object SoundFx {
     }
 
     fun play(fx: Fx) {
-        if (!enabled || !ready) return
+        if (!ready) return
         val track = tracks[fx] ?: return
         runCatching {
             if (track.playState != AudioTrack.PLAYSTATE_STOPPED) track.stop()
@@ -55,7 +53,7 @@ object SoundFx {
     fun rumble(level: Float) {
         val track = rumbleTrack ?: return
         runCatching {
-            if (!enabled || level <= 0.001f) {
+            if (level <= 0.001f) {
                 if (track.playState == AudioTrack.PLAYSTATE_PLAYING) track.pause()
                 return
             }
@@ -91,15 +89,6 @@ object SoundFx {
     // ---- synthesis -----------------------------------------------------------------------------
 
     private fun render(fx: Fx): ShortArray = when (fx) {
-        Fx.Tap -> pcm(tone(1400f, 1000f, 40, 0.30f, decayMs = 10f))
-        Fx.Queue -> mix(0 to tone(660f, 660f, 90, 0.35f, decayMs = 40f), 80 to tone(990f, 990f, 140, 0.35f, decayMs = 60f))
-        Fx.Done -> mix(
-            0 to tone(523.25f, 523.25f, 320, 0.28f, decayMs = 120f, overtone = true),
-            90 to tone(659.25f, 659.25f, 320, 0.28f, decayMs = 120f, overtone = true),
-            180 to tone(783.99f, 783.99f, 320, 0.28f, decayMs = 120f, overtone = true),
-            270 to tone(1046.5f, 1046.5f, 420, 0.28f, decayMs = 160f, overtone = true),
-        )
-        Fx.Fail -> pcm(tone(330f, 180f, 220, 0.4f, decayMs = 100f, overtone = true))
         Fx.Glass -> {
             val random = Random(5)
             val parts = ArrayList<Pair<Int, FloatArray>>()

@@ -26,8 +26,6 @@
     <string name="settings_results">结果</string>
     <string name="settings_metadata">显示标签和元数据</string>
     <string name="settings_metadata_desc">添加一张只读卡片，显示文件的标签，包括自定义标签和不常见的标签。不会显示歌词。</string>
-    <string name="settings_sound">音效</string>
-    <string name="settings_sound_desc">点按、文件加入队列和分析完成时播放轻柔的点击声与提示音。跟随系统音量。</string>
     <string name="settings_spectrogram">频谱图</string>
     <string name="settings_window_size">窗口大小</string>
     <string name="settings_window_size_desc">窗口越大，频率分辨越精细；窗口越小，时间分辨越精细。</string>
