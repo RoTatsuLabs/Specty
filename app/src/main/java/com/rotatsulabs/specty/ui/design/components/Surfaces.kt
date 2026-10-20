@@ -17,8 +17,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import com.rotatsulabs.specty.sound.Fx
-import com.rotatsulabs.specty.sound.SoundFx
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -72,7 +70,7 @@ fun MorphSurface(
             indication = ripple(),
             enabled = enabled,
             role = role,
-            onClick = { SoundFx.play(Fx.Tap); onClick() },
+            onClick = onClick,
             onLongClick = onLongClick,
         )
     }

@@ -26,8 +26,6 @@
     <string name="settings_results">Hasil</string>
     <string name="settings_metadata">Tampilkan tag dan metadata</string>
     <string name="settings_metadata_desc">Menambahkan kartu hanya-baca berisi tag file, termasuk tag kustom dan yang tidak umum. Lirik tidak pernah ditampilkan.</string>
-    <string name="settings_sound">Efek suara</string>
-    <string name="settings_sound_desc">Bunyi klik dan denting lembut untuk ketukan, file dalam antrean, dan analisis yang selesai. Mengikuti volume suara sistem Anda.</string>
     <string name="settings_spectrogram">Spektrogram</string>
     <string name="settings_window_size">Ukuran jendela</string>
     <string name="settings_window_size_desc">Jendela yang lebih besar membedakan frekuensi dengan lebih halus; yang lebih kecil membedakan waktu dengan lebih halus.</string>

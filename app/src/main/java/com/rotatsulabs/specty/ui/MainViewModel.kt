@@ -25,7 +25,6 @@ import com.rotatsulabs.specty.data.LibraryFolders
 import com.rotatsulabs.specty.data.LibraryRepository
 import com.rotatsulabs.specty.data.ResultCache
 import com.rotatsulabs.specty.data.Track
-import com.rotatsulabs.specty.sound.Fx
 import com.rotatsulabs.specty.sound.SoundFx
 import com.rotatsulabs.specty.ui.design.tonal.SeedPalette
 import com.rotatsulabs.specty.ui.theme.Appearance
@@ -74,7 +73,6 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     init {
         viewModelScope.launch(Dispatchers.IO) { AudioAnalyzer.sweepStale(app) }
-        SoundFx.enabled = prefs.getBoolean(KEY_SOUND, true)
         SoundFx.warmUp()
     }
 
@@ -95,16 +93,6 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         _logging.value = enabled
         AppLog.enabled = enabled
         prefs.edit().putBoolean(AppLog.KEY_LOGGING, enabled).apply()
-    }
-
-    private val _sound = MutableStateFlow(SoundFx.enabled)
-    val sound: StateFlow<Boolean> = _sound.asStateFlow()
-
-    fun setSound(enabled: Boolean) {
-        _sound.value = enabled
-        SoundFx.enabled = enabled
-        prefs.edit().putBoolean(KEY_SOUND, enabled).apply()
-        if (enabled) SoundFx.play(Fx.Tap)
     }
 
     private val _analysis = MutableStateFlow<AnalysisState>(AnalysisState.Idle)
@@ -268,7 +256,6 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         } else {
             waiting.addLast(uri)
             _queued.value = waiting.size
-            SoundFx.play(Fx.Queue)
             getApplication<Application>().getString(R.string.toast_queue_added)
         }
         Toast.makeText(getApplication(), message, Toast.LENGTH_SHORT).show()
@@ -324,18 +311,15 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                 }
                 _analysis.value = AnalysisState.Done(result)
                 AppLog.i("Analyze") { "Done \"$title\" in ${System.currentTimeMillis() - began} ms: ${result.authenticity.verdict}" }
-                SoundFx.play(Fx.Done)
                 if (cacheable) withContext(Dispatchers.IO) { cache.save(key, result) }
             } catch (e: CancellationException) {
                 throw e
             } catch (e: LimitedAnalysisException) {
                 AppLog.w("Analyze") { "Limited \"$title\": ${e.report.verdict}" }
                 _analysis.value = AnalysisState.Limited(title, e.info, e.report)
-                SoundFx.play(Fx.Done)
             } catch (e: Throwable) {
                 AppLog.e("Analyze", e) { "Failed \"$title\" after ${System.currentTimeMillis() - began} ms" }
                 _analysis.value = AnalysisState.Failed(title, (e as? AnalysisFailure)?.failure, e.message)
-                SoundFx.play(Fx.Fail)
             }
             advance()
         }
@@ -412,6 +396,5 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         const val KEY_BLACK = "pure_black"
         const val KEY_SEED = "seed_palette"
         const val KEY_META = "show_metadata"
-        const val KEY_SOUND = "sound_fx"
     }
 }
