@@ -435,4 +435,30 @@
     <string name="settings_app_language">应用语言</string>
     <string name="settings_language_desc">选择应用语言。“跟随系统”将使用手机的语言。</string>
     <string name="language_system">跟随系统</string>
+
+    <!-- Library filter -->
+    <string name="filter_open">按结果筛选</string>
+    <string name="filter_title">按结果筛选</string>
+    <string name="filter_subtitle">可选择一项或多项，曲目符合任意一项即会显示。</string>
+    <string name="filter_unchecked">未检查</string>
+    <string name="filter_unchecked_hint">尚未分析</string>
+    <string name="filter_lossless">无损</string>
+    <string name="filter_lossless_hint">真正的无损音频</string>
+    <string name="filter_hires_hint">48 kHz 以上的无损</string>
+    <string name="filter_needs_look">需要留意</string>
+    <string name="filter_needs_look_hint">很可能来自有损来源或经过升采样</string>
+    <string name="filter_lossy_format">有损格式</string>
+    <string name="filter_lossy_format_hint">MP3、AAC 等有损编码</string>
+    <string name="filter_atmos">杜比全景声</string>
+    <string name="filter_atmos_hint">对象音频，不判断是否有损来源</string>
+    <string name="filter_unclear">无定论</string>
+    <string name="filter_unclear_hint">频段受限，或证据不足</string>
+    <string name="filter_reset">重置</string>
+    <string name="filter_clear">清除筛选</string>
+    <string name="filter_remove">移除筛选 %1$s</string>
+    <string name="filter_empty_title">没有匹配的曲目</string>
+    <string name="filter_empty_message">曲库中暂时没有符合这些结果的曲目。清除筛选即可查看全部。</string>
+    <plurals name="filter_show">
+        <item quantity="other">显示 %1$d 首曲目</item>
+    </plurals>
 </resources>
