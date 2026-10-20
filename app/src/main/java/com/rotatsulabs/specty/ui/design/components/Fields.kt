@@ -1,5 +1,6 @@
 package com.rotatsulabs.specty.ui.design.components
 
+import com.rotatsulabs.specty.ui.components.pressScale
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.fadeIn
@@ -117,8 +118,9 @@ fun SwatchRow(
             val active = seed == selected
             val size by animateDpAsState(if (active) 56.dp else 48.dp, Motion.spatialFast(), label = "swatch")
             var center by remember(seed) { androidx.compose.runtime.mutableStateOf(androidx.compose.ui.geometry.Offset.Unspecified) }
-            Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.clickable(
-                interactionSource = remember { MutableInteractionSource() }, indication = null,
+            val source = remember { MutableInteractionSource() }
+            Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.pressScale(source, 0.88f).clickable(
+                interactionSource = source, indication = null,
             ) { if (onSelectAt != null) onSelectAt(seed, center) else onSelect(seed) }) {
                 Box(
                     Modifier.size(58.dp).onGloballyPositioned { center = it.boundsInRoot().center },

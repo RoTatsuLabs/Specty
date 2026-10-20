@@ -3,6 +3,7 @@ package com.rotatsulabs.specty.ui.screens
 import com.rotatsulabs.specty.ui.components.withoutExplicitMark
 import com.rotatsulabs.specty.ui.design.Corners
 import com.rotatsulabs.specty.ui.design.SpectyShapes
+import com.rotatsulabs.specty.ui.design.components.ExpressiveMenuItem
 import com.rotatsulabs.specty.ui.design.components.ButtonKind
 import com.rotatsulabs.specty.ui.design.components.ExpressiveButton
 import com.rotatsulabs.specty.ui.design.components.ExpressiveIconButton
@@ -19,7 +20,6 @@ import android.widget.Toast
 import androidx.compose.material.icons.rounded.Download
 import androidx.compose.material.icons.rounded.IosShare
 import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalContext
 import com.rotatsulabs.specty.ui.design.components.verdictStyle
@@ -265,13 +265,13 @@ private fun ExportMenu(result: AnalysisResult) {
     Box {
         ExpressiveIconButton(Icons.Rounded.IosShare, stringResource(R.string.analysis_export), { open = true }, tonal = false)
         DropdownMenu(expanded = open, onDismissRequest = { open = false }, shape = RoundedCornerShape(20.dp)) {
-            DropdownMenuItem(
+            ExpressiveMenuItem(
                 text = { Text(stringResource(if (busy) R.string.working else R.string.save_image)) },
                 leadingIcon = { Icon(Icons.Rounded.Download, null) },
                 enabled = !busy,
                 onClick = { open = false; request(false) },
             )
-            DropdownMenuItem(
+            ExpressiveMenuItem(
                 text = { Text(stringResource(R.string.analysis_share_image)) },
                 leadingIcon = { Icon(Icons.Rounded.IosShare, null) },
                 enabled = !busy,

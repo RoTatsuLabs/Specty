@@ -16,26 +16,25 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.FilterAltOff
 import androidx.compose.material.icons.rounded.Tune
 import androidx.compose.material3.Badge
-import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.InputChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import com.rotatsulabs.specty.ui.components.pressScale
+import com.rotatsulabs.specty.ui.design.components.ExpressiveChip
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -114,14 +113,9 @@ internal fun ActiveFilters(
         ) {
             for (f in ResultFilter.entries) {
                 if (f !in selected) continue
-                InputChip(
-                    selected = true,
-                    onClick = { onRemove(f) },
-                    label = { Text(stringResource(f.labelRes)) },
-                    trailingIcon = { Icon(Icons.Rounded.Close, stringResource(R.string.filter_remove, stringResource(f.labelRes)), Modifier.size(18.dp)) },
-                )
+                ExpressiveChip(stringResource(f.labelRes), stringResource(R.string.filter_remove, stringResource(f.labelRes)), { onRemove(f) })
             }
-            TextButton(onClick = onClear) { Text(stringResource(R.string.filter_clear)) }
+            ExpressiveButton(stringResource(R.string.filter_clear), onClear, kind = ButtonKind.Text)
         }
     }
 }
@@ -154,11 +148,13 @@ internal fun FilterSheet(
                 val count = counts[f] ?: 0
                 val checked = f in selected
                 val enabled = count > 0 || checked
+                val source = remember { MutableInteractionSource() }
                 Row(
                     Modifier
                         .fillMaxWidth()
+                        .pressScale(source, 0.97f)
                         .clip(SpectyShapes.Row.toShape())
-                        .toggleable(checked, enabled = enabled, role = Role.Checkbox) {
+                        .toggleable(checked, enabled = enabled, role = Role.Checkbox, interactionSource = source, indication = ripple()) {
                             haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                             onToggle(f)
                         }
@@ -188,10 +184,8 @@ internal fun FilterSheet(
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                TextButton(onClick = onClear, enabled = selected.isNotEmpty()) { Text(stringResource(R.string.filter_reset)) }
-                Button(onClick = onDismiss, modifier = Modifier.weight(1f)) {
-                    Text(pluralStringResource(R.plurals.filter_show, shown, shown))
-                }
+                ExpressiveButton(stringResource(R.string.filter_reset), onClear, kind = ButtonKind.Text, enabled = selected.isNotEmpty())
+                ExpressiveButton(pluralStringResource(R.plurals.filter_show, shown, shown), onDismiss, Modifier.weight(1f))
             }
         }
     }

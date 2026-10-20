@@ -32,7 +32,6 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -307,7 +306,7 @@ private fun LicenseDialog(kind: LicenseKind, onDismiss: () -> Unit, onOpenOnline
                 }
             }
         },
-        confirmButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_close)) } },
-        dismissButton = { TextButton(onClick = onOpenOnline) { Text(stringResource(R.string.about_read_online)) } },
+        confirmButton = { ExpressiveButton(stringResource(R.string.action_close), onDismiss, kind = ButtonKind.Text) },
+        dismissButton = { ExpressiveButton(stringResource(R.string.about_read_online), onOpenOnline, kind = ButtonKind.Text) },
     )
 }
