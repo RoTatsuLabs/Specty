@@ -1,4 +1,454 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Specty</string>
+    <string name="app_name" translatable="false">Specty</string>
+
+    <!-- Common -->
+    <string name="action_back">Back</string>
+    <string name="action_close">Close</string>
+
+    <!-- Settings -->
+    <string name="settings_title">Settings</string>
+    <string name="settings_appearance">Appearance</string>
+    <string name="settings_theme">Theme</string>
+    <string name="theme_system">System</string>
+    <string name="theme_light">Light</string>
+    <string name="theme_dark">Dark</string>
+    <string name="settings_dynamic_colour">Dynamic colour</string>
+    <string name="settings_dynamic_colour_desc">Use colours from your wallpaper. Off lets you pick a tonal palette.</string>
+    <string name="settings_palette">Tonal palette</string>
+    <string name="settings_palette_desc">Every colour in the app is derived from this one.</string>
+    <string name="palette_violet">Violet</string>
+    <string name="palette_azure">Azure</string>
+    <string name="palette_teal">Teal</string>
+    <string name="palette_lime">Lime</string>
+    <string name="palette_amber">Amber</string>
+    <string name="palette_rose">Rose</string>
+    <string name="settings_pure_black">Pure black</string>
+    <string name="settings_pure_black_desc">True black backgrounds in dark mode, easier on OLED screens.</string>
+    <string name="settings_results">Results</string>
+    <string name="settings_metadata">Show tags and metadata</string>
+    <string name="settings_metadata_desc">Adds a read-only card with the file\'s tags, including custom and unfamiliar ones. Lyrics are never shown.</string>
+    <string name="settings_sound">Sound effects</string>
+    <string name="settings_sound_desc">Soft clicks and chimes for taps, queued files and finished analyses. Follows your system sound volume.</string>
+    <string name="settings_spectrogram">Spectrogram</string>
+    <string name="settings_window_size">Window size</string>
+    <string name="settings_window_size_desc">Larger windows resolve frequency more finely; smaller ones resolve time more finely.</string>
+    <string name="settings_window_fn">Window function</string>
+    <string name="window_hann_note">Balanced default.</string>
+    <string name="window_hamming_note">Narrower main lobe, slightly higher distant leakage.</string>
+    <string name="window_blackman_harris_note">Lowest leakage close to strong tones, so faint content beside them stands out. Frequency detail is a little softer.</string>
+    <string name="settings_window_apply">Applies to the next file you analyse. Files already checked with another size or window are analysed again.</string>
+    <string name="settings_saved">Saved results</string>
+    <string name="settings_cache">Cache</string>
+    <string name="settings_cache_empty">No saved results yet.</string>
+    <plurals name="settings_cache_count">
+        <item quantity="one">%1$d analysis saved on this device, so a file you already checked opens instantly.</item>
+        <item quantity="other">%1$d analyses saved on this device, so files you already checked open instantly.</item>
+    </plurals>
+    <string name="settings_clear_saved">Clear saved results</string>
+    <string name="settings_developer">Developer</string>
+    <string name="settings_logging">Logging</string>
+    <string name="settings_logging_desc">Records scans, analyses and failures, with file names, in a log on this device. Nothing is sent anywhere.</string>
+    <string name="settings_log">Log and diagnostics</string>
+    <string name="settings_log_desc">Read, copy or share the log, the last crash and device details.</string>
+    <string name="settings_dev_off">Turn off developer mode</string>
+    <string name="settings_dev_off_desc">Hides this section and stops logging.</string>
+
+    <!-- About -->
+    <string name="about_title">About</string>
+    <string name="about_project">Project</string>
+    <string name="about_source">Source code</string>
+    <string name="about_report">Report a problem</string>
+    <string name="about_report_desc">Open an issue on GitHub</string>
+    <string name="about_intro">Show the intro again</string>
+    <string name="about_privacy">Privacy</string>
+    <string name="about_privacy_title">Stays on your device</string>
+    <string name="about_privacy_desc">All analysis runs on your device and nothing is uploaded. Specty does not declare the internet permission.</string>
+    <string name="about_licence">Licence</string>
+    <string name="about_licence_tap">%1$s. Tap to read it.</string>
+    <string name="about_libraries">Open source libraries</string>
+    <string name="about_libraries_hint">Specty is built on the work of these projects. Tap one for details and its licence.</string>
+    <string name="about_made_by">Made by RoTatsu Labs</string>
+    <string name="about_tagline">Audio quality lab</string>
+    <string name="about_hero">See what an audio file really contains: its spectrum, loudness and dynamics, and whether a lossless file started life as a lossy one.</string>
+    <string name="about_version">Version %1$s</string>
+    <plurals name="about_dev_taps">
+        <item quantity="one">%1$d more tap to become a developer</item>
+        <item quantity="other">%1$d more taps to become a developer</item>
+    </plurals>
+    <string name="about_dev_already">Developer mode is already on</string>
+    <string name="about_dev_on">Developer mode is on. Find it in Settings.</string>
+    <string name="about_collapse">Collapse</string>
+    <string name="about_expand">Expand</string>
+    <string name="about_by">By %1$s</string>
+    <string name="about_licence_button">Licence</string>
+    <string name="about_website">Website</string>
+    <string name="about_licence_missing">The licence text could not be loaded. You can read it online instead.</string>
+    <string name="about_read_online">Read online</string>
+
+    <!-- Library credits -->
+    <string name="lib_specty_summary">Audio quality analyser for Android.</string>
+    <string name="lib_specty_note">Specty is free software under the GNU General Public License, version 3. You can use, study, change and share it under those terms.</string>
+    <string name="lib_ffmpeg_summary">FFmpeg for Android, a continuation of the retired Arthenica ffmpeg-kit.</string>
+    <string name="lib_ffmpeg_note">Reads and decodes every audio file Specty analyses. It includes the FFmpeg libraries (libavcodec, libavformat, libavutil and others), also under the LGPL. The source is available from the link above.</string>
+    <string name="lib_compose_summary">UI toolkit: UI, Graphics, Foundation, Material 3 and Material Icons Extended.</string>
+    <string name="lib_compose_note">Draws the whole interface. The icons come from the Material Icons set.</string>
+    <string name="lib_activity_summary">Compose integration for activities, result contracts and edge-to-edge.</string>
+    <string name="lib_lifecycle_summary">ViewModel and lifecycle-aware state for Compose.</string>
+    <string name="lib_core_summary">Kotlin extensions for the Android framework.</string>
+    <string name="lib_androidx_summary">Annotation, Collection, Saved State, Startup and other AndroidX libraries that the ones above depend on.</string>
+    <string name="lib_kotlin_summary">The Kotlin runtime.</string>
+    <string name="lib_coroutines_summary">Background work and cancellation for analysis and library scanning.</string>
+
+    <!-- Onboarding -->
+    <string name="onboarding_progress">%1$d of %2$d</string>
+    <string name="onboarding_skip">Skip</string>
+    <string name="onboarding_previous">Previous page</string>
+    <string name="onboarding_start">Get started</string>
+    <string name="onboarding_next">Next</string>
+    <string name="onboarding_0_title">Meet Specty</string>
+    <string name="onboarding_0_body">A quality lab for your music. Look inside any audio file and see what it really contains.</string>
+    <string name="onboarding_1_title">See the spectrum</string>
+    <string name="onboarding_1_body">The spectrogram shows every frequency over time. Open it fullscreen, pinch to zoom into the top end and touch it to read exact values.</string>
+    <string name="onboarding_2_title">Catch fake lossless</string>
+    <string name="onboarding_2_body">A lossless file made from an MP3 keeps the MP3\'s cutoff. Specty finds that edge, says how sure it is and which encoder it resembles.</string>
+    <string name="onboarding_3_title">Measure everything</string>
+    <string name="onboarding_3_body">Loudness, true peak, dynamic range, clipping and stereo health, plus a background scan of your whole library. It all runs on your device.</string>
+    <string name="onboarding_folder_added">Folder added</string>
+    <string name="onboarding_folder_title">Library folders</string>
+    <string name="onboarding_folder_added_desc">Your music will be listed as soon as you start.</string>
+    <string name="onboarding_folder_desc">Pick the folders with your music. Files never leave your device.</string>
+    <string name="onboarding_choose_folder">Choose folder</string>
+    <string name="onboarding_cutoff_chip">16 kHz cutoff</string>
+    <string name="onboarding_verdict_genuine">Lossless full-band</string>
+    <string name="onboarding_verdict_genuine_desc">Content reaches 22 kHz</string>
+    <string name="onboarding_verdict_transcoded">Likely transcoded</string>
+    <string name="onboarding_verdict_transcoded_desc">Hard cutoff near 16 kHz</string>
+    <string name="onboarding_confidence">%1$d%% confidence</string>
+    <string name="onboarding_tile_loudness">Loudness</string>
+    <string name="onboarding_tile_dynamics">Dynamics</string>
+    <string name="onboarding_tile_meter">meter</string>
+    <string name="onboarding_tile_peak">True peak</string>
+
+    <!-- Library -->
+    <string name="action_cancel">Cancel</string>
+    <string name="action_dismiss">Dismiss</string>
+    <string name="action_done">Done</string>
+    <string name="library_menu_rescan">Rescan library</string>
+    <string name="library_menu_scan">Scan whole library</string>
+    <string name="library_menu_folders">Library folders</string>
+    <string name="library_more">More options</string>
+    <string name="library_analyse">Analyse a file</string>
+    <string name="library_search">Search your library</string>
+    <plurals name="library_tracks">
+        <item quantity="one">%1$d track</item>
+        <item quantity="other">%1$d tracks</item>
+    </plurals>
+    <string name="sort_title">Title</string>
+    <string name="sort_artist">Artist</string>
+    <string name="sort_length">Length</string>
+    <string name="sort_size">Size</string>
+    <string name="library_ascending">Ascending</string>
+    <string name="library_descending">Descending</string>
+    <string name="library_show_list">Show as list</string>
+    <string name="library_show_grid">Show as grid</string>
+    <string name="library_empty_title">Nothing to show</string>
+    <string name="library_empty_folders">No audio files found in your folders. Add another folder from the menu, or pick a single file with the button below.</string>
+    <string name="library_no_match">Nothing here yet for this filter.</string>
+    <string name="library_prompt_title">Choose your music folders</string>
+    <string name="library_prompt_message">Pick the folders that hold your music. Specty only reads inside them, so ringtones and voice notes stay out. Nothing leaves your phone.</string>
+    <string name="library_no_folders">No folders yet.</string>
+    <string name="library_remove_folder">Remove %1$s</string>
+    <string name="library_add_folder">Add folder</string>
+
+    <string name="search_default">Search</string>
+    <string name="search_clear">Clear search</string>
+
+    <!-- Batch scan card -->
+    <string name="scan_running">Scanning library</string>
+    <string name="scan_cancelled">Scan cancelled</string>
+    <string name="scan_stopped">Scan stopped</string>
+    <string name="scan_finished">Scan finished</string>
+    <string name="scan_analysed">%1$d analysed</string>
+    <string name="scan_skipped">%1$d already saved</string>
+    <string name="scan_flagged">%1$d need a look</string>
+    <string name="scan_failed">%1$d failed</string>
+    <string name="scan_sep">", "</string>
+    <string name="scan_with_note">%1$s. %2$s</string>
+    <string name="scan_progress">%1$d of %2$d</string>
+
+    <!-- Analysis dock -->
+    <string name="dock_ready">Ready, tap to view the result</string>
+    <string name="dock_limited">Lossy format, audio could not be decoded. Tap for details</string>
+    <string name="dock_progress">"%1$s  ·  %2$d%%"</string>
+    <string name="dock_progress_queued">"%1$s  ·  %2$d%%  ·  %3$d waiting"</string>
+
+    <!-- Verdict pills -->
+    <string name="verdict_lossless">Lossless</string>
+    <string name="verdict_hires" translatable="false">Hi-Res</string>
+    <string name="verdict_fake">Fake</string>
+    <string name="verdict_maybe">Maybe</string>
+    <string name="verdict_lossy">Lossy</string>
+    <string name="verdict_atmos" translatable="false">Dolby Atmos</string>
+
+    <!-- Common -->
+    <string name="working">Working…</string>
+    <string name="save_image">Save image to gallery</string>
+    <string name="toast_saved_gallery">Saved to Pictures/Specty</string>
+    <string name="toast_save_failed">Could not save the image</string>
+    <string name="toast_image_failed">Could not create the image</string>
+    <string name="toast_storage_permission">Storage permission is needed to save images</string>
+    <string name="explicit_label">Explicit</string>
+    <string name="channel_short">Ch %1$d</string>
+    <string name="count_of">%1$d of %2$d</string>
+    <string name="sentence_sep">" "</string>
+
+    <!-- Analysis -->
+    <string name="analysis_compare">Compare with another file</string>
+    <string name="analysis_again">Analyse again</string>
+    <string name="analysis_export">Export as image</string>
+    <string name="analysis_share_image">Share image</string>
+    <string name="analysis_share_title">Share analysis</string>
+    <string name="analysis_failed_title">Could not analyse this file</string>
+    <string name="badge_atmos" translatable="false">DOLBY ATMOS</string>
+    <string name="badge_hires_lossless">HI-RES LOSSLESS</string>
+    <string name="badge_lossless">LOSSLESS</string>
+    <string name="verdict_head_genuine">Lossless, no sign of a lossy origin</string>
+    <string name="verdict_head_hires">Hi-Res lossless, no sign of a lossy origin</string>
+    <string name="verdict_head_lossy_source">Likely transcoded from a lossy source</string>
+    <string name="verdict_head_possible">Possibly from a lossy source</string>
+    <string name="verdict_head_upsampled">Likely upsampled</string>
+    <string name="verdict_head_band">Band-limited spectrum</string>
+    <string name="verdict_head_codec">Lossy format</string>
+    <string name="verdict_head_inconclusive">Inconclusive</string>
+    <string name="verdict_short_hires">Hi-Res Lossless</string>
+    <string name="verdict_short_lossy_source">Lossy source</string>
+    <string name="verdict_short_possible">Possibly lossy</string>
+    <string name="verdict_short_upsampled">Upsampled</string>
+    <string name="verdict_short_band">Band-limited</string>
+    <string name="verdict_short_codec">Lossy format</string>
+    <string name="card_file">File</string>
+    <string name="card_levels">Levels and dynamics</string>
+    <string name="card_channels">Per-channel stats</string>
+
+    <!-- Stats -->
+    <string name="stat_dynamic_range">Dynamic Range</string>
+    <string name="stat_loudness">Loudness</string>
+    <string name="stat_true_peak">True Peak</string>
+    <string name="stat_codec">Codec</string>
+    <string name="stat_sample_rate">Sample Rate</string>
+    <string name="stat_source_bit_depth">Source Bit Depth</string>
+    <string name="stat_na">n/a</string>
+    <string name="stat_decoded">Decoded PCM</string>
+    <string name="stat_bitrate">Bitrate</string>
+    <string name="stat_channels">Channels</string>
+    <string name="stat_duration">Duration</string>
+    <string name="stat_nyquist">Nyquist</string>
+    <string name="stat_size">Size</string>
+    <string name="stat_dr_meter">DR meter</string>
+    <string name="stat_peak">Peak</string>
+    <string name="stat_rms" translatable="false">RMS</string>
+    <string name="stat_lufs" translatable="false">LUFS</string>
+    <string name="stat_clipping">Clipping</string>
+    <string name="stat_no_clipping">No clipping</string>
+    <string name="stat_clip_samples">%1$s samples</string>
+    <string name="stat_samples">Samples</string>
+    <string name="stat_effective_depth">Effective Depth</string>
+    <string name="stat_none">None</string>
+    <string name="stat_loudest">Loudest part</string>
+    <string name="stat_clipped_sections">Clipped sections</string>
+    <string name="edge_cutoff">Spectral Cutoff</string>
+    <string name="edge_rolloff">Spectral Roll-off</string>
+    <string name="edge_empty_above">Empty above %1$s</string>
+    <string name="edge_none">None found</string>
+    <string name="edge_unknown">Not determined</string>
+
+    <!-- Insight cards -->
+    <string name="insight_conf_high">High confidence</string>
+    <string name="insight_conf_medium">Medium confidence</string>
+    <string name="insight_conf_low">Low confidence</string>
+    <string name="insight_confidence_title">Verdict confidence</string>
+    <string name="insight_sections_match">Matches the overall reading in %1$d of %2$d sections that could be read clearly.</string>
+    <string name="insight_resembles">Resembles: %1$s.</string>
+    <string name="insight_empty_above">Nothing above %1$s kHz; the band up to %2$s kHz is empty.</string>
+    <string name="insight_cutoff_timeline">Cutoff across the track</string>
+    <string name="insight_cutoff_none">No cutoff found in any part of the track.</string>
+    <string name="insight_cutoff_found">Cutoff found in %1$d of %2$d sections.</string>
+    <string name="insight_cutoff_found_line">Cutoff found in %1$d of %2$d sections, line marks %3$s kHz.</string>
+    <string name="timeline_title">Loudness over time</string>
+    <string name="timeline_silence">silence</string>
+    <string name="timeline_readout">"%1$s  ·  %2$s  ·  peak %3$s dBFS"</string>
+    <string name="timeline_readout_clip">"%1$s  ·  %2$s  ·  peak %3$s dBFS  ·  %4$d clipped"</string>
+    <string name="timeline_hint">Touch the graph to read a point. Line: loudness, shaded: peak, red ticks: clipping.</string>
+    <string name="stereo_title">Stereo and offset</string>
+    <string name="stereo_correlation">Correlation</string>
+    <string name="stereo_out_of_phase">-1 out of phase</string>
+    <string name="stereo_mono">+1 mono</string>
+    <string name="stereo_note_phase">Strong phase cancellation: this can lose level or vanish when summed to mono.</string>
+    <string name="stereo_note_wide">Very wide image with little in common between the channels.</string>
+    <string name="stereo_note_normal">Normal stereo width.</string>
+    <string name="stereo_note_mono">Nearly identical channels; effectively mono.</string>
+    <string name="stereo_balance">Balance</string>
+    <string name="stereo_centred">Centred</string>
+    <string name="stereo_balance_left">%1$s dB left</string>
+    <string name="stereo_balance_right">%1$s dB right</string>
+    <string name="stereo_dc">DC offset</string>
+    <string name="stereo_dc_note">A DC offset above 0.5% wastes headroom and can cause clicks; a high-pass filter removes it.</string>
+
+    <!-- Tags -->
+    <string name="tags_title">Tags and metadata</string>
+    <string name="tags_none">This file has no tags.</string>
+    <string name="tags_hide">Hide other tags</string>
+    <string name="tags_show_other">All other tags (%1$d)</string>
+    <string name="tags_custom">Custom tags</string>
+    <string name="tag_title">Title</string>
+    <string name="tag_artist">Artist</string>
+    <string name="tag_album_artist">Album artist</string>
+    <string name="tag_album">Album</string>
+    <string name="tag_date">Date</string>
+    <string name="tag_track">Track</string>
+    <string name="tag_disc">Disc</string>
+    <string name="tag_genre">Genre</string>
+    <string name="tag_composer">Composer</string>
+    <string name="tag_label">Label</string>
+    <string name="tag_encoder">Encoder</string>
+    <string name="tag_comment">Comment</string>
+    <string name="tag_isrc" translatable="false">ISRC</string>
+    <string name="tag_upc" translatable="false">UPC</string>
+    <string name="tag_rating">Rating</string>
+    <string name="tag_copyright">Copyright</string>
+
+    <!-- Compare -->
+    <string name="compare_title">Compare</string>
+    <string name="compare_failed">Could not compare</string>
+    <string name="compare_differs">What differs</string>
+    <string name="compare_spectrograms">Spectrograms</string>
+    <string name="compare_same_scale">Same palette and level scale for both. Each runs from 0 Hz at the bottom to its own Nyquist at the top.</string>
+    <string name="compare_spec_cd">Spectrogram %1$s</string>
+    <string name="compare_top_pill">%1$s · %2$s top</string>
+    <string name="compare_diff_title">Difference (B minus A)</string>
+    <string name="compare_diff_cd">Difference between the two spectrograms</string>
+    <string name="compare_b_quieter">"B quieter  -30 dB"</string>
+    <string name="compare_same">same</string>
+    <string name="compare_b_louder">"+30 dB  B louder"</string>
+    <string name="compare_diff_avg">Average difference %1$s dB.</string>
+    <string name="compare_diff_freq">Frequency runs to %1$s, the lower Nyquist of the two.</string>
+    <string name="compare_diff_length">The files differ in length, so each is stretched to the full width.</string>
+    <string name="compare_avg_title">Average spectrum</string>
+    <string name="compare_avg_note">Mean level of the audible parts, -110 to -10 dB. A shelf that ends early shows where a file was low-passed.</string>
+    <string name="compare_bit_depth">Bit depth</string>
+    <string name="compare_verdict">Verdict</string>
+    <string name="compare_side_title">Side by side</string>
+    <string name="compare_better_note">Highlighted values are the better of the two for dynamics, clipping and top-end extension.</string>
+
+    <!-- Spectrogram -->
+    <string name="spec_title">Spectrogram</string>
+    <string name="spec_cutoff_tag">cutoff %1$s</string>
+    <string name="spec_fullscreen">Full screen</string>
+    <string name="spec_cutoff">Cutoff</string>
+    <string name="spec_display_options">Display options</string>
+    <string name="spec_palette">Colour palette</string>
+    <string name="spec_freq_scale">Frequency scale</string>
+    <string name="spec_linear">Linear</string>
+    <string name="spec_log">Log</string>
+    <string name="spec_level_range">Level range</string>
+    <string name="range_wide">Wide</string>
+    <string name="range_standard">Standard</string>
+    <string name="range_tight">Tight</string>
+    <string name="spec_saving">Saving…</string>
+    <string name="spec_sample_rate">Sample rate %1$s</string>
+    <string name="spec_nyquist">Nyquist %1$s</string>
+    <string name="spec_landscape">Toggle landscape lock</string>
+    <string name="spec_reset_zoom">Reset zoom</string>
+
+    <!-- Engine notes and compare highlights -->
+    <string name="note_atmos">Dolby Atmos object audio carried in a Dolby Digital Plus (E-AC-3) stream. The spectrum is not judged for lossy origin.</string>
+    <string name="note_lossy_codec_edge">%1$s is a lossy codec; its encoder low-pass sits near %2$s kHz.</string>
+    <string name="note_lossy_codec">%1$s is a lossy codec, so this is not a lossless file.</string>
+    <string name="note_no_decoder">This device has no decoder for it, so the spectrum and levels could not be measured.</string>
+    <string name="note_no_signal">There is not enough audible content to judge the spectrum.</string>
+    <string name="note_faint_top">The top of the spectrum is faint, so quiet content and noise cannot be told apart. A lossy origin is neither shown nor ruled out.</string>
+    <string name="note_full_band">Content reaches the top of the spectrum, with no cutoff or roll-off found.</string>
+    <string name="note_rolloff">The spectrum fades out near %1$s kHz without a sharp edge. That can be a mastering filter, an older source or a soft low-pass.</string>
+    <string name="note_hard_cutoff">Hard cutoff near %1$s kHz, typical of an MP3 or AAC low-pass. This file was most likely transcoded from a lossy source.</string>
+    <string name="note_upsampled">Content stops near %1$s kHz inside a %2$s kHz file. It was most likely upsampled from a 44.1 or 48 kHz source.</string>
+    <string name="note_sharp_cutoff">Sharp cutoff near %1$s kHz. This can come from a high-bitrate lossy source, but some masters are also filtered this way.</string>
+    <string name="note_band_limited">The spectrum is band-limited near %1$s kHz. That may be a mastering filter or an older source.</string>
+    <string name="note_bits_padded">Only the top %1$s bits carry data, so this looks like %1$s-bit audio stored as %2$s-bit.</string>
+    <string name="note_sections_disagree">Sections of this track disagree about the top of the spectrum (%1$s of %2$s match the average), so no verdict is given.</string>
+    <string name="note_too_little_clear">Too little of the track gives a clear reading of the top of the spectrum to rule out a lossy origin.</string>
+    <string name="hl_verdicts_differ">Verdicts differ: A is %1$s, B is %2$s.</string>
+    <string name="hl_more_top_end">%1$s keeps %2$s kHz more top end (cutoff %3$s kHz vs %4$s kHz).</string>
+    <string name="hl_b_reaches_top">B reaches the top of the spectrum; A is cut off near %1$s kHz.</string>
+    <string name="hl_a_reaches_top">A reaches the top of the spectrum; B is cut off near %1$s kHz.</string>
+    <string name="hl_more_dynamic">%1$s is more dynamic (DR%2$s vs DR%3$s).</string>
+    <string name="hl_louder">%1$s is %2$s LU louder.</string>
+    <string name="hl_more_clipping">%1$s has more clipping.</string>
+    <string name="hl_almost_same">These two files measure almost the same.</string>
+    <string name="hl_verdict_genuine">lossless</string>
+    <string name="hl_verdict_hi_res">hi-res lossless</string>
+    <string name="hl_verdict_lossy_source">from a lossy source</string>
+    <string name="hl_verdict_possible_lossy">possibly from a lossy source</string>
+    <string name="hl_verdict_upsampled">upsampled</string>
+    <string name="hl_verdict_band_limited">band-limited</string>
+    <string name="hl_verdict_lossy_codec">a lossy format</string>
+    <string name="hl_verdict_atmos">Dolby Atmos</string>
+    <string name="hl_verdict_inconclusive">inconclusive</string>
+    <string name="depth_padded">%1$d-bit data in %2$d-bit file</string>
+    <string name="depth_all">Uses all %1$d bits</string>
+    <string name="depth_n">%1$d-bit</string>
+    <string name="decoded_summary">32-bit float, %1$s kHz, %2$s</string>
+    <string name="decoded_mono">mono</string>
+    <string name="decoded_stereo">stereo</string>
+    <string name="decoded_channels">%1$d ch</string>
+    <string name="view_mix">Mix</string>
+    <string name="view_channels">Channels</string>
+    <string name="view_mono">Mono</string>
+    <string name="view_channel">Ch %1$s</string>
+    <plurals name="note_few_sections">
+        <item quantity="one">Only %1$d section of the track could be read clearly.</item>
+        <item quantity="other">Only %1$d sections of the track could be read clearly.</item>
+    </plurals>
+
+    <!-- Stage 4: notification, scan notes, stages, failures -->
+    <string name="toast_queue_already">Already in the queue</string>
+    <string name="toast_queue_added">Added to the queue</string>
+    <string name="storage_internal">Internal storage</string>
+    <string name="library_error">Could not read the library</string>
+    <string name="scan_notif_title">"Scanning library  %1$d of %2$d"</string>
+    <string name="scan_notif_paused">Paused: cooling down or low battery</string>
+    <string name="scan_notif_stopped">Library scan stopped</string>
+    <string name="scan_notif_stopped_early">Library scan stopped early</string>
+    <string name="scan_notif_finished">Library scan finished</string>
+    <string name="scan_channel_name">Library scan</string>
+    <string name="scan_channel_desc">Progress while Specty analyses your library in the background</string>
+    <string name="scan_note_failures">Stopped after many files in a row failed. Check free storage and try again.</string>
+    <string name="scan_note_memory">Stopped because the phone ran low on memory. Try again.</string>
+    <string name="scan_note_time_limit">Paused by Android\'s time limit for background work. Scan again to continue.</string>
+    <string name="scan_note_cooling">Paused while the phone cools down or charges</string>
+    <string name="scan_note_interrupted">The scan was interrupted. Scan again to continue.</string>
+    <string name="scan_note_start_failed">Could not start the scan: %1$s</string>
+    <string name="stage_reading">Reading file</string>
+    <string name="stage_decoding">Decoding</string>
+    <string name="stage_analysing">Analysing</string>
+    <string name="fail_generic">Analysis failed</string>
+    <string name="fail_storage_full">Storage is almost full. Free some space and try again.</string>
+    <string name="fail_too_long">This file is too long to analyse (about %1$s MB of audio).</string>
+    <string name="fail_not_enough_storage">Not enough free storage to decode this file (about %1$s MB needed).</string>
+    <string name="fail_more_audio">This file holds more audio than expected, or storage is too low to decode it.</string>
+    <string name="fail_no_audio">The decoder produced no audio.</string>
+    <string name="fail_cannot_open">Cannot open this file.</string>
+    <string name="fail_not_audio">This file could not be read as audio.</string>
+    <string name="fail_no_stream">No audio stream found in this file.</string>
+    <string name="fail_no_format">The audio stream has no usable sample rate or channel layout.</string>
+    <string name="fail_decode">Decoding failed. %1$s</string>
+
+    <!-- Language setting -->
+    <string name="settings_language">Language</string>
+    <string name="settings_app_language">App language</string>
+    <string name="settings_language_desc">Choose the app language. System default follows your phone.</string>
+    <string name="language_system">System default</string>
+    <string name="language_en" translatable="false">English</string>
+    <string name="language_id" translatable="false">Bahasa Indonesia</string>
+    <string name="language_zh" translatable="false">简体中文</string>
 </resources>

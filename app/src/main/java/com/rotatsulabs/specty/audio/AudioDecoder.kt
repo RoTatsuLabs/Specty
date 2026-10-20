@@ -12,7 +12,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import java.io.File
-import java.io.IOException
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
@@ -30,7 +29,7 @@ object AudioDecoder {
         onProgress: (Float) -> Unit,
     ): DecodedFormat? {
         val saf = FFmpegKitConfig.getSafParameterForRead(context, uri)
-            ?: throw IOException("Cannot open this file")
+            ?: throw AnalysisFailure(Failure(FailKey.CANNOT_OPEN))
         val args = buildList {
             addAll(listOf("-hide_banner", "-nostdin", "-y", "-i", saf, "-map", "0:a:0", "-vn", "-sn", "-dn"))
             addAll(listOf("-f", "f32le", "-acodec", "pcm_f32le"))
@@ -76,7 +75,7 @@ object AudioDecoder {
                         continuation.resume(DecodedFormat.parse(finished.output))
                     } else {
                         val detail = finished.failStackTrace ?: finished.output?.takeLast(300).orEmpty()
-                        continuation.resumeWithException(IOException("Decoding failed. $detail".trim()))
+                        continuation.resumeWithException(AnalysisFailure(Failure(FailKey.DECODE_FAILED, detail)))
                     }
                 },
                 { /* log output is not needed */ },

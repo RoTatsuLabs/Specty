@@ -12,6 +12,8 @@ import com.rotatsulabs.specty.audio.LevelStats
 import com.rotatsulabs.specty.audio.PcmFile
 import com.rotatsulabs.specty.audio.Spectrogram
 import com.rotatsulabs.specty.audio.SpectrogramAnalyzer
+import com.rotatsulabs.specty.audio.Note
+import com.rotatsulabs.specty.audio.NoteKey
 import com.rotatsulabs.specty.audio.SpectrumShape
 import com.rotatsulabs.specty.audio.Verdict
 import com.rotatsulabs.specty.audio.WindowFn
@@ -52,7 +54,7 @@ class ResultCodecTest {
 
     private fun assertSame(a: AuthenticityReport, b: AuthenticityReport) {
         assertEquals(a.verdict, b.verdict); assertEquals(a.cutoffHz, b.cutoffHz)
-        assertEquals(a.cliffDropDb, b.cliffDropDb, 0.0); assertEquals(a.note, b.note)
+        assertEquals(a.cliffDropDb, b.cliffDropDb, 0.0); assertEquals(a.notes, b.notes); assertEquals(a.note, b.note)
         assertEquals(a.confidence, b.confidence); assertTrue(a.segmentCutoffs.contentEquals(b.segmentCutoffs))
         assertEquals(a.encoderGuess, b.encoderGuess); assertEquals(a.emptyAboveHz, b.emptyAboveHz)
         assertEquals(a.shape, b.shape); assertEquals(a.sectionsJudged, b.sectionsJudged)
@@ -61,7 +63,7 @@ class ResultCodecTest {
 
     @Test
     fun aResultWithoutACutoffComesBackWithoutOne() {
-        val r = AuthenticityReport(Verdict.GENUINE, null, 0.0, "Full band.", 88, FloatArray(3), null, null, SpectrumShape.FULL_BAND, 12, 12)
+        val r = AuthenticityReport(Verdict.GENUINE, null, 0.0, listOf(Note(NoteKey.FULL_BAND)), 88, FloatArray(3), null, null, SpectrumShape.FULL_BAND, 12, 12)
         val back = ResultCodec.fromBytes(ResultCodec.toBytes(stored(r)))!!
         assertNull(back.authenticity.cutoffHz)
         assertFalse(back.authenticity.hasCliff)
@@ -71,7 +73,7 @@ class ResultCodecTest {
     @Test
     fun everyFieldSurvivesTheRoundTrip() {
         val r = AuthenticityReport(
-            Verdict.LOSSY_SOURCE, 16_050.0, 74.5, "Cutoff.", 91, floatArrayOf(16_000f, 0f, 16_100f), "MP3 around 128 kbps",
+            Verdict.LOSSY_SOURCE, 16_050.0, 74.5, listOf(Note(NoteKey.HARD_CUTOFF, "16.1"), Note(NoteKey.BITS_PADDED, 16, 24)), 91, floatArrayOf(16_000f, 0f, 16_100f), "MP3 around 128 kbps",
             16_300.0, SpectrumShape.ABRUPT_CUTOFF, 10, 9,
         )
         val s = stored(r)
@@ -121,7 +123,7 @@ class ResultCodecTest {
     // ---- invalidation ------------------------------------------------------------------------
 
     private fun sampleBytes() = ResultCodec.toBytes(
-        stored(AuthenticityReport(Verdict.GENUINE, null, 0.0, "Full band.", 88, FloatArray(0), null, null, SpectrumShape.FULL_BAND, 12, 12)),
+        stored(AuthenticityReport(Verdict.GENUINE, null, 0.0, listOf(Note(NoteKey.FULL_BAND)), 88, FloatArray(0), null, null, SpectrumShape.FULL_BAND, 12, 12)),
     )
 
     @Test

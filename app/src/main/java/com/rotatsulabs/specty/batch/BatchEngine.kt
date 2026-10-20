@@ -14,11 +14,14 @@ sealed interface BatchOutcome {
 }
 
 /** Why a batch ended without being cancelled. */
-enum class BatchStop(val note: String) {
-    Finished(""),
-    TooManyFailures("Stopped after many files in a row failed. Check free storage and try again."),
-    LowMemory("Stopped because the phone ran low on memory. Try again."),
+enum class BatchStop(val note: ScanNote) {
+    Finished(ScanNote.None),
+    TooManyFailures(ScanNote.TooManyFailures),
+    LowMemory(ScanNote.LowMemory),
 }
+
+/** Why a scan paused or ended early. The UI and the notification word each one in the app language. */
+enum class ScanNote { None, TooManyFailures, LowMemory, TimeLimit, Cooling, Interrupted, StartFailed }
 
 interface BatchListener<T> {
     fun onStart(index: Int, item: T) {}

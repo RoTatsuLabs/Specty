@@ -85,11 +85,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.rotatsulabs.specty.R
 import com.rotatsulabs.specty.ui.components.pressScale
 import com.rotatsulabs.specty.ui.spectrogram.SpectrogramPalette
 import com.rotatsulabs.specty.ui.spectrogram.SpectrogramRenderer
@@ -141,9 +143,9 @@ fun OnboardingScreen(onFinish: () -> Unit, hasFolders: Boolean, onPickFolder: ()
             Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 10.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Pill("${pager.currentPage + 1} of $PAGES", container = scheme.surfaceContainerHighest, content = scheme.onSurfaceVariant)
+            Pill(stringResource(R.string.onboarding_progress, pager.currentPage + 1, PAGES), container = scheme.surfaceContainerHighest, content = scheme.onSurfaceVariant)
             Spacer(Modifier.weight(1f))
-            if (!last) ExpressiveButton("Skip", onFinish, kind = ButtonKind.Text)
+            if (!last) ExpressiveButton(stringResource(R.string.onboarding_skip), onFinish, kind = ButtonKind.Text)
         }
 
         HorizontalPager(pager, Modifier.weight(1f)) { page ->
@@ -199,7 +201,7 @@ fun OnboardingScreen(onFinish: () -> Unit, hasFolders: Boolean, onPickFolder: ()
                 exit = scaleOut() + fadeOut(),
             ) {
                 ExpressiveIconButton(
-                    Icons.AutoMirrored.Rounded.ArrowBack, "Previous page",
+                    Icons.AutoMirrored.Rounded.ArrowBack, stringResource(R.string.onboarding_previous),
                     { scope.launch { pager.animateScrollToPage(pager.currentPage - 1) } },
                     modifier = Modifier.padding(end = 12.dp),
                 )
@@ -208,7 +210,7 @@ fun OnboardingScreen(onFinish: () -> Unit, hasFolders: Boolean, onPickFolder: ()
                 repeat(PAGES) { i -> Dot(selected = pager.currentPage == i) }
             }
             ExpressiveButton(
-                text = if (last) "Get started" else "Next",
+                text = stringResource(if (last) R.string.onboarding_start else R.string.onboarding_next),
                 onClick = { if (last) onFinish() else scope.launch { pager.animateScrollToPage(pager.currentPage + 1) } },
                 icon = if (last) null else Icons.AutoMirrored.Rounded.ArrowForward,
                 corners = Corners(topStart = 28.dp, topEnd = 14.dp, bottomEnd = 28.dp, bottomStart = 28.dp),
@@ -235,11 +237,12 @@ private fun Stage(wash: Color, content: @Composable () -> Unit) {
     }
 }
 
+@Composable
 private fun copy(page: Int): Pair<String, String> = when (page) {
-    0 -> "Meet Specty" to "A quality lab for your music. Look inside any audio file and see what it really contains."
-    1 -> "See the spectrum" to "The spectrogram shows every frequency over time. Open it fullscreen, pinch to zoom into the top end and touch it to read exact values."
-    2 -> "Catch fake lossless" to "A lossless file made from an MP3 keeps the MP3's cutoff. Specty finds that edge, says how sure it is and which encoder it resembles."
-    else -> "Measure everything" to "Loudness, true peak, dynamic range, clipping and stereo health, plus a background scan of your whole library. It all runs on your device."
+    0 -> stringResource(R.string.onboarding_0_title) to stringResource(R.string.onboarding_0_body)
+    1 -> stringResource(R.string.onboarding_1_title) to stringResource(R.string.onboarding_1_body)
+    2 -> stringResource(R.string.onboarding_2_title) to stringResource(R.string.onboarding_2_body)
+    else -> stringResource(R.string.onboarding_3_title) to stringResource(R.string.onboarding_3_body)
 }
 
 @Composable
@@ -265,9 +268,9 @@ private fun FolderBlock(granted: Boolean, onPick: () -> Unit) {
                 content = if (granted) scheme.onTertiaryContainer else scheme.onSecondaryContainer,
             )
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                Text(if (granted) "Folder added" else "Library folders", style = MaterialTheme.typography.titleSmall)
+                Text(stringResource(if (granted) R.string.onboarding_folder_added else R.string.onboarding_folder_title), style = MaterialTheme.typography.titleSmall)
                 Text(
-                    if (granted) "Your music will be listed as soon as you start." else "Pick the folders with your music. Files never leave your device.",
+                    stringResource(if (granted) R.string.onboarding_folder_added_desc else R.string.onboarding_folder_desc),
                     style = MaterialTheme.typography.bodySmall,
                     color = if (granted) scheme.onTertiaryContainer else scheme.onSurfaceVariant,
                 )
@@ -275,7 +278,7 @@ private fun FolderBlock(granted: Boolean, onPick: () -> Unit) {
         }
         if (!granted) {
             Spacer(Modifier.height(12.dp))
-            ExpressiveButton("Choose folder", onPick, kind = ButtonKind.Tonal, modifier = Modifier.fillMaxWidth())
+            ExpressiveButton(stringResource(R.string.onboarding_choose_folder), onPick, kind = ButtonKind.Tonal, modifier = Modifier.fillMaxWidth())
         }
     }
 }
@@ -337,7 +340,7 @@ private fun SpectrumArt() {
             }
         }
         Surface(shape = CircleShape, color = label, contentColor = onLabel, modifier = Modifier.padding(top = 56.dp, end = 14.dp)) {
-            Text("16 kHz cutoff", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp))
+            Text(stringResource(R.string.onboarding_cutoff_chip), style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp))
         }
     }
 }
@@ -366,13 +369,13 @@ private fun VerdictArt() {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                     Icon(if (isGenuine) Icons.Rounded.Verified else Icons.Rounded.Warning, contentDescription = null, modifier = Modifier.size(30.dp))
                     Column {
-                        Text(if (isGenuine) "Lossless full-band" else "Likely transcoded", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                        Text(if (isGenuine) "Content reaches 22 kHz" else "Hard cutoff near 16 kHz", style = MaterialTheme.typography.bodySmall)
+                        Text(stringResource(if (isGenuine) R.string.onboarding_verdict_genuine else R.string.onboarding_verdict_transcoded), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                        Text(stringResource(if (isGenuine) R.string.onboarding_verdict_genuine_desc else R.string.onboarding_verdict_transcoded_desc), style = MaterialTheme.typography.bodySmall)
                     }
                 }
             }
             Spacer(Modifier.weight(1f))
-            Text("${(confidence * 100).toInt()}% confidence", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
+            Text(stringResource(R.string.onboarding_confidence, (confidence * 100).toInt()), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
             Canvas(Modifier.fillMaxWidth().height(10.dp)) {
                 drawRoundRect(content.copy(alpha = 0.2f), size = size, cornerRadius = CornerRadius(size.height / 2))
                 drawRoundRect(content, size = Size(size.width * confidence, size.height), cornerRadius = CornerRadius(size.height / 2))
@@ -395,10 +398,10 @@ private fun NumbersArt(active: Boolean) {
     val outer = 32.dp
     val inner = 10.dp
     Row(horizontalArrangement = Arrangement.spacedBy(3.dp)) {
-        Tile("Loudness", String.format(Locale.US, "%.1f", -14.2 * progress.value), "LUFS", scheme.secondaryContainer, scheme.onSecondaryContainer,
+        Tile(stringResource(R.string.onboarding_tile_loudness), String.format(Locale.US, "%.1f", -14.2 * progress.value), "LUFS", scheme.secondaryContainer, scheme.onSecondaryContainer,
             RoundedCornerShape(topStart = outer, bottomStart = outer, topEnd = inner, bottomEnd = inner))
-        Tile("Dynamics", "DR${(12 * progress.value).toInt()}", "meter", scheme.primaryContainer, scheme.onPrimaryContainer, RoundedCornerShape(inner))
-        Tile("True peak", String.format(Locale.US, "%.1f", -0.8 * progress.value), "dBTP", scheme.tertiaryContainer, scheme.onTertiaryContainer,
+        Tile(stringResource(R.string.onboarding_tile_dynamics), "DR${(12 * progress.value).toInt()}", stringResource(R.string.onboarding_tile_meter), scheme.primaryContainer, scheme.onPrimaryContainer, RoundedCornerShape(inner))
+        Tile(stringResource(R.string.onboarding_tile_peak), String.format(Locale.US, "%.1f", -0.8 * progress.value), "dBTP", scheme.tertiaryContainer, scheme.onTertiaryContainer,
             RoundedCornerShape(topStart = inner, bottomStart = inner, topEnd = outer, bottomEnd = outer))
     }
 }

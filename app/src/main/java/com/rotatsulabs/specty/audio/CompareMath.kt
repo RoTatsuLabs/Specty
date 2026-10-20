@@ -58,10 +58,10 @@ object CompareMath {
     }
 
     /** Short plain-language differences between two analyses, most telling first. */
-    fun highlights(ca: AuthenticityReport, la: LevelStats, cb: AuthenticityReport, lb: LevelStats): List<String> {
-        val out = ArrayList<String>()
+    fun highlights(ca: AuthenticityReport, la: LevelStats, cb: AuthenticityReport, lb: LevelStats): List<Note> {
+        val out = ArrayList<Note>()
         if (ca.verdict != cb.verdict) {
-            out += "Verdicts differ: A is ${label(ca.verdict)}, B is ${label(cb.verdict)}."
+            out += Note(NoteKey.VERDICTS_DIFFER, ca.verdict.name, cb.verdict.name)
         }
         val cutA = ca.cutoffHz
         val cutB = cb.cutoffHz
@@ -69,40 +69,28 @@ object CompareMath {
             if (kotlin.math.abs(cutA - cutB) > 1000.0) {
                 val hi = if (cutA >= cutB) "A" else "B"
                 val diff = kotlin.math.abs(cutA - cutB) / 1000.0
-                out += "$hi keeps ${String.format(java.util.Locale.US, "%.1f", diff)} kHz more top end (cutoff ${khz(cutA)} vs ${khz(cutB)})."
+                out += Note(NoteKey.MORE_TOP_END, hi, num(diff), num(cutA / 1000.0), num(cutB / 1000.0))
             }
         } else if (cutA != null && cb.shape == SpectrumShape.FULL_BAND) {
-            out += "B reaches the top of the spectrum; A is cut off near ${khz(cutA)}."
+            out += Note(NoteKey.B_REACHES_TOP, num(cutA / 1000.0))
         } else if (cutB != null && ca.shape == SpectrumShape.FULL_BAND) {
-            out += "A reaches the top of the spectrum; B is cut off near ${khz(cutB)}."
+            out += Note(NoteKey.A_REACHES_TOP, num(cutB / 1000.0))
         }
         val dra = la.drTt; val drb = lb.drTt
         if (dra != null && drb != null && kotlin.math.abs(dra - drb) >= 1.0) {
             val hi = if (dra > drb) "A" else "B"
-            out += "$hi is more dynamic (DR${dra.toInt()} vs DR${drb.toInt()})."
+            out += Note(NoteKey.MORE_DYNAMIC, hi, dra.toInt(), drb.toInt())
         }
         val lua = la.lufs; val lub = lb.lufs
         if (lua != null && lub != null && kotlin.math.abs(lua - lub) >= 1.0) {
-            out += "${if (lua > lub) "A" else "B"} is ${String.format(java.util.Locale.US, "%.1f", kotlin.math.abs(lua - lub))} LU louder."
+            out += Note(NoteKey.LOUDER, if (lua > lub) "A" else "B", num(kotlin.math.abs(lua - lub)))
         }
         if (la.clippedSamples != lb.clippedSamples && max(la.clippedSamples, lb.clippedSamples) > 0) {
-            out += "${if (la.clippedSamples > lb.clippedSamples) "A" else "B"} has more clipping."
+            out += Note(NoteKey.MORE_CLIPPING, if (la.clippedSamples > lb.clippedSamples) "A" else "B")
         }
-        if (out.isEmpty()) out += "These two files measure almost the same."
+        if (out.isEmpty()) out += Note(NoteKey.ALMOST_SAME)
         return out
     }
 
-    private fun khz(hz: Double) = String.format(java.util.Locale.US, "%.1f kHz", hz / 1000.0)
-
-    private fun label(v: Verdict) = when (v) {
-        Verdict.GENUINE -> "lossless"
-        Verdict.HI_RES -> "hi-res lossless"
-        Verdict.LOSSY_SOURCE -> "from a lossy source"
-        Verdict.POSSIBLE_LOSSY_SOURCE -> "possibly from a lossy source"
-        Verdict.UPSAMPLED -> "upsampled"
-        Verdict.BAND_LIMITED -> "band-limited"
-        Verdict.LOSSY_CODEC -> "a lossy format"
-        Verdict.DOLBY_ATMOS -> "Dolby Atmos"
-        Verdict.INCONCLUSIVE -> "inconclusive"
-    }
+    private fun num(v: Double) = String.format(java.util.Locale.US, "%.1f", v)
 }

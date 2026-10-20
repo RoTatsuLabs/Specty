@@ -48,8 +48,7 @@ object AuthenticityAnalyzer {
     /** What the container alone shows for a lossy file whose audio could not be decoded, so nothing was measured. */
     fun unmeasured(info: AudioInfo): AuthenticityReport = AuthenticityReport(
         Verdict.LOSSY_CODEC, null, 0.0,
-        "${Codecs.displayName(info.codec)} is a lossy codec, so this is not a lossless file. " +
-            "This device has no decoder for it, so the spectrum and levels could not be measured.",
+        listOf(Note(NoteKey.LOSSY_CODEC, Codecs.displayName(info.codec)), Note(NoteKey.NO_DECODER)),
         confidence = 99,
     )
 
@@ -79,61 +78,50 @@ object AuthenticityAnalyzer {
         if (info.isDolbyAtmos) {
             return AuthenticityReport(
                 Verdict.DOLBY_ATMOS, cutoff, d.drop,
-                "Dolby Atmos object audio carried in a Dolby Digital Plus (E-AC-3) stream. " +
-                    "The spectrum is not judged for lossy origin.",
+                listOf(Note(NoteKey.ATMOS)),
                 shape = d.shape,
             )
         }
         if (info.isLossy) {
-            val note = if (cutoffKhz != null) {
-                "${Codecs.displayName(info.codec)} is a lossy codec; its encoder low-pass sits near $cutoffKhz kHz."
-            } else {
-                "${Codecs.displayName(info.codec)} is a lossy codec, so this is not a lossless file."
-            }
-            return AuthenticityReport(Verdict.LOSSY_CODEC, cutoff, d.drop, note, shape = d.shape)
+            val name = Codecs.displayName(info.codec)
+            val note = if (cutoffKhz != null) Note(NoteKey.LOSSY_CODEC_EDGE, name, cutoffKhz) else Note(NoteKey.LOSSY_CODEC, name)
+            return AuthenticityReport(Verdict.LOSSY_CODEC, cutoff, d.drop, listOf(note), shape = d.shape)
         }
 
-        val bitNote = BitDepth.paddingNote(info.bitDepth, effectiveBitDepth)
+        val bitNote = BitDepth.paddingNote(info.bitDepth, effectiveBitDepth)  // empty unless padded
         return when (d.shape) {
             SpectrumShape.NO_SIGNAL -> AuthenticityReport(
                 Verdict.INCONCLUSIVE, null, 0.0,
-                "There is not enough audible content to judge the spectrum.$bitNote",
+                listOf(Note(NoteKey.NO_SIGNAL)) + bitNote,
                 shape = d.shape,
             )
             SpectrumShape.UNCLEAR -> AuthenticityReport(
                 Verdict.INCONCLUSIVE, null, 0.0,
-                "The top of the spectrum is faint, so quiet content and noise cannot be told apart. " +
-                    "A lossy origin is neither shown nor ruled out.$bitNote",
+                listOf(Note(NoteKey.FAINT_TOP)) + bitNote,
                 shape = d.shape,
             )
             SpectrumShape.FULL_BAND -> AuthenticityReport(
                 if (info.sampleRate > HI_RES_ABOVE_HZ) Verdict.HI_RES else Verdict.GENUINE, null, 0.0,
-                "Content reaches the top of the spectrum, with no cutoff or roll-off found.$bitNote",
+                listOf(Note(NoteKey.FULL_BAND)) + bitNote,
                 shape = d.shape,
             )
             SpectrumShape.GRADUAL_ROLLOFF -> AuthenticityReport(
                 Verdict.BAND_LIMITED, null, 0.0,
-                "The spectrum fades out near ${fmt((d.emptyAboveHz ?: 0.0) / 1000.0)} kHz without a sharp edge. " +
-                    "That can be a mastering filter, an older source or a soft low-pass.$bitNote",
+                listOf(Note(NoteKey.ROLLOFF, fmt((d.emptyAboveHz ?: 0.0) / 1000.0))) + bitNote,
                 emptyAboveHz = d.emptyAboveHz, shape = d.shape,
             )
             SpectrumShape.ABRUPT_CUTOFF -> {
                 val edge = cutoff ?: 0.0
                 val rateKhz = fmt(info.sampleRate / 1000.0)
                 val (verdict, note) = when {
-                    edge <= 16_800.0 -> Verdict.LOSSY_SOURCE to
-                        "Hard cutoff near $cutoffKhz kHz, typical of an MP3 or AAC low-pass. " +
-                        "This file was most likely transcoded from a lossy source."
-                    info.sampleRate > 48_000 && edge in 20_500.0..23_000.0 -> Verdict.UPSAMPLED to
-                        "Content stops near $cutoffKhz kHz inside a $rateKhz kHz file. " +
-                        "It was most likely upsampled from a 44.1 or 48 kHz source."
-                    info.sampleRate <= 48_000 && edge <= 20_800.0 -> Verdict.POSSIBLE_LOSSY_SOURCE to
-                        "Sharp cutoff near $cutoffKhz kHz. This can come from a high-bitrate lossy source, " +
-                        "but some masters are also filtered this way."
-                    else -> Verdict.BAND_LIMITED to
-                        "The spectrum is band-limited near $cutoffKhz kHz. That may be a mastering filter or an older source."
+                    edge <= 16_800.0 -> Verdict.LOSSY_SOURCE to Note(NoteKey.HARD_CUTOFF, cutoffKhz.orEmpty())
+                    info.sampleRate > 48_000 && edge in 20_500.0..23_000.0 ->
+                        Verdict.UPSAMPLED to Note(NoteKey.UPSAMPLED, cutoffKhz.orEmpty(), rateKhz)
+                    info.sampleRate <= 48_000 && edge <= 20_800.0 ->
+                        Verdict.POSSIBLE_LOSSY_SOURCE to Note(NoteKey.SHARP_CUTOFF, cutoffKhz.orEmpty())
+                    else -> Verdict.BAND_LIMITED to Note(NoteKey.BAND_LIMITED, cutoffKhz.orEmpty())
                 }
-                AuthenticityReport(verdict, cutoff, d.drop, note + bitNote, emptyAboveHz = d.emptyAboveHz, shape = d.shape)
+                AuthenticityReport(verdict, cutoff, d.drop, listOf(note) + bitNote, emptyAboveHz = d.emptyAboveHz, shape = d.shape)
             }
         }
     }
@@ -178,14 +166,13 @@ object AuthenticityAnalyzer {
             if (clear >= MIN_CLEAR_SECTIONS && agreeing.toDouble() / clear < MIXED_SHARE) {
                 return withCounts.copy(
                     verdict = Verdict.INCONCLUSIVE, cutoffHz = null, cliffDropDb = 0.0, confidence = 0, encoderGuess = null,
-                    note = "Sections of this track disagree about the top of the spectrum ($agreeing of $clear match the " +
-                        "average), so no verdict is given.",
+                    notes = listOf(Note(NoteKey.SECTIONS_DISAGREE, agreeing, clear)),
                 )
             }
             if (clear < MIN_CLEAR_SECTIONS && report.shape != SpectrumShape.ABRUPT_CUTOFF) {
                 return withCounts.copy(
                     verdict = Verdict.INCONCLUSIVE, cutoffHz = null, cliffDropDb = 0.0, confidence = 0, encoderGuess = null,
-                    note = "Too little of the track gives a clear reading of the top of the spectrum to rule out a lossy origin.",
+                    notes = listOf(Note(NoteKey.TOO_LITTLE_CLEAR)),
                 )
             }
         }
@@ -199,7 +186,7 @@ object AuthenticityAnalyzer {
         return withCounts.copy(
             confidence = confidence(report, whole, clear, agreeing),
             encoderGuess = guess,
-            note = if (limited) report.note + " Only $clear section${if (clear == 1) "" else "s"} of the track could be read clearly." else report.note,
+            notes = if (limited) report.notes + Note(NoteKey.FEW_SECTIONS, clear) else report.notes,
         )
     }
 

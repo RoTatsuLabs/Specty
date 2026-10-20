@@ -118,8 +118,9 @@ class BitDepthTest {
         assertFalse(BitDepth.isPadded(32, 24))
         assertFalse(BitDepth.isPadded(null, 16))
         assertFalse(BitDepth.isPadded(24, null))
-        assertEquals("", BitDepth.paddingNote(24, 24))
-        assertTrue(BitDepth.paddingNote(24, 16).contains("16-bit audio stored as 24-bit"))
+        assertEquals(emptyList<Note>(), BitDepth.paddingNote(24, 24))
+        assertEquals(listOf(Note(NoteKey.BITS_PADDED, 16, 24)), BitDepth.paddingNote(24, 16))
+        assertTrue(Notes.english(BitDepth.paddingNote(24, 16)).contains("16-bit audio stored as 24-bit"))
     }
 
     @Test

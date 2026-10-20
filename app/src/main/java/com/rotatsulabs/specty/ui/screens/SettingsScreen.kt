@@ -17,10 +17,19 @@ import androidx.compose.material.icons.rounded.Sell
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.rotatsulabs.specty.R
 import com.rotatsulabs.specty.audio.WindowFn
+import com.rotatsulabs.specty.ui.AppLanguage
 import com.rotatsulabs.specty.ui.components.Reveal
 import com.rotatsulabs.specty.ui.design.LocalThemeReveal
 import com.rotatsulabs.specty.ui.design.components.ButtonKind
@@ -77,7 +86,7 @@ fun SettingsScreen(
         if (reveal == null) change() else if (origin != null) reveal.start(origin, change) else reveal.start(change = change)
     }
     Column(modifier.fillMaxSize()) {
-        ExpressiveTopBar("Settings", onBack = onBack)
+        ExpressiveTopBar(stringResource(R.string.settings_title), onBack = onBack)
 
         Column(
             Modifier
@@ -91,14 +100,14 @@ fun SettingsScreen(
                 val dynamic = appearance.dynamicColor && DYNAMIC_COLOR_SUPPORTED
                 val paletteAt = if (DYNAMIC_COLOR_SUPPORTED) 2 else 1
                 val rows = 2 + (if (DYNAMIC_COLOR_SUPPORTED) 1 else 0) + (if (dynamic) 0 else 1)
-                SettingGroup("Appearance") {
-                    SettingBlock("Theme", corners = groupCorners(0, rows)) {
-                        OptionSegmentedControl(ThemeMode.entries, appearance.mode, { if (it != appearance.mode) themed { onThemeMode(it) } }, { it.label })
+                SettingGroup(stringResource(R.string.settings_appearance)) {
+                    SettingBlock(stringResource(R.string.settings_theme), corners = groupCorners(0, rows)) {
+                        OptionSegmentedControl(ThemeMode.entries, appearance.mode, { if (it != appearance.mode) themed { onThemeMode(it) } }, { stringResource(it.labelRes) })
                     }
                     if (DYNAMIC_COLOR_SUPPORTED) {
                         SettingToggleRow(
-                            title = "Dynamic colour",
-                            supporting = "Use colours from your wallpaper. Off lets you pick a tonal palette.",
+                            title = stringResource(R.string.settings_dynamic_colour),
+                            supporting = stringResource(R.string.settings_dynamic_colour_desc),
                             checked = appearance.dynamicColor,
                             onChecked = { checked -> themed { onDynamicColor(checked) } },
                             icon = Icons.Rounded.Palette,
@@ -106,7 +115,7 @@ fun SettingsScreen(
                         )
                     }
                     if (!dynamic) {
-                        SettingBlock("Tonal palette", supporting = "Every colour in the app is derived from this one.", corners = groupCorners(paletteAt, rows)) {
+                        SettingBlock(stringResource(R.string.settings_palette), supporting = stringResource(R.string.settings_palette_desc), corners = groupCorners(paletteAt, rows)) {
                             SwatchRow(
                                 appearance.seed, onSeed, dark = dark,
                                 onSelectAt = { seed, at -> if (seed != appearance.seed) themed(at) { onSeed(seed) } },
@@ -114,8 +123,8 @@ fun SettingsScreen(
                         }
                     }
                     SettingToggleRow(
-                        title = "Pure black",
-                        supporting = "True black backgrounds in dark mode, easier on OLED screens.",
+                        title = stringResource(R.string.settings_pure_black),
+                        supporting = stringResource(R.string.settings_pure_black_desc),
                         checked = appearance.pureBlack,
                         enabled = dark,
                         onChecked = { checked -> themed { onPureBlack(checked) } },
@@ -125,19 +134,34 @@ fun SettingsScreen(
                 }
             }
 
+            Reveal(0) {
+                val context = LocalContext.current
+                var language by remember { mutableStateOf(AppLanguage.current(context)) }
+                SettingGroup(stringResource(R.string.settings_language)) {
+                    SettingBlock(stringResource(R.string.settings_app_language), supporting = stringResource(R.string.settings_language_desc), corners = groupCorners(0, 1)) {
+                        OptionSegmentedControl(
+                            AppLanguage.Choice.entries, language,
+                            { if (it != language) { language = it; AppLanguage.set(context, it) } },
+                            { stringResource(it.labelRes) },
+                            scrollable = true,
+                        )
+                    }
+                }
+            }
+
             Reveal(1) {
-                SettingGroup("Results") {
+                SettingGroup(stringResource(R.string.settings_results)) {
                     SettingToggleRow(
-                        title = "Show tags and metadata",
-                        supporting = "Adds a read-only card with the file's tags, including custom and unfamiliar ones. Lyrics are never shown.",
+                        title = stringResource(R.string.settings_metadata),
+                        supporting = stringResource(R.string.settings_metadata_desc),
                         checked = showMetadata,
                         onChecked = onShowMetadata,
                         icon = Icons.Rounded.Sell,
                         corners = groupCorners(0, 2),
                     )
                     SettingToggleRow(
-                        title = "Sound effects",
-                        supporting = "Soft clicks and chimes for taps, queued files and finished analyses. Follows your system sound volume.",
+                        title = stringResource(R.string.settings_sound),
+                        supporting = stringResource(R.string.settings_sound_desc),
                         checked = soundEnabled,
                         onChecked = onSound,
                         icon = Icons.AutoMirrored.Rounded.VolumeUp,
@@ -147,19 +171,19 @@ fun SettingsScreen(
             }
 
             Reveal(2) {
-                SettingGroup("Spectrogram") {
+                SettingGroup(stringResource(R.string.settings_spectrogram)) {
                     SettingBlock(
-                        "Window size",
-                        supporting = "Larger windows resolve frequency more finely; smaller ones resolve time more finely.",
+                        stringResource(R.string.settings_window_size),
+                        supporting = stringResource(R.string.settings_window_size_desc),
                         corners = groupCorners(0, 2),
                     ) {
                         OptionSegmentedControl(fftChoices, fftSize, onFftSize, { "$it" })
                     }
-                    SettingBlock("Window function", supporting = windowFn.note, corners = groupCorners(1, 2)) {
+                    SettingBlock(stringResource(R.string.settings_window_fn), supporting = stringResource(windowFn.noteRes), corners = groupCorners(1, 2)) {
                         OptionSegmentedControl(WindowFn.entries, windowFn, onWindowFn, { it.label }, scrollable = true)
                         Spacer(Modifier.height(8.dp))
                         Text(
-                            "Applies to the next file you analyse. Files already checked with another size or window are analysed again.",
+                            stringResource(R.string.settings_window_apply),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -168,38 +192,38 @@ fun SettingsScreen(
             }
 
             Reveal(3) {
-                SettingGroup("Saved results") {
+                SettingGroup(stringResource(R.string.settings_saved)) {
                     SettingBlock(
-                        "Cache",
-                        supporting = if (savedCount == 0) "No saved results yet." else "$savedCount analyses saved on this device, so files you already checked open instantly.",
+                        stringResource(R.string.settings_cache),
+                        supporting = if (savedCount == 0) stringResource(R.string.settings_cache_empty) else pluralStringResource(R.plurals.settings_cache_count, savedCount, savedCount),
                         corners = groupCorners(0, 1),
                     ) {
-                        ExpressiveButton("Clear saved results", onClearCache, kind = ButtonKind.Tonal, enabled = savedCount > 0)
+                        ExpressiveButton(stringResource(R.string.settings_clear_saved), onClearCache, kind = ButtonKind.Tonal, enabled = savedCount > 0)
                     }
                 }
             }
 
             if (developer) {
                 Reveal(4) {
-                    SettingGroup("Developer") {
+                    SettingGroup(stringResource(R.string.settings_developer)) {
                         SettingToggleRow(
-                            title = "Logging",
-                            supporting = "Records scans, analyses and failures, with file names, in a log on this device. Nothing is sent anywhere.",
+                            title = stringResource(R.string.settings_logging),
+                            supporting = stringResource(R.string.settings_logging_desc),
                             checked = logging,
                             onChecked = onLogging,
                             icon = Icons.Rounded.BugReport,
                             corners = groupCorners(0, 3),
                         )
                         ListRow(
-                            title = "Log and diagnostics",
-                            supporting = "Read, copy or share the log, the last crash and device details.",
+                            title = stringResource(R.string.settings_log),
+                            supporting = stringResource(R.string.settings_log_desc),
                             icon = Icons.Rounded.Terminal,
                             corners = groupCorners(1, 3),
                             onClick = onOpenLog,
                         )
                         ListRow(
-                            title = "Turn off developer mode",
-                            supporting = "Hides this section and stops logging.",
+                            title = stringResource(R.string.settings_dev_off),
+                            supporting = stringResource(R.string.settings_dev_off_desc),
                             icon = Icons.Rounded.Close,
                             corners = groupCorners(2, 3),
                             onClick = onDeveloperOff,
