@@ -51,6 +51,10 @@ class BatchScanService : Service() {
 
     override fun onBind(intent: Intent?): IBinder? = null
 
+    override fun attachBaseContext(newBase: Context) {
+        super.attachBaseContext(com.rotatsulabs.specty.ui.AppLanguage.wrap(newBase))
+    }
+
     override fun onCreate() {
         super.onCreate()
         AppLog.init(this)
@@ -92,7 +96,7 @@ class BatchScanService : Service() {
         val window = BatchScanner.window
         val queue = BatchScanner.queue
         var cancelled = false
-        var note = ""
+        var note = ScanNote.None
         try {
             val engine = BatchEngine<Track>(
                 isSaved = { it.sizeBytes > 0 && cache.contains(cache.keyOf(it.uri, it.sizeBytes, it.modifiedSec, fft, window)) },
@@ -128,11 +132,11 @@ class BatchScanService : Service() {
                 }
             })
             note = stop.note
-            AppLog.i("Scan") { "Stopped: ${stop.note.ifEmpty { "finished" }}" }
+            AppLog.i("Scan") { "Stopped: ${stop.name}" }
         } catch (e: CancellationException) {
             cancelled = true
             AppLog.w("Scan") { "Cancelled${if (timedOut) " by the system time limit" else ""}" }
-            if (timedOut) note = "Paused by Android's time limit for background work. Scan again to continue."
+            if (timedOut) note = ScanNote.TimeLimit
         } finally {
             cache.publishNow()
             val s = BatchScanner.state.value
@@ -151,13 +155,13 @@ class BatchScanService : Service() {
         while (tooHot(power) || batteryLow()) {
             if (!paused) {
                 paused = true
-                BatchScanner.update { it.copy(note = "Paused while the phone cools down or charges") }
+                BatchScanner.update { it.copy(note = ScanNote.Cooling) }
                 AppLog.w("Scan") { "Paused: thermal or battery" }
-                notify("Paused: cooling down or low battery", BatchScanner.state.value.processed, total, force = true)
+                notify(getString(R.string.scan_notif_paused), BatchScanner.state.value.processed, total, force = true)
             }
             delay(PAUSE_POLL_MS)
         }
-        if (paused) BatchScanner.update { it.copy(note = "") }
+        if (paused) BatchScanner.update { it.copy(note = ScanNote.None) }
     }
 
     /** Thermal status exists from Android 10; older versions only wait on the battery. */
@@ -196,28 +200,36 @@ class BatchScanService : Service() {
         val progress = if (total == 0) 0 else ((index + fraction.coerceIn(0f, 1f)) / total * max).toInt()
         return NotificationCompat.Builder(this, CHANNEL)
             .setSmallIcon(R.drawable.ic_stat_scan)
-            .setContentTitle("Scanning library  ${(index + 1).coerceAtMost(total)} of $total")
+            .setContentTitle(getString(R.string.scan_notif_title, (index + 1).coerceAtMost(total), total))
             .setContentText(title)
             .setProgress(max, progress, indeterminate)
             .setOngoing(true)
             .setOnlyAlertOnce(true)
             .setCategory(NotificationCompat.CATEGORY_PROGRESS)
             .setContentIntent(contentIntent())
-            .addAction(0, "Cancel", cancel)
+            .addAction(0, getString(R.string.action_cancel), cancel)
             .build()
     }
 
-    private fun summaryNotification(s: BatchScanner.State, cancelled: Boolean, note: String): Notification {
-        val text = buildString {
-            append("${s.done} analysed")
-            if (s.skipped > 0) append(", ${s.skipped} already saved")
-            if (s.flagged > 0) append(", ${s.flagged} need a look")
-            if (s.failed > 0) append(", ${s.failed} failed")
-            if (note.isNotEmpty()) append(". $note")
-        }
+    private fun summaryNotification(s: BatchScanner.State, cancelled: Boolean, note: ScanNote): Notification {
+        val summary = buildList {
+            add(getString(R.string.scan_analysed, s.done))
+            if (s.skipped > 0) add(getString(R.string.scan_skipped, s.skipped))
+            if (s.flagged > 0) add(getString(R.string.scan_flagged, s.flagged))
+            if (s.failed > 0) add(getString(R.string.scan_failed, s.failed))
+        }.joinToString(getString(R.string.scan_sep))
+        val text = if (note == ScanNote.None) summary else getString(R.string.scan_with_note, summary, getString(note.res, s.noteDetail))
         return NotificationCompat.Builder(this, CHANNEL)
             .setSmallIcon(R.drawable.ic_stat_scan)
-            .setContentTitle(if (cancelled) "Library scan stopped" else if (note.isNotEmpty()) "Library scan stopped early" else "Library scan finished")
+            .setContentTitle(
+                getString(
+                    when {
+                        cancelled -> R.string.scan_notif_stopped
+                        note != ScanNote.None -> R.string.scan_notif_stopped_early
+                        else -> R.string.scan_notif_finished
+                    },
+                ),
+            )
             .setContentText(text)
             .setAutoCancel(true)
             .setContentIntent(contentIntent())
@@ -228,8 +240,8 @@ class BatchScanService : Service() {
         val manager = getSystemService(NotificationManager::class.java)
         if (manager.getNotificationChannel(CHANNEL) == null) {
             manager.createNotificationChannel(
-                NotificationChannel(CHANNEL, "Library scan", NotificationManager.IMPORTANCE_LOW).apply {
-                    description = "Progress while Specty analyses your library in the background"
+                NotificationChannel(CHANNEL, getString(R.string.scan_channel_name), NotificationManager.IMPORTANCE_LOW).apply {
+                    description = getString(R.string.scan_channel_desc)
                 },
             )
         }
@@ -239,7 +251,7 @@ class BatchScanService : Service() {
         scope.cancel()
         BatchScanner.serviceAlive = false
         // Never leave the screen saying a scan is running after the service is gone.
-        if (BatchScanner.state.value.running) BatchScanner.end(cancelled = true, note = "The scan was interrupted. Scan again to continue.")
+        if (BatchScanner.state.value.running) BatchScanner.end(cancelled = true, note = ScanNote.Interrupted)
         super.onDestroy()
     }
 

@@ -122,13 +122,9 @@ object BitDepth {
         return effective != null && effective <= cap - 4
     }
 
-    /** One sentence for the verdict note, or empty when nothing is wrong. */
-    fun paddingNote(declared: Int?, effective: Int?): String =
-        if (isPadded(declared, effective)) {
-            " Only the top $effective bits carry data, so this looks like $effective-bit audio stored as $declared-bit."
-        } else {
-            ""
-        }
+    /** The verdict note for padded audio, or nothing when the depth is fine. */
+    fun paddingNote(declared: Int?, effective: Int?): List<Note> =
+        if (isPadded(declared, effective)) listOf(Note(NoteKey.BITS_PADDED, effective!!, declared!!)) else emptyList()
 
     /** Value for the "Effective depth" stat. */
     fun label(declared: Int?, effective: Int, basis: BitDepthBasis): String = when {
@@ -204,7 +200,8 @@ data class AuthenticityReport(
     /** The edge of an abrupt cutoff. Null when none was found: the Nyquist limit is never reported here. */
     val cutoffHz: Double?,
     val cliffDropDb: Double,
-    val note: String,
+    /** Why the verdict was given, as data. The UI words them in the app language; [note] is the English text. */
+    val notes: List<Note>,
     /** 0..100, how sure the verdict is. Zero when the verdict is inconclusive. */
     val confidence: Int = 0,
     /** Cutoff per equal slice of the track in Hz; 0 where no cliff was found. */
@@ -219,6 +216,9 @@ data class AuthenticityReport(
     val sectionsAgreeing: Int = 0,
 ) {
     val hasCliff: Boolean get() = cutoffHz != null
+
+    /** English text of [notes], for the report export. */
+    val note: String get() = Notes.english(notes)
 }
 
 /** Coarse time series (equal slices of the track) for the dynamics graph. */

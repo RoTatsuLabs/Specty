@@ -149,7 +149,7 @@ fun <T> OptionSegmentedControl(
     options: List<T>,
     selected: T,
     onSelect: (T) -> Unit,
-    label: (T) -> String,
+    label: @Composable (T) -> String,
     modifier: Modifier = Modifier,
     scrollable: Boolean = false,
 ) = SegmentedControl(options.map { Segment(it, label(it)) }, selected, onSelect, modifier, scrollable)

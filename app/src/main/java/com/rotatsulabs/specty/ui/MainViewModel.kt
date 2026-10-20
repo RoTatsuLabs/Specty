@@ -7,10 +7,14 @@ import android.net.Uri
 import android.widget.Toast
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.rotatsulabs.specty.R
+import com.rotatsulabs.specty.audio.AnalysisFailure
 import com.rotatsulabs.specty.audio.AnalysisResult
+import com.rotatsulabs.specty.audio.AnalysisStage
 import com.rotatsulabs.specty.audio.AudioAnalyzer
 import com.rotatsulabs.specty.audio.AudioInfo
 import com.rotatsulabs.specty.audio.AuthenticityReport
+import com.rotatsulabs.specty.audio.Failure
 import com.rotatsulabs.specty.audio.LimitedAnalysisException
 import com.rotatsulabs.specty.audio.MediaProbe
 import com.rotatsulabs.specty.audio.Verdict
@@ -38,18 +42,19 @@ import kotlinx.coroutines.withContext
 
 sealed interface AnalysisState {
     data object Idle : AnalysisState
-    data class Running(val title: String, val stage: String, val progress: Float) : AnalysisState
+    data class Running(val title: String, val stage: AnalysisStage, val progress: Float) : AnalysisState
     data class Done(val result: AnalysisResult, val cached: Boolean = false) : AnalysisState
-    data class Failed(val title: String, val message: String) : AnalysisState
+    /** [failure] is set for problems the app words itself; otherwise [detail] is the system's own message, if any. */
+    data class Failed(val title: String, val failure: Failure?, val detail: String?) : AnalysisState
     /** The file was read, but its audio cannot be decoded here, so only what the container shows is reported. */
     data class Limited(val title: String, val info: AudioInfo, val report: AuthenticityReport) : AnalysisState
 }
 
 sealed interface CompareState {
     data object Idle : CompareState
-    data class Running(val title: String, val stage: String, val progress: Float) : CompareState
+    data class Running(val title: String, val stage: AnalysisStage, val progress: Float) : CompareState
     data class Ready(val a: AnalysisResult, val b: AnalysisResult) : CompareState
-    data class Failed(val message: String) : CompareState
+    data class Failed(val failure: Failure?, val detail: String?) : CompareState
 }
 
 data class LibraryState(
@@ -201,7 +206,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                     return@launch
                 }
             }
-            _compare.value = CompareState.Running(titleOf(second, meta.displayName), "Reading file", 0f)
+            _compare.value = CompareState.Running(titleOf(second, meta.displayName), AnalysisStage.READING, 0f)
             try {
                 val result = analyzer.analyze(second, fft, _windowFn.value) { stage, progress ->
                     _compare.value = CompareState.Running(titleOf(second, meta.displayName), stage, progress)
@@ -211,7 +216,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Throwable) {
-                _compare.value = CompareState.Failed(e.message ?: "Analysis failed")
+                _compare.value = CompareState.Failed((e as? AnalysisFailure)?.failure, e.message)
             }
         }
     }
@@ -259,12 +264,12 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     private fun enqueue(uri: Uri) {
         val message = if (uri == lastUri || uri in waiting) {
-            "Already in the queue"
+            getApplication<Application>().getString(R.string.toast_queue_already)
         } else {
             waiting.addLast(uri)
             _queued.value = waiting.size
             SoundFx.play(Fx.Queue)
-            "Added to the queue"
+            getApplication<Application>().getString(R.string.toast_queue_added)
         }
         Toast.makeText(getApplication(), message, Toast.LENGTH_SHORT).show()
     }
@@ -310,7 +315,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                 }
             }
 
-            _analysis.value = AnalysisState.Running(title, "Reading file", 0f)
+            _analysis.value = AnalysisState.Running(title, AnalysisStage.READING, 0f)
             val began = System.currentTimeMillis()
             AppLog.i("Analyze") { "Start \"$title\" (${meta.sizeBytes / 1024} KB, FFT $fft)" }
             try {
@@ -329,7 +334,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                 SoundFx.play(Fx.Done)
             } catch (e: Throwable) {
                 AppLog.e("Analyze", e) { "Failed \"$title\" after ${System.currentTimeMillis() - began} ms" }
-                _analysis.value = AnalysisState.Failed(title, e.message ?: "Analysis failed")
+                _analysis.value = AnalysisState.Failed(title, (e as? AnalysisFailure)?.failure, e.message)
                 SoundFx.play(Fx.Fail)
             }
             advance()
@@ -392,7 +397,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             } catch (e: Throwable) {
                 AppLog.e("Library", e) { "Library scan failed" }
                 _library.value = LibraryState(
-                    loaded = true, loading = false, error = e.message ?: "Could not read the library", folders = folders,
+                    loaded = true, loading = false, error = e.message.orEmpty(), folders = folders,
                 )
             }
         }

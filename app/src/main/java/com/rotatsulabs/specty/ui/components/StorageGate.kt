@@ -21,7 +21,7 @@ fun rememberStorageGate(action: () -> Unit): () -> Unit {
     val context = LocalContext.current
     val current by rememberUpdatedState(action)
     val launcher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
-        if (granted) current() else Toast.makeText(context, "Storage permission is needed to save images", Toast.LENGTH_SHORT).show()
+        if (granted) current() else Toast.makeText(context, context.getString(com.rotatsulabs.specty.R.string.toast_storage_permission), Toast.LENGTH_SHORT).show()
     }
     return {
         val needed = Build.VERSION.SDK_INT < Build.VERSION_CODES.Q &&

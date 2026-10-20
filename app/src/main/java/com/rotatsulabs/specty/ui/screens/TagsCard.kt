@@ -37,30 +37,33 @@ import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.annotation.StringRes
+import com.rotatsulabs.specty.R
 import com.rotatsulabs.specty.ui.components.pressScale
 import com.rotatsulabs.specty.ui.theme.Motion
 
 /** Well-known tags, shown first and with friendly names. Everything else is listed under its own key. */
-private class Known(val label: String, vararg val keys: String)
+private class Known(@StringRes val labelRes: Int, vararg val keys: String)
 
 private val knownTags = listOf(
-    Known("Title", "title"),
-    Known("Artist", "artist"),
-    Known("Album artist", "album_artist", "albumartist"),
-    Known("Album", "album"),
-    Known("Date", "date", "year", "originaldate", "originalyear"),
-    Known("Track", "track", "tracknumber"),
-    Known("Disc", "disc", "discnumber"),
-    Known("Genre", "genre"),
-    Known("Composer", "composer"),
-    Known("Label", "label", "publisher"),
-    Known("Encoder", "encoder", "encoded_by", "encoding", "encodedby"),
-    Known("Comment", "comment", "description"),
-    Known("ISRC", "isrc"),
-    Known("UPC", "upc", "barcode"),
-    Known("Rating", "rating"),
-    Known("Copyright", "copyright"),
+    Known(R.string.tag_title, "title"),
+    Known(R.string.tag_artist, "artist"),
+    Known(R.string.tag_album_artist, "album_artist", "albumartist"),
+    Known(R.string.tag_album, "album"),
+    Known(R.string.tag_date, "date", "year", "originaldate", "originalyear"),
+    Known(R.string.tag_track, "track", "tracknumber"),
+    Known(R.string.tag_disc, "disc", "discnumber"),
+    Known(R.string.tag_genre, "genre"),
+    Known(R.string.tag_composer, "composer"),
+    Known(R.string.tag_label, "label", "publisher"),
+    Known(R.string.tag_encoder, "encoder", "encoded_by", "encoding", "encodedby"),
+    Known(R.string.tag_comment, "comment", "description"),
+    Known(R.string.tag_isrc, "isrc"),
+    Known(R.string.tag_upc, "upc", "barcode"),
+    Known(R.string.tag_rating, "rating"),
+    Known(R.string.tag_copyright, "copyright"),
 )
 
 /** True when the file's "rating" tag is 1, the explicit-content flag (0 means not explicit). */
@@ -78,7 +81,7 @@ fun TagsCard(tags: List<Pair<String, String>>) {
     for (k in knownTags) {
         val hit = k.keys.firstNotNullOfOrNull { byKey[it] } ?: continue
         used += hit.first.lowercase()
-        common += k.label to hit.second
+        common += stringResource(k.labelRes) to hit.second
     }
     val replayGain = tags.filter { isReplayGain(it.first) && it.first.lowercase() !in used }
     used += replayGain.map { it.first.lowercase() }
@@ -95,12 +98,12 @@ fun TagsCard(tags: List<Pair<String, String>>) {
     ) {
         Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("Tags and metadata", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+                Text(stringResource(R.string.tags_title), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
                 Pill("${tags.size}")
             }
 
             if (tags.isEmpty()) {
-                Text("This file has no tags.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(stringResource(R.string.tags_none), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 return@Column
             }
 
@@ -119,7 +122,7 @@ fun TagsCard(tags: List<Pair<String, String>>) {
                 ) {
                     Row(Modifier.padding(horizontal = 16.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
                         Text(
-                            if (expanded) "Hide other tags" else "All other tags (${replayGain.size + custom.size})",
+                            if (expanded) stringResource(R.string.tags_hide) else stringResource(R.string.tags_show_other, replayGain.size + custom.size),
                             style = MaterialTheme.typography.labelLarge,
                             fontWeight = FontWeight.Bold,
                             modifier = Modifier.weight(1f),
@@ -136,7 +139,7 @@ fun TagsCard(tags: List<Pair<String, String>>) {
                                 replayGain.forEach { (k, v) -> TagRow(k, v, monospaceKey = true) }
                             }
                             if (custom.isNotEmpty()) {
-                                SubHeader("Custom tags")
+                                SubHeader(stringResource(R.string.tags_custom))
                                 custom.forEach { (k, v) -> TagRow(k, v, monospaceKey = true) }
                             }
                         }

@@ -1,6 +1,7 @@
 package com.rotatsulabs.specty
 
 import com.rotatsulabs.specty.dev.AppLog
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.graphics.Color
@@ -13,6 +14,7 @@ import androidx.activity.viewModels
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.rotatsulabs.specty.ui.AppLanguage
 import com.rotatsulabs.specty.ui.MainViewModel
 import com.rotatsulabs.specty.ui.SpectyApp
 import androidx.compose.runtime.CompositionLocalProvider
@@ -35,6 +37,10 @@ class MainActivity : ComponentActivity() {
 
     private val comparePicker = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         if (uri != null) viewModel.startCompare(uri)
+    }
+
+    override fun attachBaseContext(newBase: Context) {
+        super.attachBaseContext(AppLanguage.wrap(newBase))
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {

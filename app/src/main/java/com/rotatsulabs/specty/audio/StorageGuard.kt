@@ -29,9 +29,11 @@ object StorageGuard {
         return minOf(estimatedBytes * 2 + SLACK_BYTES, MAX_DECODE_BYTES, available)
     }
 
-    fun refusal(estimatedBytes: Long, usableBytes: Long): String = when {
-        usableBytes - MIN_FREE_BYTES <= 0 -> "Storage is almost full. Free some space and try again."
-        estimatedBytes > MAX_DECODE_BYTES -> "This file is too long to analyse (about ${estimatedBytes / 1_000_000} MB of audio)."
-        else -> "Not enough free storage to decode this file (about ${estimatedBytes / 1_000_000} MB needed)."
+    fun failure(estimatedBytes: Long, usableBytes: Long): Failure = when {
+        usableBytes - MIN_FREE_BYTES <= 0 -> Failure(FailKey.STORAGE_FULL)
+        estimatedBytes > MAX_DECODE_BYTES -> Failure(FailKey.FILE_TOO_LONG, estimatedBytes / 1_000_000)
+        else -> Failure(FailKey.NOT_ENOUGH_STORAGE, estimatedBytes / 1_000_000)
     }
+
+    fun refusal(estimatedBytes: Long, usableBytes: Long): String = Failures.english(failure(estimatedBytes, usableBytes))
 }

@@ -47,6 +47,8 @@ import androidx.compose.foundation.layout.size
 import kotlinx.coroutines.launch
 import android.widget.Toast
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
+import com.rotatsulabs.specty.R
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -84,6 +86,7 @@ import androidx.compose.ui.unit.sp
 import com.rotatsulabs.specty.audio.FreqScale
 import com.rotatsulabs.specty.audio.Spectrogram
 import com.rotatsulabs.specty.ui.components.Fmt
+import com.rotatsulabs.specty.ui.components.viewLabels
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlin.math.roundToInt
@@ -92,7 +95,7 @@ import kotlin.math.roundToInt
 fun SpectrogramCard(
     spectrogram: Spectrogram,
     modifier: Modifier = Modifier,
-    title: String = "Spectrogram",
+    title: String = stringResource(R.string.spec_title),
     onFullscreen: ((view: Int) -> Unit)? = null,
     cutoffHz: Double? = null,
 ) {
@@ -124,7 +127,7 @@ fun SpectrogramCard(
             saving = false
             Toast.makeText(
                 context,
-                if (uri != null) "Saved to Pictures/Specty" else "Could not save the image",
+                context.getString(if (uri != null) R.string.toast_saved_gallery else R.string.toast_save_failed),
                 Toast.LENGTH_SHORT,
             ).show()
         }
@@ -149,6 +152,7 @@ fun SpectrogramCard(
     val axisColor = MaterialTheme.colorScheme.onSurfaceVariant
     val labelStyle = TextStyle(fontSize = 10.sp, color = axisColor)
     val gridColor = Color.White.copy(alpha = 0.14f)
+    val cutoffTagText = cutoffHz?.let { stringResource(R.string.spec_cutoff_tag, Fmt.kHz(it)) }
 
     MorphSurface(
         modifier = modifier.fillMaxWidth(),
@@ -161,7 +165,7 @@ fun SpectrogramCard(
             val onTonal = MaterialTheme.colorScheme.onSecondaryContainer
             // Selection uses the tonal colour, so the solid primary stays free for the main action below.
             SegmentedControl(
-                segments = spectrogram.displayLabels.mapIndexed { i, l -> Segment(i, l) },
+                segments = viewLabels(spectrogram).mapIndexed { i, l -> Segment(i, l) },
                 selected = selected,
                 onSelect = { selected = it },
                 scrollable = spectrogram.displayLabels.size > 3,
@@ -207,7 +211,7 @@ fun SpectrogramCard(
                         Color.White.copy(alpha = 0.9f), Offset(left, y), Offset(left + plotWidth, y), strokeWidth = 1.5.dp.toPx(),
                         pathEffect = androidx.compose.ui.graphics.PathEffect.dashPathEffect(floatArrayOf(14f, 10f)),
                     )
-                    val tag = measurer.measure("cutoff ${Fmt.kHz(cutoffHz)}", TextStyle(fontSize = 10.sp, color = Color.White))
+                    val tag = measurer.measure(cutoffTagText.orEmpty(), TextStyle(fontSize = 10.sp, color = Color.White))
                     drawText(tag, topLeft = Offset(left + plotWidth - tag.size.width - 6.dp.toPx(), (y - tag.size.height - 2.dp.toPx()).coerceAtLeast(top)))
                 }
 
@@ -245,13 +249,13 @@ fun SpectrogramCard(
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 if (onFullscreen != null) {
                     ExpressiveButton(
-                        "Full screen", { onFullscreen(selected) },
+                        stringResource(R.string.spec_fullscreen), { onFullscreen(selected) },
                         modifier = Modifier.weight(1f), icon = Icons.Rounded.Fullscreen,
                     )
                 }
                 if (cutoffHz != null) {
                     ExpressiveButton(
-                        "Cutoff",
+                        stringResource(R.string.spec_cutoff),
                         { set(options.copy(cutoffLine = !options.cutoffLine)) },
                         kind = if (options.cutoffLine) ButtonKind.Tonal else ButtonKind.Outlined,
                         icon = if (options.cutoffLine) Icons.Rounded.Check else null,
@@ -269,7 +273,7 @@ fun SpectrogramCard(
             ) {
                 Row(Modifier.padding(horizontal = 16.dp, vertical = 12.dp), verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
                     Text(
-                        "Display options",
+                        stringResource(R.string.spec_display_options),
                         style = MaterialTheme.typography.labelLarge,
                         fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
                         modifier = Modifier.weight(1f),
@@ -283,7 +287,7 @@ fun SpectrogramCard(
                 exit = shrinkVertically(Motion.spatial()) + fadeOut(Motion.effects()),
             ) {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("Colour palette", style = MaterialTheme.typography.labelMedium, color = axisColor)
+                    Text(stringResource(R.string.spec_palette), style = MaterialTheme.typography.labelMedium, color = axisColor)
                     SegmentedControl(
                         segments = SpectrogramPalette.entries.mapIndexed { i, p -> Segment(i, p.label) },
                         selected = paletteIndex,
@@ -296,18 +300,18 @@ fun SpectrogramCard(
                         indicator = tonal,
                         onIndicator = onTonal,
                     )
-                    Text("Frequency scale", style = MaterialTheme.typography.labelMedium, color = axisColor)
+                    Text(stringResource(R.string.spec_freq_scale), style = MaterialTheme.typography.labelMedium, color = axisColor)
                     SegmentedControl(
-                        segments = listOf(Segment(false, "Linear"), Segment(true, "Log")),
+                        segments = listOf(Segment(false, stringResource(R.string.spec_linear)), Segment(true, stringResource(R.string.spec_log))),
                         selected = options.log,
                         onSelect = { set(options.copy(log = it)) },
                         modifier = Modifier.fillMaxWidth(),
                         indicator = tonal,
                         onIndicator = onTonal,
                     )
-                    Text("Level range", style = MaterialTheme.typography.labelMedium, color = axisColor)
+                    Text(stringResource(R.string.spec_level_range), style = MaterialTheme.typography.labelMedium, color = axisColor)
                     SegmentedControl(
-                        segments = DbRange.entries.map { Segment(it, it.label) },
+                        segments = DbRange.entries.map { Segment(it, stringResource(it.labelRes)) },
                         selected = options.range,
                         onSelect = { set(options.copy(range = it)) },
                         modifier = Modifier.fillMaxWidth(),
@@ -318,7 +322,7 @@ fun SpectrogramCard(
             }
 
             ExpressiveButton(
-                text = if (saving) "Saving…" else "Save image to gallery",
+                text = stringResource(if (saving) R.string.spec_saving else R.string.save_image),
                 onClick = { if (!saving) save() },
                 kind = ButtonKind.Tonal,
                 icon = Icons.Rounded.Download,
@@ -327,8 +331,8 @@ fun SpectrogramCard(
             )
 
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Text("Sample rate ${Fmt.kHz(spectrogram.sampleRate.toDouble())}", style = MaterialTheme.typography.bodySmall, color = axisColor)
-                Text("Nyquist ${Fmt.kHz(spectrogram.sampleRate / 2.0)}", style = MaterialTheme.typography.bodySmall, color = axisColor)
+                Text(stringResource(R.string.spec_sample_rate, Fmt.kHz(spectrogram.sampleRate.toDouble())), style = MaterialTheme.typography.bodySmall, color = axisColor)
+                Text(stringResource(R.string.spec_nyquist, Fmt.kHz(spectrogram.sampleRate / 2.0)), style = MaterialTheme.typography.bodySmall, color = axisColor)
             }
         }
     }

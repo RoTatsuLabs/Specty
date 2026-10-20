@@ -77,6 +77,12 @@ import com.rotatsulabs.specty.ui.spectrogram.SpectrogramRenderer
 import com.rotatsulabs.specty.ui.theme.Motion
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import androidx.compose.ui.res.stringResource
+import com.rotatsulabs.specty.R
+import com.rotatsulabs.specty.ui.components.failureText
+import com.rotatsulabs.specty.ui.components.noteText
+import com.rotatsulabs.specty.ui.components.stageText
+import com.rotatsulabs.specty.ui.components.spectralEdge
 import java.util.Locale
 import kotlin.math.abs
 import kotlin.math.max
@@ -89,7 +95,7 @@ fun CompareScreen(state: CompareState, onBack: () -> Unit, modifier: Modifier = 
         modifier = modifier,
         containerColor = MaterialTheme.colorScheme.surface,
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
-        topBar = { ExpressiveTopBar("Compare", onBack = onBack) },
+        topBar = { ExpressiveTopBar(stringResource(R.string.compare_title), onBack = onBack) },
     ) { padding ->
         Box(Modifier.fillMaxSize().padding(padding)) {
             when (state) {
@@ -101,17 +107,17 @@ fun CompareScreen(state: CompareState, onBack: () -> Unit, modifier: Modifier = 
                     ShapeLoader(size = 72.dp)
                     Spacer(Modifier.height(24.dp))
                     Text(state.title, style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                    Text(state.stage, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(stageText(state.stage), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     Spacer(Modifier.height(16.dp))
                     WavyProgressBar(state.progress)
                 }
                 is CompareState.Failed -> Column(Modifier.fillMaxSize().padding(24.dp), verticalArrangement = Arrangement.Center) {
                     SpectyCard(corners = SpectyShapes.Hero, color = MaterialTheme.colorScheme.errorContainer) {
-                        Text("Could not compare", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onErrorContainer)
+                        Text(stringResource(R.string.compare_failed), style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onErrorContainer)
                         Spacer(Modifier.height(8.dp))
-                        Text(state.message, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onErrorContainer)
+                        Text(failureText(state.failure, state.detail), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onErrorContainer)
                         Spacer(Modifier.height(12.dp))
-                        ExpressiveButton("Back", onBack, kind = ButtonKind.Tonal)
+                        ExpressiveButton(stringResource(R.string.action_back), onBack, kind = ButtonKind.Tonal)
                     }
                 }
                 is CompareState.Ready -> ReadyContent(state.a, state.b)
@@ -135,10 +141,10 @@ private fun ReadyContent(a: AnalysisResult, b: AnalysisResult) {
             }
         }
         Reveal(1) {
-            SectionCard("What differs") {
+            SectionCard(stringResource(R.string.compare_differs)) {
                 Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     CompareMath.highlights(a.authenticity, a.levels, b.authenticity, b.levels).forEach {
-                        Text(it, style = MaterialTheme.typography.bodyMedium)
+                        Text(noteText(it), style = MaterialTheme.typography.bodyMedium)
                     }
                 }
             }
@@ -159,7 +165,7 @@ private fun FileTag(letter: String, r: AnalysisResult, container: Color, content
             Column {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                     Text(r.info.title.withoutExplicitMark(), style = MaterialTheme.typography.titleSmall, maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false))
-                    if (isExplicit(r.info.tags)) Icon(Icons.Rounded.Explicit, contentDescription = "Explicit", modifier = Modifier.size(18.dp))
+                    if (isExplicit(r.info.tags)) Icon(Icons.Rounded.Explicit, contentDescription = stringResource(R.string.explicit_label), modifier = Modifier.size(18.dp))
                 }
                 Text(
                     "${Codecs.displayName(r.info.codec)} · ${Fmt.kHz(r.info.sampleRate.toDouble())}",
@@ -179,12 +185,12 @@ private fun palette(context: android.content.Context): SpectrogramPalette {
 private fun SpectrogramsCard(a: AnalysisResult, b: AnalysisResult) {
     val context = LocalContext.current
     val palette = remember { palette(context) }
-    SectionCard("Spectrograms") {
+    SectionCard(stringResource(R.string.compare_spectrograms)) {
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             StackedImage("A", a.spectrogram, palette)
             StackedImage("B", b.spectrogram, palette)
             Text(
-                "Same palette and level scale for both. Each runs from 0 Hz at the bottom to its own Nyquist at the top.",
+                stringResource(R.string.compare_same_scale),
                 style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
@@ -198,10 +204,10 @@ private fun StackedImage(label: String, spec: Spectrogram, palette: SpectrogramP
     }
     Box(Modifier.fillMaxWidth().aspectRatio(16f / 7f).clip(RoundedCornerShape(18.dp)).background(Color.Black)) {
         image?.let {
-            Image(it, contentDescription = "Spectrogram $label", modifier = Modifier.fillMaxSize(), contentScale = ContentScale.FillBounds, filterQuality = FilterQuality.Medium)
+            Image(it, contentDescription = stringResource(R.string.compare_spec_cd, label), modifier = Modifier.fillMaxSize(), contentScale = ContentScale.FillBounds, filterQuality = FilterQuality.Medium)
         }
         Pill(
-            "$label · ${Fmt.kHz(spec.sampleRate / 2.0)} top",
+            stringResource(R.string.compare_top_pill, label, Fmt.kHz(spec.sampleRate / 2.0)),
             Modifier.padding(8.dp).align(Alignment.TopStart),
             container = Color.Black.copy(alpha = 0.6f), content = Color.White,
         )
@@ -236,22 +242,24 @@ private fun DifferenceCard(a: Spectrogram, b: Spectrogram) {
         }
     }
     val top = min(a.sampleRate, b.sampleRate) / 2.0
-    SectionCard("Difference (B minus A)") {
+    SectionCard(stringResource(R.string.compare_diff_title)) {
         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Box(Modifier.fillMaxWidth().aspectRatio(16f / 7f).clip(RoundedCornerShape(18.dp)).background(Color.Black)) {
                 diff?.first?.let {
-                    Image(it, contentDescription = "Difference between the two spectrograms", modifier = Modifier.fillMaxSize(), contentScale = ContentScale.FillBounds, filterQuality = FilterQuality.Medium)
+                    Image(it, contentDescription = stringResource(R.string.compare_diff_cd), modifier = Modifier.fillMaxSize(), contentScale = ContentScale.FillBounds, filterQuality = FilterQuality.Medium)
                 }
             }
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Text("B quieter  -30 dB", style = MaterialTheme.typography.labelSmall, color = Color(0xFF5C9BFF))
-                Text("same", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                Text("+30 dB  B louder", style = MaterialTheme.typography.labelSmall, color = Color(0xFFFF6A40))
+                Text(stringResource(R.string.compare_b_quieter), style = MaterialTheme.typography.labelSmall, color = Color(0xFF5C9BFF))
+                Text(stringResource(R.string.compare_same), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(stringResource(R.string.compare_b_louder), style = MaterialTheme.typography.labelSmall, color = Color(0xFFFF6A40))
             }
             Text(
-                (diff?.second?.let { "Average difference ${String.format(Locale.US, "%.1f", it)} dB. " } ?: "") +
-                    "Frequency runs to ${Fmt.kHz(top)}, the lower Nyquist of the two" +
-                    if (abs(a.durationSec - b.durationSec) > max(a.durationSec, b.durationSec) * 0.02) ". The files differ in length, so each is stretched to the full width." else ".",
+                buildList {
+                    diff?.second?.let { add(stringResource(R.string.compare_diff_avg, String.format(Locale.US, "%.1f", it))) }
+                    add(stringResource(R.string.compare_diff_freq, Fmt.kHz(top)))
+                    if (abs(a.durationSec - b.durationSec) > max(a.durationSec, b.durationSec) * 0.02) add(stringResource(R.string.compare_diff_length))
+                }.joinToString(stringResource(R.string.sentence_sep)),
                 style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
@@ -268,7 +276,7 @@ private fun SpectrumCard(a: Spectrogram, b: Spectrogram) {
     val colorB = scheme.tertiary
     val grid = scheme.outlineVariant
     val maxHz = max(a.sampleRate, b.sampleRate) / 2.0
-    SectionCard("Average spectrum") {
+    SectionCard(stringResource(R.string.compare_avg_title)) {
         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Canvas(Modifier.fillMaxWidth().height(170.dp)) {
                 val lo = -110f; val hi = -10f
@@ -304,7 +312,7 @@ private fun SpectrumCard(a: Spectrogram, b: Spectrogram) {
                 }
                 Text(Fmt.kHz(maxHz), style = MaterialTheme.typography.labelSmall, color = scheme.onSurfaceVariant)
             }
-            Text("Mean level of the audible parts, -110 to -10 dB. A shelf that ends early shows where a file was low-passed.", style = MaterialTheme.typography.bodySmall, color = scheme.onSurfaceVariant)
+            Text(stringResource(R.string.compare_avg_note), style = MaterialTheme.typography.bodySmall, color = scheme.onSurfaceVariant)
         }
     }
 }
@@ -328,38 +336,39 @@ private fun topEnd(r: AnalysisResult): Double? {
 @Composable
 private fun MetricsTable(a: AnalysisResult, b: AnalysisResult) {
     val la = a.levels; val lb = b.levels
+    val na = stringResource(R.string.stat_na)
     fun pick(x: Double?, y: Double?, higher: Boolean, margin: Double): Int {
         if (x == null || y == null || abs(x - y) < margin) return -1
         return if ((x > y) == higher) 0 else 1
     }
     val rows = listOf(
-        Row3("Codec", Codecs.displayName(a.info.codec), Codecs.displayName(b.info.codec)),
-        Row3("Sample rate", Fmt.kHz(a.info.sampleRate.toDouble()), Fmt.kHz(b.info.sampleRate.toDouble())),
-        Row3("Bit depth", a.info.bitDepth?.let { "$it-bit" } ?: "n/a", b.info.bitDepth?.let { "$it-bit" } ?: "n/a"),
-        Row3("Bitrate", Fmt.bitrate(a.info.bitrateBps), Fmt.bitrate(b.info.bitrateBps)),
-        Row3("Duration", Fmt.duration(a.info.durationSec), Fmt.duration(b.info.durationSec)),
-        Row3("Size", Fmt.size(a.info.sizeBytes), Fmt.size(b.info.sizeBytes)),
-        Row3("Loudness", Fmt.lufs(la.lufs), Fmt.lufs(lb.lufs)),
-        Row3("Peak", Fmt.db(la.peakDb), Fmt.db(lb.peakDb)),
-        Row3("True peak", Fmt.dbtp(la.truePeakDbtp), Fmt.dbtp(lb.truePeakDbtp)),
-        Row3("RMS", Fmt.db(la.rmsDb), Fmt.db(lb.rmsDb)),
-        Row3("DR meter", la.drTt?.let { "DR${it.roundToInt()}" } ?: "n/a", lb.drTt?.let { "DR${it.roundToInt()}" } ?: "n/a", pick(la.drTt, lb.drTt, true, 1.0)),
+        Row3(stringResource(R.string.stat_codec), Codecs.displayName(a.info.codec), Codecs.displayName(b.info.codec)),
+        Row3(stringResource(R.string.stat_sample_rate), Fmt.kHz(a.info.sampleRate.toDouble()), Fmt.kHz(b.info.sampleRate.toDouble())),
+        Row3(stringResource(R.string.compare_bit_depth), a.info.bitDepth?.let { "$it-bit" } ?: na, b.info.bitDepth?.let { "$it-bit" } ?: na),
+        Row3(stringResource(R.string.stat_bitrate), Fmt.bitrate(a.info.bitrateBps), Fmt.bitrate(b.info.bitrateBps)),
+        Row3(stringResource(R.string.stat_duration), Fmt.duration(a.info.durationSec), Fmt.duration(b.info.durationSec)),
+        Row3(stringResource(R.string.stat_size), Fmt.size(a.info.sizeBytes), Fmt.size(b.info.sizeBytes)),
+        Row3(stringResource(R.string.stat_loudness), Fmt.lufs(la.lufs), Fmt.lufs(lb.lufs)),
+        Row3(stringResource(R.string.stat_peak), Fmt.db(la.peakDb), Fmt.db(lb.peakDb)),
+        Row3(stringResource(R.string.stat_true_peak), Fmt.dbtp(la.truePeakDbtp), Fmt.dbtp(lb.truePeakDbtp)),
+        Row3(stringResource(R.string.stat_rms), Fmt.db(la.rmsDb), Fmt.db(lb.rmsDb)),
+        Row3(stringResource(R.string.stat_dr_meter), la.drTt?.let { "DR${it.roundToInt()}" } ?: na, lb.drTt?.let { "DR${it.roundToInt()}" } ?: na, pick(la.drTt, lb.drTt, true, 1.0)),
         Row3(
-            "Clipping",
-            if (la.clippedSamples == 0L) "None" else Fmt.count(la.clippedSamples),
-            if (lb.clippedSamples == 0L) "None" else Fmt.count(lb.clippedSamples),
+            stringResource(R.string.stat_clipping),
+            if (la.clippedSamples == 0L) stringResource(R.string.stat_none) else Fmt.count(la.clippedSamples),
+            if (lb.clippedSamples == 0L) stringResource(R.string.stat_none) else Fmt.count(lb.clippedSamples),
             pick(la.clippedSamples.toDouble(), lb.clippedSamples.toDouble(), false, 1.0),
         ),
-        Row3("Spectral cutoff", Fmt.spectralEdge(a.authenticity).second, Fmt.spectralEdge(b.authenticity).second, pick(topEnd(a), topEnd(b), true, 1000.0)),
-        Row3("Verdict", verdictShort(a), verdictShort(b)),
+        Row3(stringResource(R.string.edge_cutoff), spectralEdge(a.authenticity).second, spectralEdge(b.authenticity).second, pick(topEnd(a), topEnd(b), true, 1000.0)),
+        Row3(stringResource(R.string.compare_verdict), verdictShort(a), verdictShort(b)),
         Row3(
-            "Correlation",
-            la.correlation?.let { String.format(Locale.US, "%+.2f", it) } ?: "n/a",
-            lb.correlation?.let { String.format(Locale.US, "%+.2f", it) } ?: "n/a",
+            stringResource(R.string.stereo_correlation),
+            la.correlation?.let { String.format(Locale.US, "%+.2f", it) } ?: na,
+            lb.correlation?.let { String.format(Locale.US, "%+.2f", it) } ?: na,
         ),
     )
     val scheme = MaterialTheme.colorScheme
-    SectionCard("Side by side") {
+    SectionCard(stringResource(R.string.compare_side_title)) {
         Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
             Row(Modifier.fillMaxWidth().padding(bottom = 6.dp)) {
                 Spacer(Modifier.weight(0.34f))
@@ -375,7 +384,7 @@ private fun MetricsTable(a: AnalysisResult, b: AnalysisResult) {
                     }
                 }
             }
-            Text("Highlighted values are the better of the two for dynamics, clipping and top-end extension.", style = MaterialTheme.typography.bodySmall, color = scheme.onSurfaceVariant, modifier = Modifier.padding(top = 8.dp))
+            Text(stringResource(R.string.compare_better_note), style = MaterialTheme.typography.bodySmall, color = scheme.onSurfaceVariant, modifier = Modifier.padding(top = 8.dp))
         }
     }
 }
@@ -390,17 +399,18 @@ private fun Cell(text: String, better: Boolean, modifier: Modifier) {
     )
 }
 
+@Composable
 private fun verdictShort(r: AnalysisResult): String {
     val v = when (r.authenticity.verdict) {
-        com.rotatsulabs.specty.audio.Verdict.GENUINE -> "Lossless"
-        com.rotatsulabs.specty.audio.Verdict.HI_RES -> "Hi-Res Lossless"
-        com.rotatsulabs.specty.audio.Verdict.LOSSY_SOURCE -> "Lossy source"
-        com.rotatsulabs.specty.audio.Verdict.POSSIBLE_LOSSY_SOURCE -> "Possibly lossy"
-        com.rotatsulabs.specty.audio.Verdict.UPSAMPLED -> "Upsampled"
-        com.rotatsulabs.specty.audio.Verdict.BAND_LIMITED -> "Band-limited"
-        com.rotatsulabs.specty.audio.Verdict.LOSSY_CODEC -> "Lossy format"
-        com.rotatsulabs.specty.audio.Verdict.DOLBY_ATMOS -> "Dolby Atmos"
-        com.rotatsulabs.specty.audio.Verdict.INCONCLUSIVE -> "Inconclusive"
+        com.rotatsulabs.specty.audio.Verdict.GENUINE -> stringResource(R.string.verdict_lossless)
+        com.rotatsulabs.specty.audio.Verdict.HI_RES -> stringResource(R.string.verdict_short_hires)
+        com.rotatsulabs.specty.audio.Verdict.LOSSY_SOURCE -> stringResource(R.string.verdict_short_lossy_source)
+        com.rotatsulabs.specty.audio.Verdict.POSSIBLE_LOSSY_SOURCE -> stringResource(R.string.verdict_short_possible)
+        com.rotatsulabs.specty.audio.Verdict.UPSAMPLED -> stringResource(R.string.verdict_short_upsampled)
+        com.rotatsulabs.specty.audio.Verdict.BAND_LIMITED -> stringResource(R.string.verdict_short_band)
+        com.rotatsulabs.specty.audio.Verdict.LOSSY_CODEC -> stringResource(R.string.verdict_short_codec)
+        com.rotatsulabs.specty.audio.Verdict.DOLBY_ATMOS -> stringResource(R.string.verdict_atmos)
+        com.rotatsulabs.specty.audio.Verdict.INCONCLUSIVE -> stringResource(R.string.verdict_head_inconclusive)
     }
     return if (r.authenticity.confidence > 0) "$v (${r.authenticity.confidence}%)" else v
 }

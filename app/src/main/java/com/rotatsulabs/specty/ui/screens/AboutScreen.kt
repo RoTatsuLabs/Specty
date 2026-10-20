@@ -45,11 +45,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.rotatsulabs.specty.BuildConfig
+import com.rotatsulabs.specty.R
 import android.os.SystemClock
 import android.widget.Toast
 import androidx.compose.foundation.clickable
@@ -93,7 +95,7 @@ fun AboutScreen(
     licence?.let { kind -> LicenseDialog(kind, onDismiss = { licence = null }, onOpenOnline = { open(kind.url) }) }
 
     Column(modifier.fillMaxSize()) {
-        ExpressiveTopBar("About", onBack = onBack)
+        ExpressiveTopBar(stringResource(R.string.about_title), onBack = onBack)
 
         Column(
             Modifier
@@ -105,29 +107,29 @@ fun AboutScreen(
             Reveal(0) { Hero(developer, onUnlockDeveloper) }
 
             Reveal(1) {
-                SettingGroup("Project") {
+                SettingGroup(stringResource(R.string.about_project)) {
                     ListRow(
-                        "Source code", supporting = "github.com/RoTatsuLabs/Specty", icon = Icons.Rounded.Code,
+                        stringResource(R.string.about_source), supporting = "github.com/RoTatsuLabs/Specty", icon = Icons.Rounded.Code,
                         corners = groupCorners(0, 3), onClick = { open(OpenSource.SOURCE_URL) },
                         trailing = { OpenIcon() },
                     )
                     ListRow(
-                        "Report a problem", supporting = "Open an issue on GitHub", icon = Icons.Rounded.BugReport,
+                        stringResource(R.string.about_report), supporting = stringResource(R.string.about_report_desc), icon = Icons.Rounded.BugReport,
                         corners = groupCorners(1, 3), onClick = { open(OpenSource.SOURCE_URL + "/issues") },
                         trailing = { OpenIcon() },
                     )
                     ListRow(
-                        "Show the intro again", icon = Icons.Rounded.Replay,
+                        stringResource(R.string.about_intro), icon = Icons.Rounded.Replay,
                         corners = groupCorners(2, 3), onClick = onReplayIntro,
                     )
                 }
             }
 
             Reveal(2) {
-                SettingGroup("Privacy") {
+                SettingGroup(stringResource(R.string.about_privacy)) {
                     ListRow(
-                        "Stays on your device",
-                        supporting = "All analysis runs on your device and nothing is uploaded. Specty does not declare the internet permission.",
+                        stringResource(R.string.about_privacy_title),
+                        supporting = stringResource(R.string.about_privacy_desc),
                         icon = Icons.Rounded.Lock,
                         corners = SpectyShapes.Tile,
                     )
@@ -135,16 +137,16 @@ fun AboutScreen(
             }
 
             Reveal(3) {
-                SettingGroup("Licence") {
+                SettingGroup(stringResource(R.string.about_licence)) {
                     ListRow(
-                        "Specty", supporting = "${OpenSource.app.license.title}. Tap to read it.", icon = Icons.Rounded.Gavel,
+                        stringResource(R.string.app_name), supporting = stringResource(R.string.about_licence_tap, OpenSource.app.license.title), icon = Icons.Rounded.Gavel,
                         corners = SpectyShapes.Tile, onClick = { licence = OpenSource.app.license },
                     )
                 }
             }
 
             Reveal(4) {
-                SettingGroup("Open source libraries") {
+                SettingGroup(stringResource(R.string.about_libraries)) {
                     val libraries = OpenSource.libraries
                     libraries.forEachIndexed { index, library ->
                         LibraryRow(
@@ -157,7 +159,7 @@ fun AboutScreen(
                         )
                     }
                     Text(
-                        "Specty is built on the work of these projects. Tap one for details and its licence.",
+                        stringResource(R.string.about_libraries_hint),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(start = 20.dp, end = 20.dp, top = 12.dp),
@@ -166,7 +168,7 @@ fun AboutScreen(
             }
 
             Text(
-                "Made by RoTatsu Labs",
+                stringResource(R.string.about_made_by),
                 style = MaterialTheme.typography.labelLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,
@@ -192,28 +194,27 @@ private fun Hero(developer: Boolean, onUnlockDeveloper: () -> Unit) {
             EqualizerMark()
             Spacer(Modifier.width(16.dp))
             Column {
-                Text("Specty", style = MaterialTheme.typography.headlineLarge)
-                Text("Audio quality lab", style = MaterialTheme.typography.titleSmall, color = scheme.onSurfaceVariant)
+                Text(stringResource(R.string.app_name), style = MaterialTheme.typography.headlineLarge)
+                Text(stringResource(R.string.about_tagline), style = MaterialTheme.typography.titleSmall, color = scheme.onSurfaceVariant)
             }
         }
         Spacer(Modifier.height(16.dp))
         Text(
-            "See what an audio file really contains: its spectrum, loudness and dynamics, and whether a lossless file " +
-                "started life as a lossy one.",
+            stringResource(R.string.about_hero),
             style = MaterialTheme.typography.bodyMedium,
             color = scheme.onSurfaceVariant,
         )
         Spacer(Modifier.height(16.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Pill(
-                "Version ${BuildConfig.VERSION_NAME}",
+                stringResource(R.string.about_version, BuildConfig.VERSION_NAME),
                 Modifier.clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) {
                     when (val r = taps.tap(SystemClock.elapsedRealtime())) {
                         TapCounter.Result.Idle -> Unit
-                        is TapCounter.Result.Remaining -> if (!developer) say("${r.taps} more ${if (r.taps == 1) "tap" else "taps"} to become a developer")
-                        TapCounter.Result.Unlocked -> if (developer) say("Developer mode is already on") else {
+                        is TapCounter.Result.Remaining -> if (!developer) say(context.resources.getQuantityString(R.plurals.about_dev_taps, r.taps, r.taps))
+                        TapCounter.Result.Unlocked -> if (developer) say(context.getString(R.string.about_dev_already)) else {
                             onUnlockDeveloper()
-                            say("Developer mode is on. Find it in Settings.")
+                            say(context.getString(R.string.about_dev_on))
                         }
                     }
                 },
@@ -250,16 +251,16 @@ private fun LibraryRow(
                         color = scheme.onSurfaceVariant,
                     )
                 }
-                Icon(Icons.Rounded.ExpandMore, contentDescription = if (expanded) "Collapse" else "Expand", modifier = Modifier.rotate(turn))
+                Icon(Icons.Rounded.ExpandMore, contentDescription = stringResource(if (expanded) R.string.about_collapse else R.string.about_expand), modifier = Modifier.rotate(turn))
             }
             AnimatedVisibility(expanded) {
                 Column(Modifier.padding(top = 12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("By ${library.author}", style = MaterialTheme.typography.labelLarge, color = scheme.primary)
-                    Text(library.summary, style = MaterialTheme.typography.bodyMedium)
-                    library.note?.let { Text(it, style = MaterialTheme.typography.bodyMedium, color = scheme.onSurfaceVariant) }
+                    Text(stringResource(R.string.about_by, library.author), style = MaterialTheme.typography.labelLarge, color = scheme.primary)
+                    Text(stringResource(library.summary), style = MaterialTheme.typography.bodyMedium)
+                    library.note?.let { Text(stringResource(it), style = MaterialTheme.typography.bodyMedium, color = scheme.onSurfaceVariant) }
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        ExpressiveButton("Licence", onLicense, kind = ButtonKind.Tonal, icon = Icons.Rounded.Description)
-                        ExpressiveButton("Website", onOpen, kind = ButtonKind.Tonal, icon = Icons.AutoMirrored.Rounded.OpenInNew)
+                        ExpressiveButton(stringResource(R.string.about_licence_button), onLicense, kind = ButtonKind.Tonal, icon = Icons.Rounded.Description)
+                        ExpressiveButton(stringResource(R.string.about_website), onOpen, kind = ButtonKind.Tonal, icon = Icons.AutoMirrored.Rounded.OpenInNew)
                     }
                 }
             }
@@ -290,7 +291,7 @@ private fun LicenseDialog(kind: LicenseKind, onDismiss: () -> Unit, onOpenOnline
                 when {
                     shown == null -> ShapeLoader(size = 40.dp)
                     shown.isEmpty() -> Text(
-                        "The licence text could not be loaded. You can read it online instead.",
+                        stringResource(R.string.about_licence_missing),
                         style = MaterialTheme.typography.bodyMedium,
                     )
                     else -> LazyColumn(verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -306,7 +307,7 @@ private fun LicenseDialog(kind: LicenseKind, onDismiss: () -> Unit, onOpenOnline
                 }
             }
         },
-        confirmButton = { TextButton(onClick = onDismiss) { Text("Close") } },
-        dismissButton = { TextButton(onClick = onOpenOnline) { Text("Read online") } },
+        confirmButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_close)) } },
+        dismissButton = { TextButton(onClick = onOpenOnline) { Text(stringResource(R.string.about_read_online)) } },
     )
 }

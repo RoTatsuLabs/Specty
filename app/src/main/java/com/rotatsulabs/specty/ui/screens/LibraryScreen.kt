@@ -74,6 +74,8 @@ import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material.icons.rounded.MoreVert
 import androidx.compose.material.icons.rounded.Radar
 import com.rotatsulabs.specty.batch.BatchScanner
+import com.rotatsulabs.specty.batch.ScanNote
+import com.rotatsulabs.specty.batch.res
 import androidx.compose.material.icons.rounded.MusicNote
 import androidx.compose.material.icons.rounded.Refresh
 import androidx.compose.material.icons.rounded.Search
@@ -115,10 +117,14 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
+import androidx.annotation.StringRes
+import com.rotatsulabs.specty.R
 import com.rotatsulabs.specty.audio.Verdict
 import com.rotatsulabs.specty.data.LibraryFolder
 import com.rotatsulabs.specty.data.Track
@@ -135,8 +141,8 @@ import kotlin.math.PI
 import kotlin.math.abs
 import kotlin.math.sin
 
-private enum class SortKey(val label: String) {
-    Title("Title"), Artist("Artist"), Duration("Length"), Size("Size"),
+private enum class SortKey(@StringRes val labelRes: Int) {
+    Title(R.string.sort_title), Artist(R.string.sort_artist), Duration(R.string.sort_length), Size(R.string.sort_size),
 }
 
 /**
@@ -284,15 +290,15 @@ fun LibraryScreen(
                     }
                 }
                 state.error != null -> item(key = "error") {
-                    Box(Modifier.fillParentMaxHeight(0.5f).fillMaxWidth()) { Message(state.error) }
+                    Box(Modifier.fillParentMaxHeight(0.5f).fillMaxWidth()) { Message(state.error.ifEmpty { stringResource(R.string.library_error) }) }
                 }
                 state.tracks.isEmpty() -> item(key = "empty") {
                     Box(Modifier.fillParentMaxHeight(0.5f).fillMaxWidth()) {
-                        Message("No audio files found in your folders. Add another folder from the menu, or pick a single file with the button below.")
+                        Message(stringResource(R.string.library_empty_folders))
                     }
                 }
                 visible.isEmpty() -> item(key = "nomatch") {
-                    Box(Modifier.fillParentMaxHeight(0.4f).fillMaxWidth()) { Message("Nothing here yet for this filter.") }
+                    Box(Modifier.fillParentMaxHeight(0.4f).fillMaxWidth()) { Message(stringResource(R.string.library_no_match)) }
                 }
                 grid -> itemsIndexed(visible.chunked(2), key = { _, pair -> "g" + pair.first().uri.toString() }) { rowIndex, pair ->
                     Row(
@@ -337,7 +343,7 @@ fun LibraryScreen(
             ) {
                 Row(Modifier.padding(horizontal = 24.dp, vertical = 18.dp), verticalAlignment = Alignment.CenterVertically) {
                     Icon(Icons.Rounded.FolderOpen, contentDescription = null)
-                    Text("Analyse a file", style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(start = 12.dp))
+                    Text(stringResource(R.string.library_analyse), style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(start = 12.dp))
                 }
             }
         }
@@ -369,40 +375,40 @@ private fun Header(
                 EqualizerMark()
                 Spacer(Modifier.width(14.dp))
                 Column {
-                    Text("Specty", style = MaterialTheme.typography.headlineLarge)
-                    Text("Audio quality lab", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(stringResource(R.string.app_name), style = MaterialTheme.typography.headlineLarge)
+                    Text(stringResource(R.string.about_tagline), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
         }
         Box(Modifier.eggJitter(2)) {
-            ExpressiveIconButton(Icons.Rounded.MoreVert, "More options", { menu = true }, toggled = menu, iconModifier = Modifier.rotate(menuTurn))
+            ExpressiveIconButton(Icons.Rounded.MoreVert, stringResource(R.string.library_more), { menu = true }, toggled = menu, iconModifier = Modifier.rotate(menuTurn))
             DropdownMenu(expanded = menu, onDismissRequest = { menu = false }, shape = RoundedCornerShape(20.dp)) {
                 if (canRescan) {
                     DropdownMenuItem(
-                        text = { Text("Rescan library") },
+                        text = { Text(stringResource(R.string.library_menu_rescan)) },
                         leadingIcon = { Icon(Icons.Rounded.Refresh, contentDescription = null) },
                         onClick = { menu = false; onRescan() },
                     )
                 }
                 if (canScan) {
                     DropdownMenuItem(
-                        text = { Text("Scan whole library") },
+                        text = { Text(stringResource(R.string.library_menu_scan)) },
                         leadingIcon = { Icon(Icons.Rounded.Radar, contentDescription = null) },
                         onClick = { menu = false; onScanAll() },
                     )
                 }
                 DropdownMenuItem(
-                    text = { Text("Library folders") },
+                    text = { Text(stringResource(R.string.library_menu_folders)) },
                     leadingIcon = { Icon(Icons.Rounded.FolderOpen, contentDescription = null) },
                     onClick = { menu = false; onFolders() },
                 )
                 DropdownMenuItem(
-                    text = { Text("Settings") },
+                    text = { Text(stringResource(R.string.settings_title)) },
                     leadingIcon = { Icon(Icons.Rounded.Settings, contentDescription = null) },
                     onClick = { menu = false; onSettings() },
                 )
                 DropdownMenuItem(
-                    text = { Text("About") },
+                    text = { Text(stringResource(R.string.about_title)) },
                     leadingIcon = { Icon(Icons.Rounded.Info, contentDescription = null) },
                     onClick = { menu = false; onAbout() },
                 )
@@ -457,34 +463,38 @@ private fun BatchCard(batch: BatchScanner.State, onCancel: () -> Unit, onDismiss
                 Column(Modifier.weight(1f)) {
                     Text(
                         when {
-                            batch.running -> "Scanning library"
-                            batch.cancelled -> "Scan cancelled"
-                            batch.note.isNotEmpty() -> "Scan stopped"
-                            else -> "Scan finished"
+                            batch.running -> stringResource(R.string.scan_running)
+                            batch.cancelled -> stringResource(R.string.scan_cancelled)
+                            batch.note != ScanNote.None -> stringResource(R.string.scan_stopped)
+                            else -> stringResource(R.string.scan_finished)
                         },
                         style = MaterialTheme.typography.titleMedium,
                     )
+                    val summary = buildList {
+                        add(stringResource(R.string.scan_analysed, batch.done))
+                        if (batch.skipped > 0) add(stringResource(R.string.scan_skipped, batch.skipped))
+                        if (batch.flagged > 0) add(stringResource(R.string.scan_flagged, batch.flagged))
+                        if (batch.failed > 0) add(stringResource(R.string.scan_failed, batch.failed))
+                    }.joinToString(stringResource(R.string.scan_sep))
+                    val noteText = if (batch.note == ScanNote.None) "" else stringResource(batch.note.res, batch.noteDetail)
                     Text(
-                        if (batch.running && batch.note.isNotEmpty()) batch.note else
+                        if (batch.running && batch.note != ScanNote.None) noteText else
                         if (batch.running && batch.current.isNotEmpty()) batch.current else
-                            "${batch.done} analysed" + (if (batch.skipped > 0) ", ${batch.skipped} already saved" else "") +
-                                (if (batch.flagged > 0) ", ${batch.flagged} need a look" else "") +
-                                (if (batch.failed > 0) ", ${batch.failed} failed" else "") +
-                                (if (batch.note.isNotEmpty()) ". ${batch.note}" else ""),
+                            if (batch.note != ScanNote.None) stringResource(R.string.scan_with_note, summary, noteText) else summary,
                         style = MaterialTheme.typography.bodyMedium, maxLines = 3, overflow = TextOverflow.Ellipsis,
                     )
                 }
                 if (batch.running) {
-                    ExpressiveButton("Cancel", onCancel, kind = ButtonKind.Text)
+                    ExpressiveButton(stringResource(R.string.action_cancel), onCancel, kind = ButtonKind.Text)
                 } else {
-                    ExpressiveIconButton(Icons.Rounded.Close, "Dismiss", onDismiss, tonal = false)
+                    ExpressiveIconButton(Icons.Rounded.Close, stringResource(R.string.action_dismiss), onDismiss, tonal = false)
                 }
             }
             if (batch.running) {
                 Spacer(Modifier.height(10.dp))
                 WavyProgressBar(batch.fraction, color = scheme.onSecondaryContainer, track = scheme.onSecondaryContainer.copy(alpha = 0.18f))
                 Spacer(Modifier.height(6.dp))
-                Text("${batch.processed} of ${batch.total}", style = MaterialTheme.typography.labelMedium)
+                Text(stringResource(R.string.scan_progress, batch.processed, batch.total), style = MaterialTheme.typography.labelMedium)
             }
         }
     }
@@ -496,7 +506,7 @@ private fun BatchCard(batch: BatchScanner.State, onCancel: () -> Unit, onDismiss
 
 @Composable
 private fun SearchPill(query: String, onChange: (String) -> Unit) {
-    SearchField(query, onChange, Modifier.padding(horizontal = 16.dp), placeholder = "Search your library")
+    SearchField(query, onChange, Modifier.padding(horizontal = 16.dp), placeholder = stringResource(R.string.library_search))
 }
 
 @Composable
@@ -523,7 +533,7 @@ private fun SectionBar(
             label = "songCount",
         ) { n ->
             Text(
-                if (n == 1) "1 track" else "$n tracks",
+                pluralStringResource(R.plurals.library_tracks, n, n),
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -536,13 +546,13 @@ private fun SectionBar(
                 onClick = { menu = true },
             ) {
                 Box(Modifier.height(40.dp).padding(horizontal = 18.dp), contentAlignment = Alignment.Center) {
-                    Text(sort.label, style = MaterialTheme.typography.labelLarge)
+                    Text(stringResource(sort.labelRes), style = MaterialTheme.typography.labelLarge)
                 }
             }
             DropdownMenu(expanded = menu, onDismissRequest = { menu = false }, shape = RoundedCornerShape(20.dp)) {
                 SortKey.entries.forEach { key ->
                     DropdownMenuItem(
-                        text = { Text(key.label, fontWeight = if (key == sort) FontWeight.Bold else FontWeight.Normal) },
+                        text = { Text(stringResource(key.labelRes), fontWeight = if (key == sort) FontWeight.Bold else FontWeight.Normal) },
                         onClick = { menu = false; onSort(key) },
                     )
                 }
@@ -551,14 +561,14 @@ private fun SectionBar(
         Spacer(Modifier.width(6.dp))
         ExpressiveIconButton(
             Icons.Rounded.KeyboardArrowUp,
-            if (ascending) "Ascending" else "Descending",
+            stringResource(if (ascending) R.string.library_ascending else R.string.library_descending),
             { haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove); onToggleOrder() },
             iconModifier = Modifier.rotate(rotation),
         )
         Spacer(Modifier.width(6.dp))
         ExpressiveIconButton(
             if (grid) Icons.Rounded.ViewAgenda else Icons.Rounded.GridView,
-            if (grid) "Show as list" else "Show as grid",
+            stringResource(if (grid) R.string.library_show_list else R.string.library_show_grid),
             { haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove); onToggleGrid() },
             toggled = grid,
         )
@@ -726,10 +736,10 @@ private fun VerdictBadge(verdict: Verdict) = VerdictPill(verdict)
 private fun FolderPrompt(onPick: () -> Unit) {
     EmptyState(
         icon = Icons.Rounded.FolderOpen,
-        title = "Choose your music folders",
-        message = "Pick the folders that hold your music. Specty only reads inside them, so ringtones and voice notes stay out. Nothing leaves your phone.",
+        title = stringResource(R.string.library_prompt_title),
+        message = stringResource(R.string.library_prompt_message),
         modifier = Modifier.fillMaxSize(),
-        action = { ExpressiveButton("Choose folder", onPick) },
+        action = { ExpressiveButton(stringResource(R.string.onboarding_choose_folder), onPick) },
     )
 }
 
@@ -739,11 +749,11 @@ private fun FoldersDialog(folders: List<LibraryFolder>, onAdd: () -> Unit, onRem
     AlertDialog(
         onDismissRequest = onDismiss,
         shape = RoundedCornerShape(28.dp),
-        title = { Text("Library folders") },
+        title = { Text(stringResource(R.string.library_menu_folders)) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 if (folders.isEmpty()) {
-                    Text("No folders yet.", style = MaterialTheme.typography.bodyMedium)
+                    Text(stringResource(R.string.library_no_folders), style = MaterialTheme.typography.bodyMedium)
                 }
                 folders.forEach { folder ->
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -754,18 +764,18 @@ private fun FoldersDialog(folders: List<LibraryFolder>, onAdd: () -> Unit, onRem
                                 color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis,
                             )
                         }
-                        ExpressiveIconButton(Icons.Rounded.Close, "Remove ${folder.name}", { onRemove(folder.uri) }, tonal = false)
+                        ExpressiveIconButton(Icons.Rounded.Close, stringResource(R.string.library_remove_folder, folder.name), { onRemove(folder.uri) }, tonal = false)
                     }
                 }
             }
         },
-        confirmButton = { TextButton(onClick = { onDismiss(); onAdd() }) { Text("Add folder") } },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Done") } },
+        confirmButton = { TextButton(onClick = { onDismiss(); onAdd() }) { Text(stringResource(R.string.library_add_folder)) } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_done)) } },
     )
 }
 
 @Composable
 private fun Message(text: String) {
-    EmptyState(icon = Icons.Rounded.MusicNote, title = "Nothing to show", message = text, modifier = Modifier.fillMaxSize())
+    EmptyState(icon = Icons.Rounded.MusicNote, title = stringResource(R.string.library_empty_title), message = text, modifier = Modifier.fillMaxSize())
 }
 

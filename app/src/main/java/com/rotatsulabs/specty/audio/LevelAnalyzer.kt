@@ -120,7 +120,7 @@ object LevelAnalyzer {
             pool.shutdownNow()
         }
 
-        if (frames == 0L) throw IllegalStateException("The decoder produced no audio samples")
+        if (frames == 0L) throw AnalysisFailure(Failure(FailKey.NO_AUDIO))
 
         var overallPeak = 0.0
         var overallSquares = 0.0

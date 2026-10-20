@@ -1,0 +1,438 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Common -->
+    <string name="action_back">返回</string>
+    <string name="action_close">关闭</string>
+
+    <!-- Settings -->
+    <string name="settings_title">设置</string>
+    <string name="settings_appearance">外观</string>
+    <string name="settings_theme">主题</string>
+    <string name="theme_system">跟随系统</string>
+    <string name="theme_light">浅色</string>
+    <string name="theme_dark">深色</string>
+    <string name="settings_dynamic_colour">动态取色</string>
+    <string name="settings_dynamic_colour_desc">使用壁纸中的颜色。关闭后可自选色调调色板。</string>
+    <string name="settings_palette">色调调色板</string>
+    <string name="settings_palette_desc">应用中的所有颜色均由此颜色派生。</string>
+    <string name="palette_violet">紫罗兰</string>
+    <string name="palette_azure">天蓝</string>
+    <string name="palette_teal">青绿</string>
+    <string name="palette_lime">青柠</string>
+    <string name="palette_amber">琥珀</string>
+    <string name="palette_rose">玫瑰</string>
+    <string name="settings_pure_black">纯黑</string>
+    <string name="settings_pure_black_desc">深色模式下使用纯黑背景，对 OLED 屏幕更友好。</string>
+    <string name="settings_results">结果</string>
+    <string name="settings_metadata">显示标签和元数据</string>
+    <string name="settings_metadata_desc">添加一张只读卡片，显示文件的标签，包括自定义标签和不常见的标签。不会显示歌词。</string>
+    <string name="settings_sound">音效</string>
+    <string name="settings_sound_desc">点按、文件加入队列和分析完成时播放轻柔的点击声与提示音。跟随系统音量。</string>
+    <string name="settings_spectrogram">频谱图</string>
+    <string name="settings_window_size">窗口大小</string>
+    <string name="settings_window_size_desc">窗口越大，频率分辨越精细；窗口越小，时间分辨越精细。</string>
+    <string name="settings_window_fn">窗函数</string>
+    <string name="window_hann_note">均衡的默认选项。</string>
+    <string name="window_hamming_note">主瓣更窄，远端泄漏略高。</string>
+    <string name="window_blackman_harris_note">强音附近的泄漏最低，因此其旁边的微弱内容更突出。频率细节略显柔和。</string>
+    <string name="settings_window_apply">将应用于你分析的下一个文件。已用其他大小或窗口检查过的文件会重新分析。</string>
+    <string name="settings_saved">已保存的结果</string>
+    <string name="settings_cache">缓存</string>
+    <string name="settings_cache_empty">还没有已保存的结果。</string>
+    <plurals name="settings_cache_count">
+        <item quantity="other">已在此设备上保存 %1$d 条分析结果，因此检查过的文件可以立即打开。</item>
+    </plurals>
+    <string name="settings_clear_saved">清除已保存的结果</string>
+    <string name="settings_developer">开发者</string>
+    <string name="settings_logging">日志记录</string>
+    <string name="settings_logging_desc">在此设备的日志中记录扫描、分析和失败情况，包含文件名。不会向任何地方发送数据。</string>
+    <string name="settings_log">日志与诊断</string>
+    <string name="settings_log_desc">查看、复制或分享日志、最近一次崩溃和设备详情。</string>
+    <string name="settings_dev_off">关闭开发者模式</string>
+    <string name="settings_dev_off_desc">隐藏此部分并停止记录日志。</string>
+
+    <!-- About -->
+    <string name="about_title">关于</string>
+    <string name="about_project">项目</string>
+    <string name="about_source">源代码</string>
+    <string name="about_report">报告问题</string>
+    <string name="about_report_desc">在 GitHub 上提交 issue</string>
+    <string name="about_intro">再次显示引导页</string>
+    <string name="about_privacy">隐私</string>
+    <string name="about_privacy_title">数据留在你的设备上</string>
+    <string name="about_privacy_desc">所有分析都在你的设备上运行，不会上传任何内容。Specty 未声明联网权限。</string>
+    <string name="about_licence">许可证</string>
+    <string name="about_licence_tap">%1$s。点按阅读全文。</string>
+    <string name="about_libraries">开源库</string>
+    <string name="about_libraries_hint">Specty 建立在这些项目的成果之上。点按任意一项可查看详情及其许可证。</string>
+    <string name="about_made_by">由 RoTatsu Labs 制作</string>
+    <string name="about_tagline">音频质量实验室</string>
+    <string name="about_hero">看清音频文件的真实内容：频谱、响度与动态，以及无损文件是否原本来自有损音源。</string>
+    <string name="about_version">版本 %1$s</string>
+    <plurals name="about_dev_taps">
+        <item quantity="other">再点按 %1$d 次即可成为开发者</item>
+    </plurals>
+    <string name="about_dev_already">开发者模式已处于开启状态</string>
+    <string name="about_dev_on">开发者模式已开启。可在“设置”中找到。</string>
+    <string name="about_collapse">收起</string>
+    <string name="about_expand">展开</string>
+    <string name="about_by">作者：%1$s</string>
+    <string name="about_licence_button">许可证</string>
+    <string name="about_website">网站</string>
+    <string name="about_licence_missing">无法加载许可证文本。你可以改为在线阅读。</string>
+    <string name="about_read_online">在线阅读</string>
+
+    <!-- Library credits -->
+    <string name="lib_specty_summary">Android 音频质量分析工具。</string>
+    <string name="lib_specty_note">Specty 是自由软件，遵循 GNU 通用公共许可证第 3 版。你可以依据这些条款使用、研究、修改和分享它。</string>
+    <string name="lib_ffmpeg_summary">适用于 Android 的 FFmpeg，是已停止维护的 Arthenica ffmpeg-kit 的延续。</string>
+    <string name="lib_ffmpeg_note">读取并解码 Specty 分析的每一个音频文件。其中包含 FFmpeg 库（libavcodec、libavformat、libavutil 等），同样遵循 LGPL。源代码可通过上方链接获取。</string>
+    <string name="lib_compose_summary">UI 工具包：UI、Graphics、Foundation、Material 3 和 Material Icons Extended。</string>
+    <string name="lib_compose_note">绘制整个界面。图标来自 Material Icons 图标集。</string>
+    <string name="lib_activity_summary">面向 Activity、结果协定和边到边显示的 Compose 集成。</string>
+    <string name="lib_lifecycle_summary">适用于 Compose 的 ViewModel 与生命周期感知状态。</string>
+    <string name="lib_core_summary">Android 框架的 Kotlin 扩展。</string>
+    <string name="lib_androidx_summary">Annotation、Collection、Saved State、Startup 以及上述库所依赖的其他 AndroidX 库。</string>
+    <string name="lib_kotlin_summary">Kotlin 运行时。</string>
+    <string name="lib_coroutines_summary">用于分析和曲库扫描的后台任务与取消机制。</string>
+
+    <!-- Onboarding -->
+    <string name="onboarding_progress">%1$d / %2$d</string>
+    <string name="onboarding_skip">跳过</string>
+    <string name="onboarding_previous">上一页</string>
+    <string name="onboarding_start">开始使用</string>
+    <string name="onboarding_next">下一步</string>
+    <string name="onboarding_0_title">认识 Specty</string>
+    <string name="onboarding_0_body">为你的音乐打造的质量实验室。深入任意音频文件内部，看清它真正包含什么。</string>
+    <string name="onboarding_1_title">查看频谱</string>
+    <string name="onboarding_1_body">频谱图显示各个频率随时间的变化。可全屏打开，双指张开放大高频部分，触摸即可读取精确数值。</string>
+    <string name="onboarding_2_title">揪出伪无损</string>
+    <string name="onboarding_2_body">由 MP3 转成的无损文件会保留 MP3 的截止频率。Specty 能找到这条边界，告诉你判断的把握有多大，以及它类似哪种编码器。</string>
+    <string name="onboarding_3_title">全面测量</string>
+    <string name="onboarding_3_body">响度、真峰值、动态范围、削波和立体声状况，外加对整个曲库的后台扫描。一切都在你的设备上运行。</string>
+    <string name="onboarding_folder_added">已添加文件夹</string>
+    <string name="onboarding_folder_title">曲库文件夹</string>
+    <string name="onboarding_folder_added_desc">一开始使用，你的音乐就会列出来。</string>
+    <string name="onboarding_folder_desc">选择存放音乐的文件夹。文件绝不会离开你的设备。</string>
+    <string name="onboarding_choose_folder">选择文件夹</string>
+    <string name="onboarding_cutoff_chip">16 kHz 截止</string>
+    <string name="onboarding_verdict_genuine">真无损全频段</string>
+    <string name="onboarding_verdict_genuine_desc">内容可达 22 kHz</string>
+    <string name="onboarding_verdict_transcoded">疑似转码</string>
+    <string name="onboarding_verdict_transcoded_desc">16 kHz 附近陡然截止</string>
+    <string name="onboarding_confidence">把握度 %1$d%%</string>
+    <string name="onboarding_tile_loudness">响度</string>
+    <string name="onboarding_tile_dynamics">动态</string>
+    <string name="onboarding_tile_meter">表</string>
+    <string name="onboarding_tile_peak">真峰值</string>
+
+    <!-- Library -->
+    <string name="action_cancel">取消</string>
+    <string name="action_dismiss">关闭</string>
+    <string name="action_done">完成</string>
+    <string name="library_menu_rescan">重新扫描曲库</string>
+    <string name="library_menu_scan">扫描整个曲库</string>
+    <string name="library_menu_folders">曲库文件夹</string>
+    <string name="library_more">更多选项</string>
+    <string name="library_analyse">分析文件</string>
+    <string name="library_search">搜索你的曲库</string>
+    <plurals name="library_tracks">
+        <item quantity="other">%1$d 首曲目</item>
+    </plurals>
+    <string name="sort_title">标题</string>
+    <string name="sort_artist">艺术家</string>
+    <string name="sort_length">时长</string>
+    <string name="sort_size">大小</string>
+    <string name="library_ascending">升序</string>
+    <string name="library_descending">降序</string>
+    <string name="library_show_list">以列表显示</string>
+    <string name="library_show_grid">以网格显示</string>
+    <string name="library_empty_title">没有可显示的内容</string>
+    <string name="library_empty_folders">在你的文件夹中没有找到音频文件。可从菜单添加其他文件夹，或用下方按钮选择单个文件。</string>
+    <string name="library_no_match">没有符合此筛选条件的内容。</string>
+    <string name="library_prompt_title">选择你的音乐文件夹</string>
+    <string name="library_prompt_message">选择存放音乐的文件夹。Specty 只读取其中的内容，因此铃声和语音备忘录不会混入。任何内容都不会离开你的手机。</string>
+    <string name="library_no_folders">还没有文件夹。</string>
+    <string name="library_remove_folder">移除 %1$s</string>
+    <string name="library_add_folder">添加文件夹</string>
+
+    <string name="search_default">搜索</string>
+    <string name="search_clear">清除搜索</string>
+
+    <!-- Batch scan card -->
+    <string name="scan_running">正在扫描曲库</string>
+    <string name="scan_cancelled">扫描已取消</string>
+    <string name="scan_stopped">扫描已停止</string>
+    <string name="scan_finished">扫描完成</string>
+    <string name="scan_analysed">已分析 %1$d 个</string>
+    <string name="scan_skipped">%1$d 个已保存过</string>
+    <string name="scan_flagged">%1$d 个需要留意</string>
+    <string name="scan_failed">%1$d 个失败</string>
+    <string name="scan_sep">，</string>
+    <string name="scan_with_note">%1$s。%2$s</string>
+    <string name="scan_progress">%1$d / %2$d</string>
+
+    <!-- Analysis dock -->
+    <string name="dock_ready">已完成，点按查看结果</string>
+    <string name="dock_limited">有损格式，无法解码音频。点按查看详情</string>
+    <string name="dock_progress">"%1$s  ·  %2$d%%"</string>
+    <string name="dock_progress_queued">"%1$s  ·  %2$d%%  ·  %3$d 个等待中"</string>
+
+    <!-- Verdict pills -->
+    <string name="verdict_lossless">无损</string>
+    <string name="verdict_fake">伪无损</string>
+    <string name="verdict_maybe">存疑</string>
+    <string name="verdict_lossy">有损</string>
+
+    <!-- Common -->
+    <string name="working">Sedang memproses…</string>
+    <string name="save_image">将图片保存到相册</string>
+    <string name="toast_saved_gallery">已保存到 Pictures/Specty</string>
+    <string name="toast_save_failed">无法保存图片</string>
+    <string name="toast_image_failed">无法生成图片</string>
+    <string name="toast_storage_permission">保存图片需要存储权限</string>
+    <string name="explicit_label">Explicit</string>
+    <string name="channel_short">声道 %1$d</string>
+    <string name="count_of">%1$d / %2$d</string>
+    <string name="sentence_sep">""</string>
+
+    <!-- Analysis -->
+    <string name="analysis_compare">与另一个文件比较</string>
+    <string name="analysis_again">重新分析</string>
+    <string name="analysis_export">导出为图片</string>
+    <string name="analysis_share_image">分享图片</string>
+    <string name="analysis_share_title">分享分析结果</string>
+    <string name="analysis_failed_title">无法分析此文件</string>
+    <string name="badge_hires_lossless">HI-RES 无损</string>
+    <string name="badge_lossless">无损</string>
+    <string name="verdict_head_genuine">无损，没有来自有损音源的迹象</string>
+    <string name="verdict_head_hires">Hi-Res 无损，没有来自有损音源的迹象</string>
+    <string name="verdict_head_lossy_source">疑似由有损音源转码而来</string>
+    <string name="verdict_head_possible">可能来自有损音源</string>
+    <string name="verdict_head_upsampled">疑似经过升采样</string>
+    <string name="verdict_head_band">频谱被限带</string>
+    <string name="verdict_head_codec">有损格式</string>
+    <string name="verdict_head_inconclusive">无定论</string>
+    <string name="verdict_short_hires">Hi-Res 无损</string>
+    <string name="verdict_short_lossy_source">有损音源</string>
+    <string name="verdict_short_possible">可能有损</string>
+    <string name="verdict_short_upsampled">升采样</string>
+    <string name="verdict_short_band">限带</string>
+    <string name="verdict_short_codec">有损格式</string>
+    <string name="card_file">文件</string>
+    <string name="card_levels">电平与动态</string>
+    <string name="card_channels">各声道统计</string>
+
+    <!-- Stats -->
+    <string name="stat_dynamic_range">动态范围</string>
+    <string name="stat_loudness">响度</string>
+    <string name="stat_true_peak">真峰值</string>
+    <string name="stat_codec">编码格式</string>
+    <string name="stat_sample_rate">采样率</string>
+    <string name="stat_source_bit_depth">源位深</string>
+    <string name="stat_na">无</string>
+    <string name="stat_decoded">解码后的 PCM</string>
+    <string name="stat_bitrate">码率</string>
+    <string name="stat_channels">声道</string>
+    <string name="stat_duration">时长</string>
+    <string name="stat_nyquist">奈奎斯特</string>
+    <string name="stat_size">大小</string>
+    <string name="stat_dr_meter">DR 表</string>
+    <string name="stat_peak">峰值</string>
+    <string name="stat_clipping">削波</string>
+    <string name="stat_no_clipping">无削波</string>
+    <string name="stat_clip_samples">%1$s 个采样</string>
+    <string name="stat_samples">采样数</string>
+    <string name="stat_effective_depth">有效位深</string>
+    <string name="stat_none">无</string>
+    <string name="stat_loudest">最响的部分</string>
+    <string name="stat_clipped_sections">出现削波的片段</string>
+    <string name="edge_cutoff">频谱截止</string>
+    <string name="edge_rolloff">频谱衰减</string>
+    <string name="edge_empty_above">%1$s 以上为空</string>
+    <string name="edge_none">未发现</string>
+    <string name="edge_unknown">无法确定</string>
+
+    <!-- Insight cards -->
+    <string name="insight_conf_high">把握度高</string>
+    <string name="insight_conf_medium">把握度中等</string>
+    <string name="insight_conf_low">把握度低</string>
+    <string name="insight_confidence_title">判断把握度</string>
+    <string name="insight_sections_match">在能清晰读取的 %2$d 个片段中，有 %1$d 个与整体判断一致。</string>
+    <string name="insight_resembles">类似于：%1$s。</string>
+    <string name="insight_empty_above">%1$s kHz 以上没有内容；直到 %2$s kHz 的频段都是空的。</string>
+    <string name="insight_cutoff_timeline">整首曲目的截止频率</string>
+    <string name="insight_cutoff_none">曲目的任何部分都没有发现截止。</string>
+    <string name="insight_cutoff_found">在 %2$d 个片段中的 %1$d 个发现了截止。</string>
+    <string name="insight_cutoff_found_line">在 %2$d 个片段中的 %1$d 个发现了截止，线标出 %3$s kHz。</string>
+    <string name="timeline_title">响度随时间变化</string>
+    <string name="timeline_silence">静音</string>
+    <string name="timeline_readout">"%1$s  ·  %2$s  ·  峰值 %3$s dBFS"</string>
+    <string name="timeline_readout_clip">"%1$s  ·  %2$s  ·  峰值 %3$s dBFS  ·  削波 %4$d 处"</string>
+    <string name="timeline_hint">触摸图表可读取某一点。线条：响度，阴影：峰值，红色刻痕：削波。</string>
+    <string name="stereo_title">立体声与偏移</string>
+    <string name="stereo_correlation">相关性</string>
+    <string name="stereo_out_of_phase">-1 反相</string>
+    <string name="stereo_mono">+1 单声道</string>
+    <string name="stereo_note_phase">相位抵消严重：合并为单声道时电平可能下降甚至消失。</string>
+    <string name="stereo_note_wide">声像极宽，两个声道的共同内容很少。</string>
+    <string name="stereo_note_normal">立体声宽度正常。</string>
+    <string name="stereo_note_mono">两个声道几乎相同，实际上是单声道。</string>
+    <string name="stereo_balance">平衡</string>
+    <string name="stereo_centred">居中</string>
+    <string name="stereo_balance_left">偏左 %1$s dB</string>
+    <string name="stereo_balance_right">偏右 %1$s dB</string>
+    <string name="stereo_dc">直流偏移</string>
+    <string name="stereo_dc_note">超过 0.5% 的直流偏移会浪费动态余量并可能产生爆音；用高通滤波器即可消除。</string>
+
+    <!-- Tags -->
+    <string name="tags_title">标签与元数据</string>
+    <string name="tags_none">此文件没有标签。</string>
+    <string name="tags_hide">隐藏其他标签</string>
+    <string name="tags_show_other">所有其他标签（%1$d）</string>
+    <string name="tags_custom">自定义标签</string>
+    <string name="tag_title">标题</string>
+    <string name="tag_artist">艺术家</string>
+    <string name="tag_album_artist">专辑艺术家</string>
+    <string name="tag_album">专辑</string>
+    <string name="tag_date">日期</string>
+    <string name="tag_track">音轨</string>
+    <string name="tag_disc">光盘</string>
+    <string name="tag_genre">流派</string>
+    <string name="tag_composer">作曲</string>
+    <string name="tag_label">厂牌</string>
+    <string name="tag_encoder">编码器</string>
+    <string name="tag_comment">注释</string>
+    <string name="tag_rating">分级</string>
+    <string name="tag_copyright">版权</string>
+
+    <!-- Compare -->
+    <string name="compare_title">比较</string>
+    <string name="compare_failed">无法比较</string>
+    <string name="compare_differs">差异</string>
+    <string name="compare_spectrograms">频谱图</string>
+    <string name="compare_same_scale">两者使用相同的调色板和电平范围。各自从底部的 0 Hz 延伸到顶部自己的奈奎斯特频率。</string>
+    <string name="compare_spec_cd">频谱图 %1$s</string>
+    <string name="compare_top_pill">%1$s · 顶部 %2$s</string>
+    <string name="compare_diff_title">差异（B 减 A）</string>
+    <string name="compare_diff_cd">两张频谱图之间的差异</string>
+    <string name="compare_b_quieter">"B 更轻  -30 dB"</string>
+    <string name="compare_same">相同</string>
+    <string name="compare_b_louder">"+30 dB  B 更响"</string>
+    <string name="compare_diff_avg">平均差异 %1$s dB。</string>
+    <string name="compare_diff_freq">频率范围到 %1$s，即两者中较低的奈奎斯特频率。</string>
+    <string name="compare_diff_length">两个文件时长不同，因此各自被拉伸到整个宽度。</string>
+    <string name="compare_avg_title">平均频谱</string>
+    <string name="compare_avg_note">有声部分的平均电平，范围 -110 到 -10 dB。提前结束的平台表示该文件在此处被低通滤波。</string>
+    <string name="compare_bit_depth">位深</string>
+    <string name="compare_verdict">判断</string>
+    <string name="compare_side_title">并排对比</string>
+    <string name="compare_better_note">高亮的数值表示两者中在动态、削波和高频延伸方面更好的一个。</string>
+
+    <!-- Spectrogram -->
+    <string name="spec_title">频谱图</string>
+    <string name="spec_cutoff_tag">截止 %1$s</string>
+    <string name="spec_fullscreen">全屏</string>
+    <string name="spec_cutoff">截止线</string>
+    <string name="spec_display_options">显示选项</string>
+    <string name="spec_palette">调色板</string>
+    <string name="spec_freq_scale">频率刻度</string>
+    <string name="spec_linear">线性</string>
+    <string name="spec_log">对数</string>
+    <string name="spec_level_range">电平范围</string>
+    <string name="range_wide">宽</string>
+    <string name="range_standard">标准</string>
+    <string name="range_tight">窄</string>
+    <string name="spec_saving">正在保存…</string>
+    <string name="spec_sample_rate">采样率 %1$s</string>
+    <string name="spec_nyquist">奈奎斯特 %1$s</string>
+    <string name="spec_landscape">切换横屏锁定</string>
+    <string name="spec_reset_zoom">重置缩放</string>
+
+    <!-- Engine notes and compare highlights -->
+    <string name="note_atmos">封装在杜比数字+（E-AC-3）流中的杜比全景声对象音频。不对频谱进行有损来源判断。</string>
+    <string name="note_lossy_codec_edge">%1$s 是有损编码，其编码器低通截止频率约在 %2$s kHz。</string>
+    <string name="note_lossy_codec">%1$s 是有损编码，因此这不是无损文件。</string>
+    <string name="note_no_decoder">此设备没有对应的解码器，因此无法测量频谱和电平。</string>
+    <string name="note_no_signal">可听内容不足，无法判断频谱。</string>
+    <string name="note_faint_top">频谱高频部分很弱，无法区分安静内容与噪声。既不能证明也不能排除有损来源。</string>
+    <string name="note_full_band">内容延伸到频谱顶端，未发现截止或衰减。</string>
+    <string name="note_rolloff">频谱在约 %1$s kHz 附近逐渐衰减，没有锐利边缘。这可能是母带滤波、较旧的音源或平缓的低通。</string>
+    <string name="note_hard_cutoff">在约 %1$s kHz 处出现陡峭截止，是 MP3 或 AAC 低通的典型特征。此文件很可能由有损来源转码而来。</string>
+    <string name="note_upsampled">内容在 %2$s kHz 文件中止于约 %1$s kHz。很可能由 44.1 或 48 kHz 音源升采样而来。</string>
+    <string name="note_sharp_cutoff">在约 %1$s kHz 处出现陡峭截止。这可能来自高码率的有损来源，但部分母带也会这样滤波。</string>
+    <string name="note_band_limited">频谱在约 %1$s kHz 处受限。这可能是母带滤波或较旧的音源。</string>
+    <string name="note_bits_padded">只有最高 %1$s 位携带数据，看起来是以 %2$s 位存储的 %1$s 位音频。</string>
+    <string name="note_sections_disagree">此曲目各段对频谱高频部分的判断不一致（%2$s 段中有 %1$s 段与平均结果相符），因此不给出结论。</string>
+    <string name="note_too_little_clear">能清晰读取频谱高频部分的片段太少，无法排除有损来源。</string>
+    <string name="hl_verdicts_differ">结论不同：A 为%1$s，B 为%2$s。</string>
+    <string name="hl_more_top_end">%1$s 多保留 %2$s kHz 的高频（截止 %3$s kHz 对 %4$s kHz）。</string>
+    <string name="hl_b_reaches_top">B 延伸到频谱顶端；A 在约 %1$s kHz 处被截断。</string>
+    <string name="hl_a_reaches_top">A 延伸到频谱顶端；B 在约 %1$s kHz 处被截断。</string>
+    <string name="hl_more_dynamic">%1$s 动态更大（DR%2$s 对 DR%3$s）。</string>
+    <string name="hl_louder">%1$s 响 %2$s LU。</string>
+    <string name="hl_more_clipping">%1$s 的削波更多。</string>
+    <string name="hl_almost_same">这两个文件的测量结果几乎相同。</string>
+    <string name="hl_verdict_genuine">无损</string>
+    <string name="hl_verdict_hi_res">高解析度无损</string>
+    <string name="hl_verdict_lossy_source">来自有损来源</string>
+    <string name="hl_verdict_possible_lossy">可能来自有损来源</string>
+    <string name="hl_verdict_upsampled">升采样</string>
+    <string name="hl_verdict_band_limited">频段受限</string>
+    <string name="hl_verdict_lossy_codec">有损格式</string>
+    <string name="hl_verdict_atmos">杜比全景声</string>
+    <string name="hl_verdict_inconclusive">无定论</string>
+    <string name="depth_padded">%2$d 位文件中的 %1$d 位数据</string>
+    <string name="depth_all">使用全部 %1$d 位</string>
+    <string name="depth_n">%1$d 位</string>
+    <string name="decoded_summary">32 位浮点，%1$s kHz，%2$s</string>
+    <string name="decoded_mono">单声道</string>
+    <string name="decoded_stereo">立体声</string>
+    <string name="decoded_channels">%1$d 声道</string>
+    <string name="view_mix">混音</string>
+    <string name="view_channels">声道</string>
+    <string name="view_mono">单声道</string>
+    <string name="view_channel">声道 %1$s</string>
+    <plurals name="note_few_sections">
+        <item quantity="other">只有 %1$d 段能被清晰读取。</item>
+    </plurals>
+
+    <!-- Stage 4: notification, scan notes, stages, failures -->
+    <string name="toast_queue_already">已在队列中</string>
+    <string name="toast_queue_added">已加入队列</string>
+    <string name="storage_internal">内部存储</string>
+    <string name="library_error">无法读取曲库</string>
+    <string name="scan_notif_title">正在扫描曲库  %1$d / %2$d</string>
+    <string name="scan_notif_paused">已暂停：设备降温中或电量低</string>
+    <string name="scan_notif_stopped">曲库扫描已停止</string>
+    <string name="scan_notif_stopped_early">曲库扫描提前停止</string>
+    <string name="scan_notif_finished">曲库扫描完成</string>
+    <string name="scan_channel_name">曲库扫描</string>
+    <string name="scan_channel_desc">Specty 在后台分析曲库时显示进度</string>
+    <string name="scan_note_failures">多个文件连续失败，已停止。请检查可用存储空间后重试。</string>
+    <string name="scan_note_memory">手机内存不足，已停止。请重试。</string>
+    <string name="scan_note_time_limit">已被 Android 的后台任务时间限制暂停。请再次扫描以继续。</string>
+    <string name="scan_note_cooling">已暂停，等待手机降温或充电</string>
+    <string name="scan_note_interrupted">扫描被中断。请再次扫描以继续。</string>
+    <string name="scan_note_start_failed">无法开始扫描：%1$s</string>
+    <string name="stage_reading">正在读取文件</string>
+    <string name="stage_decoding">正在解码</string>
+    <string name="stage_analysing">正在分析</string>
+    <string name="fail_generic">分析失败</string>
+    <string name="fail_storage_full">存储空间几乎已满。请释放一些空间后重试。</string>
+    <string name="fail_too_long">此文件太长，无法分析（音频约 %1$s MB）。</string>
+    <string name="fail_not_enough_storage">可用存储空间不足，无法解码此文件（约需 %1$s MB）。</string>
+    <string name="fail_more_audio">此文件包含的音频比预期更多，或存储空间不足以解码。</string>
+    <string name="fail_no_audio">解码器没有输出音频。</string>
+    <string name="fail_cannot_open">无法打开此文件。</string>
+    <string name="fail_not_audio">无法将此文件作为音频读取。</string>
+    <string name="fail_no_stream">此文件中没有音频流。</string>
+    <string name="fail_no_format">音频流没有可用的采样率或声道布局。</string>
+    <string name="fail_decode">解码失败。%1$s</string>
+
+    <!-- Language setting -->
+    <string name="settings_language">语言</string>
+    <string name="settings_app_language">应用语言</string>
+    <string name="settings_language_desc">选择应用语言。“跟随系统”将使用手机的语言。</string>
+    <string name="language_system">跟随系统</string>
+</resources>

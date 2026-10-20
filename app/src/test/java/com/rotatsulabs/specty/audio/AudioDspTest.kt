@@ -453,7 +453,7 @@ class AudioDspTest {
         val lv = LevelStats(-1.0, -18.0, -14.0, -0.5, 0, 1000, 24, emptyList(), drTt = 12.0)
         val lv2 = LevelStats(-1.0, -12.0, -9.0, -0.2, 500, 1000, 24, emptyList(), drTt = 6.0)
         val lines = CompareMath.highlights(rep(full, "flac"), lv, rep(lossy, "flac"), lv2)
-        val text = lines.joinToString(" ")
+        val text = lines.joinToString(" ") { Notes.english(it) }
         assertTrue(text, text.contains("more dynamic") && text.contains("louder") && text.contains("clipping"))
     }
 

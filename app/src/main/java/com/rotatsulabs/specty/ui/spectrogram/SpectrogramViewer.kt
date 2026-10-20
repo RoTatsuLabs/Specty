@@ -71,6 +71,8 @@ import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
+import com.rotatsulabs.specty.R
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.font.FontWeight
@@ -85,6 +87,7 @@ import androidx.core.view.WindowInsetsControllerCompat
 import com.rotatsulabs.specty.audio.FreqScale
 import com.rotatsulabs.specty.audio.Spectrogram
 import com.rotatsulabs.specty.ui.components.Fmt
+import com.rotatsulabs.specty.ui.components.viewLabels
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.util.Locale
@@ -151,6 +154,7 @@ fun SpectrogramViewer(spectrogram: Spectrogram, title: String, initialView: Int,
     }
     val palette = SpectrogramPalette.entries[paletteIndex]
     var options by remember { mutableStateOf(SpecOptions.load(prefs)) }
+    val cutoffTagText = cutoffHz?.let { stringResource(R.string.spec_cutoff_tag, Fmt.kHz(it)) }
     val image by produceState<ImageBitmap?>(null, spectrogram, view, palette, options.log, options.range) {
         value = withContext(Dispatchers.Default) { SpectrogramRenderer.render(spectrogram, view, palette, options).asImageBitmap() }
     }
@@ -285,7 +289,7 @@ fun SpectrogramViewer(spectrogram: Spectrogram, title: String, initialView: Int,
                         Color.White.copy(alpha = 0.9f), Offset(left, y), Offset(left + plotW, y), 1.5.dp.toPx(),
                         pathEffect = androidx.compose.ui.graphics.PathEffect.dashPathEffect(floatArrayOf(16f, 10f)),
                     )
-                    val tag = measurer.measure("cutoff ${Fmt.kHz(cutoffHz)}", axisStyle)
+                    val tag = measurer.measure(cutoffTagText.orEmpty(), axisStyle)
                     drawText(tag, topLeft = Offset(left + plotW - tag.size.width - 6.dp.toPx(), (y - tag.size.height - 2.dp.toPx()).coerceAtLeast(top)))
                 }
             }
@@ -340,7 +344,7 @@ fun SpectrogramViewer(spectrogram: Spectrogram, title: String, initialView: Int,
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            ExpressiveIconButton(Icons.Rounded.Close, "Close", onClose)
+            ExpressiveIconButton(Icons.Rounded.Close, stringResource(R.string.action_close), onClose)
             Box(Modifier.weight(1f)) {
                 Pill(
                     readout ?: title,
@@ -349,13 +353,13 @@ fun SpectrogramViewer(spectrogram: Spectrogram, title: String, initialView: Int,
             }
             if (spectrogram.views.size > 1) {
                 ExpressiveButton(
-                    spectrogram.displayLabels[view], { view = (view + 1) % spectrogram.views.size },
+                    viewLabels(spectrogram)[view], { view = (view + 1) % spectrogram.views.size },
                     kind = ButtonKind.Tonal, modifier = Modifier.widthIn(min = 72.dp),
                 )
             }
-            ExpressiveIconButton(Icons.Rounded.Tune, "Display options", { showOptions = !showOptions }, toggled = showOptions)
-            ExpressiveIconButton(Icons.Rounded.CropRotate, "Toggle landscape lock", { landscape = !landscape }, toggled = landscape)
-            ExpressiveIconButton(Icons.Rounded.ZoomOutMap, "Reset zoom", { resetZoom() })
+            ExpressiveIconButton(Icons.Rounded.Tune, stringResource(R.string.spec_display_options), { showOptions = !showOptions }, toggled = showOptions)
+            ExpressiveIconButton(Icons.Rounded.CropRotate, stringResource(R.string.spec_landscape), { landscape = !landscape }, toggled = landscape)
+            ExpressiveIconButton(Icons.Rounded.ZoomOutMap, stringResource(R.string.spec_reset_zoom), { resetZoom() })
         }
 
         AnimatedVisibility(
@@ -373,7 +377,7 @@ fun SpectrogramViewer(spectrogram: Spectrogram, title: String, initialView: Int,
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
                     val caption = MaterialTheme.typography.labelMedium
-                    Text("Colour palette", style = caption, color = Color.White.copy(alpha = 0.7f))
+                    Text(stringResource(R.string.spec_palette), style = caption, color = Color.White.copy(alpha = 0.7f))
                     SegmentedControl(
                         segments = SpectrogramPalette.entries.mapIndexed { i, p -> Segment(i, p.label) },
                         selected = paletteIndex,
@@ -383,18 +387,18 @@ fun SpectrogramViewer(spectrogram: Spectrogram, title: String, initialView: Int,
                         indicator = MaterialTheme.colorScheme.secondaryContainer,
                         onIndicator = MaterialTheme.colorScheme.onSecondaryContainer,
                     )
-                    Text("Frequency scale", style = caption, color = Color.White.copy(alpha = 0.7f))
+                    Text(stringResource(R.string.spec_freq_scale), style = caption, color = Color.White.copy(alpha = 0.7f))
                     SegmentedControl(
-                        segments = listOf(Segment(false, "Linear"), Segment(true, "Log")),
+                        segments = listOf(Segment(false, stringResource(R.string.spec_linear)), Segment(true, stringResource(R.string.spec_log))),
                         selected = options.log,
                         onSelect = { options = options.copy(log = it).also { o -> o.save(prefs) }; resetZoom() },
                         modifier = Modifier.fillMaxWidth(),
                         indicator = MaterialTheme.colorScheme.secondaryContainer,
                         onIndicator = MaterialTheme.colorScheme.onSecondaryContainer,
                     )
-                    Text("Level range", style = caption, color = Color.White.copy(alpha = 0.7f))
+                    Text(stringResource(R.string.spec_level_range), style = caption, color = Color.White.copy(alpha = 0.7f))
                     SegmentedControl(
-                        segments = DbRange.entries.map { Segment(it, it.label) },
+                        segments = DbRange.entries.map { Segment(it, stringResource(it.labelRes)) },
                         selected = options.range,
                         onSelect = { options = options.copy(range = it).also { o -> o.save(prefs) } },
                         modifier = Modifier.fillMaxWidth(),
