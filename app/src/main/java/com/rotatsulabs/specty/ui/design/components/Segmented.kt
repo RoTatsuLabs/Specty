@@ -38,6 +38,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import com.rotatsulabs.specty.ui.components.pressScale
 import com.rotatsulabs.specty.ui.design.SpectyShapes
 import com.rotatsulabs.specty.ui.design.animateTone
 import com.rotatsulabs.specty.ui.theme.Motion
@@ -97,6 +98,7 @@ fun <T> SegmentedControl(
             segments.forEachIndexed { i, seg ->
                 val active = i == index
                 val contentColor = animateTone(if (active) onIndicator else onTrack)
+                val source = remember { MutableInteractionSource() }
                 Row(
                     Modifier
                         .then(if (scrollable) Modifier else Modifier.weight(1f))
@@ -106,10 +108,11 @@ fun <T> SegmentedControl(
                             lefts[i] = it.positionInParent().x
                             widths[i] = it.size.width.toFloat()
                         }
+                        .pressScale(source, 0.92f)
                         .clip(shape)
                         .semantics { this.selected = active }
                         .clickable(
-                            interactionSource = remember { MutableInteractionSource() },
+                            interactionSource = source,
                             indication = null,
                             role = Role.RadioButton,
                         ) { onSelect(seg.value) }
