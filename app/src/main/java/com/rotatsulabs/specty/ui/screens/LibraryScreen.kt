@@ -74,6 +74,8 @@ import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material.icons.rounded.MoreVert
 import androidx.compose.material.icons.rounded.Radar
 import com.rotatsulabs.specty.batch.BatchScanner
+import com.rotatsulabs.specty.batch.ScanNote
+import com.rotatsulabs.specty.batch.res
 import androidx.compose.material.icons.rounded.MusicNote
 import androidx.compose.material.icons.rounded.Refresh
 import androidx.compose.material.icons.rounded.Search
@@ -288,7 +290,7 @@ fun LibraryScreen(
                     }
                 }
                 state.error != null -> item(key = "error") {
-                    Box(Modifier.fillParentMaxHeight(0.5f).fillMaxWidth()) { Message(state.error) }
+                    Box(Modifier.fillParentMaxHeight(0.5f).fillMaxWidth()) { Message(state.error.ifEmpty { stringResource(R.string.library_error) }) }
                 }
                 state.tracks.isEmpty() -> item(key = "empty") {
                     Box(Modifier.fillParentMaxHeight(0.5f).fillMaxWidth()) {
@@ -463,7 +465,7 @@ private fun BatchCard(batch: BatchScanner.State, onCancel: () -> Unit, onDismiss
                         when {
                             batch.running -> stringResource(R.string.scan_running)
                             batch.cancelled -> stringResource(R.string.scan_cancelled)
-                            batch.note.isNotEmpty() -> stringResource(R.string.scan_stopped)
+                            batch.note != ScanNote.None -> stringResource(R.string.scan_stopped)
                             else -> stringResource(R.string.scan_finished)
                         },
                         style = MaterialTheme.typography.titleMedium,
@@ -474,10 +476,11 @@ private fun BatchCard(batch: BatchScanner.State, onCancel: () -> Unit, onDismiss
                         if (batch.flagged > 0) add(stringResource(R.string.scan_flagged, batch.flagged))
                         if (batch.failed > 0) add(stringResource(R.string.scan_failed, batch.failed))
                     }.joinToString(stringResource(R.string.scan_sep))
+                    val noteText = if (batch.note == ScanNote.None) "" else stringResource(batch.note.res, batch.noteDetail)
                     Text(
-                        if (batch.running && batch.note.isNotEmpty()) batch.note else
+                        if (batch.running && batch.note != ScanNote.None) noteText else
                         if (batch.running && batch.current.isNotEmpty()) batch.current else
-                            if (batch.note.isNotEmpty()) stringResource(R.string.scan_with_note, summary, batch.note) else summary,
+                            if (batch.note != ScanNote.None) stringResource(R.string.scan_with_note, summary, noteText) else summary,
                         style = MaterialTheme.typography.bodyMedium, maxLines = 3, overflow = TextOverflow.Ellipsis,
                     )
                 }

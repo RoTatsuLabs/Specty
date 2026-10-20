@@ -21,8 +21,10 @@ object BatchScanner {
         val flagged: Int = 0,
         val current: String = "",
         val cancelled: Boolean = false,
-        /** Why a run paused or stopped early; empty when there is nothing to say. */
-        val note: String = "",
+        /** Why a run paused or stopped early; [ScanNote.None] when there is nothing to say. */
+        val note: ScanNote = ScanNote.None,
+        /** The system's own text for [ScanNote.StartFailed]. */
+        val noteDetail: String = "",
         /** True once a run has ended; the UI shows a summary until the next start. */
         val finished: Boolean = false,
     ) {
@@ -52,7 +54,7 @@ object BatchScanner {
         } catch (e: Exception) {
             // The system can refuse a foreground service (restricted background, missing permission).
             queue = emptyList()
-            _state.value = State(finished = true, note = "Could not start the scan: ${e.message ?: e.javaClass.simpleName}")
+            _state.value = State(finished = true, note = ScanNote.StartFailed, noteDetail = e.message ?: e.javaClass.simpleName)
         }
     }
 
@@ -63,7 +65,7 @@ object BatchScanner {
 
     internal fun update(block: (State) -> State) = _state.update(block)
 
-    internal fun end(cancelled: Boolean, note: String = "") {
+    internal fun end(cancelled: Boolean, note: ScanNote = ScanNote.None) {
         queue = emptyList()
         _state.update { it.copy(running = false, cancelled = cancelled, finished = true, current = "", note = note) }
     }

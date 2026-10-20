@@ -16,11 +16,11 @@ object AudioFiles {
     class FolderLabel(val name: String, val path: String)
 
     /** Label for a tree document id such as `primary:Music/Albums`; ids without a volume are shown as they are. */
-    fun folderLabel(documentId: String): FolderLabel {
+    fun folderLabel(documentId: String, internalStorage: String = "Internal storage"): FolderLabel {
         if (':' !in documentId) return FolderLabel(documentId.trimEnd('/').substringAfterLast('/').ifEmpty { documentId }, documentId)
         val volume = documentId.substringBefore(':')
         val rest = documentId.substringAfter(':').trim('/')
-        val volumeName = if (volume == "primary") "Internal storage" else volume
+        val volumeName = if (volume == "primary") internalStorage else volume
         val name = rest.substringAfterLast('/').ifEmpty { volumeName }
         val path = if (rest.isEmpty()) volumeName else "$volumeName/$rest"
         return FolderLabel(name, path)

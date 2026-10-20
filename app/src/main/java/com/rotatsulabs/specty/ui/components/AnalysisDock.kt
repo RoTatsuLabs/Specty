@@ -66,10 +66,10 @@ fun AnalysisDock(state: AnalysisState, onOpen: () -> Unit, onDismiss: () -> Unit
     }
     val subtitle = when (state) {
         is AnalysisState.Running -> (state.progress * 100).toInt().let { pct ->
-            if (queued > 0) stringResource(R.string.dock_progress_queued, state.stage, pct, queued) else stringResource(R.string.dock_progress, state.stage, pct)
+            if (queued > 0) stringResource(R.string.dock_progress_queued, stageText(state.stage), pct, queued) else stringResource(R.string.dock_progress, stageText(state.stage), pct)
         }
         is AnalysisState.Done -> stringResource(R.string.dock_ready)
-        is AnalysisState.Failed -> state.message
+        is AnalysisState.Failed -> failureText(state.failure, state.detail)
         is AnalysisState.Limited -> stringResource(R.string.dock_limited)
         AnalysisState.Idle -> ""
     }

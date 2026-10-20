@@ -396,4 +396,37 @@
     <plurals name="note_few_sections">
         <item quantity="other">Hanya %1$d bagian lagu yang dapat dibaca dengan jelas.</item>
     </plurals>
+
+    <!-- Stage 4: notification, scan notes, stages, failures -->
+    <string name="toast_queue_already">Sudah ada dalam antrean</string>
+    <string name="toast_queue_added">Ditambahkan ke antrean</string>
+    <string name="storage_internal">Penyimpanan internal</string>
+    <string name="library_error">Tidak dapat membaca pustaka</string>
+    <string name="scan_notif_title">"Memindai pustaka  %1$d dari %2$d"</string>
+    <string name="scan_notif_paused">Dijeda: mendinginkan perangkat atau baterai lemah</string>
+    <string name="scan_notif_stopped">Pemindaian pustaka dihentikan</string>
+    <string name="scan_notif_stopped_early">Pemindaian pustaka berhenti lebih awal</string>
+    <string name="scan_notif_finished">Pemindaian pustaka selesai</string>
+    <string name="scan_channel_name">Pemindaian pustaka</string>
+    <string name="scan_channel_desc">Kemajuan saat Specty menganalisis pustaka Anda di latar belakang</string>
+    <string name="scan_note_failures">Berhenti setelah banyak file berturut-turut gagal. Periksa ruang penyimpanan lalu coba lagi.</string>
+    <string name="scan_note_memory">Berhenti karena memori ponsel hampir habis. Coba lagi.</string>
+    <string name="scan_note_time_limit">Dijeda oleh batas waktu Android untuk pekerjaan latar belakang. Pindai lagi untuk melanjutkan.</string>
+    <string name="scan_note_cooling">Dijeda sementara ponsel mendingin atau mengisi daya</string>
+    <string name="scan_note_interrupted">Pemindaian terputus. Pindai lagi untuk melanjutkan.</string>
+    <string name="scan_note_start_failed">Tidak dapat memulai pemindaian: %1$s</string>
+    <string name="stage_reading">Membaca file</string>
+    <string name="stage_decoding">Mendekode</string>
+    <string name="stage_analysing">Menganalisis</string>
+    <string name="fail_generic">Analisis gagal</string>
+    <string name="fail_storage_full">Penyimpanan hampir penuh. Kosongkan ruang lalu coba lagi.</string>
+    <string name="fail_too_long">File ini terlalu panjang untuk dianalisis (sekitar %1$s MB audio).</string>
+    <string name="fail_not_enough_storage">Ruang penyimpanan tidak cukup untuk mendekode file ini (dibutuhkan sekitar %1$s MB).</string>
+    <string name="fail_more_audio">File ini berisi audio lebih banyak dari perkiraan, atau penyimpanan terlalu sedikit untuk mendekodenya.</string>
+    <string name="fail_no_audio">Dekoder tidak menghasilkan audio.</string>
+    <string name="fail_cannot_open">Tidak dapat membuka file ini.</string>
+    <string name="fail_not_audio">File ini tidak dapat dibaca sebagai audio.</string>
+    <string name="fail_no_stream">Tidak ada aliran audio di file ini.</string>
+    <string name="fail_no_format">Aliran audio tidak punya sample rate atau tata letak kanal yang dapat dipakai.</string>
+    <string name="fail_decode">Pendekodean gagal. %1$s</string>
 </resources>

@@ -126,7 +126,9 @@ import com.rotatsulabs.specty.ui.components.CoverImage
 import com.rotatsulabs.specty.ui.components.Fmt
 import com.rotatsulabs.specty.ui.components.decodedSummary
 import com.rotatsulabs.specty.ui.components.effectiveDepthLabel
+import com.rotatsulabs.specty.ui.components.failureText
 import com.rotatsulabs.specty.ui.components.noteText
+import com.rotatsulabs.specty.ui.components.stageText
 import com.rotatsulabs.specty.ui.components.spectralEdge
 import com.rotatsulabs.specty.ui.components.rememberStorageGate
 import com.rotatsulabs.specty.ui.components.Reveal
@@ -192,7 +194,7 @@ fun AnalysisScreen(state: AnalysisState, onBack: () -> Unit, onReanalyse: () -> 
         Box(Modifier.fillMaxSize().padding(padding)) {
             when (state) {
                 is AnalysisState.Running -> RunningContent(state)
-                is AnalysisState.Failed -> FailedContent(state.message, onBack)
+                is AnalysisState.Failed -> FailedContent(failureText(state.failure, state.detail), onBack)
                 is AnalysisState.Done -> ResultContent(state.result, showMetadata, onFullscreen, flight)
                 is AnalysisState.Limited -> LimitedContent(state.info, state.report)
                 AnalysisState.Idle -> Unit
@@ -288,7 +290,7 @@ private fun RunningContent(state: AnalysisState.Running) {
     ) {
         ShapeLoader(size = 80.dp)
         Spacer(Modifier.height(28.dp))
-        Text(state.stage, style = MaterialTheme.typography.titleMedium)
+        Text(stageText(state.stage), style = MaterialTheme.typography.titleMedium)
         Spacer(Modifier.height(16.dp))
         WavyProgressBar(state.progress)
     }

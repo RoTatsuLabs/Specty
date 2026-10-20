@@ -396,4 +396,37 @@
     <plurals name="note_few_sections">
         <item quantity="other">只有 %1$d 段能被清晰读取。</item>
     </plurals>
+
+    <!-- Stage 4: notification, scan notes, stages, failures -->
+    <string name="toast_queue_already">已在队列中</string>
+    <string name="toast_queue_added">已加入队列</string>
+    <string name="storage_internal">内部存储</string>
+    <string name="library_error">无法读取曲库</string>
+    <string name="scan_notif_title">正在扫描曲库  %1$d / %2$d</string>
+    <string name="scan_notif_paused">已暂停：设备降温中或电量低</string>
+    <string name="scan_notif_stopped">曲库扫描已停止</string>
+    <string name="scan_notif_stopped_early">曲库扫描提前停止</string>
+    <string name="scan_notif_finished">曲库扫描完成</string>
+    <string name="scan_channel_name">曲库扫描</string>
+    <string name="scan_channel_desc">Specty 在后台分析曲库时显示进度</string>
+    <string name="scan_note_failures">多个文件连续失败，已停止。请检查可用存储空间后重试。</string>
+    <string name="scan_note_memory">手机内存不足，已停止。请重试。</string>
+    <string name="scan_note_time_limit">已被 Android 的后台任务时间限制暂停。请再次扫描以继续。</string>
+    <string name="scan_note_cooling">已暂停，等待手机降温或充电</string>
+    <string name="scan_note_interrupted">扫描被中断。请再次扫描以继续。</string>
+    <string name="scan_note_start_failed">无法开始扫描：%1$s</string>
+    <string name="stage_reading">正在读取文件</string>
+    <string name="stage_decoding">正在解码</string>
+    <string name="stage_analysing">正在分析</string>
+    <string name="fail_generic">分析失败</string>
+    <string name="fail_storage_full">存储空间几乎已满。请释放一些空间后重试。</string>
+    <string name="fail_too_long">此文件太长，无法分析（音频约 %1$s MB）。</string>
+    <string name="fail_not_enough_storage">可用存储空间不足，无法解码此文件（约需 %1$s MB）。</string>
+    <string name="fail_more_audio">此文件包含的音频比预期更多，或存储空间不足以解码。</string>
+    <string name="fail_no_audio">解码器没有输出音频。</string>
+    <string name="fail_cannot_open">无法打开此文件。</string>
+    <string name="fail_not_audio">无法将此文件作为音频读取。</string>
+    <string name="fail_no_stream">此文件中没有音频流。</string>
+    <string name="fail_no_format">音频流没有可用的采样率或声道布局。</string>
+    <string name="fail_decode">解码失败。%1$s</string>
 </resources>

@@ -9,7 +9,6 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.withContext
 import java.io.File
-import java.io.IOException
 
 /** Runs the full pipeline: probe, decode to a temp PCM file, measure levels, build the spectrogram. */
 class AudioAnalyzer(
@@ -23,14 +22,14 @@ class AudioAnalyzer(
         uri: Uri,
         fftSize: Int,
         windowFn: WindowFn = WindowFn.Hann,
-        onStage: (stage: String, progress: Float) -> Unit,
+        onStage: (stage: AnalysisStage, progress: Float) -> Unit,
     ): AnalysisResult = withContext(dispatcher) {
-        fun report(stage: String, progress: Float) {
+        fun report(stage: AnalysisStage, progress: Float) {
             ensureActive()
             onStage(stage, progress.coerceIn(0f, 1f))
         }
 
-        report("Reading file", 0f)
+        report(AnalysisStage.READING, 0f)
         val info = MediaProbe.probe(context, uri)
 
         // Decoded PCM is far bigger than the file. The limit keeps a long file, or one whose header lies about its
@@ -38,32 +37,32 @@ class AudioAnalyzer(
         val estimatedBytes = (info.durationSec * info.sampleRate * info.channels * 4).toLong()
         val usable = context.cacheDir.usableSpace
         val limit = StorageGuard.decodeLimit(estimatedBytes, usable)
-            ?: throw IOException(StorageGuard.refusal(estimatedBytes, usable))
+            ?: throw AnalysisFailure(StorageGuard.failure(estimatedBytes, usable))
         val temp = File.createTempFile("pcm_", ".f32", context.cacheDir)
         try {
-            report("Decoding", 0.05f)
+            report(AnalysisStage.DECODING, 0.05f)
             val reported = if (Codecs.needsPlatformDecoder(info.codec)) {
                 try {
                     PlatformDecoder.decode(context, uri, info.durationSec, temp, limit, { ensureActive() }) { p ->
-                        report("Decoding", 0.05f + 0.5f * p)
+                        report(AnalysisStage.DECODING, 0.05f + 0.5f * p)
                     }
                 } catch (e: PlatformDecoder.Unavailable) {
                     throw LimitedAnalysisException(info, AuthenticityAnalyzer.unmeasured(info))
                 }
             } else {
-                AudioDecoder.decode(context, uri, info.durationSec, temp, limit) { p -> report("Decoding", 0.05f + 0.5f * p) }
+                AudioDecoder.decode(context, uri, info.durationSec, temp, limit) { p -> report(AnalysisStage.DECODING, 0.05f + 0.5f * p) }
             }
-            if (temp.length() >= limit) throw IOException("This file holds more audio than expected, or storage is too low to decode it")
+            if (temp.length() >= limit) throw AnalysisFailure(Failure(FailKey.MORE_AUDIO_THAN_EXPECTED))
 
             // Some codecs decode to another rate or layout than the container declares (HE-AAC, parametric stereo),
             // so the PCM is read as the decoder wrote it.
             val decoded = reported ?: DecodedFormat(info.sampleRate, info.channels)
             PcmFile(temp, decoded.channels, decoded.sampleRate).use { pcm ->
-                if (pcm.frames <= 0) throw IOException("The decoder produced no audio")
+                if (pcm.frames <= 0) throw AnalysisFailure(Failure(FailKey.NO_AUDIO))
 
                 // Level measurement (multi-threaded inside) and the spectrogram read the same file independently,
                 // so they run side by side.
-                val stage = "Analysing"
+                val stage = AnalysisStage.ANALYSING
                 val specProgress = java.util.concurrent.atomic.AtomicInteger(0)
                 report(stage, 0.55f)
                 coroutineScope {

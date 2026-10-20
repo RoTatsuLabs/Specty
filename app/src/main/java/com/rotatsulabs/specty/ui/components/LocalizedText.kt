@@ -5,9 +5,12 @@ import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import com.rotatsulabs.specty.R
 import com.rotatsulabs.specty.audio.AuthenticityReport
+import com.rotatsulabs.specty.audio.AnalysisStage
 import com.rotatsulabs.specty.audio.BitDepth
 import com.rotatsulabs.specty.audio.BitDepthBasis
 import com.rotatsulabs.specty.audio.DecodedFormat
+import com.rotatsulabs.specty.audio.FailKey
+import com.rotatsulabs.specty.audio.Failure
 import com.rotatsulabs.specty.audio.Note
 import com.rotatsulabs.specty.audio.NoteKey
 import com.rotatsulabs.specty.audio.Spectrogram
@@ -120,5 +123,33 @@ fun viewLabels(spectrogram: Spectrogram): List<String> {
             "Mono" -> mono
             else -> CHANNEL_LABEL.matchEntire(label)?.let { channel.replace("\u0000", it.groupValues[1]) } ?: label
         }
+    }
+}
+
+@Composable
+fun stageText(stage: AnalysisStage): String = stringResource(
+    when (stage) {
+        AnalysisStage.READING -> R.string.stage_reading
+        AnalysisStage.DECODING -> R.string.stage_decoding
+        AnalysisStage.ANALYSING -> R.string.stage_analysing
+    },
+)
+
+/** Why an analysis failed: the app's own wording when it has one, else the system's message, else a plain fallback. */
+@Composable
+fun failureText(failure: Failure?, detail: String?): String {
+    if (failure == null) return detail?.takeIf { it.isNotBlank() } ?: stringResource(R.string.fail_generic)
+    val a = failure.args
+    return when (failure.key) {
+        FailKey.STORAGE_FULL -> stringResource(R.string.fail_storage_full)
+        FailKey.FILE_TOO_LONG -> stringResource(R.string.fail_too_long, a[0])
+        FailKey.NOT_ENOUGH_STORAGE -> stringResource(R.string.fail_not_enough_storage, a[0])
+        FailKey.MORE_AUDIO_THAN_EXPECTED -> stringResource(R.string.fail_more_audio)
+        FailKey.NO_AUDIO -> stringResource(R.string.fail_no_audio)
+        FailKey.CANNOT_OPEN -> stringResource(R.string.fail_cannot_open)
+        FailKey.NOT_AUDIO -> stringResource(R.string.fail_not_audio)
+        FailKey.NO_AUDIO_STREAM -> stringResource(R.string.fail_no_stream)
+        FailKey.NO_USABLE_FORMAT -> stringResource(R.string.fail_no_format)
+        FailKey.DECODE_FAILED -> stringResource(R.string.fail_decode, a[0].trim()).trim()
     }
 }

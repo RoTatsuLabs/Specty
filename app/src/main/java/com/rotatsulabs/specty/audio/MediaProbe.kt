@@ -45,17 +45,17 @@ object MediaProbe {
     fun probe(context: Context, uri: Uri): AudioInfo {
         val meta = queryMeta(context, uri)
         val saf = FFmpegKitConfig.getSafParameterForRead(context, uri)
-            ?: throw IOException("Cannot open this file")
+            ?: throw AnalysisFailure(Failure(FailKey.CANNOT_OPEN))
         val session = FFprobeKit.getMediaInformation(saf)
         val media = session.mediaInformation
-            ?: throw IOException("This file could not be read as audio")
+            ?: throw AnalysisFailure(Failure(FailKey.NOT_AUDIO))
         val stream = media.streams?.firstOrNull { it.type == "audio" }
-            ?: throw IOException("No audio stream found in this file")
+            ?: throw AnalysisFailure(Failure(FailKey.NO_AUDIO_STREAM))
         val props = stream.allProperties ?: JSONObject()
 
         val sampleRate = props.optString("sample_rate").toIntOrNull() ?: 0
         val channels = props.optInt("channels", 0)
-        if (sampleRate <= 0 || channels <= 0) throw IOException("The audio stream has no usable sample rate or channel layout")
+        if (sampleRate <= 0 || channels <= 0) throw AnalysisFailure(Failure(FailKey.NO_USABLE_FORMAT))
 
         val rawBits = props.optString("bits_per_raw_sample").toIntOrNull()?.takeIf { it > 0 }
         val sampleBits = props.optInt("bits_per_sample", 0).takeIf { it > 0 }

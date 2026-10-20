@@ -409,4 +409,37 @@
         <item quantity="one">Only %1$d section of the track could be read clearly.</item>
         <item quantity="other">Only %1$d sections of the track could be read clearly.</item>
     </plurals>
+
+    <!-- Stage 4: notification, scan notes, stages, failures -->
+    <string name="toast_queue_already">Already in the queue</string>
+    <string name="toast_queue_added">Added to the queue</string>
+    <string name="storage_internal">Internal storage</string>
+    <string name="library_error">Could not read the library</string>
+    <string name="scan_notif_title">"Scanning library  %1$d of %2$d"</string>
+    <string name="scan_notif_paused">Paused: cooling down or low battery</string>
+    <string name="scan_notif_stopped">Library scan stopped</string>
+    <string name="scan_notif_stopped_early">Library scan stopped early</string>
+    <string name="scan_notif_finished">Library scan finished</string>
+    <string name="scan_channel_name">Library scan</string>
+    <string name="scan_channel_desc">Progress while Specty analyses your library in the background</string>
+    <string name="scan_note_failures">Stopped after many files in a row failed. Check free storage and try again.</string>
+    <string name="scan_note_memory">Stopped because the phone ran low on memory. Try again.</string>
+    <string name="scan_note_time_limit">Paused by Android\'s time limit for background work. Scan again to continue.</string>
+    <string name="scan_note_cooling">Paused while the phone cools down or charges</string>
+    <string name="scan_note_interrupted">The scan was interrupted. Scan again to continue.</string>
+    <string name="scan_note_start_failed">Could not start the scan: %1$s</string>
+    <string name="stage_reading">Reading file</string>
+    <string name="stage_decoding">Decoding</string>
+    <string name="stage_analysing">Analysing</string>
+    <string name="fail_generic">Analysis failed</string>
+    <string name="fail_storage_full">Storage is almost full. Free some space and try again.</string>
+    <string name="fail_too_long">This file is too long to analyse (about %1$s MB of audio).</string>
+    <string name="fail_not_enough_storage">Not enough free storage to decode this file (about %1$s MB needed).</string>
+    <string name="fail_more_audio">This file holds more audio than expected, or storage is too low to decode it.</string>
+    <string name="fail_no_audio">The decoder produced no audio.</string>
+    <string name="fail_cannot_open">Cannot open this file.</string>
+    <string name="fail_not_audio">This file could not be read as audio.</string>
+    <string name="fail_no_stream">No audio stream found in this file.</string>
+    <string name="fail_no_format">The audio stream has no usable sample rate or channel layout.</string>
+    <string name="fail_decode">Decoding failed. %1$s</string>
 </resources>

@@ -79,7 +79,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import androidx.compose.ui.res.stringResource
 import com.rotatsulabs.specty.R
+import com.rotatsulabs.specty.ui.components.failureText
 import com.rotatsulabs.specty.ui.components.noteText
+import com.rotatsulabs.specty.ui.components.stageText
 import com.rotatsulabs.specty.ui.components.spectralEdge
 import java.util.Locale
 import kotlin.math.abs
@@ -105,7 +107,7 @@ fun CompareScreen(state: CompareState, onBack: () -> Unit, modifier: Modifier = 
                     ShapeLoader(size = 72.dp)
                     Spacer(Modifier.height(24.dp))
                     Text(state.title, style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                    Text(state.stage, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(stageText(state.stage), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     Spacer(Modifier.height(16.dp))
                     WavyProgressBar(state.progress)
                 }
@@ -113,7 +115,7 @@ fun CompareScreen(state: CompareState, onBack: () -> Unit, modifier: Modifier = 
                     SpectyCard(corners = SpectyShapes.Hero, color = MaterialTheme.colorScheme.errorContainer) {
                         Text(stringResource(R.string.compare_failed), style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onErrorContainer)
                         Spacer(Modifier.height(8.dp))
-                        Text(state.message, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onErrorContainer)
+                        Text(failureText(state.failure, state.detail), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onErrorContainer)
                         Spacer(Modifier.height(12.dp))
                         ExpressiveButton(stringResource(R.string.action_back), onBack, kind = ButtonKind.Tonal)
                     }
