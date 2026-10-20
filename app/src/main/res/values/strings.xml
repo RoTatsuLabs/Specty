@@ -451,4 +451,31 @@
     <string name="language_en" translatable="false">English</string>
     <string name="language_id" translatable="false">Bahasa Indonesia</string>
     <string name="language_zh" translatable="false">简体中文</string>
+
+    <!-- Library filter -->
+    <string name="filter_open">Filter by result</string>
+    <string name="filter_title">Filter by result</string>
+    <string name="filter_subtitle">Pick one or more. A track shows when it matches any of them.</string>
+    <string name="filter_unchecked">Unchecked</string>
+    <string name="filter_unchecked_hint">Not analysed yet</string>
+    <string name="filter_lossless">Lossless</string>
+    <string name="filter_lossless_hint">Real lossless audio</string>
+    <string name="filter_hires_hint">Lossless above 48 kHz</string>
+    <string name="filter_needs_look">Needs a look</string>
+    <string name="filter_needs_look_hint">Likely made from a lossy source or upsampled</string>
+    <string name="filter_lossy_format">Lossy format</string>
+    <string name="filter_lossy_format_hint">MP3, AAC and other lossy codecs</string>
+    <string name="filter_atmos">Dolby Atmos</string>
+    <string name="filter_atmos_hint">Object audio, not judged for lossy origin</string>
+    <string name="filter_unclear">Unclear</string>
+    <string name="filter_unclear_hint">Band-limited, or not enough evidence</string>
+    <string name="filter_reset">Reset</string>
+    <string name="filter_clear">Clear filters</string>
+    <string name="filter_remove">Remove filter %1$s</string>
+    <string name="filter_empty_title">No tracks match</string>
+    <string name="filter_empty_message">Nothing in your library has these results yet. Clear the filter to see everything.</string>
+    <plurals name="filter_show">
+        <item quantity="one">Show %1$d track</item>
+        <item quantity="other">Show %1$d tracks</item>
+    </plurals>
 </resources>
