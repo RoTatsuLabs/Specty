@@ -453,4 +453,11 @@
     <string name="pick_one_more">再选一首即可比较</string>
     <string name="pick_compare">比较</string>
     <string name="pick_clear">清除选择</string>
+    <string name="folders_included">包含的文件夹</string>
+    <string name="folders_included_hint">资料库会列出这些文件夹及其所有子文件夹中的音频。</string>
+    <string name="folders_excluded">排除的文件夹</string>
+    <string name="folders_excluded_hint">包含文件夹内要跳过的文件夹，其所有子文件夹也会一并跳过。</string>
+    <string name="folders_excluded_none">没有排除任何文件夹</string>
+    <string name="folders_exclude_add">排除文件夹</string>
+    <string name="folders_include_again">重新包含 %1$s</string>
 </resources>

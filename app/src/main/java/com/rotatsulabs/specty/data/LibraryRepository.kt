@@ -45,9 +45,9 @@ object LibraryRepository {
     private val reader = Dispatchers.IO.limitedParallelism(4)
 
     /** [onUpdate] receives the list as it fills in; the final list is returned. */
-    suspend fun scan(context: Context, folders: List<Uri>, onUpdate: (List<Track>) -> Unit): List<Track> = coroutineScope {
+    suspend fun scan(context: Context, folders: List<Uri>, excluded: List<String> = emptyList(), onUpdate: (List<Track>) -> Unit): List<Track> = coroutineScope {
         val entries = withContext(Dispatchers.IO) {
-            folders.flatMap { list(context, it) { ensureActive() } }.distinctBy { it.uri }
+            folders.flatMap { list(context, it, excluded) { ensureActive() } }.distinctBy { it.uri }
         }
         val known = withContext(Dispatchers.IO) { loadCache(context) }
         val meta = ConcurrentHashMap<String, TrackMeta>()
@@ -89,12 +89,13 @@ object LibraryRepository {
         )
     }
 
-    /** Walks [tree] and everything below it. A folder the provider cannot list is skipped. */
-    private fun list(context: Context, tree: Uri, ensureActive: () -> Unit): List<Entry> {
+    /** Walks [tree] and everything below it, leaving out [excluded] folders. A folder the provider cannot list is skipped. */
+    private fun list(context: Context, tree: Uri, excluded: List<String>, ensureActive: () -> Unit): List<Entry> {
         val out = ArrayList<Entry>()
         val seen = HashSet<String>()
         val pending = ArrayDeque<String>()
         val root = runCatching { DocumentsContract.getTreeDocumentId(tree) }.getOrNull() ?: return out
+        if (AudioFiles.isExcluded(root, excluded)) return out
         pending.addLast(root)
         val columns = arrayOf(
             DocumentsContract.Document.COLUMN_DOCUMENT_ID,
@@ -115,7 +116,7 @@ object LibraryRepository {
                         val name = c.getString(1) ?: continue
                         val mime = c.getString(2)
                         if (mime == DocumentsContract.Document.MIME_TYPE_DIR) {
-                            if (!name.startsWith(".")) pending.addLast(id)
+                            if (!name.startsWith(".") && !AudioFiles.isExcluded(id, excluded)) pending.addLast(id)
                         } else if (AudioFiles.isAudio(name, mime)) {
                             out += Entry(
                                 DocumentsContract.buildDocumentUriUsingTree(tree, id),
