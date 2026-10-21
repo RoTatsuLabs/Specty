@@ -1,7 +1,5 @@
 package com.rotatsulabs.specty.ui.components
 
-import com.rotatsulabs.specty.ui.design.LocalBackPose
-import com.rotatsulabs.specty.ui.design.followBack
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.interaction.InteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
@@ -31,7 +29,6 @@ fun Modifier.pressScale(source: InteractionSource, pressedScale: Float = 0.92f):
 /** Fades and lifts [content] into place, staggered by [index]. */
 @Composable
 fun Reveal(index: Int, modifier: Modifier = Modifier, content: @Composable () -> Unit) {
-    val back = LocalBackPose.current
     var shown by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) {
         delay(70L * index)
@@ -45,7 +42,6 @@ fun Reveal(index: Int, modifier: Modifier = Modifier, content: @Composable () ->
             val pop = 0.92f + 0.08f * p
             scaleX = pop
             scaleY = pop
-            followBack(back, index)
         },
     ) { content() }
 }

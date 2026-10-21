@@ -16,14 +16,12 @@ object BackMath {
     const val REST = 0.6f
     private const val SETTLE_SCALE = 0.9f
 
-    /** Components leave one after another, lowest first; this many positions are told apart. */
-    const val STAGGER_SLOTS = 7
-    private const val STAGGER_SPREAD = 0.35f
-    private const val PART_DRIFT = 0.18f
-    private const val PART_SHRINK = 0.1f
+    private const val SHRINK = 0.2f
+    private const val SHIFT = 0.16f
+    private const val LIFT_GAIN = 0.35f
 
-    private const val RISE_SHRINK = 0.22f
-    private const val RISE_TRAVEL = 0.12f
+    /** The screen may follow the finger up or down by at most this share of its height. */
+    const val LIFT_LIMIT = 0.08f
     private const val FADE_START = 0.5f
     private const val CORNER_RAMP = 3f
 
@@ -32,24 +30,6 @@ object BackMath {
 
     /** Progress of a container transform (1 fully open) for a swipe [progress]. */
     fun containerOpen(progress: Float): Float = 1f - progress.coerceIn(0f, 1f) * CONTAINER_RANGE
-
-    /**
-     * How far one component has left, 0 (in place) to 1 (gone), while its screen is [leave] of the way out. A
-     * component with a higher [index] (lower on the screen) goes first, so the screen comes apart from the bottom.
-     */
-    fun part(leave: Float, index: Int): Float {
-        val slot = index.coerceIn(0, STAGGER_SLOTS)
-        val start = (STAGGER_SLOTS - slot) / STAGGER_SLOTS.toFloat() * STAGGER_SPREAD
-        val t = ((leave - start) / (1f - STAGGER_SPREAD)).coerceIn(0f, 1f)
-        return t * t * (3f - 2f * t)
-    }
-
-    fun partAlpha(part: Float): Float = 1f - part
-
-    fun partScale(part: Float): Float = 1f - PART_SHRINK * part
-
-    /** Share of its own width a component drifts along the swipe. */
-    fun partDrift(part: Float): Float = PART_DRIFT * part
 
     /** Where a container transform sits, in pixels, for [open] (1 fully open) and the element it grows from. */
     class ContainerBox(val scaleX: Float, val scaleY: Float, val x: Float, val y: Float)
@@ -71,9 +51,14 @@ object BackMath {
         )
     }
 
-    fun riseScale(pose: Float): Float = 1f - RISE_SHRINK * pose
+    /** Scale of the whole screen: it shrinks as it is pulled back, like the system's back preview. */
+    fun scale(pose: Float): Float = 1f - SHRINK * pose
 
-    fun riseTravel(pose: Float): Float = RISE_TRAVEL * pose
+    /** Share of its width the screen has slid away from the edge the swipe began at. */
+    fun shift(pose: Float): Float = SHIFT * pose
+
+    /** Vertical follow of the finger: a damped share of how far it moved from where the swipe began, held to [limit]. */
+    fun lift(dy: Float, limit: Float): Float = (dy * LIFT_GAIN).coerceIn(-limit, limit)
 
     /** Opaque through the whole swipe, then fading to nothing as the exit finishes. */
     fun alpha(pose: Float): Float = (1f - (pose - FADE_START) / (1f - FADE_START)).coerceIn(0f, 1f)
