@@ -13,6 +13,11 @@ object AudioFiles {
         return name.substringAfterLast('.', "").lowercase() in extensions
     }
 
+    /** True when [documentId] is one of [excluded] or lies below one; ids compare by whole path parts, so `Music/A` does not hide `Music/AB`. */
+    fun isExcluded(documentId: String, excluded: Collection<String>): Boolean = excluded.any { ex ->
+        documentId == ex || documentId.startsWith(if (ex.endsWith('/') || ex.endsWith(':')) ex else "$ex/")
+    }
+
     class FolderLabel(val name: String, val path: String)
 
     /** Label for a tree document id such as `primary:Music/Albums`; ids without a volume are shown as they are. */

@@ -192,7 +192,7 @@ fun LibraryScreen(
     onOpen: (Track, androidx.compose.ui.geometry.Rect?, CoverSource?) -> Unit,
     onPickFile: () -> Unit,
     onPickFolder: () -> Unit,
-    onRemoveFolder: (Uri) -> Unit,
+    onOpenFolders: () -> Unit,
     onOpenSettings: () -> Unit,
     onOpenAbout: () -> Unit,
     verdicts: Map<String, Verdict>,
@@ -208,7 +208,6 @@ fun LibraryScreen(
 ) {
     val context = LocalContext.current
     val hasFolders = state.folders.isNotEmpty()
-    var showFolders by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) { onLoad(false) }
     // Notifications are optional: the scan runs either way, the permission only shows its progress.
     val notificationLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { onScanAll() }
@@ -283,9 +282,6 @@ fun LibraryScreen(
     }
 
     Box(modifier.fillMaxSize()) {
-        if (showFolders) {
-            FoldersDialog(state.folders, onAdd = onPickFolder, onRemove = onRemoveFolder, onDismiss = { showFolders = false })
-        }
         if (showFilter && hasTracks) {
             FilterSheet(
                 selected = filters,
@@ -315,7 +311,7 @@ fun LibraryScreen(
                     onRescan = { onLoad(true) },
                     onSettings = onOpenSettings,
                     onAbout = onOpenAbout,
-                    onFolders = { showFolders = true },
+                    onFolders = onOpenFolders,
                     canRescan = hasFolders,
                     canScan = state.tracks.isNotEmpty() && !batch.running,
                     unscanned = unscanned,
@@ -965,37 +961,6 @@ private fun FolderPrompt(onPick: () -> Unit) {
         message = stringResource(R.string.library_prompt_message),
         modifier = Modifier.fillMaxSize(),
         action = { ExpressiveButton(stringResource(R.string.onboarding_choose_folder), onPick) },
-    )
-}
-
-/** The folders the library is built from, with a way to add another or drop one. */
-@Composable
-private fun FoldersDialog(folders: List<LibraryFolder>, onAdd: () -> Unit, onRemove: (Uri) -> Unit, onDismiss: () -> Unit) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        shape = RoundedCornerShape(28.dp),
-        title = { Text(stringResource(R.string.library_menu_folders)) },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                if (folders.isEmpty()) {
-                    Text(stringResource(R.string.library_no_folders), style = MaterialTheme.typography.bodyMedium)
-                }
-                folders.forEach { folder ->
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Column(Modifier.weight(1f)) {
-                            Text(folder.name, style = MaterialTheme.typography.titleSmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                            Text(
-                                folder.path, style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis,
-                            )
-                        }
-                        ExpressiveIconButton(Icons.Rounded.Close, stringResource(R.string.library_remove_folder, folder.name), { onRemove(folder.uri) }, tonal = false)
-                    }
-                }
-            }
-        },
-        confirmButton = { ExpressiveButton(stringResource(R.string.library_add_folder), { onDismiss(); onAdd() }, kind = ButtonKind.Text) },
-        dismissButton = { ExpressiveButton(stringResource(R.string.action_done), onDismiss, kind = ButtonKind.Text) },
     )
 }
 

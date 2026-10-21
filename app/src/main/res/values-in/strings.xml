@@ -453,4 +453,11 @@
     <string name="pick_one_more">Pilih satu lagi untuk dibandingkan</string>
     <string name="pick_compare">Bandingkan</string>
     <string name="pick_clear">Hapus pilihan</string>
+    <string name="folders_included">Folder yang disertakan</string>
+    <string name="folders_included_hint">Pustaka menampilkan audio dari folder ini dan semua yang ada di bawahnya.</string>
+    <string name="folders_excluded">Folder yang dikecualikan</string>
+    <string name="folders_excluded_hint">Folder di dalam folder yang disertakan yang dilewati, beserta semua isinya.</string>
+    <string name="folders_excluded_none">Tidak ada yang dikecualikan</string>
+    <string name="folders_exclude_add">Kecualikan folder</string>
+    <string name="folders_include_again">Sertakan %1$s lagi</string>
 </resources>
