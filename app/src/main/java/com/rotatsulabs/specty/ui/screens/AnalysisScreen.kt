@@ -13,6 +13,7 @@ import com.rotatsulabs.specty.ui.design.components.MetricTile
 import com.rotatsulabs.specty.ui.design.components.MorphSurface
 import androidx.compose.ui.draw.alpha
 import com.rotatsulabs.specty.ui.design.components.Pill
+import com.rotatsulabs.specty.ui.spectrogram.rememberPlayback
 import com.rotatsulabs.specty.ui.design.components.ShapeLoader
 import com.rotatsulabs.specty.ui.design.components.SpectyCard
 import com.rotatsulabs.specty.ui.design.components.WavyProgressBar
@@ -351,6 +352,7 @@ private fun ResultContent(result: AnalysisResult, onFullscreen: (Int) -> Unit, f
                 title = result.info.title.withoutExplicitMark(),
                 onFullscreen = onFullscreen,
                 cutoffHz = result.authenticity.cutoffHz,
+                playback = rememberPlayback(result.uri),
             ) }
         Spacer(Modifier.height(12.dp))
     }

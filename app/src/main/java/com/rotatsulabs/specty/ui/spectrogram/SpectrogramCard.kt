@@ -7,6 +7,11 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.material.icons.rounded.Check
+import androidx.compose.material.icons.rounded.Pause
+import androidx.compose.material.icons.rounded.PlayArrow
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.material.icons.rounded.KeyboardArrowDown
 import androidx.compose.ui.draw.rotate
 import com.rotatsulabs.specty.ui.design.Corners
@@ -98,6 +103,7 @@ fun SpectrogramCard(
     title: String = stringResource(R.string.spec_title),
     onFullscreen: ((view: Int) -> Unit)? = null,
     cutoffHz: Double? = null,
+    playback: Playback? = null,
 ) {
     var selected by rememberSaveable { mutableIntStateOf(0) }
     if (selected >= spectrogram.views.size) selected = 0
@@ -148,6 +154,13 @@ fun SpectrogramCard(
         }
     }
 
+    if (playback != null) {
+        val failed = playback.failed
+        LaunchedEffect(failed) {
+            if (failed) Toast.makeText(context, context.getString(R.string.toast_play_failed), Toast.LENGTH_SHORT).show()
+        }
+    }
+
     val measurer = rememberTextMeasurer()
     val axisColor = MaterialTheme.colorScheme.onSurfaceVariant
     val labelStyle = TextStyle(fontSize = 10.sp, color = axisColor)
@@ -174,7 +187,21 @@ fun SpectrogramCard(
                 onIndicator = onTonal,
             )
 
-            Canvas(Modifier.fillMaxWidth().aspectRatio(16f / 9f)) {
+            val seekable = if (playback == null) Modifier else Modifier
+                .pointerInput(playback, spectrogram.durationSec) {
+                    // The plot starts 40 dp in and ends 6 dp short of the right edge, as drawn below.
+                    val l = 40.dp.toPx()
+                    val w = size.width - l - 6.dp.toPx()
+                    val ms = (spectrogram.durationSec * 1000).toLong()
+                    detectTapGestures { p -> playback.seekTo((p.x - l) / w, ms) }
+                }
+                .pointerInput(playback, spectrogram.durationSec) {
+                    val l = 40.dp.toPx()
+                    val w = size.width - l - 6.dp.toPx()
+                    val ms = (spectrogram.durationSec * 1000).toLong()
+                    detectHorizontalDragGestures { change, _ -> playback.seekTo((change.position.x - l) / w, ms) }
+                }
+            Canvas(Modifier.fillMaxWidth().aspectRatio(16f / 9f).then(seekable)) {
                 val left = 40.dp.toPx()
                 val right = 6.dp.toPx()
                 val top = 6.dp.toPx()
@@ -215,6 +242,14 @@ fun SpectrogramCard(
                     drawText(tag, topLeft = Offset(left + plotWidth - tag.size.width - 6.dp.toPx(), (y - tag.size.height - 2.dp.toPx()).coerceAtLeast(top)))
                 }
 
+                // Playhead
+                if (playback != null && (playback.playing || playback.positionMs > 0L) && spectrogram.durationSec > 0.0) {
+                    val frac = (playback.positionMs / 1000.0 / spectrogram.durationSec).toFloat().coerceIn(0f, 1f)
+                    val x = left + plotWidth * frac
+                    drawLine(Color.White, Offset(x, top), Offset(x, top + plotHeight), strokeWidth = 2.dp.toPx())
+                    drawCircle(Color.White, 5.dp.toPx(), Offset(x, top))
+                }
+
                 // Time axis
                 val duration = spectrogram.durationSec
                 val timeStep = listOf(5, 10, 15, 30, 60, 120, 300, 600).firstOrNull { duration / it <= 6.0 } ?: 600
@@ -246,11 +281,25 @@ fun SpectrogramCard(
             }
 
             fun set(o: SpecOptions) { options = o; o.save(prefs) }
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            @OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
+            androidx.compose.foundation.layout.FlowRow(
+                Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
                 if (onFullscreen != null) {
                     ExpressiveButton(
                         stringResource(R.string.spec_fullscreen), { onFullscreen(selected) },
-                        modifier = Modifier.weight(1f), icon = Icons.Rounded.Fullscreen,
+                        icon = Icons.Rounded.Fullscreen,
+                    )
+                }
+                if (playback != null) {
+                    ExpressiveButton(
+                        stringResource(if (playback.playing) R.string.spec_pause else R.string.spec_play),
+                        { playback.toggle() },
+                        kind = ButtonKind.Tonal,
+                        icon = if (playback.playing) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
+                        enabled = !playback.failed,
                     )
                 }
                 if (cutoffHz != null) {
