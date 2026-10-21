@@ -39,6 +39,23 @@ class LibraryFoldersTest {
     }
 
     @Test
+    fun anExcludedFolderHidesItselfAndEverythingBelow() {
+        val out = listOf("primary:Music/Podcasts")
+        assertTrue(AudioFiles.isExcluded("primary:Music/Podcasts", out))
+        assertTrue(AudioFiles.isExcluded("primary:Music/Podcasts/2024", out))
+        assertFalse(AudioFiles.isExcluded("primary:Music/Podcasts2", out))
+        assertFalse(AudioFiles.isExcluded("primary:Music", out))
+        assertFalse(AudioFiles.isExcluded("primary:Music/Albums", out))
+        assertFalse(AudioFiles.isExcluded("primary:Music/Albums", emptyList()))
+    }
+
+    @Test
+    fun excludingAVolumeRootHidesTheWholeVolume() {
+        assertTrue(AudioFiles.isExcluded("1A2B-3C4D:Flac", listOf("1A2B-3C4D:")))
+        assertFalse(AudioFiles.isExcluded("primary:Flac", listOf("1A2B-3C4D:")))
+    }
+
+    @Test
     fun trackMetaSurvivesTheCacheFile() {
         val entries = mapOf(
             TrackMetaCodec.keyOf("content://x/1", 10L, 5L) to TrackMeta("Title", "Artist", "Album", 213000L),

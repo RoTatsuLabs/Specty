@@ -17,6 +17,20 @@ class LibraryFolders(private val context: Context) {
 
     fun remove(uri: Uri) = prefs.edit().putStringSet(KEY, uris() - uri.toString()).apply()
 
+    /** Folders left out of the scan, including everything below them. */
+    fun excluded(): List<LibraryFolder> =
+        (prefs.getStringSet(KEY_OUT, emptySet()) ?: emptySet()).map { describe(Uri.parse(it)) }.sortedBy { it.path.lowercase() }
+
+    /** Document ids of the excluded folders, as the scan compares them. */
+    fun excludedIds(): List<String> =
+        (prefs.getStringSet(KEY_OUT, emptySet()) ?: emptySet()).mapNotNull { runCatching { DocumentsContract.getTreeDocumentId(Uri.parse(it)) }.getOrNull() }
+
+    fun exclude(uri: Uri) = prefs.edit().putStringSet(KEY_OUT, outUris() + uri.toString()).apply()
+
+    fun include(uri: Uri) = prefs.edit().putStringSet(KEY_OUT, outUris() - uri.toString()).apply()
+
+    private fun outUris(): Set<String> = HashSet(prefs.getStringSet(KEY_OUT, emptySet()) ?: emptySet())
+
     private fun uris(): Set<String> = HashSet(prefs.getStringSet(KEY, emptySet()) ?: emptySet())
 
     private fun describe(uri: Uri): LibraryFolder {
@@ -27,5 +41,6 @@ class LibraryFolders(private val context: Context) {
 
     private companion object {
         const val KEY = "library_folders"
+        const val KEY_OUT = "library_excluded"
     }
 }

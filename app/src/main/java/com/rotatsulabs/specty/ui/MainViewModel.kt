@@ -60,6 +60,8 @@ data class LibraryState(
     val error: String? = null,
     /** The folders the library is built from. Empty until the person picks one. */
     val folders: List<LibraryFolder> = emptyList(),
+    /** Folders left out of the library, with everything below them. */
+    val excluded: List<LibraryFolder> = emptyList(),
 )
 
 class MainViewModel(app: Application) : AndroidViewModel(app) {
@@ -104,7 +106,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     private val folderStore = LibraryFolders(app)
     private var libraryJob: Job? = null
-    private val _library = MutableStateFlow(LibraryState(folders = folderStore.list()))
+    private val _library = MutableStateFlow(LibraryState(folders = folderStore.list(), excluded = folderStore.excluded()))
     val library: StateFlow<LibraryState> = _library.asStateFlow()
 
     private val _fftSize = MutableStateFlow(prefs.getInt(KEY_FFT, 2048))
@@ -323,30 +325,42 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         loadLibrary(force = true)
     }
 
+    /** Leaves a folder (and everything below it) out of the library. */
+    fun excludeFolder(uri: Uri) {
+        folderStore.exclude(uri)
+        loadLibrary(force = true)
+    }
+
+    fun includeFolder(uri: Uri) {
+        folderStore.include(uri)
+        loadLibrary(force = true)
+    }
+
     fun loadLibrary(force: Boolean = false) {
         val current = _library.value
         if (!force && (current.loading || current.loaded)) return
         libraryJob?.cancel()
         val folders = folderStore.list()
+        val excluded = folderStore.excluded()
         if (folders.isEmpty()) {
-            _library.value = LibraryState(loaded = true, folders = folders)
+            _library.value = LibraryState(loaded = true, folders = folders, excluded = excluded)
             return
         }
-        _library.value = current.copy(loading = true, error = null, folders = folders)
+        _library.value = current.copy(loading = true, error = null, folders = folders, excluded = excluded)
         libraryJob = viewModelScope.launch {
             try {
                 val scanBegan = System.currentTimeMillis()
-                val tracks = LibraryRepository.scan(getApplication(), folders.map { it.uri }) { partial ->
+                val tracks = LibraryRepository.scan(getApplication(), folders.map { it.uri }, folderStore.excludedIds()) { partial ->
                     _library.value = _library.value.copy(tracks = partial)
                 }
                 AppLog.i("Library") { "Scanned ${tracks.size} tracks in ${folders.size} folders, ${System.currentTimeMillis() - scanBegan} ms" }
-                _library.value = LibraryState(loaded = true, loading = false, tracks = tracks, folders = folders)
+                _library.value = LibraryState(loaded = true, loading = false, tracks = tracks, folders = folders, excluded = excluded)
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Throwable) {
                 AppLog.e("Library", e) { "Library scan failed" }
                 _library.value = LibraryState(
-                    loaded = true, loading = false, error = e.message.orEmpty(), folders = folders,
+                    loaded = true, loading = false, error = e.message.orEmpty(), folders = folders, excluded = excluded,
                 )
             }
         }

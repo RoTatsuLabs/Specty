@@ -468,4 +468,11 @@
     <string name="pick_one_more">Pick one more to compare</string>
     <string name="pick_compare">Compare</string>
     <string name="pick_clear">Clear selection</string>
+    <string name="folders_included">Included folders</string>
+    <string name="folders_included_hint">The library lists audio from these folders and everything below them.</string>
+    <string name="folders_excluded">Excluded folders</string>
+    <string name="folders_excluded_hint">Folders inside an included folder to leave out, with everything below them.</string>
+    <string name="folders_excluded_none">Nothing excluded</string>
+    <string name="folders_exclude_add">Exclude a folder</string>
+    <string name="folders_include_again">Include %1$s again</string>
 </resources>

@@ -52,7 +52,7 @@ import com.rotatsulabs.specty.ui.theme.Motion
 import com.rotatsulabs.specty.ui.theme.MotionTokens
 
 @Composable
-fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit, onPickFolder: () -> Unit, onPickCompare: () -> Unit) {
+fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit, onPickFolder: () -> Unit, onPickExcluded: () -> Unit, onPickCompare: () -> Unit) {
     val analysis by viewModel.analysis.collectAsStateWithLifecycle()
     val library by viewModel.library.collectAsStateWithLifecycle()
     val fftSize by viewModel.fftSize.collectAsStateWithLifecycle()
@@ -72,6 +72,7 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit, onPickFolder: ()
     var showSettings by rememberSaveable { mutableStateOf(false) }
     var showAbout by rememberSaveable { mutableStateOf(false) }
     var showLog by rememberSaveable { mutableStateOf(false) }
+    var showFolders by rememberSaveable { mutableStateOf(false) }
     var viewerView by rememberSaveable { mutableStateOf<Int?>(null) }
     // Hashing every track is not free, so remember each key for as long as the settings it depends on stay put.
     val keyFor = remember(fftSize, windowFn) {
@@ -104,10 +105,12 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit, onPickFolder: ()
     val compareBack = remember { BackGesture() }
     val viewerBack = remember { BackGesture() }
     val logBack = remember { BackGesture() }
+    val foldersBack = remember { BackGesture() }
     PredictiveBack(analysisBack, enabled = analysisOpen) { viewModel.closeAnalysis() }
     PredictiveBack(settingsBack, enabled = showSettings) { showSettings = false }
     PredictiveBack(aboutBack, enabled = showAbout) { showAbout = false }
     PredictiveBack(logBack, enabled = showLog) { showLog = false }
+    PredictiveBack(foldersBack, enabled = showFolders) { showFolders = false }
     PredictiveBack(compareBack, enabled = compare !is CompareState.Idle) { viewModel.closeCompare() }
     PredictiveBack(viewerBack, enabled = viewerView != null) { viewerView = null }
 
@@ -125,7 +128,7 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit, onPickFolder: ()
                 flight = flight,
                 onPickFile = onPickFile,
                 onPickFolder = onPickFolder,
-                onRemoveFolder = viewModel::removeFolder,
+                onOpenFolders = { showFolders = true },
                 onOpenSettings = { showSettings = true },
                 onOpenAbout = { showAbout = true },
                 dockVisible = dockVisible,
@@ -193,6 +196,20 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit, onPickFolder: ()
                     onOpenLog = { showLog = true },
                     onDeveloperOff = { viewModel.setDeveloper(false); showLog = false },
                     onBack = { showSettings = false },
+                )
+            }
+        }
+
+        OverlayScreen(visible = showFolders, gesture = foldersBack, depth = depth, id = "folders", backdrop = MaterialTheme.colorScheme.surface) {
+            Surface(Modifier.fillMaxSize(), color = androidx.compose.ui.graphics.Color.Transparent, contentColor = MaterialTheme.colorScheme.onSurface) {
+                com.rotatsulabs.specty.ui.screens.FoldersScreen(
+                    included = library.folders,
+                    excluded = library.excluded,
+                    onAddIncluded = onPickFolder,
+                    onRemoveIncluded = viewModel::removeFolder,
+                    onAddExcluded = onPickExcluded,
+                    onRemoveExcluded = viewModel::includeFolder,
+                    onBack = { showFolders = false },
                 )
             }
         }

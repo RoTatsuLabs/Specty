@@ -36,6 +36,10 @@ class MainActivity : ComponentActivity() {
         if (uri != null) viewModel.addFolder(uri)
     }
 
+    private val excludePicker = registerForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
+        if (uri != null) viewModel.excludeFolder(uri)
+    }
+
     private val comparePicker = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         if (uri != null) viewModel.startCompare(uri)
     }
@@ -67,6 +71,7 @@ class MainActivity : ComponentActivity() {
                             viewModel = viewModel,
                             onPickFile = { picker.launch(arrayOf("audio/*", "application/ogg")) },
                             onPickFolder = { folderPicker.launch(null) },
+                            onPickExcluded = { excludePicker.launch(null) },
                             onPickCompare = { comparePicker.launch(arrayOf("audio/*", "application/ogg")) },
                         )
                     }
