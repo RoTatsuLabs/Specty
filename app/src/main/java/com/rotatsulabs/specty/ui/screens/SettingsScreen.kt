@@ -12,7 +12,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Contrast
 import androidx.compose.material.icons.rounded.Palette
-import androidx.compose.material.icons.rounded.Sell
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -61,8 +60,6 @@ fun SettingsScreen(
     onDynamicColor: (Boolean) -> Unit,
     onSeed: (SeedPalette) -> Unit,
     onPureBlack: (Boolean) -> Unit,
-    showMetadata: Boolean,
-    onShowMetadata: (Boolean) -> Unit,
     fftSize: Int,
     onFftSize: (Int) -> Unit,
     windowFn: WindowFn,
@@ -143,19 +140,6 @@ fun SettingsScreen(
                             { stringResource(it.labelRes) },
                         )
                     }
-                }
-            }
-
-            Reveal(1) {
-                SettingGroup(stringResource(R.string.settings_results)) {
-                    SettingToggleRow(
-                        title = stringResource(R.string.settings_metadata),
-                        supporting = stringResource(R.string.settings_metadata_desc),
-                        checked = showMetadata,
-                        onChecked = onShowMetadata,
-                        icon = Icons.Rounded.Sell,
-                        corners = groupCorners(0, 1),
-                    )
                 }
             }
 

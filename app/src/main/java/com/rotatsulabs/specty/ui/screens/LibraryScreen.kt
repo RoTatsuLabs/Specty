@@ -138,7 +138,6 @@ import com.rotatsulabs.specty.ui.LibraryState
 import com.rotatsulabs.specty.ui.components.CoverImage
 import com.rotatsulabs.specty.ui.components.Fmt
 import com.rotatsulabs.specty.ui.components.pressScale
-import com.rotatsulabs.specty.ui.egg.eggJitter
 import com.rotatsulabs.specty.ui.design.CoverFlight
 import com.rotatsulabs.specty.ui.design.CoverSource
 import com.rotatsulabs.specty.ui.theme.Motion
@@ -196,7 +195,6 @@ fun LibraryScreen(
     onRemoveFolder: (Uri) -> Unit,
     onOpenSettings: () -> Unit,
     onOpenAbout: () -> Unit,
-    brandHold: Modifier = Modifier,
     verdicts: Map<String, Verdict>,
     keyFor: (Track) -> String,
     batch: BatchScanner.State = BatchScanner.State(),
@@ -323,7 +321,6 @@ fun LibraryScreen(
                     unscanned = unscanned,
                     onScanAll = startScan,
                     brandModifier = titleFx,
-                    brandHold = brandHold,
                 )
             }
 
@@ -334,7 +331,7 @@ fun LibraryScreen(
             }
             item(key = "search") {
                 Spacer(Modifier.height(14.dp))
-                Box(Modifier.eggJitter(3)) {
+                Box {
                     SearchPill(query, { query = it }) {
                         if (hasTracks) {
                             Spacer(Modifier.width(8.dp))
@@ -354,7 +351,7 @@ fun LibraryScreen(
             }
             if (hasTracks) {
                 item(key = "section") {
-                    Box(Modifier.eggJitter(5)) {
+                    Box {
                     SectionBar(
                         count = visible.size,
                         sort = layout.sort,
@@ -408,7 +405,7 @@ fun LibraryScreen(
                                 pair.forEachIndexed { i, track ->
                                     TrackTile(
                                         track, rowIndex * 2 + i, verdictByTrack[track.uri.toString()], { b, c -> onOpen(track, b, c) },
-                                        Modifier.weight(1f).eggJitter(rowIndex * 2 + i + 10), flight,
+                                        Modifier.weight(1f), flight,
                                         selected = track.uri.toString() in pickedIds, selecting = selecting, onToggle = { togglePick(track) },
                                     )
                                 }
@@ -419,7 +416,7 @@ fun LibraryScreen(
                         itemsIndexed(group.items, key = { _, t -> t.uri.toString() }) { index, track ->
                             TrackRow(
                                 track, index, verdictByTrack[track.uri.toString()], { b, c -> onOpen(track, b, c) },
-                                Modifier.padding(horizontal = 10.dp).animateItem(placementSpec = Motion.spatial()).eggJitter(index + 10),
+                                Modifier.padding(horizontal = 10.dp).animateItem(placementSpec = Motion.spatial()),
                                 flight,
                                 selected = track.uri.toString() in pickedIds, selecting = selecting, onToggle = { togglePick(track) },
                             )
@@ -440,7 +437,7 @@ fun LibraryScreen(
         ) {
             val haptic = LocalHapticFeedback.current
             MorphSurface(
-                Modifier.navigationBarsPadding().padding(20.dp).eggJitter(98),
+                Modifier.navigationBarsPadding().padding(20.dp),
                 corners = SpectyShapes.Feature,
                 color = MaterialTheme.colorScheme.primaryContainer,
                 onClick = {
@@ -490,7 +487,6 @@ private fun Header(
     unscanned: Int,
     onScanAll: () -> Unit,
     brandModifier: Modifier,
-    brandHold: Modifier,
 ) {
     var menu by remember { mutableStateOf(false) }
     val menuTurn by animateFloatAsState(if (menu) 90f else 0f, Motion.spatial(), label = "menuTurn")
@@ -499,16 +495,14 @@ private fun Header(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Row(Modifier.weight(1f).then(brandModifier), verticalAlignment = Alignment.CenterVertically) {
-            Row(brandHold.eggJitter(1), verticalAlignment = Alignment.CenterVertically) {
-                EqualizerMark()
-                Spacer(Modifier.width(14.dp))
+            Row(verticalAlignment = Alignment.CenterVertically) {
                 Column {
                     Text(stringResource(R.string.app_name), style = MaterialTheme.typography.headlineLarge)
                     Text(stringResource(R.string.about_tagline), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
         }
-        Box(Modifier.eggJitter(2)) {
+        Box {
             ExpressiveIconButton(Icons.Rounded.MoreVert, stringResource(R.string.library_more), { menu = true }, toggled = menu, iconModifier = Modifier.rotate(menuTurn))
             DropdownMenu(expanded = menu, onDismissRequest = { menu = false }, shape = RoundedCornerShape(20.dp)) {
                 if (canRescan) {
