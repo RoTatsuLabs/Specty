@@ -205,7 +205,7 @@
     <string name="verdict_head_possible">Mungkin berasal dari sumber lossy</string>
     <string name="verdict_head_upsampled">Kemungkinan hasil upsampling</string>
     <string name="verdict_head_band">Spektrum terbatas pita</string>
-    <string name="verdict_head_codec">Format lossy</string>
+    <string name="verdict_head_codec">Kompresi lossy</string>
     <string name="verdict_head_inconclusive">Tidak meyakinkan</string>
     <string name="verdict_short_hires">Lossless Hi-Res</string>
     <string name="verdict_short_lossy_source">Sumber lossy</string>
@@ -327,7 +327,7 @@
     <!-- Engine notes and compare highlights -->
     <string name="note_atmos">Audio objek Dolby Atmos yang dibawa dalam aliran Dolby Digital Plus (E-AC-3). Spektrum tidak dinilai untuk asal lossy.</string>
     <string name="note_lossy_codec_edge">%1$s adalah codec lossy; low-pass encodernya berada di sekitar %2$s kHz.</string>
-    <string name="note_lossy_codec">%1$s adalah codec lossy, jadi ini bukan file lossless.</string>
+    <string name="note_lossy_codec">%1$s adalah codec lossy: ukuran file dikecilkan dengan membuang detail yang sulit terdengar.</string>
     <string name="note_no_decoder">Perangkat ini tidak punya decoder untuknya, jadi spektrum dan level tidak dapat diukur.</string>
     <string name="note_no_signal">Konten yang terdengar tidak cukup untuk menilai spektrum.</string>
     <string name="note_faint_top">Bagian atas spektrum lemah, sehingga konten pelan dan derau tidak dapat dibedakan. Asal lossy tidak terbukti maupun disingkirkan.</string>

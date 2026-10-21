@@ -23,7 +23,7 @@ object Notes {
             NoteKey.ATMOS ->
                 "Dolby Atmos object audio carried in a Dolby Digital Plus (E-AC-3) stream. The spectrum is not judged for lossy origin."
             NoteKey.LOSSY_CODEC_EDGE -> "${a[0]} is a lossy codec; its encoder low-pass sits near ${a[1]} kHz."
-            NoteKey.LOSSY_CODEC -> "${a[0]} is a lossy codec, so this is not a lossless file."
+            NoteKey.LOSSY_CODEC -> "${a[0]} is a lossy codec: it shrinks the file by dropping detail that is hard to hear."
             NoteKey.NO_DECODER -> "This device has no decoder for it, so the spectrum and levels could not be measured."
             NoteKey.NO_SIGNAL -> "There is not enough audible content to judge the spectrum."
             NoteKey.FAINT_TOP ->

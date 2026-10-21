@@ -213,7 +213,7 @@
     <string name="verdict_head_possible">Possibly from a lossy source</string>
     <string name="verdict_head_upsampled">Likely upsampled</string>
     <string name="verdict_head_band">Band-limited spectrum</string>
-    <string name="verdict_head_codec">Lossy format</string>
+    <string name="verdict_head_codec">Lossy compression</string>
     <string name="verdict_head_inconclusive">Inconclusive</string>
     <string name="verdict_short_hires">Hi-Res Lossless</string>
     <string name="verdict_short_lossy_source">Lossy source</string>
@@ -337,7 +337,7 @@
     <!-- Engine notes and compare highlights -->
     <string name="note_atmos">Dolby Atmos object audio carried in a Dolby Digital Plus (E-AC-3) stream. The spectrum is not judged for lossy origin.</string>
     <string name="note_lossy_codec_edge">%1$s is a lossy codec; its encoder low-pass sits near %2$s kHz.</string>
-    <string name="note_lossy_codec">%1$s is a lossy codec, so this is not a lossless file.</string>
+    <string name="note_lossy_codec">%1$s is a lossy codec: it shrinks the file by dropping detail that is hard to hear.</string>
     <string name="note_no_decoder">This device has no decoder for it, so the spectrum and levels could not be measured.</string>
     <string name="note_no_signal">There is not enough audible content to judge the spectrum.</string>
     <string name="note_faint_top">The top of the spectrum is faint, so quiet content and noise cannot be told apart. A lossy origin is neither shown nor ruled out.</string>
