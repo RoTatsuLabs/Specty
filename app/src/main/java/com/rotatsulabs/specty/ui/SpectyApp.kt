@@ -24,7 +24,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.graphics.rememberGraphicsLayer
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.rotatsulabs.specty.ui.screens.AboutScreen
@@ -49,12 +48,6 @@ import com.rotatsulabs.specty.ui.design.rememberContainerOrigin
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.layout.onGloballyPositioned
-import com.rotatsulabs.specty.ui.egg.EasterEgg
-import com.rotatsulabs.specty.ui.egg.EasterEggDriver
-import com.rotatsulabs.specty.ui.egg.EasterEggStage
-import com.rotatsulabs.specty.ui.egg.EasterEggBox
-import com.rotatsulabs.specty.ui.egg.eggJitter
-import com.rotatsulabs.specty.ui.egg.eggHold
 import com.rotatsulabs.specty.ui.theme.Motion
 import com.rotatsulabs.specty.ui.theme.MotionTokens
 
@@ -65,7 +58,6 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit, onPickFolder: ()
     val fftSize by viewModel.fftSize.collectAsStateWithLifecycle()
     val windowFn by viewModel.windowFn.collectAsStateWithLifecycle()
     val appearance by viewModel.appearance.collectAsStateWithLifecycle()
-    val showMetadata by viewModel.showMetadata.collectAsStateWithLifecycle()
     val verdicts by viewModel.cachedVerdicts.collectAsStateWithLifecycle()
     val batch by viewModel.batch.collectAsStateWithLifecycle()
     val developer by viewModel.developer.collectAsStateWithLifecycle()
@@ -76,9 +68,6 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit, onPickFolder: ()
     if (compare !is CompareState.Idle) compareHeld.state = compare
     val origin = rememberContainerOrigin()
     val flight = remember { CoverFlight() }
-    val egg = remember { EasterEgg() }
-    val eggLayer = rememberGraphicsLayer()
-    EasterEggDriver(egg, eggLayer)
     var dockBounds by remember { mutableStateOf<Rect?>(null) }
     var showSettings by rememberSaveable { mutableStateOf(false) }
     var showAbout by rememberSaveable { mutableStateOf(false) }
@@ -93,7 +82,6 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit, onPickFolder: ()
         lookup
     }
     val analysisOpen by viewModel.viewing.collectAsStateWithLifecycle()
-    val queued by viewModel.queued.collectAsStateWithLifecycle()
     val dockVisible = !analysisOpen && analysis !is AnalysisState.Idle
 
     // Keep the last non-idle state around so the screen can animate out with its content intact.
@@ -123,18 +111,15 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit, onPickFolder: ()
     PredictiveBack(compareBack, enabled = compare !is CompareState.Idle) { viewModel.closeCompare() }
     PredictiveBack(viewerBack, enabled = viewerView != null) { viewerView = null }
 
-    EasterEggBox(egg, eggLayer) {
+    Box(Modifier.fillMaxSize()) {
         Surface(Modifier.fillMaxSize().underlay(depth), color = MaterialTheme.colorScheme.surface) {
             LibraryScreen(
                 state = library,
                 onLoad = viewModel::loadLibrary,
                 onOpen = { track, bounds, cover ->
-                    // A tap that only joins the queue must not start the cover flight.
-                    if (!viewModel.busy) {
-                        origin.bounds = bounds
-                        origin.corners = SpectyShapes.Row
-                        flight.begin(track.uri, cover)
-                    }
+                    origin.bounds = bounds
+                    origin.corners = SpectyShapes.Row
+                    flight.begin(track.uri, cover)
                     viewModel.analyze(track.uri)
                 },
                 flight = flight,
@@ -143,7 +128,6 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit, onPickFolder: ()
                 onRemoveFolder = viewModel::removeFolder,
                 onOpenSettings = { showSettings = true },
                 onOpenAbout = { showAbout = true },
-                brandHold = Modifier.eggHold(egg),
                 dockVisible = dockVisible,
                 verdicts = verdicts,
                 keyFor = keyFor,
@@ -163,13 +147,11 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit, onPickFolder: ()
         ) {
             AnalysisDock(
                 state = dockHeld.state,
-                queued = queued,
                 onOpen = { origin.bounds = dockBounds; origin.corners = Corners(28.dp); flight.clear(); viewModel.openResult() },
                 onDismiss = viewModel::closeAnalysis,
                 modifier = Modifier
                     .navigationBarsPadding()
                     .padding(horizontal = 12.dp, vertical = 12.dp)
-                    .eggJitter(97)
                     .onGloballyPositioned { dockBounds = it.boundsInRoot() },
             )
         }
@@ -184,7 +166,7 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit, onPickFolder: ()
         ) {
             Surface(Modifier.fillMaxSize(), color = androidx.compose.ui.graphics.Color.Transparent, contentColor = MaterialTheme.colorScheme.onSurface) {
                 Box(Modifier.navigationBarsPadding()) {
-                    AnalysisScreen(held.state, onBack = viewModel::closeAnalysis, onReanalyse = viewModel::reanalyze, showMetadata = showMetadata, onFullscreen = { viewerView = it }, onCompare = onPickCompare, flight = flight)
+                    AnalysisScreen(held.state, onBack = viewModel::closeAnalysis, onReanalyse = viewModel::reanalyze, onFullscreen = { viewerView = it }, onCompare = onPickCompare, flight = flight)
                 }
             }
         }
@@ -199,8 +181,6 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit, onPickFolder: ()
                     onDynamicColor = viewModel::setDynamicColor,
                     onSeed = viewModel::setSeed,
                     onPureBlack = viewModel::setPureBlack,
-                    showMetadata = showMetadata,
-                    onShowMetadata = viewModel::setShowMetadata,
                     fftSize = fftSize,
                     onFftSize = viewModel::setFftSize,
                     windowFn = windowFn,
@@ -282,6 +262,5 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit, onPickFolder: ()
             )
         }
 
-        EasterEggStage(egg)
     }
 }

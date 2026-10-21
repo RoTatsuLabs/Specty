@@ -26,8 +26,6 @@
     <string name="settings_pure_black">Pure black</string>
     <string name="settings_pure_black_desc">True black backgrounds in dark mode, easier on OLED screens.</string>
     <string name="settings_results">Results</string>
-    <string name="settings_metadata">Show tags and metadata</string>
-    <string name="settings_metadata_desc">Adds a read-only card with the file\'s tags, including custom and unfamiliar ones. Lyrics are never shown.</string>
     <string name="settings_spectrogram">Spectrogram</string>
     <string name="settings_window_size">Window size</string>
     <string name="settings_window_size_desc">Larger windows resolve frequency more finely; smaller ones resolve time more finely.</string>
@@ -178,7 +176,6 @@
     <string name="dock_ready">Ready, tap to view the result</string>
     <string name="dock_limited">Lossy format, audio could not be decoded. Tap for details</string>
     <string name="dock_progress">"%1$s  ·  %2$d%%"</string>
-    <string name="dock_progress_queued">"%1$s  ·  %2$d%%  ·  %3$d waiting"</string>
 
     <!-- Verdict pills -->
     <string name="verdict_lossless">Lossless</string>
@@ -293,27 +290,6 @@
     <string name="stereo_dc_note">A DC offset above 0.5% wastes headroom and can cause clicks; a high-pass filter removes it.</string>
 
     <!-- Tags -->
-    <string name="tags_title">Tags and metadata</string>
-    <string name="tags_none">This file has no tags.</string>
-    <string name="tags_hide">Hide other tags</string>
-    <string name="tags_show_other">All other tags (%1$d)</string>
-    <string name="tags_custom">Custom tags</string>
-    <string name="tag_title">Title</string>
-    <string name="tag_artist">Artist</string>
-    <string name="tag_album_artist">Album artist</string>
-    <string name="tag_album">Album</string>
-    <string name="tag_date">Date</string>
-    <string name="tag_track">Track</string>
-    <string name="tag_disc">Disc</string>
-    <string name="tag_genre">Genre</string>
-    <string name="tag_composer">Composer</string>
-    <string name="tag_label">Label</string>
-    <string name="tag_encoder">Encoder</string>
-    <string name="tag_comment">Comment</string>
-    <string name="tag_isrc" translatable="false">ISRC</string>
-    <string name="tag_upc" translatable="false">UPC</string>
-    <string name="tag_rating">Rating</string>
-    <string name="tag_copyright">Copyright</string>
 
     <!-- Compare -->
     <string name="compare_title">Compare</string>
@@ -408,8 +384,6 @@
     </plurals>
 
     <!-- Stage 4: notification, scan notes, stages, failures -->
-    <string name="toast_queue_already">Already in the queue</string>
-    <string name="toast_queue_added">Added to the queue</string>
     <string name="storage_internal">Internal storage</string>
     <string name="library_error">Could not read the library</string>
     <string name="scan_notif_title">"Scanning library  %1$d of %2$d"</string>

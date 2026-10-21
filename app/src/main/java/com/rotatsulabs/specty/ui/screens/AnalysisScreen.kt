@@ -161,7 +161,7 @@ import com.rotatsulabs.specty.ui.theme.Motion
 import kotlinx.coroutines.delay
 
 @Composable
-fun AnalysisScreen(state: AnalysisState, onBack: () -> Unit, onReanalyse: () -> Unit, modifier: Modifier = Modifier, showMetadata: Boolean = false, onFullscreen: (Int) -> Unit = {}, onCompare: () -> Unit = {}, flight: CoverFlight? = null) {
+fun AnalysisScreen(state: AnalysisState, onBack: () -> Unit, onReanalyse: () -> Unit, modifier: Modifier = Modifier, onFullscreen: (Int) -> Unit = {}, onCompare: () -> Unit = {}, flight: CoverFlight? = null) {
     val title = when (state) {
         is AnalysisState.Running -> state.title
         is AnalysisState.Failed -> state.title
@@ -195,7 +195,7 @@ fun AnalysisScreen(state: AnalysisState, onBack: () -> Unit, onReanalyse: () -> 
             when (state) {
                 is AnalysisState.Running -> RunningContent(state)
                 is AnalysisState.Failed -> FailedContent(failureText(state.failure, state.detail), onBack)
-                is AnalysisState.Done -> ResultContent(state.result, showMetadata, onFullscreen, flight)
+                is AnalysisState.Done -> ResultContent(state.result, onFullscreen, flight)
                 is AnalysisState.Limited -> LimitedContent(state.info, state.report)
                 AnalysisState.Idle -> Unit
             }
@@ -328,7 +328,7 @@ private fun LimitedContent(info: AudioInfo, report: AuthenticityReport) {
 }
 
 @Composable
-private fun ResultContent(result: AnalysisResult, showMetadata: Boolean, onFullscreen: (Int) -> Unit, flight: CoverFlight?) {
+private fun ResultContent(result: AnalysisResult, onFullscreen: (Int) -> Unit, flight: CoverFlight?) {
     Column(
         Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
@@ -342,7 +342,6 @@ private fun ResultContent(result: AnalysisResult, showMetadata: Boolean, onFulls
         Reveal(6) { TimelineCard(result.levels) }
         Reveal(7) { ChannelsCard(result) }
         Reveal(8) { StereoCard(result.levels) }
-        if (showMetadata) Reveal(9) { TagsCard(result.info.tags) }
         Reveal(10) { SpectrogramCard(
                 result.spectrogram,
                 title = result.info.title.withoutExplicitMark(),

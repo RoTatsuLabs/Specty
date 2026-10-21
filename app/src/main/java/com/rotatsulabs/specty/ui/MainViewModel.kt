@@ -4,10 +4,8 @@ import android.app.Application
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
-import android.widget.Toast
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.rotatsulabs.specty.R
 import com.rotatsulabs.specty.audio.AnalysisFailure
 import com.rotatsulabs.specty.audio.AnalysisResult
 import com.rotatsulabs.specty.audio.AnalysisStage
@@ -25,7 +23,6 @@ import com.rotatsulabs.specty.data.LibraryFolders
 import com.rotatsulabs.specty.data.LibraryRepository
 import com.rotatsulabs.specty.data.ResultCache
 import com.rotatsulabs.specty.data.Track
-import com.rotatsulabs.specty.sound.SoundFx
 import com.rotatsulabs.specty.ui.design.tonal.SeedPalette
 import com.rotatsulabs.specty.ui.theme.Appearance
 import com.rotatsulabs.specty.ui.theme.ThemeMode
@@ -73,7 +70,6 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     init {
         viewModelScope.launch(Dispatchers.IO) { AudioAnalyzer.sweepStale(app) }
-        SoundFx.warmUp()
     }
 
     private val _developer = MutableStateFlow(prefs.getBoolean(AppLog.KEY_DEVELOPER, false))
@@ -150,14 +146,6 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     fun setPureBlack(enabled: Boolean) {
         _appearance.value = _appearance.value.copy(pureBlack = enabled)
         prefs.edit().putBoolean(KEY_BLACK, enabled).apply()
-    }
-
-    private val _showMetadata = MutableStateFlow(prefs.getBoolean(KEY_META, false))
-    val showMetadata: StateFlow<Boolean> = _showMetadata.asStateFlow()
-
-    fun setShowMetadata(enabled: Boolean) {
-        _showMetadata.value = enabled
-        prefs.edit().putBoolean(KEY_META, enabled).apply()
     }
 
     private var analysisJob: Job? = null
@@ -259,41 +247,8 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         lastUri?.let { analyze(it, force = true) }
     }
 
-    private val waiting = ArrayDeque<Uri>()
-    private val _queued = MutableStateFlow(0)
-    /** Files waiting for the running analysis to finish. */
-    val queued: StateFlow<Int> = _queued.asStateFlow()
-
-    /** True while an analysis is running, so another file would join the queue instead of replacing it. */
-    val busy: Boolean get() = analysisJob?.isActive == true && _analysis.value is AnalysisState.Running
-
-    private fun enqueue(uri: Uri) {
-        val message = if (uri == lastUri || uri in waiting) {
-            getApplication<Application>().getString(R.string.toast_queue_already)
-        } else {
-            waiting.addLast(uri)
-            _queued.value = waiting.size
-            getApplication<Application>().getString(R.string.toast_queue_added)
-        }
-        Toast.makeText(getApplication(), message, Toast.LENGTH_SHORT).show()
-    }
-
-    /** Starts the next waiting file, unless a result is open on screen (it starts once that closes). */
-    private fun advance() {
-        if (_viewing.value) return
-        val next = waiting.removeFirstOrNull() ?: return
-        _queued.value = waiting.size
-        start(next, force = false)
-    }
-
-    /** Analyses [uri] now, or queues it when another analysis is still running. */
-    fun analyze(uri: Uri, force: Boolean = false) {
-        if (!force && busy) {
-            enqueue(uri)
-            return
-        }
-        start(uri, force)
-    }
+    /** Analyses [uri] now, replacing any analysis still running. */
+    fun analyze(uri: Uri, force: Boolean = false) = start(uri, force)
 
     /** The song title the library already shows, so a running analysis is not named after its file. */
     private fun titleOf(uri: Uri, fileName: String): String =
@@ -338,20 +293,13 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                 AppLog.e("Analyze", e) { "Failed \"$title\" after ${System.currentTimeMillis() - began} ms" }
                 _analysis.value = AnalysisState.Failed(title, (e as? AnalysisFailure)?.failure, e.message)
             }
-            advance()
         }
     }
 
     fun closeAnalysis() {
-        // Cancelling a running analysis stops the whole queue; closing a finished result lets the queue go on.
-        if (_analysis.value is AnalysisState.Running) {
-            waiting.clear()
-            _queued.value = 0
-        }
         analysisJob?.cancel()
         _viewing.value = false
         _analysis.value = AnalysisState.Idle
-        advance()
     }
 
     /** Adds a folder picked with the system picker and keeps access to it across restarts. */
@@ -412,6 +360,5 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         const val KEY_DYNAMIC = "dynamic_color"
         const val KEY_BLACK = "pure_black"
         const val KEY_SEED = "seed_palette"
-        const val KEY_META = "show_metadata"
     }
 }

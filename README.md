@@ -122,7 +122,6 @@ app/src/main/java/com/rotatsulabs/specty/
 ├── audio/        DSP and analysis (pure Kotlin), plus FFmpeg and MediaCodec glue
 ├── batch/        Background library scan and its foreground service
 ├── data/         Folder library, cover art loader, saved-result cache
-├── sound/        Synthesised Easter egg sounds
 └── ui/
     ├── components/   Cover image, stat grid, progress dock
     ├── design/       Shapes, type, motion and reusable components

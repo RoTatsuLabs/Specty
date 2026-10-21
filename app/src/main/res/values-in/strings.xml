@@ -24,8 +24,6 @@
     <string name="settings_pure_black">Hitam pekat</string>
     <string name="settings_pure_black_desc">Latar belakang hitam sejati di mode gelap, lebih nyaman untuk layar OLED.</string>
     <string name="settings_results">Hasil</string>
-    <string name="settings_metadata">Tampilkan tag dan metadata</string>
-    <string name="settings_metadata_desc">Menambahkan kartu hanya-baca berisi tag file, termasuk tag kustom dan yang tidak umum. Lirik tidak pernah ditampilkan.</string>
     <string name="settings_spectrogram">Spektrogram</string>
     <string name="settings_window_size">Ukuran jendela</string>
     <string name="settings_window_size_desc">Jendela yang lebih besar membedakan frekuensi dengan lebih halus; yang lebih kecil membedakan waktu dengan lebih halus.</string>
@@ -173,7 +171,6 @@
     <string name="dock_ready">Siap, ketuk untuk melihat hasil</string>
     <string name="dock_limited">Format lossy, audio tidak dapat didekode. Ketuk untuk detail</string>
     <string name="dock_progress">"%1$s  ·  %2$d%%"</string>
-    <string name="dock_progress_queued">"%1$s  ·  %2$d%%  ·  %3$d menunggu"</string>
 
     <!-- Verdict pills -->
     <string name="verdict_lossless">Lossless</string>
@@ -283,25 +280,6 @@
     <string name="stereo_dc_note">Offset DC di atas 0,5% menyia-nyiakan headroom dan dapat menimbulkan bunyi klik; filter high-pass dapat menghilangkannya.</string>
 
     <!-- Tags -->
-    <string name="tags_title">Tag dan metadata</string>
-    <string name="tags_none">File ini tidak memiliki tag.</string>
-    <string name="tags_hide">Sembunyikan tag lainnya</string>
-    <string name="tags_show_other">Semua tag lainnya (%1$d)</string>
-    <string name="tags_custom">Tag kustom</string>
-    <string name="tag_title">Judul</string>
-    <string name="tag_artist">Artis</string>
-    <string name="tag_album_artist">Artis album</string>
-    <string name="tag_album">Album</string>
-    <string name="tag_date">Tanggal</string>
-    <string name="tag_track">Trek</string>
-    <string name="tag_disc">Disk</string>
-    <string name="tag_genre">Genre</string>
-    <string name="tag_composer">Komposer</string>
-    <string name="tag_label">Label</string>
-    <string name="tag_encoder">Encoder</string>
-    <string name="tag_comment">Komentar</string>
-    <string name="tag_rating">Rating</string>
-    <string name="tag_copyright">Hak cipta</string>
 
     <!-- Compare -->
     <string name="compare_title">Bandingkan</string>
@@ -395,8 +373,6 @@
     </plurals>
 
     <!-- Stage 4: notification, scan notes, stages, failures -->
-    <string name="toast_queue_already">Sudah ada dalam antrean</string>
-    <string name="toast_queue_added">Ditambahkan ke antrean</string>
     <string name="storage_internal">Penyimpanan internal</string>
     <string name="library_error">Tidak dapat membaca pustaka</string>
     <string name="scan_notif_title">"Memindai pustaka  %1$d dari %2$d"</string>

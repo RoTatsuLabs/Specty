@@ -71,3 +71,7 @@ private val explicitMark = Regex("""\s*[\[(]\s*(?:E|Explicit)\s*[\])]""", RegexO
 
 /** Drops a trailing "[E]" or "(Explicit)" that rippers add to titles; the explicit flag has its own tag. */
 fun String.withoutExplicitMark(): String = replace(explicitMark, "").trim()
+
+/** True when the file's "rating" tag is 1, the explicit-content flag (0 means not explicit). */
+fun isExplicit(tags: List<Pair<String, String>>): Boolean =
+    tags.any { it.first.equals("rating", ignoreCase = true) && it.second.trim() == "1" }

@@ -24,8 +24,6 @@
     <string name="settings_pure_black">纯黑</string>
     <string name="settings_pure_black_desc">深色模式下使用纯黑背景，对 OLED 屏幕更友好。</string>
     <string name="settings_results">结果</string>
-    <string name="settings_metadata">显示标签和元数据</string>
-    <string name="settings_metadata_desc">添加一张只读卡片，显示文件的标签，包括自定义标签和不常见的标签。不会显示歌词。</string>
     <string name="settings_spectrogram">频谱图</string>
     <string name="settings_window_size">窗口大小</string>
     <string name="settings_window_size_desc">窗口越大，频率分辨越精细；窗口越小，时间分辨越精细。</string>
@@ -173,7 +171,6 @@
     <string name="dock_ready">已完成，点按查看结果</string>
     <string name="dock_limited">有损格式，无法解码音频。点按查看详情</string>
     <string name="dock_progress">"%1$s  ·  %2$d%%"</string>
-    <string name="dock_progress_queued">"%1$s  ·  %2$d%%  ·  %3$d 个等待中"</string>
 
     <!-- Verdict pills -->
     <string name="verdict_lossless">无损</string>
@@ -283,25 +280,6 @@
     <string name="stereo_dc_note">超过 0.5% 的直流偏移会浪费动态余量并可能产生爆音；用高通滤波器即可消除。</string>
 
     <!-- Tags -->
-    <string name="tags_title">标签与元数据</string>
-    <string name="tags_none">此文件没有标签。</string>
-    <string name="tags_hide">隐藏其他标签</string>
-    <string name="tags_show_other">所有其他标签（%1$d）</string>
-    <string name="tags_custom">自定义标签</string>
-    <string name="tag_title">标题</string>
-    <string name="tag_artist">艺术家</string>
-    <string name="tag_album_artist">专辑艺术家</string>
-    <string name="tag_album">专辑</string>
-    <string name="tag_date">日期</string>
-    <string name="tag_track">音轨</string>
-    <string name="tag_disc">光盘</string>
-    <string name="tag_genre">流派</string>
-    <string name="tag_composer">作曲</string>
-    <string name="tag_label">厂牌</string>
-    <string name="tag_encoder">编码器</string>
-    <string name="tag_comment">注释</string>
-    <string name="tag_rating">分级</string>
-    <string name="tag_copyright">版权</string>
 
     <!-- Compare -->
     <string name="compare_title">比较</string>
@@ -395,8 +373,6 @@
     </plurals>
 
     <!-- Stage 4: notification, scan notes, stages, failures -->
-    <string name="toast_queue_already">已在队列中</string>
-    <string name="toast_queue_added">已加入队列</string>
     <string name="storage_internal">内部存储</string>
     <string name="library_error">无法读取曲库</string>
     <string name="scan_notif_title">正在扫描曲库  %1$d / %2$d</string>
