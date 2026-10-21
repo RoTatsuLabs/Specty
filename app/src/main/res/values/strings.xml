@@ -133,7 +133,6 @@
     <string name="action_dismiss">Dismiss</string>
     <string name="action_done">Done</string>
     <string name="library_menu_rescan">Rescan library</string>
-    <string name="library_menu_scan">Scan whole library</string>
     <string name="library_menu_folders">Library folders</string>
     <string name="library_more">More options</string>
     <string name="library_analyse">Analyse a file</string>
@@ -476,4 +475,23 @@
         <item quantity="one">Show %1$d track</item>
         <item quantity="other">Show %1$d tracks</item>
     </plurals>
+    <string name="library_menu_scan_new">Scan new and changed (%1$d)</string>
+    <string name="library_menu_scanned">Everything is scanned</string>
+    <string name="sort_album">Album</string>
+    <string name="sort_modified">Modified</string>
+    <string name="sort_result">Result</string>
+    <string name="library_sort_by">Sort by</string>
+    <string name="library_group_by">Group by</string>
+    <string name="group_none">No grouping</string>
+    <string name="group_artist">Artist</string>
+    <string name="group_album">Album</string>
+    <string name="group_result">Result</string>
+    <string name="group_format">Format</string>
+    <string name="group_unknown_artist">Unknown artist</string>
+    <string name="group_unknown_album">Unknown album</string>
+    <string name="group_unknown_format">No extension</string>
+    <string name="pick_count">%1$d selected</string>
+    <string name="pick_one_more">Pick one more to compare</string>
+    <string name="pick_compare">Compare</string>
+    <string name="pick_clear">Clear selection</string>
 </resources>

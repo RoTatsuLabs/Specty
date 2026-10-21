@@ -52,7 +52,7 @@ import com.rotatsulabs.specty.ui.design.components.EmptyState
 import com.rotatsulabs.specty.ui.design.components.ExpressiveButton
 
 @get:StringRes
-private val ResultFilter.labelRes: Int
+internal val ResultFilter.labelRes: Int
     get() = when (this) {
         ResultFilter.Unchecked -> R.string.filter_unchecked
         ResultFilter.Lossless -> R.string.filter_lossless

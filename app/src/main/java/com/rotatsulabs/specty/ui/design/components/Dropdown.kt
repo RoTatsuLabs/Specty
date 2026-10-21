@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.KeyboardArrowDown
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.Icon
@@ -67,7 +66,7 @@ fun <T> OptionDropdown(
                 val active = option == selected
                 ExpressiveMenuItem(
                     text = { Text(label(option), fontWeight = if (active) FontWeight.Bold else FontWeight.Normal) },
-                    trailingIcon = if (active) ({ Icon(Icons.Rounded.Check, null) }) else null,
+                    checked = active,
                     onClick = { open = false; if (!active) onSelect(option) },
                 )
             }

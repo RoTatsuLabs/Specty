@@ -20,6 +20,7 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.runtime.remember
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.Close
 import com.rotatsulabs.specty.ui.components.pressScale
 import androidx.compose.material3.Icon
@@ -158,14 +159,17 @@ fun ExpressiveMenuItem(
     leadingIcon: (@Composable () -> Unit)? = null,
     trailingIcon: (@Composable () -> Unit)? = null,
     enabled: Boolean = true,
+    /** Marks the current choice in a menu of options. */
+    checked: Boolean = false,
 ) {
     val source = remember { MutableInteractionSource() }
+    val trailing: (@Composable () -> Unit)? = if (checked) { { Icon(Icons.Rounded.Check, contentDescription = null) } } else trailingIcon
     DropdownMenuItem(
         text = text,
         onClick = onClick,
         modifier = modifier.pressScale(source, 0.96f),
         leadingIcon = leadingIcon,
-        trailingIcon = trailingIcon,
+        trailingIcon = trailing,
         enabled = enabled,
         interactionSource = source,
     )
