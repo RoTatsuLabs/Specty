@@ -19,6 +19,7 @@ import com.rotatsulabs.specty.ui.MainViewModel
 import com.rotatsulabs.specty.ui.SpectyApp
 import androidx.compose.runtime.CompositionLocalProvider
 import com.rotatsulabs.specty.ui.design.LocalThemeReveal
+import com.rotatsulabs.specty.ui.design.ThemeRevealAccent
 import com.rotatsulabs.specty.ui.design.ThemeRevealHost
 import com.rotatsulabs.specty.ui.design.rememberThemeReveal
 import com.rotatsulabs.specty.ui.theme.SpectyTheme
@@ -61,6 +62,7 @@ class MainActivity : ComponentActivity() {
             CompositionLocalProvider(LocalThemeReveal provides reveal) {
                 ThemeRevealHost(reveal) {
                     SpectyTheme(appearance) {
+                        ThemeRevealAccent(reveal)
                         SpectyApp(
                             viewModel = viewModel,
                             onPickFile = { picker.launch(arrayOf("audio/*", "application/ogg")) },
