@@ -149,6 +149,7 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit, onPickFolder: ()
                 keyFor = keyFor,
                 batch = batch,
                 onScanAll = viewModel::scanLibrary,
+                onCompare = { a, b -> viewModel.compareTracks(a.uri, b.uri) },
                 onCancelScan = viewModel::cancelScan,
                 onDismissScan = viewModel::dismissScanSummary,
             )

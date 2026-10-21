@@ -37,7 +37,7 @@ import kotlinx.coroutines.withContext
 /**
  * Foreground service that analyses the queued library tracks one by one and stores each result as it goes, so a scan
  * that is stopped, cancelled or killed carries on from the same place the next time. The work is bounded: one file at
- * a time, a few CPU threads, a pause after each file, and a wait while the phone is hot or the battery is low.
+ * a time, a few CPU threads, a rest after each file that follows the heat, and a wait while the phone is hot or the battery is low.
  */
 class BatchScanService : Service() {
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -111,7 +111,7 @@ class BatchScanService : Service() {
                     }
                 },
                 gate = { waitUntilSafe(queue.size) },
-                cooldownMs = COOLDOWN_MS,
+                cooldownMs = { Cooldown.after(thermalStatus(getSystemService(PowerManager::class.java))) },
             )
             val stop = engine.run(queue, object : BatchListener<Track> {
                 override fun onStart(index: Int, item: Track) {
@@ -165,8 +165,10 @@ class BatchScanService : Service() {
     }
 
     /** Thermal status exists from Android 10; older versions only wait on the battery. */
-    private fun tooHot(power: PowerManager): Boolean =
-        Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && power.currentThermalStatus >= PowerManager.THERMAL_STATUS_SEVERE
+    private fun tooHot(power: PowerManager): Boolean = (thermalStatus(power) ?: 0) >= PowerManager.THERMAL_STATUS_SEVERE
+
+    private fun thermalStatus(power: PowerManager): Int? =
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) power.currentThermalStatus else null
 
     private fun batteryLow(): Boolean {
         val status = registerReceiver(null, IntentFilter(Intent.ACTION_BATTERY_CHANGED)) ?: return false
@@ -261,7 +263,6 @@ class BatchScanService : Service() {
         private const val NOTIFICATION_ID = 41
         /** CPU threads the scan uses at once; the rest are left to the phone. */
         private const val SCAN_THREADS = 2
-        private const val COOLDOWN_MS = 150L
         private const val PAUSE_POLL_MS = 10_000L
         private const val LOW_BATTERY_PERCENT = 15
     }

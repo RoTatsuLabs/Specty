@@ -247,6 +247,43 @@ class BatchEngineTest {
     }
 
     @Test
+    fun savedFilesPassWithoutWaitingForTheGate() = runBlocking {
+        val probe = Probe(saved = (0 until 100).filter { it % 4 != 0 }.toMutableSet())
+        var gated = 0
+        val stop = engine(probe, gate = { gated++ }).run(library(100), probe)
+        assertEquals(BatchStop.Finished, stop)
+        assertEquals("only the 25 files that need work wait", 25, gated)
+        assertEquals(75, probe.skipped)
+        assertEquals(25, probe.done)
+    }
+
+    @Test
+    fun aHeldGateDoesNotStopSavedFilesAheadOfTheNextRealOne() = runBlocking {
+        val probe = Probe(saved = (0 until 10).toMutableSet())
+        val release = CompletableDeferred<Unit>()
+        val job = async { engine(probe, gate = { release.await() }).run(library(12), probe) }
+        delay(100)
+        assertEquals("ten saved files passed, the eleventh waits at the gate", 10, probe.skipped)
+        assertEquals(10, probe.started.size)
+        release.complete(Unit)
+        assertEquals(BatchStop.Finished, job.await())
+        assertEquals(2, probe.done)
+    }
+
+    @Test
+    fun theRestAfterEachFileIsAskedForEveryTime() = runBlocking {
+        val probe = Probe()
+        val asked = ArrayList<Int>()
+        val engine = BatchEngine<Int>(
+            isSaved = { false },
+            process = { item, _ -> probe.work(item) },
+            cooldownMs = { asked += asked.size; 0L },
+        )
+        engine.run(library(6), probe)
+        assertEquals(listOf(0, 1, 2, 3, 4, 5), asked)
+    }
+
+    @Test
     fun progressAndOutcomeAreReportedForEveryFile() = runBlocking {
         val probe = Probe()
         val progress = ArrayList<Pair<Int, Float>>()

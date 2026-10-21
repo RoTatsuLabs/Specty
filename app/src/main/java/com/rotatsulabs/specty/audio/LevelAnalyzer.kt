@@ -50,19 +50,24 @@ object LevelAnalyzer {
         val tpDone = Array(channels) { AtomicLong() }
         val tpPeaks = DoubleArray(channels)
         val cancelled = java.util.concurrent.atomic.AtomicBoolean(false)
-        val pool = Executors.newFixedThreadPool(channels.coerceIn(1, maxThreads.coerceAtLeast(1)))
-        val futures = (0 until channels).map { c ->
+        // A worker reads the file once and feeds every channel it owns, so a surround file is not read once per channel.
+        val workers = channels.coerceIn(1, maxThreads.coerceAtLeast(1))
+        val pool = Executors.newFixedThreadPool(workers)
+        val futures = (0 until workers).map { w ->
+            val mine = (w until channels step workers).toList()
             pool.submit(
                 Callable {
-                    val meter = TruePeakChannel(pcm.sampleRate)
+                    val meters = mine.map { TruePeakChannel(pcm.sampleRate) }
                     PcmFile(pcm.file, channels, pcm.sampleRate).use { own ->
                         own.forEachChunk { buf, n ->
                             if (cancelled.get()) return@forEachChunk
-                            meter.process(buf, n, channels, c)
-                            tpDone[c].addAndGet(n.toLong())
+                            mine.forEachIndexed { i, c ->
+                                meters[i].process(buf, n, channels, c)
+                                tpDone[c].addAndGet(n.toLong())
+                            }
                         }
                     }
-                    tpPeaks[c] = meter.peak
+                    mine.forEachIndexed { i, c -> tpPeaks[c] = meters[i].peak }
                 },
             )
         }

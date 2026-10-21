@@ -12,6 +12,7 @@ import java.io.DataInputStream
 import java.io.DataOutputStream
 import java.io.File
 import java.util.zip.GZIPInputStream
+import java.util.zip.Deflater
 import java.util.zip.GZIPOutputStream
 
 /**
@@ -80,7 +81,7 @@ class ResultCache private constructor(context: Context) {
         val tmp = File(dir, "$key.tmp")
         try {
             val stored = StoredResult(result.info, result.levels, result.authenticity, result.spectrogram, result.decoded)
-            DataOutputStream(GZIPOutputStream(tmp.outputStream().buffered())).use { ResultCodec.write(it, stored) }
+            DataOutputStream(FastGzip(tmp.outputStream().buffered())).use { ResultCodec.write(it, stored) }
             if (!tmp.renameTo(file)) {
                 tmp.delete()
                 return
@@ -130,6 +131,11 @@ class ResultCache private constructor(context: Context) {
             unpublished = 0
             _verdicts.value = emptyMap()
         }
+    }
+
+    /** Same format as the default, written with the fastest level: spectrograms shrink about as well, in two thirds of the time. */
+    private class FastGzip(out: java.io.OutputStream) : GZIPOutputStream(out) {
+        init { def.setLevel(Deflater.BEST_SPEED) }
     }
 
     companion object {

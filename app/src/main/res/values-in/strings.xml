@@ -129,7 +129,6 @@
     <string name="action_dismiss">Tutup</string>
     <string name="action_done">Selesai</string>
     <string name="library_menu_rescan">Pindai ulang pustaka</string>
-    <string name="library_menu_scan">Pindai seluruh pustaka</string>
     <string name="library_menu_folders">Folder pustaka</string>
     <string name="library_more">Opsi lainnya</string>
     <string name="library_analyse">Analisis file</string>
@@ -459,4 +458,23 @@
     <plurals name="filter_show">
         <item quantity="other">Tampilkan %1$d lagu</item>
     </plurals>
+    <string name="library_menu_scan_new">Pindai yang baru dan berubah (%1$d)</string>
+    <string name="library_menu_scanned">Semua sudah dipindai</string>
+    <string name="sort_album">Album</string>
+    <string name="sort_modified">Diubah</string>
+    <string name="sort_result">Hasil</string>
+    <string name="library_sort_by">Urutkan menurut</string>
+    <string name="library_group_by">Kelompokkan menurut</string>
+    <string name="group_none">Tanpa pengelompokan</string>
+    <string name="group_artist">Artis</string>
+    <string name="group_album">Album</string>
+    <string name="group_result">Hasil</string>
+    <string name="group_format">Format</string>
+    <string name="group_unknown_artist">Artis tidak dikenal</string>
+    <string name="group_unknown_album">Album tidak dikenal</string>
+    <string name="group_unknown_format">Tanpa ekstensi</string>
+    <string name="pick_count">%1$d dipilih</string>
+    <string name="pick_one_more">Pilih satu lagi untuk dibandingkan</string>
+    <string name="pick_compare">Bandingkan</string>
+    <string name="pick_clear">Hapus pilihan</string>
 </resources>

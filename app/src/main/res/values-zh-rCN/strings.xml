@@ -129,7 +129,6 @@
     <string name="action_dismiss">关闭</string>
     <string name="action_done">完成</string>
     <string name="library_menu_rescan">重新扫描曲库</string>
-    <string name="library_menu_scan">扫描整个曲库</string>
     <string name="library_menu_folders">曲库文件夹</string>
     <string name="library_more">更多选项</string>
     <string name="library_analyse">分析文件</string>
@@ -459,4 +458,23 @@
     <plurals name="filter_show">
         <item quantity="other">显示 %1$d 首曲目</item>
     </plurals>
+    <string name="library_menu_scan_new">扫描新增和已更改的曲目（%1$d）</string>
+    <string name="library_menu_scanned">已全部扫描</string>
+    <string name="sort_album">专辑</string>
+    <string name="sort_modified">修改时间</string>
+    <string name="sort_result">结果</string>
+    <string name="library_sort_by">排序方式</string>
+    <string name="library_group_by">分组方式</string>
+    <string name="group_none">不分组</string>
+    <string name="group_artist">艺术家</string>
+    <string name="group_album">专辑</string>
+    <string name="group_result">结果</string>
+    <string name="group_format">格式</string>
+    <string name="group_unknown_artist">未知艺术家</string>
+    <string name="group_unknown_album">未知专辑</string>
+    <string name="group_unknown_format">无扩展名</string>
+    <string name="pick_count">已选 %1$d 项</string>
+    <string name="pick_one_more">再选一首即可比较</string>
+    <string name="pick_compare">比较</string>
+    <string name="pick_clear">清除选择</string>
 </resources>

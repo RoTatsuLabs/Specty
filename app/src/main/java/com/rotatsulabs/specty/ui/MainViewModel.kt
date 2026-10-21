@@ -179,34 +179,47 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     val compare: StateFlow<CompareState> = _compare.asStateFlow()
     private var compareJob: Job? = null
 
-    /** Analyses [second] (or loads it from the cache) and shows it next to the result currently open. */
-    fun startCompare(second: Uri) {
-        val first = (_analysis.value as? AnalysisState.Done)?.result ?: return
+    /** The saved result for [uri] when there is one, otherwise a fresh analysis that is saved for next time. */
+    private suspend fun savedOrAnalysed(uri: Uri, onStage: (title: String, stage: AnalysisStage, progress: Float) -> Unit): AnalysisResult {
+        val meta = withContext(Dispatchers.IO) { MediaProbe.queryMeta(getApplication(), uri) }
+        val fft = _fftSize.value
+        val key = cache.keyOf(uri, meta.sizeBytes, meta.modified, fft, _windowFn.value)
+        if (meta.sizeBytes > 0) {
+            withContext(Dispatchers.IO) { cache.load(key, uri) }?.let { return it }
+        }
+        val title = titleOf(uri, meta.displayName)
+        val result = analyzer.analyze(uri, fft, _windowFn.value) { stage, progress -> onStage(title, stage, progress) }
+        if (meta.sizeBytes > 0) withContext(Dispatchers.IO) { cache.save(key, result) }
+        return result
+    }
+
+    private fun runCompare(load: suspend () -> Pair<AnalysisResult, AnalysisResult>) {
         compareJob?.cancel()
         compareJob = viewModelScope.launch {
-            val meta = withContext(Dispatchers.IO) { MediaProbe.queryMeta(getApplication(), second) }
-            val fft = _fftSize.value
-            val key = cache.keyOf(second, meta.sizeBytes, meta.modified, fft, _windowFn.value)
-            if (meta.sizeBytes > 0) {
-                val hit = withContext(Dispatchers.IO) { cache.load(key, second) }
-                if (hit != null) {
-                    _compare.value = CompareState.Ready(first, hit)
-                    return@launch
-                }
-            }
-            _compare.value = CompareState.Running(titleOf(second, meta.displayName), AnalysisStage.READING, 0f)
             try {
-                val result = analyzer.analyze(second, fft, _windowFn.value) { stage, progress ->
-                    _compare.value = CompareState.Running(titleOf(second, meta.displayName), stage, progress)
-                }
-                if (meta.sizeBytes > 0) withContext(Dispatchers.IO) { cache.save(key, result) }
-                _compare.value = CompareState.Ready(first, result)
+                val (a, b) = load()
+                _compare.value = CompareState.Ready(a, b)
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Throwable) {
                 _compare.value = CompareState.Failed((e as? AnalysisFailure)?.failure, e.message)
             }
         }
+    }
+
+    private val showProgress = { title: String, stage: AnalysisStage, progress: Float ->
+        _compare.value = CompareState.Running(title, stage, progress)
+    }
+
+    /** Analyses [second] (or loads it from the cache) and shows it next to the result currently open. */
+    fun startCompare(second: Uri) {
+        val first = (_analysis.value as? AnalysisState.Done)?.result ?: return
+        runCompare { first to savedOrAnalysed(second, showProgress) }
+    }
+
+    /** Shows two library tracks side by side, analysing whichever has no saved result yet. */
+    fun compareTracks(first: Uri, second: Uri) {
+        runCompare { savedOrAnalysed(first, showProgress) to savedOrAnalysed(second, showProgress) }
     }
 
     fun closeCompare() {
@@ -217,8 +230,12 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     /** Progress of the background library scan. */
     val batch: StateFlow<BatchScanner.State> = BatchScanner.state
 
+    /** Queues the tracks with no saved result: new files, and files whose size or date changed since they were scanned. */
     fun scanLibrary() {
-        BatchScanner.start(getApplication(), _library.value.tracks, _fftSize.value, _windowFn.value)
+        val fft = _fftSize.value
+        val window = _windowFn.value
+        val todo = _library.value.tracks.filter { !(it.sizeBytes > 0 && cache.contains(cache.keyOf(it.uri, it.sizeBytes, it.modifiedSec, fft, window))) }
+        BatchScanner.start(getApplication(), todo, fft, window)
     }
 
     fun cancelScan() = BatchScanner.cancel(getApplication())
