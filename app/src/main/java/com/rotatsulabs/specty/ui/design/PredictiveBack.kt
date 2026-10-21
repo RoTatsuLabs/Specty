@@ -8,12 +8,8 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.compositionLocalOf
-import androidx.compose.ui.graphics.GraphicsLayerScope
 import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.background
-import kotlinx.coroutines.coroutineScope
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
@@ -51,7 +47,15 @@ class BackGesture {
     var committed by mutableStateOf(false)
         private set
 
+    /** Vertical distance the finger has moved since the swipe began, in pixels. */
+    var dy by mutableFloatStateOf(0f)
+        private set
+
+    private var startY = 0f
+
     internal fun update(event: BackEventCompat) {
+        if (!active) startY = event.touchY
+        dy = event.touchY - startY
         committed = false
         active = true
         progress = event.progress
@@ -107,32 +111,11 @@ fun Modifier.underlay(depth: OverlayDepth): Modifier = graphicsLayer {
     scaleY = s
 }
 
-/**
- * How far the screen the reader is looking at has left, shared down to its components. Each component reads it
- * through [followBack] and moves on its own, instead of the whole screen moving as one sheet.
- */
-@Stable
-class BackPose(val leave: () -> Float, val direction: () -> Float = { 1f })
-
-val LocalBackPose = compositionLocalOf<BackPose?> { null }
-
-/** Applies the part of a screen's exit that belongs to the component at [index]. Call at the end of a graphicsLayer. */
-fun GraphicsLayerScope.followBack(back: BackPose?, index: Int) {
-    if (back == null) return
-    val part = BackMath.part(back.leave(), index)
-    if (part <= 0f) return
-    alpha *= BackMath.partAlpha(part)
-    val k = BackMath.partScale(part)
-    scaleX *= k
-    scaleY *= k
-    translationX += back.direction() * size.width * BackMath.partDrift(part)
-}
-
 enum class OverlayStyle {
-    /** Fades in over the screen below; its components arrive and leave one by one along the swipe. */
+    /** Opaque surface of its own ([backdrop]); the screen below shows around it while it is pulled back. */
     Side,
 
-    /** Grows in from slightly below and settles back down. */
+    /** The content brings its own surface. */
     Rise,
 }
 
@@ -154,23 +137,19 @@ fun OverlayScreen(
     content: @Composable () -> Unit,
 ) {
     val pose = remember { Animatable(if (visible) 0f else 1f) }
-    val leave = remember { Animatable(if (visible) 0f else 1f) }
+    val lift = remember { Animatable(0f) }
     var composed by remember { mutableStateOf(visible) }
     var direction by remember { mutableFloatStateOf(1f) }
     val isVisible by rememberUpdatedState(visible)
-    val backPose = remember { BackPose({ leave.value }, { direction }) }
 
     LaunchedEffect(visible) {
         if (visible) {
             direction = 1f
             composed = true
-            leave.snapTo(0f)
+            lift.snapTo(0f)
             pose.animateTo(0f, Motion.spatial())
         } else {
-            coroutineScope {
-                launch { leave.animateTo(1f, exit) }
-                pose.animateTo(1f, exit)
-            }
+            pose.animateTo(1f, exit)
             composed = false
         }
     }
@@ -185,14 +164,14 @@ fun OverlayScreen(
                     direction = if (fromRight) -1f else 1f
                     val at = BackMath.pose(progress)
                     pose.snapTo(at)
-                    leave.snapTo(at)
+                    lift.snapTo(gesture.dy)
                 }
             } else if (following) {
                 following = false
                 // A cancelled swipe springs back. A committed one is closed by `visible` turning false.
                 if (!gesture.committed && isVisible) {
                     scope.launch { pose.animateTo(0f, Motion.spatial()) }
-                    scope.launch { leave.animateTo(0f, Motion.spatial()) }
+                    scope.launch { lift.animateTo(0f, Motion.spatial()) }
                 }
             }
         }
@@ -206,33 +185,26 @@ fun OverlayScreen(
     }
 
     if (!composed) return
-    when (style) {
-        // The surface stays put and opaque; the components on it leave one by one.
-        OverlayStyle.Side -> Box(modifier.fillMaxSize()) {
-            if (backdrop != Color.Transparent) {
-                Box(Modifier.fillMaxSize().graphicsLayer { alpha = BackMath.alpha(pose.value) }.background(backdrop))
+    // The whole screen follows the swipe like the system's own back preview: it shrinks, rounds its corners and
+    // slides away from the edge, with the screen below showing around it.
+    Box(
+        modifier
+            .fillMaxSize()
+            .graphicsLayer {
+                val p = pose.value
+                val s = BackMath.scale(p)
+                scaleX = s
+                scaleY = s
+                translationX = direction * size.width * BackMath.shift(p)
+                translationY = BackMath.lift(lift.value, size.height * BackMath.LIFT_LIMIT)
+                transformOrigin = TransformOrigin.Center
+                alpha = BackMath.alpha(p)
+                val corner = BackMath.cornerShare(p)
+                if (corner > 0f) {
+                    shape = RoundedCornerShape((32.dp * corner).toPx())
+                    clip = true
+                }
             }
-            Box(Modifier.fillMaxSize().graphicsLayer { alpha = BackMath.alpha(pose.value) }) {
-                CompositionLocalProvider(LocalBackPose provides backPose) { content() }
-            }
-        }
-        OverlayStyle.Rise -> Box(
-            modifier
-                .fillMaxSize()
-                .graphicsLayer {
-                    val p = pose.value
-                    val s = BackMath.riseScale(p)
-                    scaleX = s
-                    scaleY = s
-                    translationY = size.height * BackMath.riseTravel(p)
-                    transformOrigin = TransformOrigin.Center
-                    alpha = BackMath.alpha(p)
-                    val corner = BackMath.cornerShare(p)
-                    if (corner > 0f) {
-                        shape = RoundedCornerShape((32.dp * corner).toPx())
-                        clip = true
-                    }
-                },
-        ) { content() }
-    }
+            .then(if (style == OverlayStyle.Side && backdrop != Color.Transparent) Modifier.background(backdrop) else Modifier),
+    ) { content() }
 }

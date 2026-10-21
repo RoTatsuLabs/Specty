@@ -16,7 +16,6 @@ import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.background
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.graphics.Color
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
@@ -158,9 +157,6 @@ fun ContainerTransform(
         }
     }
     if (gone && !visible) return
-    val backPose = remember(gesture) {
-        BackPose({ 1f - progress.value }, { if (gesture?.fromRight == true) -1f else 1f })
-    }
     val from = origin.bounds
     val startCorners = origin.corners
     Box(
@@ -187,7 +183,7 @@ fun ContainerTransform(
     ) {
         // The surface behind stays solid; only the content comes in as the container opens and goes as it closes.
         Box(Modifier.graphicsLayer { alpha = (progress.value / 0.3f).coerceIn(0f, 1f) }) {
-            CompositionLocalProvider(LocalBackPose provides backPose) { content() }
+            content()
         }
     }
 }
