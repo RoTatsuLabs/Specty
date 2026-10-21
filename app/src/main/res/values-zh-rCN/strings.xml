@@ -205,7 +205,7 @@
     <string name="verdict_head_possible">可能来自有损音源</string>
     <string name="verdict_head_upsampled">疑似经过升采样</string>
     <string name="verdict_head_band">频谱被限带</string>
-    <string name="verdict_head_codec">有损格式</string>
+    <string name="verdict_head_codec">有损压缩</string>
     <string name="verdict_head_inconclusive">无定论</string>
     <string name="verdict_short_hires">Hi-Res 无损</string>
     <string name="verdict_short_lossy_source">有损音源</string>
@@ -327,7 +327,7 @@
     <!-- Engine notes and compare highlights -->
     <string name="note_atmos">封装在杜比数字+（E-AC-3）流中的杜比全景声对象音频。不对频谱进行有损来源判断。</string>
     <string name="note_lossy_codec_edge">%1$s 是有损编码，其编码器低通截止频率约在 %2$s kHz。</string>
-    <string name="note_lossy_codec">%1$s 是有损编码，因此这不是无损文件。</string>
+    <string name="note_lossy_codec">%1$s 是有损编码：通过舍弃不易听出的细节来缩小文件。</string>
     <string name="note_no_decoder">此设备没有对应的解码器，因此无法测量频谱和电平。</string>
     <string name="note_no_signal">可听内容不足，无法判断频谱。</string>
     <string name="note_faint_top">频谱高频部分很弱，无法区分安静内容与噪声。既不能证明也不能排除有损来源。</string>
