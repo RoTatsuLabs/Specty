@@ -1,5 +1,6 @@
 package com.rotatsulabs.specty.ui.screens
 
+import com.rotatsulabs.specty.ui.components.isExplicit
 import com.rotatsulabs.specty.ui.components.withoutExplicitMark
 import com.rotatsulabs.specty.ui.design.Corners
 import com.rotatsulabs.specty.ui.design.SpectyShapes
