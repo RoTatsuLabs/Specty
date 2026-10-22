@@ -460,4 +460,7 @@
     <string name="folders_excluded_none">没有排除任何文件夹</string>
     <string name="folders_exclude_add">排除文件夹</string>
     <string name="folders_include_again">重新包含 %1$s</string>
+    <string name="spec_play">播放</string>
+    <string name="spec_pause">暂停</string>
+    <string name="toast_play_failed">此设备无法播放该文件</string>
 </resources>

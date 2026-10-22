@@ -460,4 +460,7 @@
     <string name="folders_excluded_none">Tidak ada yang dikecualikan</string>
     <string name="folders_exclude_add">Kecualikan folder</string>
     <string name="folders_include_again">Sertakan %1$s lagi</string>
+    <string name="spec_play">Putar</string>
+    <string name="spec_pause">Jeda</string>
+    <string name="toast_play_failed">Perangkat ini tidak bisa memutar file ini</string>
 </resources>
