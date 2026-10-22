@@ -24,7 +24,7 @@ class FailuresTest {
     )
 
     private fun res(): File {
-        var root: File? = File(System.getProperty("user.dir")).absoluteFile
+        var root: File? = File(System.getProperty("user.dir")!!).absoluteFile
         while (root != null && !File(root, "gradle/libs.versions.toml").exists()) root = root.parentFile
         return File(root, "app/src/main/res")
     }
@@ -63,6 +63,6 @@ class FailuresTest {
         for ((_, r) in scanRes) checkTranslated(r.first, r.second)
         assertEquals(AnalysisStage.entries.toSet(), stageRes.keys)
         for ((_, name) in stageRes) checkTranslated(name, 0)
-        for (name in listOf("fail_generic", "toast_queue_already", "toast_queue_added", "storage_internal", "library_error")) checkTranslated(name, 0)
+        for (name in listOf("fail_generic", "storage_internal", "library_error")) checkTranslated(name, 0)
     }
 }

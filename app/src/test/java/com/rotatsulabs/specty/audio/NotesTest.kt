@@ -34,7 +34,7 @@ class NotesTest {
 
     @Test
     fun everyKeyIsTranslatedWithMatchingArguments() {
-        var root: File? = File(System.getProperty("user.dir")).absoluteFile
+        var root: File? = File(System.getProperty("user.dir")!!).absoluteFile
         while (root != null && !File(root, "gradle/libs.versions.toml").exists()) root = root.parentFile
         val res = File(root, "app/src/main/res")
         for (dir in listOf("values", "values-in", "values-zh-rCN")) {

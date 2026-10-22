@@ -55,7 +55,7 @@ class ResultFilterTest {
 
     @Test
     fun everyKindHasATranslatedLabelAndHint() {
-        var root: File? = File(System.getProperty("user.dir")).absoluteFile
+        var root: File? = File(System.getProperty("user.dir")!!).absoluteFile
         while (root != null && !File(root, "gradle/libs.versions.toml").exists()) root = root.parentFile
         val names = listOf("unchecked", "lossless", "needs_look", "lossy_format", "atmos", "unclear").flatMap { listOf("filter_$it", "filter_${it}_hint") } +
             "filter_hires_hint" + listOf("filter_open", "filter_title", "filter_subtitle", "filter_reset", "filter_clear", "filter_remove", "filter_empty_title", "filter_empty_message")

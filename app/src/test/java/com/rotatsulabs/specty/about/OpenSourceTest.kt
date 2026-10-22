@@ -8,7 +8,7 @@ import java.io.File
 class OpenSourceTest {
     /** Gradle runs unit tests in the module folder, so the project root is found by walking up. */
     private fun root(): File {
-        var dir: File? = File(System.getProperty("user.dir")).absoluteFile
+        var dir: File? = File(System.getProperty("user.dir")!!).absoluteFile
         while (dir != null && !File(dir, "gradle/libs.versions.toml").exists()) dir = dir.parentFile
         return dir ?: error("project root not found")
     }
