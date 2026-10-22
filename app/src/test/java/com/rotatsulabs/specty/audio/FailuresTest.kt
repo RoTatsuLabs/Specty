@@ -24,7 +24,7 @@ class FailuresTest {
     )
 
     private fun res(): File {
-        var root: File? = File(System.getProperty("user.dir")).absoluteFile
+        var root: File? = File(System.getProperty("user.dir")!!).absoluteFile
         while (root != null && !File(root, "gradle/libs.versions.toml").exists()) root = root.parentFile
         return File(root, "app/src/main/res")
     }
