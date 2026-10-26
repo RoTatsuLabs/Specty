@@ -12,7 +12,6 @@ import com.rotatsulabs.specty.ui.design.components.ExpressiveTopBar
 import com.rotatsulabs.specty.ui.design.components.IconBadge
 import com.rotatsulabs.specty.ui.design.components.MetricTile
 import com.rotatsulabs.specty.ui.design.components.MorphSurface
-import androidx.compose.ui.draw.alpha
 import com.rotatsulabs.specty.ui.design.components.Pill
 import com.rotatsulabs.specty.ui.spectrogram.rememberPlayback
 import com.rotatsulabs.specty.ui.design.components.ShapeLoader
@@ -327,7 +326,7 @@ private fun LimitedContent(info: AudioInfo, report: AuthenticityReport) {
             Text(info.title.withoutExplicitMark(), style = MaterialTheme.typography.headlineSmall, maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false))
             if (isExplicit(info.tags)) ExplicitMark()
         }
-        VerdictCard(report, info)
+        VerdictCard(report)
         FileCard(info, decoded = null, showDecoded = false)
         Spacer(Modifier.height(16.dp))
     }
@@ -340,7 +339,7 @@ private fun ResultContent(result: AnalysisResult, onFullscreen: (Int) -> Unit, f
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         Hero(result, flight)
-        Reveal(1) { VerdictCard(result.authenticity, result.info) }
+        Reveal(1) { VerdictCard(result.authenticity) }
         Reveal(2) { MetricTiles(result) }
         Reveal(3) { ConfidenceCard(result.authenticity, result.info) }
         Reveal(4) { FileCard(result.info, result.decoded) }
@@ -492,7 +491,7 @@ private fun InfoChip(
 ) = Pill(text, container = container, content = content)
 
 @Composable
-private fun VerdictCard(report: AuthenticityReport, info: AudioInfo) {
+private fun VerdictCard(report: AuthenticityReport) {
     val scheme = MaterialTheme.colorScheme
     val (container, content, icon, headline) = when (report.verdict) {
         Verdict.GENUINE -> Quad(scheme.tertiaryContainer, scheme.onTertiaryContainer, Icons.Rounded.Verified, stringResource(R.string.verdict_head_genuine))
@@ -518,11 +517,6 @@ private fun VerdictCard(report: AuthenticityReport, info: AudioInfo) {
                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     Text(headline, style = MaterialTheme.typography.titleMedium)
                     Text(noteText(report.notes), style = MaterialTheme.typography.bodyMedium)
-                    Text(
-                        fileFacts(info),
-                        style = MaterialTheme.typography.labelLarge,
-                        modifier = Modifier.padding(top = 4.dp).alpha(0.8f),
-                    )
                 }
             }
         }
@@ -533,16 +527,6 @@ private fun VerdictCard(report: AuthenticityReport, info: AudioInfo) {
 private fun ExplicitMark() {
     Icon(Icons.Rounded.Explicit, contentDescription = stringResource(R.string.explicit_label), modifier = Modifier.size(24.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
 }
-
-/** Codec, sample rate, channels and bitrate on one line: what the file is, whatever the verdict. */
-@Composable
-private fun fileFacts(info: AudioInfo): String = buildList {
-    add(Codecs.displayName(info.codec))
-    add(Fmt.kHz(info.sampleRate.toDouble()))
-    info.bitDepth?.let { add("$it-bit") }
-    add(stringResource(R.string.decoded_channels, info.channels))
-    info.bitrateBps?.takeIf { it > 0 }?.let { add(Fmt.bitrate(it)) }
-}.joinToString(" · ")
 
 private data class Quad(val container: Color, val content: Color, val icon: ImageVector, val headline: String)
 

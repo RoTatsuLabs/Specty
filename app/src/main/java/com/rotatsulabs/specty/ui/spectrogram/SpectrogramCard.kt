@@ -281,15 +281,11 @@ fun SpectrogramCard(
             }
 
             fun set(o: SpecOptions) { options = o; o.save(prefs) }
-            @OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
-            androidx.compose.foundation.layout.FlowRow(
-                Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 if (onFullscreen != null) {
                     ExpressiveButton(
                         stringResource(R.string.spec_fullscreen), { onFullscreen(selected) },
+                        modifier = Modifier.weight(1f),
                         icon = Icons.Rounded.Fullscreen,
                     )
                 }
@@ -297,6 +293,7 @@ fun SpectrogramCard(
                     ExpressiveButton(
                         stringResource(if (playback.playing) R.string.spec_pause else R.string.spec_play),
                         { playback.toggle() },
+                        modifier = Modifier.weight(1f),
                         kind = ButtonKind.Tonal,
                         icon = if (playback.playing) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
                         enabled = !playback.failed,
@@ -306,6 +303,7 @@ fun SpectrogramCard(
                     ExpressiveButton(
                         stringResource(R.string.spec_cutoff),
                         { set(options.copy(cutoffLine = !options.cutoffLine)) },
+                        modifier = Modifier.weight(1f),
                         kind = if (options.cutoffLine) ButtonKind.Tonal else ButtonKind.Outlined,
                         icon = if (options.cutoffLine) Icons.Rounded.Check else null,
                     )
