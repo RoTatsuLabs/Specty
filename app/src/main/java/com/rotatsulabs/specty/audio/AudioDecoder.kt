@@ -28,7 +28,7 @@ object AudioDecoder {
         maxBytes: Long = 0L,
         onProgress: (Float) -> Unit,
     ): DecodedFormat? {
-        val saf = FFmpegKitConfig.getSafParameterForRead(context, uri)
+        val saf = runCatching { FFmpegKitConfig.getSafParameterForRead(context, uri) }.getOrNull()
             ?: throw AnalysisFailure(Failure(FailKey.CANNOT_OPEN))
         val args = buildList {
             addAll(listOf("-hide_banner", "-nostdin", "-y", "-i", saf, "-map", "0:a:0", "-vn", "-sn", "-dn"))
@@ -45,9 +45,9 @@ object AudioDecoder {
             // about to delete and the next file's decode never overlaps with this one.
             withContext(NonCancellable) {
                 running?.let { session ->
-                    FFmpegKit.cancel(session.sessionId)
+                    FFmpegKit.cancel(session.getSessionId())
                     var waited = 0L
-                    while (session.state.let { it != SessionState.COMPLETED && it != SessionState.FAILED } && waited < STOP_WAIT_MS) {
+                    while (session.getState().let { it != SessionState.COMPLETED && it != SessionState.FAILED } && waited < STOP_WAIT_MS) {
                         delay(50)
                         waited += 50
                     }
@@ -71,10 +71,10 @@ object AudioDecoder {
                 args,
                 { finished ->
                     if (!continuation.isActive) return@executeWithArgumentsAsync
-                    if (ReturnCode.isSuccess(finished.returnCode)) {
-                        continuation.resume(DecodedFormat.parse(finished.output))
+                    if (ReturnCode.isSuccess(finished.getReturnCode())) {
+                        continuation.resume(DecodedFormat.parse(finished.getOutput()))
                     } else {
-                        val detail = finished.failStackTrace ?: finished.output?.takeLast(300).orEmpty()
+                        val detail = finished.getFailStackTrace() ?: finished.getOutput().takeLast(300)
                         continuation.resumeWithException(AnalysisFailure(Failure(FailKey.DECODE_FAILED, detail)))
                     }
                 },
@@ -87,7 +87,7 @@ object AudioDecoder {
                 },
             )
             onSession(session)
-            continuation.invokeOnCancellation { FFmpegKit.cancel(session.sessionId) }
+            continuation.invokeOnCancellation { FFmpegKit.cancel(session.getSessionId()) }
         }
     }
 

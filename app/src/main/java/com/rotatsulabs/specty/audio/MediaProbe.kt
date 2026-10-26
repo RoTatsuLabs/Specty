@@ -44,14 +44,14 @@ object MediaProbe {
 
     fun probe(context: Context, uri: Uri): AudioInfo {
         val meta = queryMeta(context, uri)
-        val saf = FFmpegKitConfig.getSafParameterForRead(context, uri)
+        val saf = runCatching { FFmpegKitConfig.getSafParameterForRead(context, uri) }.getOrNull()
             ?: throw AnalysisFailure(Failure(FailKey.CANNOT_OPEN))
         val session = FFprobeKit.getMediaInformation(saf)
-        val media = session.mediaInformation
+        val media = session.getMediaInformation()
             ?: throw AnalysisFailure(Failure(FailKey.NOT_AUDIO))
-        val stream = media.streams?.firstOrNull { it.type == "audio" }
+        val stream = media.getStreams().firstOrNull { it.getType() == "audio" }
             ?: throw AnalysisFailure(Failure(FailKey.NO_AUDIO_STREAM))
-        val props = stream.allProperties ?: JSONObject()
+        val props = stream.getAllProperties() ?: JSONObject()
 
         val sampleRate = props.optString("sample_rate").toIntOrNull() ?: 0
         val channels = props.optInt("channels", 0)
@@ -63,18 +63,18 @@ object MediaProbe {
         return AudioInfo(
             displayName = meta.displayName,
             codec = props.optString("codec_name").ifEmpty { "unknown" },
-            container = media.format,
+            container = media.getFormat(),
             sampleRate = sampleRate,
             channels = channels,
             bitDepth = rawBits ?: sampleBits,
             sampleFormat = props.optString("sample_fmt").ifEmpty { null },
-            bitrateBps = props.optString("bit_rate").toLongOrNull() ?: media.bitrate?.toLongOrNull(),
-            durationSec = media.duration?.toDoubleOrNull()
+            bitrateBps = props.optString("bit_rate").toLongOrNull() ?: media.getBitrate()?.toLongOrNull(),
+            durationSec = media.getDuration()?.toDoubleOrNull()
                 ?: props.optString("duration").toDoubleOrNull()
                 ?: 0.0,
-            sizeBytes = if (meta.sizeBytes > 0) meta.sizeBytes else media.size?.toLongOrNull() ?: 0L,
-            tags = readTags(media.tags, stream.tags),
-            profile = atmosProfile(context, uri, props.optString("codec_name"), media.format)
+            sizeBytes = if (meta.sizeBytes > 0) meta.sizeBytes else media.getSize()?.toLongOrNull() ?: 0L,
+            tags = readTags(media.getTags(), stream.getTags()),
+            profile = atmosProfile(context, uri, props.optString("codec_name"), media.getFormat())
                 ?: props.optString("profile").ifEmpty { null },
         )
     }

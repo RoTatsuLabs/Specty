@@ -40,8 +40,8 @@ object OpenSource {
 
     val libraries: List<Library> = listOf(
         Library(
-            "FFmpegKit (maintained fork)", "ffmpegkit-maintained", "8.1.9", LicenseKind.Lgpl3,
-            "https://github.com/ffmpegkit-maintained/ffmpeg",
+            "FFmpegKitNext", "arthenica", "9.0.2-r1", LicenseKind.Lgpl3,
+            "https://github.com/arthenica/ffmpeg-kit-next",
             R.string.lib_ffmpeg_summary,
             R.string.lib_ffmpeg_note,
         ),
