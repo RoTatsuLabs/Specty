@@ -24,7 +24,7 @@ class OpenSourceTest {
     @Test
     fun listedVersionsMatchTheVersionCatalog() {
         val v = catalogVersions()
-        assertEquals(v["ffmpegKit"], versionOf("FFmpegKit (maintained fork)"))
+        assertEquals(v["ffmpegKit"], versionOf("FFmpegKitNext"))
         assertEquals("BOM " + v["composeBom"], versionOf("Jetpack Compose"))
         assertEquals(v["activityCompose"], versionOf("Activity Compose"))
         assertEquals(v["lifecycle"], versionOf("Lifecycle"))

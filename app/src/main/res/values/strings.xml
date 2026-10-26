@@ -85,7 +85,7 @@
     <!-- Library credits -->
     <string name="lib_specty_summary">Audio quality analyser for Android.</string>
     <string name="lib_specty_note">Specty is free software under the GNU General Public License, version 3. You can use, study, change and share it under those terms.</string>
-    <string name="lib_ffmpeg_summary">FFmpeg for Android, a continuation of the retired Arthenica ffmpeg-kit.</string>
+    <string name="lib_ffmpeg_summary">FFmpeg for Android through FFmpegKitNext, the continuation of Arthenica\'s ffmpeg-kit.</string>
     <string name="lib_ffmpeg_note">Reads and decodes every audio file Specty analyses. It includes the FFmpeg libraries (libavcodec, libavformat, libavutil and others), also under the LGPL. The source is available from the link above.</string>
     <string name="lib_compose_summary">UI toolkit: UI, Graphics, Foundation, Material 3 and Material Icons Extended.</string>
     <string name="lib_compose_note">Draws the whole interface. The icons come from the Material Icons set.</string>
