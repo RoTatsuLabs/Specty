@@ -14,7 +14,6 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.background
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.runtime.LaunchedEffect
@@ -26,6 +25,7 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
@@ -179,10 +179,12 @@ fun ContainerTransform(
             } else {
                 alpha = p.coerceIn(0f, 1f)
             }
-        }.background(background),
+        }.drawBehind {
+            // Transparent while it is still row-sized, so the tapped row's text stays readable at both ends.
+            drawRect(background, alpha = (progress.value / 0.4f).coerceIn(0f, 1f))
+        },
     ) {
-        // The surface behind stays solid; only the content comes in as the container opens and goes as it closes.
-        Box(Modifier.graphicsLayer { alpha = (progress.value / 0.3f).coerceIn(0f, 1f) }) {
+        Box(Modifier.graphicsLayer { alpha = ((progress.value - 0.15f) / 0.3f).coerceIn(0f, 1f) }) {
             content()
         }
     }
