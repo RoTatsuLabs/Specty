@@ -17,7 +17,20 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.rotatsulabs.specty.ui.AppLanguage
 import com.rotatsulabs.specty.ui.MainViewModel
 import com.rotatsulabs.specty.ui.SpectyApp
+import android.os.Build
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import com.rotatsulabs.specty.ui.design.LocalThemeReveal
 import com.rotatsulabs.specty.ui.design.ThemeRevealAccent
 import com.rotatsulabs.specty.ui.design.ThemeRevealHost
@@ -63,17 +76,33 @@ class MainActivity : ComponentActivity() {
                 onDispose {}
             }
             val reveal = rememberThemeReveal()
-            CompositionLocalProvider(LocalThemeReveal provides reveal) {
+            // Android 12 and older switch language in place: re-provide a context whose resources follow it.
+            val revision = AppLanguage.revision
+            val base = LocalContext.current
+            val inPlace = Build.VERSION.SDK_INT < 33 && revision > 0
+            val localized = remember(revision, base) { if (inPlace) AppLanguage.localized(base) else base }
+            val config = if (inPlace) localized.resources.configuration else LocalConfiguration.current
+            LaunchedEffect(config.locales.toLanguageTags(), revision) { AppLanguage.lift() }
+            val shown by animateFloatAsState(if (AppLanguage.veil) 0f else 1f, tween(200), label = "languageVeil")
+            CompositionLocalProvider(
+                LocalContext provides localized,
+                LocalConfiguration provides config,
+                LocalThemeReveal provides reveal,
+            ) {
                 ThemeRevealHost(reveal) {
                     SpectyTheme(appearance) {
-                        ThemeRevealAccent(reveal)
-                        SpectyApp(
-                            viewModel = viewModel,
-                            onPickFile = { picker.launch(arrayOf("audio/*", "application/ogg")) },
-                            onPickFolder = { folderPicker.launch(null) },
-                            onPickExcluded = { excludePicker.launch(null) },
-                            onPickCompare = { comparePicker.launch(arrayOf("audio/*", "application/ogg")) },
-                        )
+                        Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.surface)) {
+                            Box(Modifier.fillMaxSize().graphicsLayer { alpha = shown }) {
+                                ThemeRevealAccent(reveal)
+                                SpectyApp(
+                                    viewModel = viewModel,
+                                    onPickFile = { picker.launch(arrayOf("audio/*", "application/ogg")) },
+                                    onPickFolder = { folderPicker.launch(null) },
+                                    onPickExcluded = { excludePicker.launch(null) },
+                                    onPickCompare = { comparePicker.launch(arrayOf("audio/*", "application/ogg")) },
+                                )
+                            }
+                        }
                     }
                 }
             }

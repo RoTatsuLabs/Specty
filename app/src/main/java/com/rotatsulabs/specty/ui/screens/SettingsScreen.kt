@@ -28,6 +28,7 @@ import androidx.compose.ui.unit.dp
 import com.rotatsulabs.specty.R
 import com.rotatsulabs.specty.audio.WindowFn
 import com.rotatsulabs.specty.ui.AppLanguage
+import kotlinx.coroutines.launch
 import com.rotatsulabs.specty.ui.components.Reveal
 import com.rotatsulabs.specty.ui.design.LocalThemeReveal
 import com.rotatsulabs.specty.ui.design.components.ButtonKind
@@ -132,11 +133,12 @@ fun SettingsScreen(
             Reveal(0) {
                 val context = LocalContext.current
                 var language by remember { mutableStateOf(AppLanguage.current(context)) }
+                val scope = androidx.compose.runtime.rememberCoroutineScope()
                 SettingGroup(stringResource(R.string.settings_language)) {
                     SettingBlock(stringResource(R.string.settings_app_language), supporting = stringResource(R.string.settings_language_desc), corners = groupCorners(0, 1)) {
                         OptionDropdown(
                             AppLanguage.Choice.entries, language,
-                            { language = it; AppLanguage.set(context, it) },
+                            { language = it; scope.launch { AppLanguage.change(context, it) } },
                             { stringResource(it.labelRes) },
                         )
                     }

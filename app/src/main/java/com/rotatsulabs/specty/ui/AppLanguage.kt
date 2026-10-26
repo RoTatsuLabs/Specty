@@ -1,6 +1,5 @@
 package com.rotatsulabs.specty.ui
 
-import android.app.Activity
 import android.app.LocaleManager
 import android.content.Context
 import android.content.ContextWrapper
@@ -9,7 +8,12 @@ import android.content.res.Resources
 import android.os.Build
 import android.os.LocaleList
 import androidx.annotation.StringRes
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import com.rotatsulabs.specty.R
+import kotlinx.coroutines.delay
 import java.util.Locale
 
 /**
@@ -28,6 +32,34 @@ object AppLanguage {
     private const val PREFS = "specty"
     private const val KEY = "language"
 
+    /** True while the screen is faded out to hide the switch; the activity lifts it once the new language is in. */
+    var veil by mutableStateOf(false)
+        private set
+
+    /** Bumped when Android 12 and older switch language without recreating the activity. */
+    var revision by mutableIntStateOf(0)
+        private set
+
+    fun lift() { veil = false }
+
+    /** Fades the screen out, switches to [choice], and leaves the lift to the activity. */
+    suspend fun change(context: Context, choice: Choice) {
+        if (choice == current(context)) return
+        veil = true
+        delay(220)
+        set(context, choice)
+        delay(1500)
+        veil = false
+    }
+
+    /** For Android 12 and older: [base] with resources in the saved language, still reaching the activity. */
+    fun localized(base: Context): Context {
+        val resources = wrap(base).resources
+        return object : ContextWrapper(base) {
+            override fun getResources(): Resources = resources
+        }
+    }
+
     fun current(context: Context): Choice {
         val tag = if (Build.VERSION.SDK_INT >= 33) {
             context.getSystemService(LocaleManager::class.java).applicationLocales.let { if (it.isEmpty) null else it[0].toLanguageTag() }
@@ -38,7 +70,7 @@ object AppLanguage {
         return Choice.entries.firstOrNull { it.tag != null && Locale.forLanguageTag(it.tag).language == language } ?: Choice.System
     }
 
-    /** Applies [choice]. The screen is rebuilt in the new language; Android 13+ does that itself. */
+    /** Applies [choice]. The activity handles the locale change itself, so nothing is rebuilt. */
     fun set(context: Context, choice: Choice) {
         if (Build.VERSION.SDK_INT >= 33) {
             context.getSystemService(LocaleManager::class.java).applicationLocales =
@@ -52,7 +84,7 @@ object AppLanguage {
         Locale.setDefault(locale)
         // Strings read through the application context (toasts, notifications) follow at once.
         updateResources(context.applicationContext.resources, locale)
-        context.findActivity()?.recreate()
+        revision++
     }
 
     /** For Android 12 and older: a context whose resources use the saved language. Other versions are left alone. */
@@ -72,14 +104,5 @@ object AppLanguage {
     private fun updateResources(resources: Resources, locale: Locale) {
         val config = Configuration(resources.configuration).apply { setLocale(locale) }
         resources.updateConfiguration(config, resources.displayMetrics)
-    }
-
-    private fun Context.findActivity(): Activity? {
-        var c: Context? = this
-        while (c is ContextWrapper) {
-            if (c is Activity) return c
-            c = c.baseContext
-        }
-        return null
     }
 }
