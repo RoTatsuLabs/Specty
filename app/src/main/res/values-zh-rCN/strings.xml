@@ -81,7 +81,7 @@
     <!-- Library credits -->
     <string name="lib_specty_summary">Android 音频质量分析工具。</string>
     <string name="lib_specty_note">Specty 是自由软件，遵循 GNU 通用公共许可证第 3 版。你可以依据这些条款使用、研究、修改和分享它。</string>
-    <string name="lib_ffmpeg_summary">适用于 Android 的 FFmpeg，是已停止维护的 Arthenica ffmpeg-kit 的延续。</string>
+    <string name="lib_ffmpeg_summary">通过 FFmpegKitNext 提供的适用于 Android 的 FFmpeg，是 Arthenica 的 ffmpeg-kit 的延续。</string>
     <string name="lib_ffmpeg_note">读取并解码 Specty 分析的每一个音频文件。其中包含 FFmpeg 库（libavcodec、libavformat、libavutil 等），同样遵循 LGPL。源代码可通过上方链接获取。</string>
     <string name="lib_compose_summary">UI 工具包：UI、Graphics、Foundation、Material 3 和 Material Icons Extended。</string>
     <string name="lib_compose_note">绘制整个界面。图标来自 Material Icons 图标集。</string>

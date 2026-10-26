@@ -7,9 +7,9 @@ Persistent guidance for coding agents working on Specty. Keep it short and curre
 Specty is an Android audio quality analyzer: spectrogram, loudness and dynamics, codec facts, and an authenticity check for lossy or upsampled "lossless" files. Everything runs on the device.
 
 - Package `com.rotatsulabs.specty`, GPL-3.0, Kotlin with Jetpack Compose and Material 3.
-- minSdk 26, targetSdk and compileSdk 36, ABIs `arm64-v8a` and `x86_64`.
+- minSdk 26, targetSdk and compileSdk 36, ABIs `arm64-v8a`, `armeabi-v7a` and `x86_64`.
 - Single module `:app`. Versions live in `gradle/libs.versions.toml`.
-- Decoding uses FFmpeg through `dev.ffmpegkit-maintained:ffmpeg-kit-min`. Formats FFmpeg cannot decode (AC-4) go through the device's `MediaCodec`.
+- Decoding uses FFmpeg through `com.rotatsulabs.forge:ffmpeg-kit-next` (built by Forge, read from GitHub Packages with `FORGE_PACKAGES_USER`/`FORGE_PACKAGES_TOKEN` or `forge.user`/`forge.token`). Formats FFmpeg cannot decode (AC-4) go through the device's `MediaCodec`.
 - No internet permission and no storage permission. The library is built from folders the user picks with the system folder picker.
 
 ## Build and test

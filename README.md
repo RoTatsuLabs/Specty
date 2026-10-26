@@ -82,8 +82,9 @@ Download an APK from the [latest release](https://github.com/RoTatsuLabs/Specty/
 | File | Use it on |
 | --- | --- |
 | `Specty_<version>_arm64-v8a.apk` | Most phones and tablets |
+| `Specty_<version>_armeabi-v7a.apk` | Older 32-bit ARM phones |
 | `Specty_<version>_x86_64.apk` | x86 devices and emulators |
-| `Specty_<version>_universal.apk` | Either of the above, at a larger size |
+| `Specty_<version>_universal.apk` | Any of the above, at a larger size |
 
 Android may ask you to allow installs from your browser or file manager. After the first launch, open the library menu, choose Library folders, and pick where your music lives. There is no in-app updater, so install a newer APK over the old one to update.
 
@@ -100,7 +101,7 @@ gradle :app:testDebugUnitTest   # unit tests
 gradle :app:assembleDebug       # debug APK in app/build/outputs/apk/debug/
 ```
 
-The app is Kotlin with Jetpack Compose and targets Android 8.0 (API 26) and up on `arm64-v8a` and `x86_64`. Audio is decoded with FFmpeg through [ffmpeg-kit](https://github.com/ffmpegkit-maintained/ffmpeg), a maintained continuation of the retired [arthenica/ffmpeg-kit](https://github.com/arthenica/ffmpeg-kit), and with the device's `MediaCodec` for formats FFmpeg cannot decode. GitHub Actions runs lint, the unit tests and a debug build on every push to `main` and on pull requests.
+The app is Kotlin with Jetpack Compose and targets Android 8.0 (API 26) and up on `arm64-v8a`, `armeabi-v7a` and `x86_64`. Audio is decoded with FFmpeg through [FFmpegKitNext](https://github.com/arthenica/ffmpeg-kit-next), the continuation of [arthenica/ffmpeg-kit](https://github.com/arthenica/ffmpeg-kit) that RoTatsu Labs builds in [Forge](https://github.com/RoTatsuLabs/Forge), and with the device's `MediaCodec` for formats FFmpeg cannot decode. GitHub Actions runs lint, the unit tests and a debug build on every push to `main` and on pull requests.
 
 ## Contributing
 
@@ -118,4 +119,4 @@ Issues and pull requests are welcome. Run the unit tests before you send a chang
 
 ## License
 
-Specty is free software released under the [GNU General Public License v3.0](LICENSE). The About page in the app lists every bundled library with its licence and the full texts. FFmpeg reaches Specty through the ffmpeg-kit fork, which is LGPL v3.0.
+Specty is free software released under the [GNU General Public License v3.0](LICENSE). The About page in the app lists every bundled library with its licence and the full texts. FFmpeg reaches Specty through FFmpegKitNext, which is LGPL v3.0.
