@@ -70,6 +70,14 @@ object ReportFacts {
         )
     }
 
+    /** The three headline measurements. */
+    fun keyLevels(levels: LevelStats): List<Metric> = metrics(levels).take(KEY_LEVELS)
+
+    /** Every measurement after the headline ones. */
+    fun moreMeasurements(levels: LevelStats): List<Metric> = metrics(levels).drop(KEY_LEVELS)
+
+    private const val KEY_LEVELS = 3
+
     /** A file name that keeps the title readable (any script) and drops what file systems refuse. */
     fun fileName(title: String, stamp: String): String {
         val cleaned = title

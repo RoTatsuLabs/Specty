@@ -67,7 +67,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
+import com.rotatsulabs.specty.ui.design.AdaptiveMath
+import com.rotatsulabs.specty.ui.design.rememberWidthDp
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
@@ -292,8 +295,10 @@ fun LibraryScreen(
                 onDismiss = { showFilter = false },
             )
         }
+        val widthDp = rememberWidthDp()
+        val columns = AdaptiveMath.columns(widthDp)
         LazyColumn(
-            Modifier.fillMaxSize(),
+            Modifier.fillMaxSize().widthIn(max = (if (layout.grid) AdaptiveMath.LIBRARY_MAX else 760).dp).align(Alignment.TopCenter),
             state = listState,
             contentPadding = WindowInsets.statusBars.asPaddingValues(),
         ) {
@@ -393,19 +398,19 @@ fun LibraryScreen(
                         }
                     }
                     if (layout.grid) {
-                        itemsIndexed(group.items.chunked(2), key = { _, pair -> "g" + pair.first().uri.toString() }) { rowIndex, pair ->
+                        itemsIndexed(group.items.chunked(columns), key = { _, pair -> "g" + pair.first().uri.toString() }) { rowIndex, pair ->
                             Row(
                                 Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp).animateItem(placementSpec = Motion.spatial()),
                                 horizontalArrangement = Arrangement.spacedBy(14.dp),
                             ) {
                                 pair.forEachIndexed { i, track ->
                                     TrackTile(
-                                        track, rowIndex * 2 + i, verdictByTrack[track.uri.toString()], { b, c -> onOpen(track, b, c) },
+                                        track, rowIndex * columns + i, verdictByTrack[track.uri.toString()], { b, c -> onOpen(track, b, c) },
                                         Modifier.weight(1f), flight,
                                         selected = track.uri.toString() in pickedIds, selecting = selecting, onToggle = { togglePick(track) },
                                     )
                                 }
-                                if (pair.size == 1) Spacer(Modifier.weight(1f))
+                                repeat(columns - pair.size) { Spacer(Modifier.weight(1f)) }
                             }
                         }
                     } else {

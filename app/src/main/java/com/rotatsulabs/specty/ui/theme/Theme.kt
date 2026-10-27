@@ -1,5 +1,6 @@
 package com.rotatsulabs.specty.ui.theme
 
+import android.content.Context
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.ColorScheme
@@ -38,6 +39,16 @@ private fun ColorScheme.asPureBlack(): ColorScheme = copy(
 /** Wallpaper-derived colour needs Android 12. */
 val DYNAMIC_COLOR_SUPPORTED: Boolean = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
 
+/** The app's colours for a given brightness, so other surfaces (the exported image) can use a look the screen is not in. */
+fun colorSchemeFor(context: Context, appearance: Appearance, dark: Boolean, pureBlack: Boolean): ColorScheme {
+    val base = if (appearance.dynamicColor && DYNAMIC_COLOR_SUPPORTED) {
+        if (dark) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
+    } else {
+        SeedScheme(appearance.seed).roles(dark).toColorScheme(dark)
+    }
+    return if (dark && pureBlack) base.asPureBlack() else base
+}
+
 /** Material 3 with optional wallpaper-derived dynamic colour (Android 12 and newer). */
 @Composable
 fun SpectyTheme(appearance: Appearance, content: @Composable () -> Unit) {
@@ -45,12 +56,7 @@ fun SpectyTheme(appearance: Appearance, content: @Composable () -> Unit) {
     val dark = isDarkFor(appearance)
     // The tonal maths is not free, so derive the scheme only when one of its inputs changes.
     val scheme = remember(appearance.dynamicColor, appearance.seed, appearance.pureBlack, dark) {
-        val base = if (appearance.dynamicColor && DYNAMIC_COLOR_SUPPORTED) {
-            if (dark) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
-        } else {
-            SeedScheme(appearance.seed).roles(dark).toColorScheme(dark)
-        }
-        if (dark && appearance.pureBlack) base.asPureBlack() else base
+        colorSchemeFor(context, appearance, dark, appearance.pureBlack)
     }
     MaterialTheme(colorScheme = scheme, typography = SpectyTypography, shapes = SpectyMaterialShapes, content = content)
 }

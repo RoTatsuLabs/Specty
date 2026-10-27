@@ -113,7 +113,7 @@ class TonalPalette(val hue: Double, val chroma: Double) {
 }
 
 /** Seed colours offered in settings. [hue] is the OKLCH hue in degrees. */
-enum class SeedPalette(@StringRes val labelRes: Int, val hue: Double, val chroma: Double = 0.15) {
+enum class SeedPalette(@param:StringRes val labelRes: Int, val hue: Double, val chroma: Double = 0.15) {
     Violet(R.string.palette_violet, 295.0),
     Azure(R.string.palette_azure, 250.0),
     Teal(R.string.palette_teal, 190.0, 0.12),

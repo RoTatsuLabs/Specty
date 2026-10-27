@@ -5,7 +5,7 @@ import androidx.annotation.StringRes
 import com.rotatsulabs.specty.R
 
 /** Level window mapped onto the colour ramp. A tighter window brings out faint detail. */
-enum class DbRange(@StringRes val labelRes: Int, val floor: Int, val ceil: Int) {
+enum class DbRange(@param:StringRes val labelRes: Int, val floor: Int, val ceil: Int) {
     Wide(R.string.range_wide, -120, 0),
     Standard(R.string.range_standard, -100, -10),
     Tight(R.string.range_tight, -80, -20),

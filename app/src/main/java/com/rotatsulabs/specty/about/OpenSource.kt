@@ -16,9 +16,9 @@ data class Library(
     val version: String?,
     val license: LicenseKind,
     val url: String,
-    @StringRes val summary: Int,
+    @param:StringRes val summary: Int,
     /** What Specty uses it for, or a licence-specific note. */
-    @StringRes val note: Int? = null,
+    @param:StringRes val note: Int? = null,
 )
 
 /**

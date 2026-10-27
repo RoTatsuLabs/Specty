@@ -77,7 +77,7 @@ fun ExpressiveButton(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             if (icon != null) Icon(icon, null, Modifier.size(20.dp))
-            Text(text, style = MaterialTheme.typography.labelLarge)
+            Text(text, style = MaterialTheme.typography.labelLarge, maxLines = 1, softWrap = false)
         }
     }
 }

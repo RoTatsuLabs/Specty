@@ -88,4 +88,12 @@ class ReportFactsTest {
         val name = ReportFacts.fileName("a".repeat(200), "x")
         assertEquals(60 + "-report-x.png".length, name.length)
     }
+
+    @Test
+    fun keyLevelsAndTheRestCoverEveryMeasurementOnce() {
+        val l = levels(dr = 8.0, corr = 0.5)
+        val all = ReportFacts.metrics(l)
+        assertEquals(all, ReportFacts.keyLevels(l) + ReportFacts.moreMeasurements(l))
+        assertTrue(ReportFacts.keyLevels(l).size <= 3)
+    }
 }
