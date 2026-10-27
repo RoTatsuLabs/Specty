@@ -48,6 +48,7 @@ class ReportInput internal constructor(
     internal val shot: Bitmap,
     internal val crop: android.graphics.Rect,
     internal val caption: String,
+    internal val cover: Bitmap? = null,
 )
 
 /**
@@ -96,7 +97,8 @@ object ReportExporter {
     }
 
     /** Renders the spectrogram once. The result is reused for every [render] of the same analysis. */
-    fun prepare(context: Context, result: AnalysisResult): ReportInput {
+    suspend fun prepare(context: Context, result: AnalysisResult): ReportInput {
+        val cover = com.rotatsulabs.specty.data.CoverArt.load(context, result.uri, 512)
         val prefs = context.getSharedPreferences("specty", Context.MODE_PRIVATE)
         val palette = SpectrogramPalette.entries[prefs.getInt("spectrogram_palette", 0).coerceIn(0, SpectrogramPalette.entries.lastIndex)]
         val options = SpecOptions.load(prefs)
@@ -104,7 +106,7 @@ object ReportExporter {
         val shot = SpectrogramExporter.render(spec, 0, palette, result.info.title, options, result.authenticity.cutoffHz)
         val caption = "${spec.displayLabels[0]}  ·  ${Fmt.kHz(spec.sampleRate.toDouble())}  ·  FFT ${spec.fftSize}  ·  ${Fmt.duration(spec.durationSec)}  ·  ${palette.label}" +
             if (options.log) "  ·  log scale" else ""
-        return ReportInput(shot, SpectrogramExporter.plotCrop(), caption)
+        return ReportInput(shot, SpectrogramExporter.plotCrop(), caption, cover)
     }
 
     fun render(input: ReportInput, result: AnalysisResult, theme: ReportTheme, options: ReportOptions): Bitmap {
@@ -173,7 +175,7 @@ object ReportExporter {
     }
 
     private fun build(slot: Slot, k: Ink, w: Float, input: ReportInput, result: AnalysisResult, options: ReportOptions): Laid? = when (slot) {
-        Slot.Title -> title(k, w, result)
+        Slot.Title -> title(k, w, result, input.cover.takeIf { options.has(ReportSection.Cover) })
         Slot.Details -> details(k, w, result)
         Slot.Verdict -> verdict(k, w, result)
         Slot.Metrics -> metrics(k, w, result, options.has(ReportSection.KeyLevels), options.has(ReportSection.Measurements))
@@ -181,16 +183,29 @@ object ReportExporter {
         Slot.Spectrogram -> spectrogram(k, w, input)
     }
 
-    private fun title(k: Ink, w: Float, result: AnalysisResult): Laid {
+    private fun title(k: Ink, w: Float, result: AnalysisResult, cover: Bitmap?): Laid {
         val name = result.info.title
+        val art = if (cover != null) k.dp(76f) else 0f
+        val gap = if (cover != null) k.dp(14f) else 0f
+        val textW = w - art - gap
         val titlePaint = k.text(30f, k.theme.onSurface, 800, -0.015f)
-        val title = StaticLayout.Builder.obtain(name, 0, name.length, titlePaint, w.toInt())
+        val title = StaticLayout.Builder.obtain(name, 0, name.length, titlePaint, textW.toInt())
             .setMaxLines(2).setEllipsize(TextUtils.TruncateAt.END).setLineSpacing(0f, 1.05f).build()
         val datePaint = k.text(14f, k.theme.onMuted, 600, 0.005f)
         val dateText = "Analysed " + DateFormat.getDateInstance(DateFormat.LONG).format(Date())
-        return Laid(title.height + k.dp(4f) + k.dp(19f)) { c, x, y ->
-            c.save(); c.translate(x, y); title.draw(c); c.restore()
-            c.drawText(dateText, x, y + title.height + k.dp(4f) + k.dp(15f), datePaint)
+        val textH = title.height + k.dp(4f) + k.dp(19f)
+        return Laid(maxOf(textH, art)) { c, x, y ->
+            val tx = x + art + gap
+            val ty = y + (maxOf(textH, art) - textH) / 2f
+            if (cover != null) {
+                val r = RectF(x, y, x + art, y + art)
+                c.save()
+                c.clipPath(Path().apply { addRoundRect(r, k.dp(16f), k.dp(16f), Path.Direction.CW) })
+                c.drawBitmap(cover, null, r, Paint(Paint.FILTER_BITMAP_FLAG))
+                c.restore()
+            }
+            c.save(); c.translate(tx, ty); title.draw(c); c.restore()
+            c.drawText(dateText, tx, ty + title.height + k.dp(4f) + k.dp(15f), datePaint)
         }
     }
 

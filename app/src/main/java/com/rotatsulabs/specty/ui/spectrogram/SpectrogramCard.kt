@@ -104,6 +104,7 @@ fun SpectrogramCard(
     onFullscreen: ((view: Int) -> Unit)? = null,
     cutoffHz: Double? = null,
     playback: Playback? = null,
+    coverUri: android.net.Uri? = null,
 ) {
     var selected by rememberSaveable { mutableIntStateOf(0) }
     if (selected >= spectrogram.views.size) selected = 0
@@ -122,8 +123,9 @@ fun SpectrogramCard(
         val view = selected
         val chosen = palette
         scope.launch {
+            val cover = coverUri?.let { com.rotatsulabs.specty.data.CoverArt.load(context, it, 512) }
             val uri = withContext(Dispatchers.Default) {
-                val bmp = SpectrogramExporter.render(spectrogram, view, chosen, title, options, cutoffHz)
+                val bmp = SpectrogramExporter.render(spectrogram, view, chosen, title, options, cutoffHz, cover)
                 try {
                     SpectrogramExporter.saveToGallery(context, bmp, "$title ${spectrogram.displayLabels[view]}")
                 } finally {

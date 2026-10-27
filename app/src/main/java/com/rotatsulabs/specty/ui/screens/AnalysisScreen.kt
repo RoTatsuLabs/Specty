@@ -255,6 +255,7 @@ private fun ResultContent(result: AnalysisResult, onFullscreen: (Int) -> Unit, f
                 onFullscreen = onFullscreen,
                 cutoffHz = result.authenticity.cutoffHz,
                 playback = rememberPlayback(result.uri),
+                coverUri = result.uri,
             ) }
         Spacer(Modifier.height(12.dp))
     }

@@ -31,6 +31,7 @@ import androidx.compose.material.icons.rounded.CropPortrait
 import androidx.compose.material.icons.rounded.CropSquare
 import androidx.compose.material.icons.rounded.Download
 import androidx.compose.material.icons.rounded.GraphicEq
+import androidx.compose.material.icons.rounded.Image
 import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material.icons.rounded.IosShare
 import androidx.compose.material.icons.rounded.Speed
@@ -309,6 +310,7 @@ private class SectionRow(val section: ReportSection, val title: Int, val support
 @Composable
 private fun sectionRows(): List<SectionRow> = remember {
     listOf(
+        SectionRow(ReportSection.Cover, R.string.report_section_cover, R.string.report_section_cover_desc, Icons.Rounded.Image),
         SectionRow(ReportSection.Details, R.string.report_section_details, R.string.report_section_details_desc, Icons.Rounded.Info),
         SectionRow(ReportSection.Verdict, R.string.report_section_verdict, R.string.report_section_verdict_desc, Icons.Rounded.Verified),
         SectionRow(ReportSection.KeyLevels, R.string.report_section_levels, R.string.report_section_levels_desc, Icons.Rounded.Speed),

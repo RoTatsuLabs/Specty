@@ -491,4 +491,6 @@
     <string name="report_section_footer_desc">Nama dan versi Specty</string>
     <string name="report_save">Simpan</string>
     <string name="report_share">Bagikan</string>
+    <string name="report_section_cover">Sampul</string>
+    <string name="report_section_cover_desc">Sampul lagu di samping judul</string>
 </resources>

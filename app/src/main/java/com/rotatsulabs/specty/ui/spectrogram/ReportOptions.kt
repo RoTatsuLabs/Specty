@@ -8,7 +8,7 @@ enum class ReportAspect(val width: Int, val height: Int, val label: String) {
 }
 
 /** The blocks of the report that can be switched off. The title and date are always drawn. */
-enum class ReportSection { Details, Verdict, KeyLevels, Measurements, Loudness, Spectrogram, Footer }
+enum class ReportSection { Details, Verdict, KeyLevels, Measurements, Loudness, Spectrogram, Footer, Cover }
 
 /** What the exported image shows and how it is shaped. Kept as two ints, so it fits in preferences. */
 data class ReportOptions(

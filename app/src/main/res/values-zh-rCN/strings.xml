@@ -491,4 +491,6 @@
     <string name="report_section_footer_desc">Specty 名称和版本</string>
     <string name="report_save">保存</string>
     <string name="report_share">分享</string>
+    <string name="report_section_cover">封面</string>
+    <string name="report_section_cover_desc">标题旁的歌曲封面</string>
 </resources>

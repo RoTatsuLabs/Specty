@@ -506,4 +506,6 @@
     <string name="report_section_footer_desc">Specty name and version</string>
     <string name="report_save">Save</string>
     <string name="report_share">Share</string>
+    <string name="report_section_cover">Cover art</string>
+    <string name="report_section_cover_desc">The song\'s cover next to the title</string>
 </resources>
