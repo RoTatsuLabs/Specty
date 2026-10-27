@@ -73,6 +73,7 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit, onPickFolder: ()
     var showAbout by rememberSaveable { mutableStateOf(false) }
     var showLog by rememberSaveable { mutableStateOf(false) }
     var showFolders by rememberSaveable { mutableStateOf(false) }
+    var showExport by rememberSaveable { mutableStateOf(false) }
     var viewerView by rememberSaveable { mutableStateOf<Int?>(null) }
     // Hashing every track is not free, so remember each key for as long as the settings it depends on stay put.
     val keyFor = remember(fftSize, windowFn) {
@@ -106,11 +107,13 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit, onPickFolder: ()
     val viewerBack = remember { BackGesture() }
     val logBack = remember { BackGesture() }
     val foldersBack = remember { BackGesture() }
+    val exportBack = remember { BackGesture() }
     PredictiveBack(analysisBack, enabled = analysisOpen) { viewModel.closeAnalysis() }
     PredictiveBack(settingsBack, enabled = showSettings) { showSettings = false }
     PredictiveBack(aboutBack, enabled = showAbout) { showAbout = false }
     PredictiveBack(logBack, enabled = showLog) { showLog = false }
     PredictiveBack(foldersBack, enabled = showFolders) { showFolders = false }
+    PredictiveBack(exportBack, enabled = showExport) { showExport = false }
     PredictiveBack(compareBack, enabled = compare !is CompareState.Idle) { viewModel.closeCompare() }
     PredictiveBack(viewerBack, enabled = viewerView != null) { viewerView = null }
 
@@ -169,7 +172,7 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit, onPickFolder: ()
         ) {
             Surface(Modifier.fillMaxSize(), color = androidx.compose.ui.graphics.Color.Transparent, contentColor = MaterialTheme.colorScheme.onSurface) {
                 Box(Modifier.navigationBarsPadding()) {
-                    AnalysisScreen(held.state, onBack = viewModel::closeAnalysis, onReanalyse = viewModel::reanalyze, onFullscreen = { viewerView = it }, onCompare = onPickCompare, flight = flight)
+                    AnalysisScreen(held.state, onBack = viewModel::closeAnalysis, onReanalyse = viewModel::reanalyze, onFullscreen = { viewerView = it }, onCompare = onPickCompare, onExport = { showExport = true }, flight = flight)
                 }
             }
         }
@@ -211,6 +214,14 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit, onPickFolder: ()
                     onRemoveExcluded = viewModel::includeFolder,
                     onBack = { showFolders = false },
                 )
+            }
+        }
+
+        OverlayScreen(visible = showExport, gesture = exportBack, depth = depth, id = "export", backdrop = MaterialTheme.colorScheme.surface) {
+            Surface(Modifier.fillMaxSize(), color = androidx.compose.ui.graphics.Color.Transparent, contentColor = MaterialTheme.colorScheme.onSurface) {
+                (held.state as? AnalysisState.Done)?.result?.let { result ->
+                    com.rotatsulabs.specty.ui.screens.ExportScreen(result = result, onBack = { showExport = false })
+                }
             }
         }
 

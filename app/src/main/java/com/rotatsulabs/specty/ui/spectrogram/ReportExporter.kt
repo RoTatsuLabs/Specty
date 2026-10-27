@@ -6,7 +6,6 @@ import android.graphics.Canvas
 import android.graphics.DashPathEffect
 import android.graphics.Paint
 import android.graphics.Path
-import android.graphics.Picture
 import android.graphics.RectF
 import android.graphics.Typeface
 import android.os.Build
@@ -44,16 +43,20 @@ class ReportTheme(
     }
 }
 
+/** The spectrogram picture and its caption, drawn once so changing the options re-lays the report out quickly. */
+class ReportInput internal constructor(
+    internal val shot: Bitmap,
+    internal val crop: android.graphics.Rect,
+    internal val caption: String,
+)
+
 /**
- * Draws the whole analysis result as one portrait image in the app's own Material 3 Expressive language: tonal
- * containers, the large asymmetric corners, segmented tiles and solid tags. Everything is recorded first and the
- * bitmap is cut to the measured height, so nothing can be clipped at the bottom.
+ * Draws the analysis result as one image in the app's own Material 3 Expressive language: tonal containers, the large
+ * asymmetric corners, segmented tiles and solid tags. The canvas has a fixed shape ([ReportAspect]); the content is
+ * scaled until the chosen sections fit it, so nothing is clipped, and each shape has its own arrangement: a single
+ * column for 9:16 and 1:1, two columns for 16:9.
  */
 object ReportExporter {
-    private const val W = 1440
-    private const val DP = W / 411f
-    private fun dp(v: Float) = v * DP
-
     // The app's corner vocabulary (SpectyShapes), clockwise from top-left.
     private val hero = floatArrayOf(56f, 56f, 56f, 20f)
     private val card = floatArrayOf(36f, 36f, 36f, 14f)
@@ -61,19 +64,17 @@ object ReportExporter {
     private val tileStart = floatArrayOf(32f, 10f, 10f, 32f)
     private val tileMiddle = floatArrayOf(10f, 10f, 10f, 10f)
     private val tileEnd = floatArrayOf(10f, 32f, 32f, 10f)
+    private val tileSingle = floatArrayOf(32f, 32f, 32f, 32f)
 
-    fun render(context: Context, result: AnalysisResult, theme: ReportTheme): Bitmap {
-        val prefs = context.getSharedPreferences("specty", Context.MODE_PRIVATE)
-        val palette = SpectrogramPalette.entries[prefs.getInt("spectrogram_palette", 0).coerceIn(0, SpectrogramPalette.entries.lastIndex)]
-        val options = SpecOptions.load(prefs)
-        val info = result.info
-        val report = result.authenticity
-        val spec = result.spectrogram
-        val quality = ReportFacts.quality(info, report.verdict)
-        val metrics = ReportFacts.metrics(result.levels)
+    /** The measurable blocks, in reading order. */
+    private enum class Slot { Title, Details, Verdict, Metrics, Loudness, Spectrogram }
 
-        val shot = SpectrogramExporter.render(spec, 0, palette, info.title, options, report.cutoffHz)
-        val crop = SpectrogramExporter.plotCrop()
+    /** A block that has been measured: how tall it is, and how to draw it at a given left and top. */
+    private class Laid(val height: Float, val draw: (Canvas, Float, Float) -> Unit)
+
+    /** Everything that depends on the scale: dp to pixels, and the paints in the theme's colours. */
+    private class Ink(val u: Float, val theme: ReportTheme) {
+        fun dp(v: Float) = v * u
 
         fun weight(w: Int): Typeface = when {
             Build.VERSION.SDK_INT >= Build.VERSION_CODES.P -> Typeface.create(Typeface.DEFAULT, w, false)
@@ -81,112 +82,234 @@ object ReportExporter {
             w >= 500 -> Typeface.create("sans-serif-medium", Typeface.NORMAL)
             else -> Typeface.DEFAULT
         }
+
         fun text(sp: Float, color: Int, w: Int = 400, tracking: Float = 0f) = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
             this.color = color; textSize = dp(sp); typeface = weight(w); letterSpacing = tracking
         }
+
         fun fill(color: Int) = Paint(Paint.ANTI_ALIAS_FLAG).apply { this.color = color }
+
         fun shape(c: Canvas, r: RectF, radii: FloatArray, paint: Paint) {
             val px = FloatArray(8) { dp(radii[it / 2]) }
             c.drawPath(Path().apply { addRoundRect(r, px, Path.Direction.CW) }, paint)
         }
+    }
 
-        val pad = dp(20f)
-        val inner = W - 2 * pad
-        val picture = Picture()
-        val c = picture.beginRecording(W, 12_000)
-        c.drawColor(theme.surface)
-        var y = dp(28f)
+    /** Renders the spectrogram once. The result is reused for every [render] of the same analysis. */
+    fun prepare(context: Context, result: AnalysisResult): ReportInput {
+        val prefs = context.getSharedPreferences("specty", Context.MODE_PRIVATE)
+        val palette = SpectrogramPalette.entries[prefs.getInt("spectrogram_palette", 0).coerceIn(0, SpectrogramPalette.entries.lastIndex)]
+        val options = SpecOptions.load(prefs)
+        val spec = result.spectrogram
+        val shot = SpectrogramExporter.render(spec, 0, palette, result.info.title, options, result.authenticity.cutoffHz)
+        val caption = "${spec.displayLabels[0]}  ·  ${Fmt.kHz(spec.sampleRate.toDouble())}  ·  FFT ${spec.fftSize}  ·  ${Fmt.duration(spec.durationSec)}  ·  ${palette.label}" +
+            if (options.log) "  ·  log scale" else ""
+        return ReportInput(shot, SpectrogramExporter.plotCrop(), caption)
+    }
 
-        // Title and date
-        val titlePaint = text(30f, theme.onSurface, 800, -0.015f)
-        val title = StaticLayout.Builder.obtain(info.title, 0, info.title.length, titlePaint, inner.toInt())
-            .setMaxLines(2).setEllipsize(TextUtils.TruncateAt.END).setLineSpacing(0f, 1.05f).build()
-        c.save(); c.translate(pad, y); title.draw(c); c.restore()
-        y += title.height + dp(4f)
-        val dateText = "Analysed " + DateFormat.getDateInstance(DateFormat.LONG).format(Date())
-        c.drawText(dateText, pad, y + dp(15f), text(14f, theme.onMuted, 600, 0.005f))
-        y += dp(15f) + dp(18f)
+    fun render(input: ReportInput, result: AnalysisResult, theme: ReportTheme, options: ReportOptions): Bitmap {
+        val aspect = options.aspect
+        val width = aspect.width
+        val height = aspect.height
+        val base = width / 411f
+        val wide = aspect == ReportAspect.Landscape
 
-        // File facts: the quality tag first, in the same solid colours the library uses
-        val chipText = text(13f, theme.onSurface, 600, 0.004f)
-        val tagText = text(13f, theme.onTag, 700, 0.004f)
-        val chipH = dp(34f)
-        val chipGap = dp(8f)
-        var x = pad
-        fun chip(label: String, bg: Int, paint: TextPaint) {
-            val w = paint.measureText(label) + dp(28f)
-            if (x + w > W - pad && x > pad) { x = pad; y += chipH + chipGap }
-            c.drawRoundRect(RectF(x, y, x + w, y + chipH), chipH / 2, chipH / 2, fill(bg))
-            c.drawText(label, x + dp(14f), y + chipH / 2 - (paint.ascent() + paint.descent()) / 2, paint)
-            x += w + chipGap
+        fun slots(pane: Int): List<Slot> {
+            val column = buildList {
+                add(Slot.Title)
+                if (options.has(ReportSection.Details)) add(Slot.Details)
+                if (options.has(ReportSection.Verdict)) add(Slot.Verdict)
+                if (options.has(ReportSection.KeyLevels) || options.has(ReportSection.Measurements)) add(Slot.Metrics)
+                if (options.has(ReportSection.Loudness)) add(Slot.Loudness)
+                if (options.has(ReportSection.Spectrogram)) add(Slot.Spectrogram)
+            }
+            if (!wide) return column
+            val right = column.filter { it == Slot.Loudness || it == Slot.Spectrogram }
+            return if (pane == 0) column - right.toSet() else right
         }
-        quality?.let { chip(it.label, theme.tag, tagText) }
-        ReportFacts.chips(info).forEach { chip(it, theme.card, chipText) }
-        y += chipH + dp(20f)
 
-        // Verdict
-        val headPaint = text(22f, theme.onVerdict, 700)
-        val notePaint = text(15f, theme.onVerdict, 400)
-        notePaint.alpha = 215
-        val padCard = dp(24f)
+        class Pane(val x: Float, val width: Float, val slots: List<Slot>)
+
+        fun panes(k: Ink): List<Pane> {
+            val pad = k.dp(20f)
+            if (!wide) return listOf(Pane(pad, width - 2 * pad, slots(0)))
+            val right = slots(1)
+            if (right.isEmpty()) return listOf(Pane(pad, width - 2 * pad, slots(0)))
+            val leftWidth = (width - 3 * pad) * 0.4f
+            return listOf(Pane(pad, leftWidth, slots(0)), Pane(pad * 2 + leftWidth, width - 3 * pad - leftWidth, right))
+        }
+
+        val footerOn = options.has(ReportSection.Footer)
+        fun gap(k: Ink) = k.dp(14f)
+        fun top(k: Ink) = k.dp(28f)
+        fun bottom(k: Ink) = k.dp(20f) + if (footerOn) k.dp(34f) else 0f
+        fun laid(k: Ink, pane: Pane) = pane.slots.mapNotNull { build(it, k, pane.width, input, result, options) }
+        fun stackHeight(blocks: List<Laid>, k: Ink) = blocks.sumOf { it.height.toDouble() }.toFloat() + gap(k) * (blocks.size - 1).coerceAtLeast(0)
+
+        val scale = ReportFit.scale(height.toFloat()) { s ->
+            val k = Ink(base * s, theme)
+            top(k) + bottom(k) + panes(k).maxOf { stackHeight(laid(k, it), k) }
+        }
+        val k = Ink(base * scale, theme)
+
+        val out = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+        val c = Canvas(out)
+        c.drawColor(theme.surface)
+        val room = height - top(k) - bottom(k)
+        for (pane in panes(k)) {
+            val blocks = laid(k, pane)
+            val extra = ReportFit.extraGap(room - stackHeight(blocks, k), blocks.size, k.dp(26f))
+            var y = top(k)
+            for (b in blocks) {
+                b.draw(c, pane.x, y)
+                y += b.height + gap(k) + extra
+            }
+        }
+        if (footerOn) {
+            val foot = k.text(12f, theme.onMuted, 600, 0.02f).apply { textAlign = Paint.Align.CENTER }
+            c.drawText("Specty ${BuildConfig.VERSION_NAME}  ·  analysed on this device", width / 2f, height - k.dp(20f), foot)
+        }
+        return out
+    }
+
+    private fun build(slot: Slot, k: Ink, w: Float, input: ReportInput, result: AnalysisResult, options: ReportOptions): Laid? = when (slot) {
+        Slot.Title -> title(k, w, result)
+        Slot.Details -> details(k, w, result)
+        Slot.Verdict -> verdict(k, w, result)
+        Slot.Metrics -> metrics(k, w, result, options.has(ReportSection.KeyLevels), options.has(ReportSection.Measurements))
+        Slot.Loudness -> loudness(k, w, result)
+        Slot.Spectrogram -> spectrogram(k, w, input)
+    }
+
+    private fun title(k: Ink, w: Float, result: AnalysisResult): Laid {
+        val name = result.info.title
+        val titlePaint = k.text(30f, k.theme.onSurface, 800, -0.015f)
+        val title = StaticLayout.Builder.obtain(name, 0, name.length, titlePaint, w.toInt())
+            .setMaxLines(2).setEllipsize(TextUtils.TruncateAt.END).setLineSpacing(0f, 1.05f).build()
+        val datePaint = k.text(14f, k.theme.onMuted, 600, 0.005f)
+        val dateText = "Analysed " + DateFormat.getDateInstance(DateFormat.LONG).format(Date())
+        return Laid(title.height + k.dp(4f) + k.dp(19f)) { c, x, y ->
+            c.save(); c.translate(x, y); title.draw(c); c.restore()
+            c.drawText(dateText, x, y + title.height + k.dp(4f) + k.dp(15f), datePaint)
+        }
+    }
+
+    /** File facts: the quality tag first, in the same solid colours the library uses. */
+    private fun details(k: Ink, w: Float, result: AnalysisResult): Laid {
+        val chipText = k.text(13f, k.theme.onSurface, 600, 0.004f)
+        val tagText = k.text(13f, k.theme.onTag, 700, 0.004f)
+        val chipH = k.dp(34f)
+        val chipGap = k.dp(8f)
+        class Chip(val label: String, val bg: Int, val paint: TextPaint, val x: Float, val y: Float, val w: Float)
+        val chips = ArrayList<Chip>()
+        var x = 0f
+        var y = 0f
+        fun add(label: String, bg: Int, paint: TextPaint) {
+            val cw = paint.measureText(label) + k.dp(28f)
+            if (x + cw > w && x > 0f) { x = 0f; y += chipH + chipGap }
+            chips += Chip(label, bg, paint, x, y, cw)
+            x += cw + chipGap
+        }
+        ReportFacts.quality(result.info, result.authenticity.verdict)?.let { add(it.label, k.theme.tag, tagText) }
+        ReportFacts.chips(result.info).forEach { add(it, k.theme.card, chipText) }
+        return Laid(y + chipH) { c, left, top ->
+            for (chip in chips) {
+                val r = RectF(left + chip.x, top + chip.y, left + chip.x + chip.w, top + chip.y + chipH)
+                c.drawRoundRect(r, chipH / 2, chipH / 2, k.fill(chip.bg))
+                c.drawText(chip.label, r.left + k.dp(14f), r.centerY() - (chip.paint.ascent() + chip.paint.descent()) / 2, chip.paint)
+            }
+        }
+    }
+
+    private fun verdict(k: Ink, w: Float, result: AnalysisResult): Laid {
+        val report = result.authenticity
+        val headPaint = k.text(22f, k.theme.onVerdict, 700)
+        val notePaint = k.text(15f, k.theme.onVerdict, 400).apply { alpha = 215 }
+        val pad = k.dp(24f)
         val headline = ReportFacts.headline(report.verdict)
-        val noteLayout = StaticLayout.Builder.obtain(report.note, 0, report.note.length, notePaint, (inner - 2 * padCard).toInt())
+        val note = StaticLayout.Builder.obtain(report.note, 0, report.note.length, notePaint, (w - 2 * pad).toInt())
             .setLineSpacing(0f, 1.3f).setAlignment(Layout.Alignment.ALIGN_NORMAL).build()
-        val verdictH = padCard + dp(28f) + dp(10f) + noteLayout.height + padCard
-        shape(c, RectF(pad, y, W - pad, y + verdictH), hero, fill(theme.verdict))
         val confidence = if (report.confidence > 0) "${report.confidence}% confidence" else null
-        val confPaint = text(13f, theme.onVerdict, 600, 0.004f).apply { textAlign = Paint.Align.RIGHT; alpha = 200 }
-        val room = inner - 2 * padCard - (confidence?.let { confPaint.measureText(it) + dp(16f) } ?: 0f)
-        c.drawText(TextUtils.ellipsize(headline, headPaint, room, TextUtils.TruncateAt.END).toString(), pad + padCard, y + padCard + dp(22f), headPaint)
-        confidence?.let { c.drawText(it, W - pad - padCard, y + padCard + dp(21f), confPaint) }
-        c.save(); c.translate(pad + padCard, y + padCard + dp(38f)); noteLayout.draw(c); c.restore()
-        y += verdictH + dp(14f)
+        val confPaint = k.text(13f, k.theme.onVerdict, 600, 0.004f).apply { textAlign = Paint.Align.RIGHT; alpha = 200 }
+        val room = w - 2 * pad - (confidence?.let { confPaint.measureText(it) + k.dp(16f) } ?: 0f)
+        val head = TextUtils.ellipsize(headline, headPaint, room, TextUtils.TruncateAt.END).toString()
+        val h = pad + k.dp(28f) + k.dp(10f) + note.height + pad
+        return Laid(h) { c, x, y ->
+            k.shape(c, RectF(x, y, x + w, y + h), hero, k.fill(k.theme.verdict))
+            c.drawText(head, x + pad, y + pad + k.dp(22f), headPaint)
+            confidence?.let { c.drawText(it, x + w - pad, y + pad + k.dp(21f), confPaint) }
+            c.save(); c.translate(x + pad, y + pad + k.dp(38f)); note.draw(c); c.restore()
+        }
+    }
 
-        // Measurements: three tonal headline tiles, then rows of quiet ones, each row a segmented group
-        val gap = dp(3f)
-        val tileW = (inner - 2 * gap) / 3f
-        val tileH = dp(104f)
-        val labelPaint = text(12f, 0, 600, 0.04f)
-        val valuePaint = text(26f, 0, 700)
-        val unitPaint = text(12f, 0, 600, 0.04f)
+    /** Three tonal headline tiles, then rows of quiet ones, each row a segmented group. */
+    private fun metrics(k: Ink, w: Float, result: AnalysisResult, keyLevels: Boolean, more: Boolean): Laid? {
+        val items = buildList {
+            if (keyLevels) ReportFacts.keyLevels(result.levels).forEach { add(it to true) }
+            if (more) ReportFacts.moreMeasurements(result.levels).forEach { add(it to false) }
+        }
+        if (items.isEmpty()) return null
+        val theme = k.theme
+        val gap = k.dp(3f)
+        val tileW = (w - 2 * gap) / 3f
+        val tileH = k.dp(104f)
         val tonal = listOf(
             theme.primaryContainer to theme.onPrimaryContainer,
             theme.secondaryContainer to theme.onSecondaryContainer,
             theme.tertiaryContainer to theme.onTertiaryContainer,
         )
-        metrics.forEachIndexed { i, m ->
-            val col = i % 3
-            val row = i / 3
-            val bg = if (i < 3) tonal[i].first else theme.card
-            val fg = if (i < 3) tonal[i].second else theme.onSurface
-            val tx = pad + col * (tileW + gap)
-            val ty = y + row * (tileH + gap)
-            shape(c, RectF(tx, ty, tx + tileW, ty + tileH), when (col) { 0 -> tileStart; 1 -> tileMiddle; else -> tileEnd }, fill(bg))
-            labelPaint.color = fg; labelPaint.alpha = 185
-            valuePaint.color = fg; unitPaint.color = fg; unitPaint.alpha = 185
-            val left = tx + dp(16f)
-            c.drawText(TextUtils.ellipsize(m.label, labelPaint, tileW - dp(32f), TextUtils.TruncateAt.END).toString(), left, ty + dp(30f), labelPaint)
-            c.drawText(m.value, left, ty + dp(64f), valuePaint)
-            if (m.unit.isNotEmpty()) c.drawText(m.unit, left, ty + dp(88f), unitPaint)
+        val label = k.text(12f, 0, 600, 0.04f)
+        val value = k.text(26f, 0, 700)
+        val unit = k.text(12f, 0, 600, 0.04f)
+        val rows = (items.size + 2) / 3
+        return Laid(rows * (tileH + gap) - gap) { c, x, y ->
+            items.forEachIndexed { i, (m, headline) ->
+                val col = i % 3
+                val row = i / 3
+                val inRow = minOf(3, items.size - row * 3)
+                val (bg, fg) = if (headline) tonal[i % 3] else theme.card to theme.onSurface
+                val tx = x + col * (tileW + gap)
+                val ty = y + row * (tileH + gap)
+                val radii = when {
+                    inRow == 1 -> tileSingle
+                    col == 0 -> tileStart
+                    col == inRow - 1 -> tileEnd
+                    else -> tileMiddle
+                }
+                k.shape(c, RectF(tx, ty, tx + tileW, ty + tileH), radii, k.fill(bg))
+                label.color = fg; label.alpha = 185
+                value.color = fg
+                unit.color = fg; unit.alpha = 185
+                val left = tx + k.dp(16f)
+                c.drawText(TextUtils.ellipsize(m.label, label, tileW - k.dp(32f), TextUtils.TruncateAt.END).toString(), left, ty + k.dp(30f), label)
+                c.drawText(m.value, left, ty + k.dp(64f), value)
+                if (m.unit.isNotEmpty()) c.drawText(m.unit, left, ty + k.dp(88f), unit)
+            }
         }
-        y += ((metrics.size + 2) / 3) * (tileH + gap) - gap + dp(14f)
+    }
 
-        // Loudness over time
-        val timeline = result.levels.timeline?.takeIf { it.points >= 2 }
-        if (timeline != null) {
-            val h = dp(190f)
-            shape(c, RectF(pad, y, W - pad, y + h), card, fill(theme.card))
-            c.drawText("Loudness over time", pad + padCard, y + dp(36f), text(16f, theme.onSurface, 600, 0.002f))
-            val small = text(11f, theme.onMuted, 600, 0.03f)
-            val box = RectF(pad + padCard + dp(34f), y + dp(52f), W - pad - padCard, y + h - dp(34f))
-            val lo = timeline.loudness.min().coerceAtMost(-40f)
-            val hi = max(timeline.loudness.max(), lo + 6f)
-            val grid = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = theme.outline; strokeWidth = dp(0.8f); style = Paint.Style.STROKE; pathEffect = DashPathEffect(floatArrayOf(dp(4f), dp(4f)), 0f) }
+    private fun loudness(k: Ink, w: Float, result: AnalysisResult): Laid? {
+        val timeline = result.levels.timeline?.takeIf { it.points >= 2 } ?: return null
+        val theme = k.theme
+        val pad = k.dp(24f)
+        val h = k.dp(190f)
+        val heading = k.text(16f, theme.onSurface, 600, 0.002f)
+        val small = k.text(11f, theme.onMuted, 600, 0.03f)
+        val lo = timeline.loudness.min().coerceAtMost(-40f)
+        val hi = max(timeline.loudness.max(), lo + 6f)
+        return Laid(h) { c, x, y ->
+            k.shape(c, RectF(x, y, x + w, y + h), card, k.fill(theme.card))
+            c.drawText("Loudness over time", x + pad, y + k.dp(36f), heading)
+            val box = RectF(x + pad + k.dp(34f), y + k.dp(52f), x + w - pad, y + h - k.dp(34f))
+            val grid = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                color = theme.outline; strokeWidth = k.dp(0.8f); style = Paint.Style.STROKE
+                pathEffect = DashPathEffect(floatArrayOf(k.dp(4f), k.dp(4f)), 0f)
+            }
+            small.textAlign = Paint.Align.RIGHT
             for (v in listOf(hi, (hi + lo) / 2f, lo)) {
                 val gy = box.bottom - box.height() * ((v - lo) / (hi - lo))
                 c.drawLine(box.left, gy, box.right, gy, grid)
-                small.textAlign = Paint.Align.RIGHT
-                c.drawText("%.0f".format(v), box.left - dp(8f), gy + dp(4f), small)
+                c.drawText("%.0f".format(v), box.left - k.dp(8f), gy + k.dp(4f), small)
             }
             val line = Path()
             timeline.loudness.forEachIndexed { i, v ->
@@ -195,47 +318,38 @@ object ReportExporter {
                 if (i == 0) line.moveTo(px, py) else line.lineTo(px, py)
             }
             val area = Path(line).apply { lineTo(box.right, box.bottom); lineTo(box.left, box.bottom); close() }
-            c.drawPath(area, fill(theme.primary).apply { alpha = 40 })
+            c.drawPath(area, k.fill(theme.primary).apply { alpha = 40 })
             c.drawPath(line, Paint(Paint.ANTI_ALIAS_FLAG).apply {
-                color = theme.primary; style = Paint.Style.STROKE; strokeWidth = dp(2.4f); strokeJoin = Paint.Join.ROUND; strokeCap = Paint.Cap.ROUND
+                color = theme.primary; style = Paint.Style.STROKE; strokeWidth = k.dp(2.4f); strokeJoin = Paint.Join.ROUND; strokeCap = Paint.Cap.ROUND
             })
             small.textAlign = Paint.Align.LEFT
-            c.drawText("0:00", box.left, y + h - dp(12f), small)
+            c.drawText("0:00", box.left, y + h - k.dp(12f), small)
             small.textAlign = Paint.Align.RIGHT
-            c.drawText(Fmt.duration(timeline.durationSec), box.right, y + h - dp(12f), small)
-            small.textAlign = Paint.Align.RIGHT
-            c.drawText("LUFS", pad + padCard + dp(30f), y + dp(36f), small)
-            y += h + dp(14f)
+            c.drawText(Fmt.duration(timeline.durationSec), box.right, y + h - k.dp(12f), small)
+            c.drawText("LUFS", x + pad + k.dp(30f), y + k.dp(36f), small)
         }
+    }
 
-        // Spectrogram on its own dark panel, so it reads the same in a light theme
-        val padSpec = dp(16f)
-        val panelW = inner - 2 * padSpec
-        val panelH = crop.height() * panelW / crop.width()
-        val captionPaint = text(12.5f, theme.onMuted, 500, 0.004f)
-        val caption = "${spec.displayLabels[0]}  ·  ${Fmt.kHz(spec.sampleRate.toDouble())}  ·  FFT ${spec.fftSize}  ·  ${Fmt.duration(spec.durationSec)}  ·  ${palette.label}" +
-            if (options.log) "  ·  log scale" else ""
-        val specH = dp(20f) + dp(18f) + dp(10f) + dp(20f) + panelH + padSpec
-        shape(c, RectF(pad, y, W - pad, y + specH), cardMirrored, fill(theme.card))
-        c.drawText("Spectrogram", pad + padSpec + dp(8f), y + dp(38f), text(16f, theme.onSurface, 600, 0.002f))
-        c.drawText(TextUtils.ellipsize(caption, captionPaint, panelW - dp(8f), TextUtils.TruncateAt.END).toString(), pad + padSpec + dp(8f), y + dp(60f), captionPaint)
-        val panel = RectF(pad + padSpec, y + dp(72f), W - pad - padSpec, y + dp(72f) + panelH)
-        c.save()
-        c.clipPath(Path().apply { addRoundRect(panel, dp(22f), dp(22f), Path.Direction.CW) })
-        c.drawColor(0xFF101014.toInt())
-        c.drawBitmap(shot, crop, panel, Paint(Paint.FILTER_BITMAP_FLAG))
-        c.restore()
-        y += dp(72f) + panelH + padSpec + dp(18f)
-
-        // Footer
-        val foot = text(12f, theme.onMuted, 600, 0.02f).apply { textAlign = Paint.Align.CENTER }
-        c.drawText("Specty ${BuildConfig.VERSION_NAME}  ·  analysed on this device", W / 2f, y + dp(12f), foot)
-        y += dp(12f) + dp(28f)
-        picture.endRecording()
-
-        val out = Bitmap.createBitmap(W, y.toInt(), Bitmap.Config.ARGB_8888)
-        Canvas(out).drawPicture(picture)
-        shot.recycle()
-        return out
+    /** The spectrogram on its own dark panel, so it reads the same in a light theme. */
+    private fun spectrogram(k: Ink, w: Float, input: ReportInput): Laid {
+        val theme = k.theme
+        val pad = k.dp(16f)
+        val panelW = w - 2 * pad
+        val panelH = input.crop.height() * panelW / input.crop.width()
+        val captionPaint = k.text(12.5f, theme.onMuted, 500, 0.004f)
+        val heading = k.text(16f, theme.onSurface, 600, 0.002f)
+        val caption = TextUtils.ellipsize(input.caption, captionPaint, panelW - k.dp(8f), TextUtils.TruncateAt.END).toString()
+        val h = k.dp(72f) + panelH + pad
+        return Laid(h) { c, x, y ->
+            k.shape(c, RectF(x, y, x + w, y + h), cardMirrored, k.fill(theme.card))
+            c.drawText("Spectrogram", x + pad + k.dp(8f), y + k.dp(38f), heading)
+            c.drawText(caption, x + pad + k.dp(8f), y + k.dp(60f), captionPaint)
+            val panel = RectF(x + pad, y + k.dp(72f), x + w - pad, y + k.dp(72f) + panelH)
+            c.save()
+            c.clipPath(Path().apply { addRoundRect(panel, k.dp(22f), k.dp(22f), Path.Direction.CW) })
+            c.drawColor(0xFF101014.toInt())
+            c.drawBitmap(input.shot, input.crop, panel, Paint(Paint.FILTER_BITMAP_FLAG))
+            c.restore()
+        }
     }
 }
