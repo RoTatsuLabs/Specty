@@ -11,6 +11,7 @@ import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
 import androidx.compose.ui.Alignment
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.ui.unit.dp
 import com.rotatsulabs.specty.ui.components.AnalysisDock
 import com.rotatsulabs.specty.ui.components.withoutExplicitMark
@@ -26,6 +27,9 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.compose.ui.unit.Dp
+import com.rotatsulabs.specty.ui.design.AdaptiveMath
+import com.rotatsulabs.specty.ui.design.CenteredPane
 import com.rotatsulabs.specty.ui.screens.AboutScreen
 import com.rotatsulabs.specty.ui.screens.AnalysisScreen
 import com.rotatsulabs.specty.ui.screens.LibraryScreen
@@ -156,6 +160,7 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit, onPickFolder: ()
                 onOpen = { origin.bounds = dockBounds; origin.corners = Corners(28.dp); flight.clear(); viewModel.openResult() },
                 onDismiss = viewModel::closeAnalysis,
                 modifier = Modifier
+                    .widthIn(max = 640.dp)
                     .navigationBarsPadding()
                     .padding(horizontal = 12.dp, vertical = 12.dp)
                     .onGloballyPositioned { dockBounds = it.boundsInRoot() },
@@ -180,7 +185,7 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit, onPickFolder: ()
         CoverFlightLayer(flight, open = analysisOpen, currentUri = viewerResult?.uri)
 
         OverlayScreen(visible = showSettings, gesture = settingsBack, depth = depth, id = "settings", backdrop = MaterialTheme.colorScheme.surface) {
-            Surface(Modifier.fillMaxSize(), color = androidx.compose.ui.graphics.Color.Transparent, contentColor = MaterialTheme.colorScheme.onSurface) {
+            PaneSurface {
                 SettingsScreen(
                     appearance = appearance,
                     onThemeMode = viewModel::setThemeMode,
@@ -204,7 +209,7 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit, onPickFolder: ()
         }
 
         OverlayScreen(visible = showFolders, gesture = foldersBack, depth = depth, id = "folders", backdrop = MaterialTheme.colorScheme.surface) {
-            Surface(Modifier.fillMaxSize(), color = androidx.compose.ui.graphics.Color.Transparent, contentColor = MaterialTheme.colorScheme.onSurface) {
+            PaneSurface {
                 com.rotatsulabs.specty.ui.screens.FoldersScreen(
                     included = library.folders,
                     excluded = library.excluded,
@@ -218,15 +223,15 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit, onPickFolder: ()
         }
 
         OverlayScreen(visible = showExport, gesture = exportBack, depth = depth, id = "export", backdrop = MaterialTheme.colorScheme.surface) {
-            Surface(Modifier.fillMaxSize(), color = androidx.compose.ui.graphics.Color.Transparent, contentColor = MaterialTheme.colorScheme.onSurface) {
+            PaneSurface(1200.dp) {
                 (held.state as? AnalysisState.Done)?.result?.let { result ->
-                    com.rotatsulabs.specty.ui.screens.ExportScreen(result = result, onBack = { showExport = false })
+                    com.rotatsulabs.specty.ui.screens.ExportScreen(result = result, appearance = appearance, onBack = { showExport = false })
                 }
             }
         }
 
         OverlayScreen(visible = showAbout, gesture = aboutBack, depth = depth, id = "about", backdrop = MaterialTheme.colorScheme.surface) {
-            Surface(Modifier.fillMaxSize(), color = androidx.compose.ui.graphics.Color.Transparent, contentColor = MaterialTheme.colorScheme.onSurface) {
+            PaneSurface {
                 AboutScreen(
                     onReplayIntro = { showAbout = false; viewModel.replayOnboarding() },
                     developer = developer,
@@ -237,7 +242,7 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit, onPickFolder: ()
         }
 
         OverlayScreen(visible = showLog, gesture = logBack, depth = depth, id = "log", backdrop = MaterialTheme.colorScheme.surface) {
-            Surface(Modifier.fillMaxSize(), color = androidx.compose.ui.graphics.Color.Transparent, contentColor = MaterialTheme.colorScheme.onSurface) {
+            PaneSurface {
                 com.rotatsulabs.specty.ui.screens.DeveloperLogScreen(onBack = { showLog = false })
             }
         }
@@ -251,7 +256,9 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit, onPickFolder: ()
         ) {
             Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.surface) {
                 Box(Modifier.navigationBarsPadding()) {
-                    com.rotatsulabs.specty.ui.screens.CompareScreen(compareHeld.state, onBack = viewModel::closeCompare)
+                    CenteredPane(maxWidth = 900.dp) {
+                        com.rotatsulabs.specty.ui.screens.CompareScreen(compareHeld.state, onBack = viewModel::closeCompare)
+                    }
                 }
             }
         }
@@ -283,12 +290,22 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit, onPickFolder: ()
             enter = FadeThrough.enter(),
             exit = FadeThrough.exit(),
         ) {
+            CenteredPane(maxWidth = 600.dp) {
             com.rotatsulabs.specty.ui.screens.OnboardingScreen(
                 onFinish = viewModel::finishOnboarding,
                 hasFolders = library.folders.isNotEmpty(),
                 onPickFolder = onPickFolder,
             )
+            }
         }
 
+    }
+}
+
+/** A transparent surface that keeps an overlay screen to a readable column and centres it on wide windows. */
+@Composable
+private fun PaneSurface(maxWidth: Dp = AdaptiveMath.READABLE.dp, content: @Composable () -> Unit) {
+    Surface(Modifier.fillMaxSize(), color = androidx.compose.ui.graphics.Color.Transparent, contentColor = MaterialTheme.colorScheme.onSurface) {
+        CenteredPane(maxWidth = maxWidth, content = content)
     }
 }

@@ -491,21 +491,19 @@
     <string name="report_landscape_bad">Short, so key levels sit in a narrow column.</string>
     <string name="report_content">Show in the image</string>
     <string name="report_section_details">File details</string>
-    <string name="report_section_details_desc">Codec, sample rate, bit depth, length, size</string>
     <string name="report_section_verdict">Verdict</string>
-    <string name="report_section_verdict_desc">The verdict and its explanation</string>
     <string name="report_section_levels">Key levels</string>
-    <string name="report_section_levels_desc">Dynamic range, loudness and true peak</string>
     <string name="report_section_measurements">More measurements</string>
-    <string name="report_section_measurements_desc">Peak, RMS, bit depth, clipping, DR meter, correlation</string>
     <string name="report_section_loudness">Loudness over time</string>
-    <string name="report_section_loudness_desc">The loudness graph</string>
     <string name="report_section_spectrogram">Spectrogram</string>
-    <string name="report_section_spectrogram_desc">The spectrogram with its scale</string>
     <string name="report_section_footer">Footer</string>
-    <string name="report_section_footer_desc">Specty name and version</string>
     <string name="report_save">Save</string>
     <string name="report_share">Share</string>
     <string name="report_section_cover">Cover art</string>
-    <string name="report_section_cover_desc">The song\'s cover next to the title</string>
+    <string name="report_look">Colours</string>
+    <string name="report_look_auto">Match app</string>
+    <string name="report_look_amoled">AMOLED</string>
+    <string name="report_preview">Preview</string>
+    <string name="report_caption">Add a caption (optional)</string>
+    <string name="report_png">PNG image</string>
 </resources>

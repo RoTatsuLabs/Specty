@@ -34,6 +34,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
+import com.rotatsulabs.specty.ui.design.rememberIsWide
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
@@ -219,8 +221,9 @@ private fun FailedContent(message: String, onBack: () -> Unit) {
 /** A lossy file this device cannot decode: file facts and the container-based verdict, with the reason nothing else is shown. */
 @Composable
 private fun LimitedContent(info: AudioInfo, report: AuthenticityReport) {
+    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
     Column(
-        Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp),
+        Modifier.widthIn(max = 720.dp).fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         Spacer(Modifier.height(8.dp))
@@ -232,23 +235,41 @@ private fun LimitedContent(info: AudioInfo, report: AuthenticityReport) {
         FileCard(info, decoded = null, showDecoded = false)
         Spacer(Modifier.height(16.dp))
     }
+    }
 }
 
 @Composable
 private fun ResultContent(result: AnalysisResult, onFullscreen: (Int) -> Unit, flight: CoverFlight?) {
+    val wide = rememberIsWide()
+    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
     Column(
-        Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp),
+        Modifier.widthIn(max = if (wide) 1200.dp else 720.dp).fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        Hero(result, flight)
-        Reveal(1) { VerdictCard(result.authenticity) }
-        Reveal(2) { MetricTiles(result) }
-        Reveal(3) { ConfidenceCard(result.authenticity, result.info) }
-        Reveal(4) { FileCard(result.info, result.decoded) }
-        Reveal(5) { LevelsCard(result) }
-        Reveal(6) { TimelineCard(result.levels) }
-        Reveal(7) { ChannelsCard(result) }
-        Reveal(8) { StereoCard(result.levels) }
+        // Two columns on a wide window: what the file is on the left, how it measures on the right.
+        // On a narrow one the same cards stack in one column, in the same order.
+        val about: @Composable () -> Unit = {
+            Hero(result, flight)
+            Reveal(1) { VerdictCard(result.authenticity) }
+            Reveal(2) { MetricTiles(result) }
+            Reveal(3) { ConfidenceCard(result.authenticity, result.info) }
+            Reveal(4) { FileCard(result.info, result.decoded) }
+        }
+        val measured: @Composable () -> Unit = {
+            Reveal(5) { LevelsCard(result) }
+            Reveal(6) { TimelineCard(result.levels) }
+            Reveal(7) { ChannelsCard(result) }
+            Reveal(8) { StereoCard(result.levels) }
+        }
+        if (wide) {
+            Row(horizontalArrangement = Arrangement.spacedBy(16.dp), verticalAlignment = Alignment.Top) {
+                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(16.dp)) { about() }
+                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(16.dp)) { measured() }
+            }
+        } else {
+            about()
+            measured()
+        }
         Reveal(10) { SpectrogramCard(
                 result.spectrogram,
                 title = result.info.title.withoutExplicitMark(),
@@ -258,6 +279,7 @@ private fun ResultContent(result: AnalysisResult, onFullscreen: (Int) -> Unit, f
                 coverUri = result.uri,
             ) }
         Spacer(Modifier.height(12.dp))
+    }
     }
 }
 

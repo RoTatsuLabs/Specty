@@ -476,21 +476,19 @@
     <string name="report_landscape_bad">高度较短，关键指标挤在窄栏中。</string>
     <string name="report_content">图片中显示的内容</string>
     <string name="report_section_details">文件详情</string>
-    <string name="report_section_details_desc">编码、采样率、位深、时长、大小</string>
     <string name="report_section_verdict">结论</string>
-    <string name="report_section_verdict_desc">结论及其说明</string>
     <string name="report_section_levels">关键指标</string>
-    <string name="report_section_levels_desc">动态范围、响度和真峰值</string>
     <string name="report_section_measurements">更多测量</string>
-    <string name="report_section_measurements_desc">峰值、RMS、位深、削波、DR 表、相关性</string>
     <string name="report_section_loudness">响度变化</string>
-    <string name="report_section_loudness_desc">响度曲线图</string>
     <string name="report_section_spectrogram">频谱图</string>
-    <string name="report_section_spectrogram_desc">带刻度的频谱图</string>
     <string name="report_section_footer">页脚</string>
-    <string name="report_section_footer_desc">Specty 名称和版本</string>
     <string name="report_save">保存</string>
     <string name="report_share">分享</string>
     <string name="report_section_cover">封面</string>
-    <string name="report_section_cover_desc">标题旁的歌曲封面</string>
+    <string name="report_look">配色</string>
+    <string name="report_look_auto">跟随应用</string>
+    <string name="report_look_amoled">AMOLED</string>
+    <string name="report_preview">预览</string>
+    <string name="report_caption">添加说明（可选）</string>
+    <string name="report_png">PNG 图片</string>
 </resources>

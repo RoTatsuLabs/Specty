@@ -68,7 +68,7 @@ object ReportExporter {
     private val tileSingle = floatArrayOf(32f, 32f, 32f, 32f)
 
     /** The measurable blocks, in reading order. */
-    private enum class Slot { Title, Details, Verdict, Metrics, Loudness, Spectrogram }
+    private enum class Slot { Title, Note, Details, Verdict, Metrics, Loudness, Spectrogram }
 
     /** A block that has been measured: how tall it is, and how to draw it at a given left and top. */
     private class Laid(val height: Float, val draw: (Canvas, Float, Float) -> Unit)
@@ -109,7 +109,7 @@ object ReportExporter {
         return ReportInput(shot, SpectrogramExporter.plotCrop(), caption, cover)
     }
 
-    fun render(input: ReportInput, result: AnalysisResult, theme: ReportTheme, options: ReportOptions): Bitmap {
+    fun render(input: ReportInput, result: AnalysisResult, theme: ReportTheme, options: ReportOptions, note: String = ""): Bitmap {
         val aspect = options.aspect
         val width = aspect.width
         val height = aspect.height
@@ -119,6 +119,7 @@ object ReportExporter {
         fun slots(pane: Int): List<Slot> {
             val column = buildList {
                 add(Slot.Title)
+                if (note.isNotBlank()) add(Slot.Note)
                 if (options.has(ReportSection.Details)) add(Slot.Details)
                 if (options.has(ReportSection.Verdict)) add(Slot.Verdict)
                 if (options.has(ReportSection.KeyLevels) || options.has(ReportSection.Measurements)) add(Slot.Metrics)
@@ -145,7 +146,7 @@ object ReportExporter {
         fun gap(k: Ink) = k.dp(14f)
         fun top(k: Ink) = k.dp(28f)
         fun bottom(k: Ink) = k.dp(20f) + if (footerOn) k.dp(34f) else 0f
-        fun laid(k: Ink, pane: Pane) = pane.slots.mapNotNull { build(it, k, pane.width, input, result, options) }
+        fun laid(k: Ink, pane: Pane) = pane.slots.mapNotNull { build(it, k, pane.width, input, result, options, note.trim()) }
         fun stackHeight(blocks: List<Laid>, k: Ink) = blocks.sumOf { it.height.toDouble() }.toFloat() + gap(k) * (blocks.size - 1).coerceAtLeast(0)
 
         val scale = ReportFit.scale(height.toFloat()) { s ->
@@ -174,8 +175,9 @@ object ReportExporter {
         return out
     }
 
-    private fun build(slot: Slot, k: Ink, w: Float, input: ReportInput, result: AnalysisResult, options: ReportOptions): Laid? = when (slot) {
+    private fun build(slot: Slot, k: Ink, w: Float, input: ReportInput, result: AnalysisResult, options: ReportOptions, note: String): Laid? = when (slot) {
         Slot.Title -> title(k, w, result, input.cover.takeIf { options.has(ReportSection.Cover) })
+        Slot.Note -> note(k, w, note)
         Slot.Details -> details(k, w, result)
         Slot.Verdict -> verdict(k, w, result)
         Slot.Metrics -> metrics(k, w, result, options.has(ReportSection.KeyLevels), options.has(ReportSection.Measurements))
@@ -206,6 +208,19 @@ object ReportExporter {
             }
             c.save(); c.translate(tx, ty); title.draw(c); c.restore()
             c.drawText(dateText, tx, ty + title.height + k.dp(4f) + k.dp(15f), datePaint)
+        }
+    }
+
+    /** The caption the person typed, in a quiet card of its own. */
+    private fun note(k: Ink, w: Float, text: String): Laid {
+        val paint = k.text(16f, k.theme.onSurface, 500)
+        val pad = k.dp(18f)
+        val layout = StaticLayout.Builder.obtain(text, 0, text.length, paint, (w - 2 * pad).toInt())
+            .setMaxLines(4).setEllipsize(TextUtils.TruncateAt.END).setLineSpacing(0f, 1.25f).build()
+        val h = layout.height + 2 * pad
+        return Laid(h) { c, x, y ->
+            k.shape(c, RectF(x, y, x + w, y + h), card, k.fill(k.theme.card))
+            c.save(); c.translate(x + pad, y + pad); layout.draw(c); c.restore()
         }
     }
 
