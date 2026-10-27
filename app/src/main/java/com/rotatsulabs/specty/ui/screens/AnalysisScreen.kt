@@ -4,7 +4,6 @@ import com.rotatsulabs.specty.ui.components.isExplicit
 import com.rotatsulabs.specty.ui.components.withoutExplicitMark
 import com.rotatsulabs.specty.ui.design.Corners
 import com.rotatsulabs.specty.ui.design.SpectyShapes
-import com.rotatsulabs.specty.ui.design.components.ExpressiveMenuItem
 import com.rotatsulabs.specty.ui.design.components.ButtonKind
 import com.rotatsulabs.specty.ui.design.components.ExpressiveButton
 import com.rotatsulabs.specty.ui.design.components.ExpressiveIconButton
@@ -17,23 +16,7 @@ import com.rotatsulabs.specty.ui.spectrogram.rememberPlayback
 import com.rotatsulabs.specty.ui.design.components.ShapeLoader
 import com.rotatsulabs.specty.ui.design.components.SpectyCard
 import com.rotatsulabs.specty.ui.design.components.WavyProgressBar
-import android.content.Intent
-import android.widget.Toast
-import androidx.compose.material.icons.rounded.Download
 import androidx.compose.material.icons.rounded.IosShare
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.platform.LocalContext
-import com.rotatsulabs.specty.ui.design.components.verdictStyle
-import com.rotatsulabs.specty.ui.spectrogram.ReportExporter
-import com.rotatsulabs.specty.ui.spectrogram.ReportTheme
-import com.rotatsulabs.specty.ui.spectrogram.ReportFacts
-import com.rotatsulabs.specty.ui.spectrogram.SpectrogramExporter
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import java.text.SimpleDateFormat
-import java.util.Date
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -51,9 +34,10 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
+import com.rotatsulabs.specty.ui.design.rememberIsWide
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
@@ -132,7 +116,6 @@ import com.rotatsulabs.specty.ui.components.failureText
 import com.rotatsulabs.specty.ui.components.noteText
 import com.rotatsulabs.specty.ui.components.stageText
 import com.rotatsulabs.specty.ui.components.spectralEdge
-import com.rotatsulabs.specty.ui.components.rememberStorageGate
 import com.rotatsulabs.specty.ui.components.Reveal
 import com.rotatsulabs.specty.ui.components.pressScale
 import androidx.compose.animation.core.Animatable
@@ -154,7 +137,6 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.ui.draw.scale
-import java.util.Locale
 import kotlin.math.roundToInt
 import com.rotatsulabs.specty.ui.components.Stat
 import com.rotatsulabs.specty.ui.components.StatGrid
@@ -163,7 +145,7 @@ import com.rotatsulabs.specty.ui.theme.Motion
 import kotlinx.coroutines.delay
 
 @Composable
-fun AnalysisScreen(state: AnalysisState, onBack: () -> Unit, onReanalyse: () -> Unit, modifier: Modifier = Modifier, onFullscreen: (Int) -> Unit = {}, onCompare: () -> Unit = {}, flight: CoverFlight? = null) {
+fun AnalysisScreen(state: AnalysisState, onBack: () -> Unit, onReanalyse: () -> Unit, modifier: Modifier = Modifier, onFullscreen: (Int) -> Unit = {}, onCompare: () -> Unit = {}, onExport: () -> Unit = {}, flight: CoverFlight? = null) {
     val title = when (state) {
         is AnalysisState.Running -> state.title
         is AnalysisState.Failed -> state.title
@@ -180,7 +162,7 @@ fun AnalysisScreen(state: AnalysisState, onBack: () -> Unit, onReanalyse: () -> 
                 modifier = Modifier,
                 actions = {
                     if (state is AnalysisState.Done) {
-                        ExportMenu(state.result)
+                        ExpressiveIconButton(Icons.Rounded.IosShare, stringResource(R.string.analysis_export), onExport, tonal = false)
                         ExpressiveIconButton(Icons.Rounded.Compare, stringResource(R.string.analysis_compare), onCompare, tonal = false)
                         var spins by remember { mutableStateOf(0) }
                         val spin by animateFloatAsState(spins * 360f, spring(dampingRatio = 0.6f, stiffness = 120f), label = "spin")
@@ -201,84 +183,6 @@ fun AnalysisScreen(state: AnalysisState, onBack: () -> Unit, onReanalyse: () -> 
                 is AnalysisState.Limited -> LimitedContent(state.info, state.report)
                 AnalysisState.Idle -> Unit
             }
-        }
-    }
-}
-
-/** Top-bar action that saves or shares the whole result as one image. */
-@Composable
-private fun ExportMenu(result: AnalysisResult) {
-    val context = LocalContext.current
-    // The image is drawn in the colours the screen has right now, so it matches the app's theme.
-    val scheme = MaterialTheme.colorScheme
-    val verdict = verdictStyle(result.authenticity.verdict)
-    val tags = mapOf(
-        ReportFacts.Quality.Lossless to verdictStyle(Verdict.GENUINE),
-        ReportFacts.Quality.HiRes to verdictStyle(Verdict.HI_RES),
-        ReportFacts.Quality.Atmos to verdictStyle(Verdict.DOLBY_ATMOS),
-    )
-    val tag = ReportFacts.quality(result.info, result.authenticity.verdict)?.let { tags[it] }
-    val theme = ReportTheme.of(
-        scheme,
-        verdict = (verdict?.container ?: scheme.surfaceContainerHigh) to (verdict?.content ?: scheme.onSurface),
-        tag = (tag?.container ?: scheme.surfaceContainerHigh) to (tag?.content ?: scheme.onSurface),
-    )
-    val scope = rememberCoroutineScope()
-    var open by remember { mutableStateOf(false) }
-    var busy by remember { mutableStateOf(false) }
-    var sharing by remember { mutableStateOf(false) }
-    fun export(share: Boolean) {
-        busy = true
-        scope.launch {
-            val uri = withContext(Dispatchers.Default) {
-                val bmp = try { ReportExporter.render(context, result, theme) } catch (_: OutOfMemoryError) { null }
-                try {
-                    bmp?.let {
-                        val stamp = SimpleDateFormat("yyyyMMdd-HHmmss", Locale.US).format(Date())
-                        SpectrogramExporter.savePng(context, it, ReportFacts.fileName(result.info.title, stamp))
-                    }
-                } finally {
-                    bmp?.recycle()
-                }
-            }
-            busy = false
-            when {
-                uri == null -> Toast.makeText(context, context.getString(R.string.toast_image_failed), Toast.LENGTH_SHORT).show()
-                share -> context.startActivity(
-                    Intent.createChooser(
-                        Intent(Intent.ACTION_SEND).apply {
-                            type = "image/png"
-                            putExtra(Intent.EXTRA_STREAM, uri)
-                            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                        },
-                        context.getString(R.string.analysis_share_title),
-                    ),
-                )
-                else -> Toast.makeText(context, context.getString(R.string.toast_saved_gallery), Toast.LENGTH_SHORT).show()
-            }
-        }
-    }
-    val gate = rememberStorageGate { export(sharing) }
-    fun request(share: Boolean) {
-        if (busy) return
-        sharing = share
-        gate()
-    }
-    Box {
-        ExpressiveIconButton(Icons.Rounded.IosShare, stringResource(R.string.analysis_export), { open = true }, tonal = false)
-        DropdownMenu(expanded = open, onDismissRequest = { open = false }, shape = RoundedCornerShape(20.dp)) {
-            ExpressiveMenuItem(
-                text = { Text(stringResource(if (busy) R.string.working else R.string.save_image)) },
-                leadingIcon = { Icon(Icons.Rounded.Download, null) },
-                enabled = !busy,
-                onClick = { open = false; request(false) },
-            )
-            ExpressiveMenuItem(
-                text = { Text(stringResource(R.string.analysis_share_image)) },
-                leadingIcon = { Icon(Icons.Rounded.IosShare, null) },
-                enabled = !busy,
-                onClick = { open = false; request(true) },
-            )
         }
     }
 }
@@ -317,8 +221,9 @@ private fun FailedContent(message: String, onBack: () -> Unit) {
 /** A lossy file this device cannot decode: file facts and the container-based verdict, with the reason nothing else is shown. */
 @Composable
 private fun LimitedContent(info: AudioInfo, report: AuthenticityReport) {
+    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
     Column(
-        Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp),
+        Modifier.widthIn(max = 720.dp).fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         Spacer(Modifier.height(8.dp))
@@ -330,31 +235,51 @@ private fun LimitedContent(info: AudioInfo, report: AuthenticityReport) {
         FileCard(info, decoded = null, showDecoded = false)
         Spacer(Modifier.height(16.dp))
     }
+    }
 }
 
 @Composable
 private fun ResultContent(result: AnalysisResult, onFullscreen: (Int) -> Unit, flight: CoverFlight?) {
+    val wide = rememberIsWide()
+    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
     Column(
-        Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp),
+        Modifier.widthIn(max = if (wide) 1200.dp else 720.dp).fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        Hero(result, flight)
-        Reveal(1) { VerdictCard(result.authenticity) }
-        Reveal(2) { MetricTiles(result) }
-        Reveal(3) { ConfidenceCard(result.authenticity, result.info) }
-        Reveal(4) { FileCard(result.info, result.decoded) }
-        Reveal(5) { LevelsCard(result) }
-        Reveal(6) { TimelineCard(result.levels) }
-        Reveal(7) { ChannelsCard(result) }
-        Reveal(8) { StereoCard(result.levels) }
+        // Two columns on a wide window: what the file is on the left, how it measures on the right.
+        // On a narrow one the same cards stack in one column, in the same order.
+        val about: @Composable () -> Unit = {
+            Hero(result, flight)
+            Reveal(1) { VerdictCard(result.authenticity) }
+            Reveal(2) { MetricTiles(result) }
+            Reveal(3) { ConfidenceCard(result.authenticity, result.info) }
+            Reveal(4) { FileCard(result.info, result.decoded) }
+        }
+        val measured: @Composable () -> Unit = {
+            Reveal(5) { LevelsCard(result) }
+            Reveal(6) { TimelineCard(result.levels) }
+            Reveal(7) { ChannelsCard(result) }
+            Reveal(8) { StereoCard(result.levels) }
+        }
+        if (wide) {
+            Row(horizontalArrangement = Arrangement.spacedBy(16.dp), verticalAlignment = Alignment.Top) {
+                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(16.dp)) { about() }
+                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(16.dp)) { measured() }
+            }
+        } else {
+            about()
+            measured()
+        }
         Reveal(10) { SpectrogramCard(
                 result.spectrogram,
                 title = result.info.title.withoutExplicitMark(),
                 onFullscreen = onFullscreen,
                 cutoffHz = result.authenticity.cutoffHz,
                 playback = rememberPlayback(result.uri),
+                coverUri = result.uri,
             ) }
         Spacer(Modifier.height(12.dp))
+    }
     }
 }
 

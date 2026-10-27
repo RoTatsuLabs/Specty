@@ -22,7 +22,7 @@ import java.util.Locale
  */
 object AppLanguage {
     /** [tag] is null for "follow the system". Tags match `res/xml/locales_config.xml`. */
-    enum class Choice(val tag: String?, @StringRes val labelRes: Int) {
+    enum class Choice(val tag: String?, @param:StringRes val labelRes: Int) {
         System(null, R.string.language_system),
         English("en", R.string.language_en),
         Indonesian("id", R.string.language_id),

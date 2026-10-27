@@ -32,6 +32,7 @@ object SpectrogramExporter {
     private const val RIGHT = 60f
     private const val TOP = 190f
     private const val BOTTOM = 250f
+    private const val COVER = 130f
 
     private const val BACKGROUND = 0xFF101014.toInt()
     private const val TEXT = 0xFFF2F0F4.toInt()
@@ -50,6 +51,7 @@ object SpectrogramExporter {
         title: String,
         options: SpecOptions = SpecOptions(),
         cutoffHz: Double? = null,
+        cover: Bitmap? = null,
     ): Bitmap {
         val plotW = WIDTH - LEFT - RIGHT
         val plotH = plotW * 9f / 16f
@@ -64,12 +66,21 @@ object SpectrogramExporter {
         val subtitlePaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply { color = MUTED; textSize = 34f }
         val axisPaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply { color = MUTED; textSize = 30f }
 
-        val shownTitle = TextUtils.ellipsize(title, titlePaint, WIDTH - 120f, TextUtils.TruncateAt.END).toString()
+        val textRoom = if (cover != null) WIDTH - 120f - COVER - 40f else WIDTH - 120f
+        val shownTitle = TextUtils.ellipsize(title, titlePaint, textRoom, TextUtils.TruncateAt.END).toString()
         canvas.drawText(shownTitle, 60f, 90f, titlePaint)
         val subtitle = "${spectrogram.displayLabels[view]}  ·  ${spectrogram.sampleRate / 1000.0} kHz  ·  " +
             "FFT ${spectrogram.fftSize}  ·  ${Fmt.duration(spectrogram.durationSec)}  ·  ${palette.label}" +
             if (options.log) "  ·  log scale" else ""
         canvas.drawText(subtitle, 60f, 145f, subtitlePaint)
+
+        if (cover != null) {
+            val box = RectF(WIDTH - 60f - COVER, 30f, WIDTH - 60f, 30f + COVER)
+            canvas.save()
+            canvas.clipPath(android.graphics.Path().apply { addRoundRect(box, 28f, 28f, android.graphics.Path.Direction.CW) })
+            canvas.drawBitmap(cover, null, box, Paint(Paint.FILTER_BITMAP_FLAG))
+            canvas.restore()
+        }
 
         // Plot
         val plot = RectF(LEFT, TOP, LEFT + plotW, TOP + plotH)

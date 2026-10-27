@@ -14,6 +14,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.text.style.TextOverflow
 import java.util.Locale
 import androidx.compose.ui.Modifier
+import androidx.compose.material3.ColorScheme
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.res.stringResource
@@ -59,6 +60,17 @@ fun MetricTile(
 
 /** Colours and label for a verdict, shared by badges, tiles and the dock so they always agree. */
 data class VerdictStyle(val label: String, val container: Color, val content: Color)
+
+/** The container and content colours a verdict is shown in, for any colour scheme; null when there is no verdict colour. */
+fun verdictColors(verdict: Verdict, s: ColorScheme): Pair<Color, Color>? = when (verdict) {
+    Verdict.GENUINE -> s.tertiaryContainer to s.onTertiaryContainer
+    Verdict.HI_RES -> s.primaryContainer to s.onPrimaryContainer
+    Verdict.LOSSY_SOURCE, Verdict.UPSAMPLED -> s.errorContainer to s.onErrorContainer
+    Verdict.POSSIBLE_LOSSY_SOURCE, Verdict.BAND_LIMITED -> s.secondaryContainer to s.onSecondaryContainer
+    Verdict.LOSSY_CODEC -> s.surfaceContainerHighest to s.onSurfaceVariant
+    Verdict.DOLBY_ATMOS -> s.inverseSurface to s.inverseOnSurface
+    Verdict.INCONCLUSIVE -> null
+}
 
 @Composable
 fun verdictStyle(verdict: Verdict): VerdictStyle? {

@@ -6,7 +6,7 @@ import kotlin.math.PI
 import kotlin.math.cos
 
 /** Analysis window for the spectrogram. Tighter side lobes show weak content next to loud tones more cleanly. */
-enum class WindowFn(val label: String, @StringRes val noteRes: Int) {
+enum class WindowFn(val label: String, @param:StringRes val noteRes: Int) {
     Hann("Hann", R.string.window_hann_note),
     Hamming("Hamming", R.string.window_hamming_note),
     BlackmanHarris("Blackman-Harris", R.string.window_blackman_harris_note);
