@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="action_back">Back</string>
+    <string name="search_clear">Clear search</string>
+    <string name="search_default">Search</string>
+    <string name="verdict_atmos" translatable="false">Dolby Atmos</string>
+    <string name="verdict_fake">Fake</string>
+    <string name="verdict_hires" translatable="false">Hi-Res</string>
+    <string name="verdict_lossless">Lossless</string>
+    <string name="verdict_lossy">Lossy</string>
+    <string name="verdict_maybe">Maybe</string>
+    <string name="palette_violet">Violet</string>
+    <string name="palette_azure">Azure</string>
+    <string name="palette_teal">Teal</string>
+    <string name="palette_lime">Lime</string>
+    <string name="palette_amber">Amber</string>
+    <string name="palette_rose">Rose</string>
+    <string name="theme_system">System</string>
+    <string name="theme_light">Light</string>
+    <string name="theme_dark">Dark</string>
+</resources>

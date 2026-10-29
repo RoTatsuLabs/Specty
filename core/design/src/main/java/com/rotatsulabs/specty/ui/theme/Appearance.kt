@@ -1,7 +1,7 @@
 package com.rotatsulabs.specty.ui.theme
 
 import androidx.annotation.StringRes
-import com.rotatsulabs.specty.R
+import com.rotatsulabs.specty.core.design.R
 import com.rotatsulabs.specty.ui.design.tonal.SeedPalette
 
 enum class ThemeMode(@param:StringRes val labelRes: Int) {

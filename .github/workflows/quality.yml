@@ -34,10 +34,10 @@ jobs:
           gradle-version: 8.14.3
 
       - name: Lint
-        run: gradle :app:lintDebug --stacktrace
+        run: gradle lintDebug --stacktrace
 
       - name: Unit tests
-        run: gradle :app:testDebugUnitTest --stacktrace
+        run: gradle :core:audio:test testDebugUnitTest --stacktrace
 
       - name: Compile debug
         run: gradle :app:assembleDebug --stacktrace
@@ -48,6 +48,6 @@ jobs:
         with:
           name: reports
           path: |
-            app/build/reports/lint-results-debug.*
-            app/build/reports/tests/
+            **/build/reports/lint-results-debug.*
+            **/build/reports/tests/
           if-no-files-found: ignore

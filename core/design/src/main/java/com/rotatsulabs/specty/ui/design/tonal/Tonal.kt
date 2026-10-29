@@ -1,7 +1,7 @@
 package com.rotatsulabs.specty.ui.design.tonal
 
 import androidx.annotation.StringRes
-import com.rotatsulabs.specty.R
+import com.rotatsulabs.specty.core.design.R
 import kotlin.math.abs
 import kotlin.math.atan2
 import kotlin.math.cbrt

@@ -1,26 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Common -->
-    <string name="action_back">返回</string>
     <string name="action_close">关闭</string>
 
     <!-- Settings -->
     <string name="settings_title">设置</string>
     <string name="settings_appearance">外观</string>
     <string name="settings_theme">主题</string>
-    <string name="theme_system">跟随系统</string>
-    <string name="theme_light">浅色</string>
-    <string name="theme_dark">深色</string>
     <string name="settings_dynamic_colour">动态取色</string>
     <string name="settings_dynamic_colour_desc">使用壁纸中的颜色。关闭后可自选色调调色板。</string>
     <string name="settings_palette">色调调色板</string>
     <string name="settings_palette_desc">应用中的所有颜色均由此颜色派生。</string>
-    <string name="palette_violet">紫罗兰</string>
-    <string name="palette_azure">天蓝</string>
-    <string name="palette_teal">青绿</string>
-    <string name="palette_lime">青柠</string>
-    <string name="palette_amber">琥珀</string>
-    <string name="palette_rose">玫瑰</string>
     <string name="settings_pure_black">纯黑</string>
     <string name="settings_pure_black_desc">深色模式下使用纯黑背景，对 OLED 屏幕更友好。</string>
     <string name="settings_results">结果</string>
@@ -153,8 +143,6 @@
     <string name="library_remove_folder">移除 %1$s</string>
     <string name="library_add_folder">添加文件夹</string>
 
-    <string name="search_default">搜索</string>
-    <string name="search_clear">清除搜索</string>
 
     <!-- Batch scan card -->
     <string name="scan_running">正在扫描曲库</string>
@@ -175,10 +163,6 @@
     <string name="dock_progress">"%1$s  ·  %2$d%%"</string>
 
     <!-- Verdict pills -->
-    <string name="verdict_lossless">无损</string>
-    <string name="verdict_fake">伪无损</string>
-    <string name="verdict_maybe">存疑</string>
-    <string name="verdict_lossy">有损</string>
 
     <!-- Common -->
     <string name="working">Sedang memproses…</string>

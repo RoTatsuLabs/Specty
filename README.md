@@ -97,9 +97,16 @@ Specty reads audio only to analyze it, and only inside the folders you pick with
 You need JDK 17, Android SDK 36 and Gradle 8.14 or newer.
 
 ```sh
-gradle :app:testDebugUnitTest   # unit tests
-gradle :app:assembleDebug       # debug APK in app/build/outputs/apk/debug/
+gradle :core:audio:test testDebugUnitTest   # unit tests, every module
+gradle :app:assembleDebug                   # debug APK in app/build/outputs/apk/debug/
 ```
+
+The project is split into modules:
+
+- `:core:audio` is plain Kotlin with no Android code: the FFT, loudness and dynamics meters, spectrogram, authenticity verdict and notes. Its tests run on the JVM.
+- `:core:data` is the Android side of analysis and storage: decoding, the media probe, the library repository, the result cache and cover art.
+- `:core:design` holds the Compose design system, the theme and the tonal colour maths.
+- `:app` has the screens, the scan service and the report export.
 
 The app is Kotlin with Jetpack Compose and targets Android 8.0 (API 26) and up on `arm64-v8a`, `armeabi-v7a` and `x86_64`. Audio is decoded with FFmpeg through [FFmpegKitNext](https://github.com/arthenica/ffmpeg-kit-next), the continuation of [arthenica/ffmpeg-kit](https://github.com/arthenica/ffmpeg-kit) that RoTatsu Labs builds in [Forge](https://github.com/RoTatsuLabs/Forge), and with the device's `MediaCodec` for formats FFmpeg cannot decode. GitHub Actions runs lint, the unit tests and a debug build on every push to `main` and on pull requests.
 

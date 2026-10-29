@@ -18,7 +18,7 @@ import androidx.compose.material3.ColorScheme
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.res.stringResource
-import com.rotatsulabs.specty.R
+import com.rotatsulabs.specty.core.design.R
 import com.rotatsulabs.specty.audio.Verdict
 import com.rotatsulabs.specty.ui.design.Corners
 import com.rotatsulabs.specty.ui.design.SpectyShapes

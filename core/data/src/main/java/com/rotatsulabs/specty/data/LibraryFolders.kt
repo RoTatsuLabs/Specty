@@ -7,7 +7,7 @@ import android.provider.DocumentsContract
 data class LibraryFolder(val uri: Uri, val name: String, val path: String)
 
 /** The folders the person picked for the library, kept in preferences. Access to each is granted by the system picker. */
-class LibraryFolders(private val context: Context) {
+class LibraryFolders(private val context: Context, private val internalStorageLabel: String) {
     private val prefs = context.getSharedPreferences("specty", Context.MODE_PRIVATE)
 
     fun list(): List<LibraryFolder> =
@@ -35,7 +35,7 @@ class LibraryFolders(private val context: Context) {
 
     private fun describe(uri: Uri): LibraryFolder {
         val id = runCatching { DocumentsContract.getTreeDocumentId(uri) }.getOrNull() ?: uri.lastPathSegment ?: uri.toString()
-        val label = AudioFiles.folderLabel(id, context.getString(com.rotatsulabs.specty.R.string.storage_internal))
+        val label = AudioFiles.folderLabel(id, internalStorageLabel)
         return LibraryFolder(uri, label.name, label.path)
     }
 
