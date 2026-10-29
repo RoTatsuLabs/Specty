@@ -34,28 +34,13 @@ jobs:
           gradle-version: 8.14.3
 
       - name: Lint
-        run: |
-          set -o pipefail
-          gradle lintDebug --stacktrace 2>&1 | tee build.log || {
-            grep -E '^e: |^w: .*(error)|What went wrong|Execution failed|FAILED|Unresolved|Test.*FAILED' -A2 build.log | head -60 | while IFS= read -r line; do echo "::error::${line}"; done
-            exit 1
-          }
+        run: gradle lintDebug --stacktrace
 
       - name: Unit tests
-        run: |
-          set -o pipefail
-          gradle :core:audio:test testDebugUnitTest --stacktrace 2>&1 | tee build.log || {
-            grep -E '^e: |^w: .*(error)|What went wrong|Execution failed|FAILED|Unresolved|Test.*FAILED' -A2 build.log | head -60 | while IFS= read -r line; do echo "::error::${line}"; done
-            exit 1
-          }
+        run: gradle :core:audio:test testDebugUnitTest --stacktrace
 
       - name: Compile debug
-        run: |
-          set -o pipefail
-          gradle :app:assembleDebug --stacktrace 2>&1 | tee build.log || {
-            grep -E '^e: |^w: .*(error)|What went wrong|Execution failed|FAILED|Unresolved|Test.*FAILED' -A2 build.log | head -60 | while IFS= read -r line; do echo "::error::${line}"; done
-            exit 1
-          }
+        run: gradle :app:assembleDebug --stacktrace
 
       - name: Upload reports
         if: always()
