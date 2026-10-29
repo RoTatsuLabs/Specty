@@ -11,6 +11,8 @@ class AuthSpectra(
     val whole: FloatArray,
     /** One average per section of the track; null for sections without audible content. Empty for very short files. */
     val sections: List<FloatArray?>,
+    /** White-noise equivalent power per channel (full scale +-1.0) of the quietest passages, or null when none qualified. */
+    val quietFloorVariance: Double? = null,
 )
 
 /**
@@ -49,6 +51,15 @@ object AuthSpectrumAnalyzer {
         val sectionSum = Array(sectionCount) { DoubleArray(bins) }
         val sectionActive = IntArray(sectionCount)
 
+        // Noise floor of the quietest frames (see NoiseFloor): median band power per frame, in raw |X|^2 units.
+        val windowPower = window.sumOf { it * it }
+        val rawScale = (windowSum / 2.0) * (windowSum / 2.0)
+        val binHz = pcm.sampleRate.toDouble() / fftSize
+        val floorLow = Math.ceil(NoiseFloor.BAND_LOW_HZ / binHz).toInt()
+        val floorHigh = min((NoiseFloor.BAND_HIGH_HZ / binHz).toInt(), bins - 1)
+        val floorBand = DoubleArray(maxOf(0, floorHigh - floorLow + 1))
+        val floorFrames = ArrayList<DoubleArray>()
+
         for (col in 0 until columns) {
             val start = if (columns == 1) 0L else Math.round(col.toDouble() * (total - fftSize) / (columns - 1))
             pcm.readFrames(start, fftSize, buffer)
@@ -70,6 +81,21 @@ object AuthSpectrumAnalyzer {
                 framePower += power
                 db[k] = toDb(power)
                 allSum[k] += db[k]
+            }
+            if (floorBand.isNotEmpty()) {
+                var sum = 0.0
+                for (k in floorLow..floorHigh) {
+                    val raw = mixPower[k] / channels * rawScale
+                    floorBand[k - floorLow] = raw
+                    sum += raw
+                }
+                if (sum > 0.0) {
+                    val sorted = floorBand.copyOf()
+                    sorted.sort()
+                    val mid = sorted.size / 2
+                    val median = if (sorted.size % 2 == 1) sorted[mid] else (sorted[mid - 1] + sorted[mid]) / 2.0
+                    floorFrames.add(doubleArrayOf(sum / sorted.size, median))
+                }
             }
             if (toDb(framePower) > ACTIVE_FRAME_DB) {
                 for (k in 0 until bins) activeSum[k] += db[k]
@@ -96,7 +122,19 @@ object AuthSpectrumAnalyzer {
                 FloatArray(bins) { k -> (sectionSum[s][k] / sectionActive[s]).toFloat() }
             }
         }
-        return AuthSpectra(pcm.sampleRate, fftSize, whole, sections)
+        return AuthSpectra(pcm.sampleRate, fftSize, whole, sections, quietFloor(floorFrames, windowPower))
+    }
+
+    /**
+     * |X|^2 of white noise is exponential with mean sigma^2 * sum(w^2), so its median is ln 2 times that; the median
+     * ignores tonal peaks. Read in the quietest [NoiseFloor.QUIET_FRACTION] of the frames. Method from Mornye.
+     */
+    private fun quietFloor(frames: List<DoubleArray>, windowPower: Double): Double? {
+        if (frames.isEmpty()) return null
+        val quiet = frames.sortedBy { it[0] }.take(maxOf(1, (frames.size * NoiseFloor.QUIET_FRACTION).toInt()))
+        val estimates = quiet.map { it[1] / Math.log(2.0) / windowPower }.sorted()
+        val mid = estimates.size / 2
+        return if (estimates.size % 2 == 1) estimates[mid] else (estimates[mid - 1] + estimates[mid]) / 2.0
     }
 
     private fun toDb(power: Double): Double = 10.0 * log10(power + 1e-18)

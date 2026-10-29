@@ -87,6 +87,8 @@
     <string name="lib_specty_note">Specty is free software under the GNU General Public License, version 3. You can use, study, change and share it under those terms.</string>
     <string name="lib_ffmpeg_summary">FFmpeg for Android through FFmpegKitNext, the continuation of Arthenica\'s ffmpeg-kit.</string>
     <string name="lib_ffmpeg_note">Reads and decodes every audio file Specty analyses. It includes the FFmpeg libraries (libavcodec, libavformat, libavutil and others), also under the LGPL. The source is available from the link above.</string>
+    <string name="lib_mornye_summary">Hi-Res checks for upsampling and for the noise floor of 16-bit audio, from the Mornye music app.</string>
+    <string name="lib_mornye_note">Specty\'s sample-and-hold, interpolation and 16-bit noise floor checks are Kotlin ports of Mornye\'s Hi-Res evidence code, used under the LGPL and combined with Specty under the GPL. Thank you to its authors. The source is available from the link above.</string>
     <string name="lib_compose_summary">UI toolkit: UI, Graphics, Foundation, Material 3 and Material Icons Extended.</string>
     <string name="lib_compose_note">Draws the whole interface. The icons come from the Material Icons set.</string>
     <string name="lib_activity_summary">Compose integration for activities, result contracts and edge-to-edge.</string>
@@ -378,6 +380,10 @@
     <string name="view_channels">Channels</string>
     <string name="view_mono">Mono</string>
     <string name="view_channel">Ch %1$s</string>
+    <string name="note_upsample_hold">Every sample is repeated %1$s times, the mark of a %2$s kHz source stretched to this rate by sample-and-hold. This is upsampled audio.</string>
+    <string name="note_upsample_line">The samples between every %1$sth one lie on straight lines, the mark of a %2$s kHz source stretched to this rate by linear interpolation. This is upsampled audio.</string>
+    <string name="note_floor_at_16bit">The quietest passages sit at the noise level of 16-bit audio, which fits a CD-resolution source.</string>
+    <string name="note_floor_below_16bit">The quietest passages are quieter than 16-bit noise, so the file holds more than CD resolution.</string>
     <plurals name="note_few_sections">
         <item quantity="one">Only %1$d section of the track could be read clearly.</item>
         <item quantity="other">Only %1$d sections of the track could be read clearly.</item>

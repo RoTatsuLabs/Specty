@@ -46,6 +46,12 @@ object OpenSource {
             R.string.lib_ffmpeg_note,
         ),
         Library(
+            "Mornye", "Mornye contributors", null, LicenseKind.Lgpl3,
+            "https://github.com/mornyeapp/Mornye",
+            R.string.lib_mornye_summary,
+            R.string.lib_mornye_note,
+        ),
+        Library(
             "Jetpack Compose", "Google / Android Open Source Project", "BOM 2026.03.01", LicenseKind.Apache2,
             "https://developer.android.com/jetpack/compose",
             R.string.lib_compose_summary,

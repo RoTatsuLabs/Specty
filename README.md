@@ -119,4 +119,4 @@ Issues and pull requests are welcome. Run the unit tests before you send a chang
 
 ## License
 
-Specty is free software released under the [GNU General Public License v3.0](LICENSE). The About page in the app lists every bundled library with its licence and the full texts. FFmpeg reaches Specty through FFmpegKitNext, which is LGPL v3.0.
+Specty is free software released under the [GNU General Public License v3.0](LICENSE). The About page in the app lists every bundled library with its licence and the full texts. FFmpeg reaches Specty through FFmpegKitNext, which is LGPL v3.0. The sample-and-hold, interpolation and 16-bit noise floor checks are Kotlin ports of the Hi-Res evidence code in [Mornye](https://github.com/mornyeapp/Mornye) (LGPL v3.0), used with credit and combined with Specty under the GPL.
