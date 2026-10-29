@@ -53,11 +53,51 @@ object AuthenticityAnalyzer {
     )
 
     /** Full judgement from the spectra built by [AuthSpectrumAnalyzer]. */
-    fun assess(info: AudioInfo, spectra: AuthSpectra, effectiveBitDepth: Int?): AuthenticityReport {
+    fun assess(
+        info: AudioInfo,
+        spectra: AuthSpectra,
+        effectiveBitDepth: Int?,
+        upsample: UpsampleEvidence.Finding? = null,
+    ): AuthenticityReport {
         // The spectra come from the decoded PCM, whose rate is what the frequency axis means.
         val measured = if (spectra.sampleRate != info.sampleRate) info.copy(sampleRate = spectra.sampleRate) else info
         val base = analyze(measured, spectra.whole, spectra.fftSize, effectiveBitDepth)
-        return withInsights(base, measured, spectra.whole, spectra.fftSize, spectra.sections)
+        val report = withInsights(base, measured, spectra.whole, spectra.fftSize, spectra.sections)
+        return withEvidence(report, spectra, upsample)
+    }
+
+    /**
+     * Adds what the samples themselves show, using the checks from Mornye (see [UpsampleEvidence], [NoiseFloor]).
+     * A sample-and-hold or interpolation pattern is proof of upsampling whatever the spectrum says. A cutoff-based
+     * upsampled verdict is backed by a noise floor at 16-bit level, and withdrawn when the floor is below it, because
+     * a file with that much resolution is not a stretched CD.
+     */
+    private fun withEvidence(report: AuthenticityReport, spectra: AuthSpectra, upsample: UpsampleEvidence.Finding?): AuthenticityReport {
+        if (report.verdict == Verdict.LOSSY_CODEC || report.verdict == Verdict.DOLBY_ATMOS) return report
+        if (upsample != null) {
+            val key = if (upsample.kind == UpsampleEvidence.Kind.SAMPLE_HOLD) NoteKey.UPSAMPLE_HOLD else NoteKey.UPSAMPLE_LINE
+            val sourceKhz = fmt(upsample.sourceHz / 1000.0)
+            return report.copy(
+                verdict = Verdict.UPSAMPLED, confidence = 97, encoderGuess = null,
+                notes = listOf(Note(key, upsample.ratio, sourceKhz)) + report.notes.filter { it.key == NoteKey.BITS_PADDED },
+            )
+        }
+        if (report.verdict != Verdict.UPSAMPLED) return report
+        val floor = NoiseFloor.classify(spectra.quietFloorVariance) ?: return report
+        return when (floor.level) {
+            NoiseFloor.Level.AT_16BIT -> report.copy(
+                confidence = (report.confidence + 8).coerceAtMost(95),
+                notes = report.notes + Note(NoteKey.FLOOR_AT_16BIT),
+            )
+            NoiseFloor.Level.BELOW_16BIT -> report.copy(
+                verdict = Verdict.BAND_LIMITED,
+                confidence = (report.confidence - 15).coerceAtLeast(5),
+                notes = report.notes.map {
+                    if (it.key == NoteKey.UPSAMPLED) Note(NoteKey.BAND_LIMITED, it.args[0]) else it
+                } + Note(NoteKey.FLOOR_BELOW_16BIT),
+            )
+            NoiseFloor.Level.MASKED -> report
+        }
     }
 
     /**

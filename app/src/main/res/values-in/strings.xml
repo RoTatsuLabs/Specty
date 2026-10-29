@@ -83,6 +83,8 @@
     <string name="lib_specty_note">Specty adalah perangkat lunak bebas di bawah GNU General Public License, versi 3. Anda dapat menggunakan, mempelajari, mengubah, dan membagikannya sesuai ketentuan tersebut.</string>
     <string name="lib_ffmpeg_summary">FFmpeg untuk Android melalui FFmpegKitNext, kelanjutan dari ffmpeg-kit milik Arthenica.</string>
     <string name="lib_ffmpeg_note">Membaca dan mendekode setiap file audio yang dianalisis Specty. Mencakup pustaka FFmpeg (libavcodec, libavformat, libavutil, dan lainnya), juga di bawah LGPL. Kode sumbernya tersedia di tautan di atas.</string>
+    <string name="lib_mornye_summary">Pemeriksaan Hi-Res untuk upsampling dan lantai derau audio 16-bit, dari aplikasi musik Mornye.</string>
+    <string name="lib_mornye_note">Pemeriksaan sample-and-hold, interpolasi, dan lantai derau 16-bit di Specty adalah port Kotlin dari kode bukti Hi-Res Mornye, dipakai di bawah LGPL dan digabungkan dengan Specty di bawah GPL. Terima kasih kepada para penulisnya. Kode sumbernya tersedia di tautan di atas.</string>
     <string name="lib_compose_summary">Toolkit UI: UI, Graphics, Foundation, Material 3, dan Material Icons Extended.</string>
     <string name="lib_compose_note">Menggambar seluruh antarmuka. Ikonnya berasal dari kumpulan Material Icons.</string>
     <string name="lib_activity_summary">Integrasi Compose untuk activity, result contract, dan edge-to-edge.</string>
@@ -368,6 +370,10 @@
     <string name="view_channels">Kanal</string>
     <string name="view_mono">Mono</string>
     <string name="view_channel">Kn %1$s</string>
+    <string name="note_upsample_hold">Setiap sampel diulang %1$s kali, tanda sumber %2$s kHz yang diregangkan ke laju ini dengan sample-and-hold. Ini audio hasil upsample.</string>
+    <string name="note_upsample_line">Sampel di antara setiap sampel ke-%1$s berada pada garis lurus, tanda sumber %2$s kHz yang diregangkan ke laju ini dengan interpolasi linear. Ini audio hasil upsample.</string>
+    <string name="note_floor_at_16bit">Bagian paling sunyi berada pada tingkat derau audio 16-bit, yang sesuai dengan sumber beresolusi CD.</string>
+    <string name="note_floor_below_16bit">Bagian paling sunyi lebih sunyi daripada derau 16-bit, sehingga file ini menyimpan resolusi lebih dari CD.</string>
     <plurals name="note_few_sections">
         <item quantity="other">Hanya %1$d bagian lagu yang dapat dibaca dengan jelas.</item>
     </plurals>

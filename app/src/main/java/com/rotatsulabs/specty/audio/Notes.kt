@@ -5,6 +5,7 @@ enum class NoteKey {
     // Verdict notes.
     ATMOS, LOSSY_CODEC_EDGE, LOSSY_CODEC, NO_DECODER, NO_SIGNAL, FAINT_TOP, FULL_BAND, ROLLOFF,
     HARD_CUTOFF, UPSAMPLED, SHARP_CUTOFF, BAND_LIMITED, BITS_PADDED, SECTIONS_DISAGREE, TOO_LITTLE_CLEAR, FEW_SECTIONS,
+    UPSAMPLE_HOLD, UPSAMPLE_LINE, FLOOR_AT_16BIT, FLOOR_BELOW_16BIT,
 
     // Compare highlights.
     VERDICTS_DIFFER, MORE_TOP_END, B_REACHES_TOP, A_REACHES_TOP, MORE_DYNAMIC, LOUDER, MORE_CLIPPING, ALMOST_SAME,
@@ -51,6 +52,16 @@ object Notes {
                 "Too little of the track gives a clear reading of the top of the spectrum to rule out a lossy origin."
             NoteKey.FEW_SECTIONS ->
                 "Only ${a[0]} section${if (a[0] == "1") "" else "s"} of the track could be read clearly."
+            NoteKey.UPSAMPLE_HOLD ->
+                "Every sample is repeated ${a[0]} times, the mark of a ${a[1]} kHz source stretched to this rate by sample-and-hold. " +
+                    "This is upsampled audio."
+            NoteKey.UPSAMPLE_LINE ->
+                "The samples between every ${a[0]}th one lie on straight lines, the mark of a ${a[1]} kHz source stretched to this rate " +
+                    "by linear interpolation. This is upsampled audio."
+            NoteKey.FLOOR_AT_16BIT ->
+                "The quietest passages sit at the noise level of 16-bit audio, which fits a CD-resolution source."
+            NoteKey.FLOOR_BELOW_16BIT ->
+                "The quietest passages are quieter than 16-bit noise, so the file holds more than CD resolution."
 
             NoteKey.VERDICTS_DIFFER -> "Verdicts differ: A is ${verdictPhrase(a[0])}, B is ${verdictPhrase(a[1])}."
             NoteKey.MORE_TOP_END -> "${a[0]} keeps ${a[1]} kHz more top end (cutoff ${a[2]} kHz vs ${a[3]} kHz)."

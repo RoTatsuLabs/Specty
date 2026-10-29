@@ -308,4 +308,51 @@ class AuthenticityRegressionTest {
         val r = AuthenticityAnalyzer.assess(declared, spectra(cliff, same(cliff), 44_100), null)
         assertTrue("cutoff ${r.cutoffHz}", kotlin.math.abs(r.cutoffHz!! - 16_000.0) < 600.0)
     }
+
+    // ---- sample evidence and noise floor (checks from Mornye) -------------------------------
+
+    private val lsbVar = Math.pow(Math.pow(2.0, -15.0), 2.0) / 12.0
+
+    private fun assessWith(
+        whole: FloatArray, info: AudioInfo, floor: Double?, finding: UpsampleEvidence.Finding? = null,
+    ) = AuthenticityAnalyzer.assess(
+        info, AuthSpectra(info.sampleRate, AnalysisVersion.AUTH_FFT, whole, same(whole), floor), null, finding,
+    )
+
+    @Test
+    fun aRepeatedSamplePatternIsProofOfUpsamplingWhateverTheSpectrumShows() {
+        val finding = UpsampleEvidence.Finding(UpsampleEvidence.Kind.SAMPLE_HOLD, 2, 44_100)
+        val r = assessWith(spectrum(96_000) { base(it) }, info(sampleRate = 96_000), null, finding)
+        assertEquals(Verdict.UPSAMPLED, r.verdict)
+        assertEquals(97, r.confidence)
+        assertEquals(NoteKey.UPSAMPLE_HOLD, r.notes.first().key)
+        assertEquals(listOf("2", "44.1"), r.notes.first().args)
+    }
+
+    @Test
+    fun aFloorAtSixteenBitsBacksACutoffBasedUpsampledVerdict() {
+        val cut = spectrum(96_000) { if (it < 21_500.0) base(it) else -135.0 }
+        val plain = assessWith(cut, info(sampleRate = 96_000), null)
+        assertEquals(Verdict.UPSAMPLED, plain.verdict)
+        val backed = assessWith(cut, info(sampleRate = 96_000), lsbVar)
+        assertEquals(Verdict.UPSAMPLED, backed.verdict)
+        assertTrue(backed.confidence >= plain.confidence && backed.confidence <= 95)
+        assertEquals(NoteKey.FLOOR_AT_16BIT, backed.notes.last().key)
+    }
+
+    @Test
+    fun aFloorBelowSixteenBitsWithdrawsTheUpsampledVerdict() {
+        val cut = spectrum(96_000) { if (it < 21_500.0) base(it) else -135.0 }
+        val r = assessWith(cut, info(sampleRate = 96_000), lsbVar / 100)
+        assertEquals(Verdict.BAND_LIMITED, r.verdict)
+        assertEquals(NoteKey.BAND_LIMITED, r.notes.first().key)
+        assertEquals(NoteKey.FLOOR_BELOW_16BIT, r.notes.last().key)
+    }
+
+    @Test
+    fun sampleEvidenceNeverTouchesALossyCodec() {
+        val finding = UpsampleEvidence.Finding(UpsampleEvidence.Kind.SAMPLE_HOLD, 2, 44_100)
+        val r = assessWith(fullBand, info(codec = "mp3"), null, finding)
+        assertEquals(Verdict.LOSSY_CODEC, r.verdict)
+    }
 }

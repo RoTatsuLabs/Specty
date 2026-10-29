@@ -83,6 +83,8 @@
     <string name="lib_specty_note">Specty 是自由软件，遵循 GNU 通用公共许可证第 3 版。你可以依据这些条款使用、研究、修改和分享它。</string>
     <string name="lib_ffmpeg_summary">通过 FFmpegKitNext 提供的适用于 Android 的 FFmpeg，是 Arthenica 的 ffmpeg-kit 的延续。</string>
     <string name="lib_ffmpeg_note">读取并解码 Specty 分析的每一个音频文件。其中包含 FFmpeg 库（libavcodec、libavformat、libavutil 等），同样遵循 LGPL。源代码可通过上方链接获取。</string>
+    <string name="lib_mornye_summary">来自 Mornye 音乐应用的 Hi-Res 检测：升采样与 16 位噪声底。</string>
+    <string name="lib_mornye_note">Specty 的采样保持、插值和 16 位噪声底检测，是 Mornye Hi-Res 证据代码的 Kotlin 移植版，依据 LGPL 使用，并依据 GPL 与 Specty 合并。感谢其作者。源代码可通过上方链接获取。</string>
     <string name="lib_compose_summary">UI 工具包：UI、Graphics、Foundation、Material 3 和 Material Icons Extended。</string>
     <string name="lib_compose_note">绘制整个界面。图标来自 Material Icons 图标集。</string>
     <string name="lib_activity_summary">面向 Activity、结果协定和边到边显示的 Compose 集成。</string>
@@ -368,6 +370,10 @@
     <string name="view_channels">声道</string>
     <string name="view_mono">单声道</string>
     <string name="view_channel">声道 %1$s</string>
+    <string name="note_upsample_hold">每个采样点都重复了 %1$s 次，这是 %2$s kHz 音源经采样保持拉伸到该采样率的特征。这是升采样音频。</string>
+    <string name="note_upsample_line">每隔 %1$s 个采样点之间的采样落在直线上，这是 %2$s kHz 音源经线性插值拉伸到该采样率的特征。这是升采样音频。</string>
+    <string name="note_floor_at_16bit">最安静的部分处于 16 位音频的噪声水平，符合 CD 分辨率的音源。</string>
+    <string name="note_floor_below_16bit">最安静的部分比 16 位噪声更低，说明该文件的分辨率高于 CD。</string>
     <plurals name="note_few_sections">
         <item quantity="other">只有 %1$d 段能被清晰读取。</item>
     </plurals>
