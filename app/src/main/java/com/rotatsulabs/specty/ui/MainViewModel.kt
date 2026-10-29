@@ -6,6 +6,7 @@ import android.content.Intent
 import android.net.Uri
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.rotatsulabs.specty.R
 import com.rotatsulabs.specty.audio.AnalysisFailure
 import com.rotatsulabs.specty.audio.AnalysisResult
 import com.rotatsulabs.specty.audio.AnalysisStage
@@ -104,7 +105,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         if (_analysis.value.let { it is AnalysisState.Done || it is AnalysisState.Limited }) _viewing.value = true
     }
 
-    private val folderStore = LibraryFolders(app)
+    private val folderStore = LibraryFolders(app, app.getString(R.string.storage_internal))
     private var libraryJob: Job? = null
     private val _library = MutableStateFlow(LibraryState(folders = folderStore.list(), excluded = folderStore.excluded()))
     val library: StateFlow<LibraryState> = _library.asStateFlow()
