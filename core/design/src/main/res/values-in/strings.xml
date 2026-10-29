@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="action_back">Kembali</string>
+    <string name="search_clear">Hapus pencarian</string>
+    <string name="search_default">Cari</string>
+    <string name="verdict_fake">Palsu</string>
+    <string name="verdict_lossless">Lossless</string>
+    <string name="verdict_lossy">Lossy</string>
+    <string name="verdict_maybe">Mungkin</string>
+    <string name="palette_violet">Ungu</string>
+    <string name="palette_azure">Biru</string>
+    <string name="palette_teal">Teal</string>
+    <string name="palette_lime">Limau</string>
+    <string name="palette_amber">Ambar</string>
+    <string name="palette_rose">Mawar</string>
+    <string name="theme_system">Sistem</string>
+    <string name="theme_light">Terang</string>
+    <string name="theme_dark">Gelap</string>
+</resources>

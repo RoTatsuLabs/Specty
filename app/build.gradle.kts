@@ -97,6 +97,9 @@ kotlin {
 }
 
 dependencies {
+    implementation(project(":core:audio"))
+    implementation(project(":core:data"))
+    implementation(project(":core:design"))
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.compose.ui)
     implementation(libs.androidx.compose.ui.graphics)
@@ -109,7 +112,6 @@ dependencies {
     implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.androidx.core.ktx)
     implementation(libs.kotlinx.coroutines.android)
-    implementation(libs.ffmpeg.kit)
 
     debugImplementation(libs.androidx.compose.ui.tooling)
 

@@ -35,11 +35,17 @@ class OpenSourceTest {
 
     @Test
     fun everyShippedDependencyIsListed() {
-        val gradle = File(root(), "app/build.gradle.kts").readText()
-        val shipped = Regex("""^\s*implementation\(""", RegexOption.MULTILINE).findAll(gradle).count()
+        // Every module's build file counts; a library two modules both use is one dependency. Modules of this project
+        // are not libraries.
+        val files = listOf(File(root(), "app/build.gradle.kts")) +
+            File(root(), "core").listFiles { f -> f.isDirectory }!!.map { File(it, "build.gradle.kts") }
+        val shipped = files.flatMap { it.readLines() }
+            .mapNotNull { Regex("""^\s*(?:implementation|api)\((.+)\)\s*$""").find(it)?.groupValues?.get(1)?.removePrefix("platform(")?.removeSuffix(")") }
+            .filter { !it.startsWith("project(") }
+            .toSet()
         // BOM + 6 Compose, Activity, 2 Lifecycle, Core, coroutines, ffmpeg-kit. A new dependency needs an entry in
         // OpenSource.libraries (or a note that an existing one covers it) and this count updated.
-        assertEquals(13, shipped)
+        assertEquals(shipped.toString(), 13, shipped.size)
     }
 
     @Test
