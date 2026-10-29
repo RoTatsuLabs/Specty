@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="action_back">返回</string>
+    <string name="search_clear">清除搜索</string>
+    <string name="search_default">搜索</string>
+    <string name="verdict_fake">伪无损</string>
+    <string name="verdict_lossless">无损</string>
+    <string name="verdict_lossy">有损</string>
+    <string name="verdict_maybe">存疑</string>
+    <string name="palette_violet">紫罗兰</string>
+    <string name="palette_azure">天蓝</string>
+    <string name="palette_teal">青绿</string>
+    <string name="palette_lime">青柠</string>
+    <string name="palette_amber">琥珀</string>
+    <string name="palette_rose">玫瑰</string>
+    <string name="theme_system">跟随系统</string>
+    <string name="theme_light">浅色</string>
+    <string name="theme_dark">深色</string>
+</resources>

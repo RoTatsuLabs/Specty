@@ -26,3 +26,6 @@ dependencyResolutionManagement {
 
 rootProject.name = "Specty"
 include(":app")
+include(":core:audio")
+include(":core:data")
+include(":core:design")

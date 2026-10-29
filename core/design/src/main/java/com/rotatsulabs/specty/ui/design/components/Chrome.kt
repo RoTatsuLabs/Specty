@@ -1,7 +1,7 @@
 package com.rotatsulabs.specty.ui.design.components
 
 import androidx.compose.ui.res.stringResource
-import com.rotatsulabs.specty.R
+import com.rotatsulabs.specty.core.design.R
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row

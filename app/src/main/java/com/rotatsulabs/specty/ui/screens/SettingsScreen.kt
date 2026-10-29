@@ -27,6 +27,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.rotatsulabs.specty.R
 import com.rotatsulabs.specty.audio.WindowFn
+import com.rotatsulabs.specty.ui.components.noteRes
 import com.rotatsulabs.specty.ui.AppLanguage
 import kotlinx.coroutines.launch
 import com.rotatsulabs.specty.ui.components.Reveal

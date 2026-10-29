@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import com.rotatsulabs.specty.R
+import com.rotatsulabs.specty.audio.WindowFn
 import com.rotatsulabs.specty.audio.AuthenticityReport
 import com.rotatsulabs.specty.audio.AnalysisStage
 import com.rotatsulabs.specty.audio.BitDepth
@@ -157,3 +158,11 @@ fun failureText(failure: Failure?, detail: String?): String {
         FailKey.DECODE_FAILED -> stringResource(R.string.fail_decode, a[0].trim()).trim()
     }
 }
+
+/** The sentence under the window choice in Settings. The text lives in the app, so the audio module stays free of resources. */
+val WindowFn.noteRes: Int
+    get() = when (this) {
+        WindowFn.Hann -> R.string.window_hann_note
+        WindowFn.Hamming -> R.string.window_hamming_note
+        WindowFn.BlackmanHarris -> R.string.window_blackman_harris_note
+    }

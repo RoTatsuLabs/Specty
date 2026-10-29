@@ -54,10 +54,11 @@ object Fmt {
      */
     fun spectralEdge(report: AuthenticityReport): Pair<String, String> {
         val cutoff = report.cutoffHz
+        val emptyAbove = report.emptyAboveHz
         return when {
             cutoff != null -> "Spectral Cutoff" to kHz(cutoff)
-            report.shape == SpectrumShape.GRADUAL_ROLLOFF && report.emptyAboveHz != null ->
-                "Spectral Roll-off" to "Empty above ${kHz(report.emptyAboveHz)}"
+            report.shape == SpectrumShape.GRADUAL_ROLLOFF && emptyAbove != null ->
+                "Spectral Roll-off" to "Empty above ${kHz(emptyAbove)}"
             report.shape == SpectrumShape.FULL_BAND -> "Spectral Cutoff" to "None found"
             else -> "Spectral Cutoff" to "Not determined"
         }
