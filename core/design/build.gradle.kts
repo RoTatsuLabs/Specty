@@ -41,6 +41,7 @@ kotlin {
 }
 
 dependencies {
+    api(project(":core:audio"))
     api(platform(libs.androidx.compose.bom))
     api(libs.androidx.compose.ui)
     api(libs.androidx.compose.ui.graphics)
