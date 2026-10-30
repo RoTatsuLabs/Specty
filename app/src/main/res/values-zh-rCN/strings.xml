@@ -497,6 +497,7 @@
     <string name="insights_duplicates">重复</string>
     <string name="insights_duplicates_hint">每首歌保留最好的一份。</string>
     <string name="insights_duplicates_none">没有重复的歌曲。</string>
+    <string name="insights_compare">与最佳版本对比</string>
     <string name="insights_best">最佳版本</string>
     <string name="insights_share">分享摘要</string>
     <string name="insights_share_title">Specty 曲库摘要</string>

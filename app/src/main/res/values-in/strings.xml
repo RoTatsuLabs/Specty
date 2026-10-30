@@ -497,6 +497,7 @@
     <string name="insights_duplicates">Duplikat</string>
     <string name="insights_duplicates_hint">Simpan salinan terbaik dari tiap lagu.</string>
     <string name="insights_duplicates_none">Tidak ada lagu yang muncul dua kali.</string>
+    <string name="insights_compare">Bandingkan dengan salinan terbaik</string>
     <string name="insights_best">Salinan terbaik</string>
     <string name="insights_share">Bagikan ringkasan</string>
     <string name="insights_share_title">Ringkasan pustaka Specty</string>

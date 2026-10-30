@@ -512,6 +512,7 @@
     <string name="insights_duplicates">Duplicates</string>
     <string name="insights_duplicates_hint">Keep the best copy of each.</string>
     <string name="insights_duplicates_none">No song appears twice.</string>
+    <string name="insights_compare">Compare with the best copy</string>
     <string name="insights_best">Best copy</string>
     <string name="insights_share">Share summary</string>
     <string name="insights_share_title">Specty library summary</string>
