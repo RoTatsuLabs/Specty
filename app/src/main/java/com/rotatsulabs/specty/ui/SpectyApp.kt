@@ -204,6 +204,7 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit, onPickFolder: ()
                     keyFor = keyFor,
                     onBack = { showInsights = false },
                     onOpenTrack = openTrack,
+                    onCompare = { a, b -> viewModel.compareTracks(a.uri, b.uri) },
                     dockVisible = dockVisible,
                     flight = flight,
                 )
