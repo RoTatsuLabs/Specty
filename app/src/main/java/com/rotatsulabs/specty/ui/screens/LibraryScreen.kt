@@ -151,7 +151,7 @@ import kotlin.math.abs
 import kotlin.math.sin
 
 @StringRes
-private fun SortField.labelRes(): Int = when (this) {
+internal fun SortField.labelRes(): Int = when (this) {
     SortField.Title -> R.string.sort_title
     SortField.Artist -> R.string.sort_artist
     SortField.Album -> R.string.sort_album
@@ -175,10 +175,7 @@ private fun GroupField.labelRes(): Int = when (this) {
 }
 
 /** Results from the ones worth a look down to tracks not checked yet; this is the order of the Result sort and groups. */
-private val RESULT_ORDER = listOf(
-    ResultFilter.NeedsLook, ResultFilter.LossyFormat, ResultFilter.Unclear,
-    ResultFilter.Lossless, ResultFilter.HiRes, ResultFilter.Atmos, ResultFilter.Unchecked,
-)
+private val RESULT_ORDER = ResultFilter.ORDER
 
 @Composable
 private fun groupTitle(by: GroupField, group: TrackGroup<Track>): String = when (by) {

@@ -22,6 +22,15 @@ enum class ResultFilter {
             Verdict.BAND_LIMITED, Verdict.INCONCLUSIVE -> Unclear
         }
 
+        /** Results from the ones worth a look down to tracks not checked yet; the order of the Result sort and summaries. */
+        val ORDER = listOf(NeedsLook, LossyFormat, Unclear, Lossless, HiRes, Atmos, Unchecked)
+
+        /** The kinds present in [verdicts] with their counts, in [ORDER]. Kinds with no track are left out. */
+        fun summary(verdicts: Collection<Verdict?>): List<Pair<ResultFilter, Int>> {
+            val counts = counts(verdicts)
+            return ORDER.mapNotNull { kind -> counts.getValue(kind).takeIf { it > 0 }?.let { kind to it } }
+        }
+
         fun counts(verdicts: Collection<Verdict?>): Map<ResultFilter, Int> {
             val out = entries.associateWith { 0 }.toMutableMap()
             for (v in verdicts) out[of(v)] = out.getValue(of(v)) + 1
