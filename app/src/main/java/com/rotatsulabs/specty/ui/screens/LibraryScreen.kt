@@ -15,6 +15,7 @@ import com.rotatsulabs.specty.ui.design.components.Pill
 import com.rotatsulabs.specty.ui.design.components.RingProgress
 import com.rotatsulabs.specty.ui.design.components.SearchField
 import com.rotatsulabs.specty.ui.design.components.ShapeLoader
+import com.rotatsulabs.specty.ui.design.components.OptionSegmentedControl
 import com.rotatsulabs.specty.ui.design.components.SpectyCard
 import com.rotatsulabs.specty.ui.design.components.VerdictPill
 import com.rotatsulabs.specty.ui.design.components.WavyProgressBar
@@ -161,10 +162,14 @@ private fun SortField.labelRes(): Int = when (this) {
 }
 
 @StringRes
+private fun BrowseKind.labelRes(): Int = when (this) {
+    BrowseKind.Tracks -> R.string.browse_tracks
+    BrowseKind.Albums -> R.string.browse_albums
+    BrowseKind.Artists -> R.string.browse_artists
+}
+
 private fun GroupField.labelRes(): Int = when (this) {
     GroupField.None -> R.string.group_none
-    GroupField.Artist -> R.string.group_artist
-    GroupField.Album -> R.string.group_album
     GroupField.Result -> R.string.group_result
     GroupField.Format -> R.string.group_format
 }
@@ -178,8 +183,6 @@ private val RESULT_ORDER = listOf(
 @Composable
 private fun groupTitle(by: GroupField, group: TrackGroup<Track>): String = when (by) {
     GroupField.Result -> stringResource(RESULT_ORDER[group.rank].labelRes)
-    GroupField.Artist -> group.key ?: stringResource(R.string.group_unknown_artist)
-    GroupField.Album -> group.key ?: stringResource(R.string.group_unknown_album)
     GroupField.Format -> group.key ?: stringResource(R.string.group_unknown_format)
     GroupField.None -> ""
 }
@@ -198,6 +201,7 @@ fun LibraryScreen(
     onOpenFolders: () -> Unit,
     onOpenSettings: () -> Unit,
     onOpenAbout: () -> Unit,
+    onOpenCollection: (String) -> Unit = {},
     verdicts: Map<String, Verdict>,
     keyFor: (Track) -> String,
     batch: BatchScanner.State = BatchScanner.State(),
@@ -260,6 +264,14 @@ fun LibraryScreen(
         LibraryOrder.group(LibraryOrder.sort(filtered, layout.sort, layout.ascending, fields), layout.group, fields)
     }
     val visible = remember(groups) { groups.flatMap { it.items } }
+    val collections = remember(visible, layout.browse, layout.ascending, fields) {
+        val list = when (layout.browse) {
+            BrowseKind.Albums -> Browse.albums(visible, fields)
+            BrowseKind.Artists -> Browse.artists(visible, fields)
+            BrowseKind.Tracks -> emptyList()
+        }
+        if (layout.ascending) list else list.reversed()
+    }
 
     val picks = remember(pickedRaw, state.tracks) {
         ComparePicks.decode(pickedRaw).mapNotNull { id -> state.tracks.firstOrNull { it.uri.toString() == id } }
@@ -342,6 +354,15 @@ fun LibraryScreen(
                 }
             }
             if (hasTracks) {
+                item(key = "browse") {
+                    OptionSegmentedControl(
+                        BrowseKind.entries, layout.browse, { setLayout(layout.copy(browse = it)) },
+                        { stringResource(it.labelRes()) },
+                        Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp),
+                    )
+                }
+            }
+            if (hasTracks) {
                 item(key = "activeFilters") {
                     ActiveFilters(
                         selected = filters,
@@ -354,7 +375,8 @@ fun LibraryScreen(
                 item(key = "section") {
                     Box {
                     SectionBar(
-                        count = visible.size,
+                        count = if (layout.browse == BrowseKind.Tracks) visible.size else collections.size,
+                        browse = layout.browse,
                         sort = layout.sort,
                         group = layout.group,
                         ascending = layout.ascending,
@@ -390,6 +412,23 @@ fun LibraryScreen(
                 }
                 visible.isEmpty() -> item(key = "nomatch") {
                     Box(Modifier.fillParentMaxHeight(0.4f).fillMaxWidth()) { Message(stringResource(R.string.library_no_match)) }
+                }
+                layout.browse != BrowseKind.Tracks -> {
+                    if (layout.grid) {
+                        itemsIndexed(collections.chunked(columns), key = { _, row -> "c" + row.first().id }) { _, row ->
+                            Row(
+                                Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp).animateItem(placementSpec = Motion.spatial()),
+                                horizontalArrangement = Arrangement.spacedBy(14.dp),
+                            ) {
+                                row.forEach { c -> CollectionTile(c, { onOpenCollection(c.id) }, Modifier.weight(1f)) }
+                                repeat(columns - row.size) { Spacer(Modifier.weight(1f)) }
+                            }
+                        }
+                    } else {
+                        itemsIndexed(collections, key = { _, c -> "c" + c.id }) { _, c ->
+                            CollectionRow(c, { onOpenCollection(c.id) }, Modifier.padding(horizontal = 10.dp).animateItem(placementSpec = Motion.spatial()))
+                        }
+                    }
                 }
                 else -> groups.forEach { group ->
                     if (layout.group != GroupField.None) {
@@ -644,6 +683,7 @@ private fun SearchPill(query: String, onChange: (String) -> Unit, trailing: @Com
 @Composable
 private fun SectionBar(
     count: Int,
+    browse: BrowseKind,
     sort: SortField,
     group: GroupField,
     ascending: Boolean,
@@ -667,12 +707,19 @@ private fun SectionBar(
             label = "songCount",
         ) { n ->
             Text(
-                pluralStringResource(R.plurals.library_tracks, n, n),
+                pluralStringResource(
+                    when (browse) {
+                        BrowseKind.Tracks -> R.plurals.library_tracks
+                        BrowseKind.Albums -> R.plurals.library_albums
+                        BrowseKind.Artists -> R.plurals.library_artists
+                    },
+                    n, n,
+                ),
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
-        Box {
+        if (browse == BrowseKind.Tracks) Box {
             MorphSurface(
                 Modifier.height(40.dp),
                 corners = SpectyShapes.Pill,
@@ -723,7 +770,7 @@ private fun SectionBar(
 // ---- tracks -----------------------------------------------------------------------------------------
 
 @Composable
-private fun CoverFallback(track: Track) {
+internal fun CoverFallback(track: Track) {
     Surface(
         modifier = Modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.tertiaryContainer,
@@ -737,7 +784,7 @@ private fun CoverFallback(track: Track) {
 
 /** Flat row: no card, just cover, text and a trailing badge. Pressing morphs the corners. */
 @Composable
-private fun TrackRow(
+internal fun TrackRow(
     track: Track,
     index: Int,
     verdict: Verdict?,

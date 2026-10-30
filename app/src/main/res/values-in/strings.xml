@@ -126,6 +126,16 @@
     <plurals name="library_tracks">
         <item quantity="other">%1$d lagu</item>
     </plurals>
+    <string name="browse_tracks">Lagu</string>
+    <string name="browse_albums">Album</string>
+    <string name="browse_artists">Artis</string>
+    <plurals name="library_albums">
+        <item quantity="other">%1$d album</item>
+    </plurals>
+    <plurals name="library_artists">
+        <item quantity="other">%1$d artis</item>
+    </plurals>
+    <string name="album_various">Berbagai artis</string>
     <string name="sort_title">Judul</string>
     <string name="sort_artist">Artis</string>
     <string name="sort_length">Durasi</string>
@@ -432,8 +442,6 @@
     <string name="library_sort_by">Urutkan menurut</string>
     <string name="library_group_by">Kelompokkan menurut</string>
     <string name="group_none">Tanpa pengelompokan</string>
-    <string name="group_artist">Artis</string>
-    <string name="group_album">Album</string>
     <string name="group_result">Hasil</string>
     <string name="group_format">Format</string>
     <string name="group_unknown_artist">Artis tidak dikenal</string>
