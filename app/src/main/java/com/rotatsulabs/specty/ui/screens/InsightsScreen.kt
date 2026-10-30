@@ -24,6 +24,7 @@ import androidx.compose.material.icons.rounded.IosShare
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -56,6 +57,7 @@ fun InsightsScreen(
     keyFor: (Track) -> String,
     onBack: () -> Unit,
     onOpenTrack: (Track, Rect?, CoverSource?) -> Unit,
+    onCompare: (Track, Track) -> Unit,
     dockVisible: Boolean,
     flight: CoverFlight?,
     modifier: Modifier = Modifier,
@@ -145,6 +147,11 @@ fun InsightsScreen(
                         Column {
                             if (t == group.best) BestMark()
                             TrackRow(t, 0, verdicts[keyFor(t)], { b, c -> onOpenTrack(t, b, c) }, Modifier.padding(horizontal = 10.dp), flight)
+                            if (t != group.best) {
+                                TextButton(onClick = { onCompare(group.best, t) }, Modifier.padding(start = 14.dp)) {
+                                    Text(stringResource(R.string.insights_compare))
+                                }
+                            }
                         }
                     }
                     item(key = "gap$id") { Spacer(Modifier.height(10.dp)) }
