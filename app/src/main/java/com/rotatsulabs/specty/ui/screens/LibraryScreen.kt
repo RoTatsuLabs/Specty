@@ -81,6 +81,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.FolderOpen
 import androidx.compose.material.icons.rounded.GridView
+import androidx.compose.material.icons.rounded.Insights
 import androidx.compose.material.icons.rounded.KeyboardArrowUp
 import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material.icons.rounded.MoreVert
@@ -196,6 +197,7 @@ fun LibraryScreen(
     onPickFile: () -> Unit,
     onPickFolder: () -> Unit,
     onOpenFolders: () -> Unit,
+    onOpenInsights: () -> Unit = {},
     onOpenSettings: () -> Unit,
     onOpenAbout: () -> Unit,
     onOpenCollection: (String) -> Unit = {},
@@ -326,6 +328,8 @@ fun LibraryScreen(
                     onSettings = onOpenSettings,
                     onAbout = onOpenAbout,
                     onFolders = onOpenFolders,
+                    onInsights = onOpenInsights,
+                    canInsights = state.tracks.isNotEmpty(),
                     canRescan = hasFolders,
                     canScan = state.tracks.isNotEmpty() && !batch.running,
                     unscanned = unscanned,
@@ -519,6 +523,8 @@ private fun Header(
     onSettings: () -> Unit,
     onAbout: () -> Unit,
     onFolders: () -> Unit,
+    onInsights: () -> Unit,
+    canInsights: Boolean,
     canRescan: Boolean,
     canScan: Boolean,
     unscanned: Int,
@@ -560,6 +566,13 @@ private fun Header(
                         leadingIcon = { Icon(Icons.Rounded.Radar, contentDescription = null) },
                         enabled = unscanned > 0,
                         onClick = { menu = false; onScanAll() },
+                    )
+                }
+                if (canInsights) {
+                    ExpressiveMenuItem(
+                        text = { Text(stringResource(R.string.library_menu_insights)) },
+                        leadingIcon = { Icon(Icons.Rounded.Insights, contentDescription = null) },
+                        onClick = { menu = false; onInsights() },
                     )
                 }
                 ExpressiveMenuItem(

@@ -9,6 +9,18 @@ import com.rotatsulabs.specty.audio.Verdict
 enum class ResultFilter {
     Unchecked, Lossless, HiRes, NeedsLook, LossyFormat, Atmos, Unclear;
 
+    /** How good a result is when choosing between copies of one song: higher is better, an unchecked track the lowest. */
+    val quality: Int
+        get() = when (this) {
+            HiRes -> 6
+            Lossless -> 5
+            Atmos -> 4
+            Unclear -> 3
+            NeedsLook -> 2
+            LossyFormat -> 1
+            Unchecked -> 0
+        }
+
     companion object {
         /** The kind for a saved verdict, or [Unchecked] when the track has no saved result. */
         fun of(verdict: Verdict?): ResultFilter = when (verdict) {

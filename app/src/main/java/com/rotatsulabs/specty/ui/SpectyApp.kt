@@ -78,6 +78,7 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit, onPickFolder: ()
     var showLog by rememberSaveable { mutableStateOf(false) }
     var showFolders by rememberSaveable { mutableStateOf(false) }
     var showExport by rememberSaveable { mutableStateOf(false) }
+    var showInsights by rememberSaveable { mutableStateOf(false) }
     // Pages of albums and artists, newest last; an artist page can open one of its albums on top of itself.
     var pagesRaw by rememberSaveable { mutableStateOf("") }
     var viewerView by rememberSaveable { mutableStateOf<Int?>(null) }
@@ -115,9 +116,11 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit, onPickFolder: ()
     val foldersBack = remember { BackGesture() }
     val exportBack = remember { BackGesture() }
     val pageBack = remember { BackGesture() }
+    val insightsBack = remember { BackGesture() }
     val pages = pagesRaw.split('\n').filter { it.isNotEmpty() }
     val pageHeld = remember { object { var id: String = "" } }
     pages.lastOrNull()?.let { pageHeld.id = it }
+    PredictiveBack(insightsBack, enabled = showInsights) { showInsights = false }
     PredictiveBack(pageBack, enabled = pages.isNotEmpty()) { pagesRaw = pages.dropLast(1).joinToString("\n") }
     PredictiveBack(analysisBack, enabled = analysisOpen) { viewModel.closeAnalysis() }
     PredictiveBack(settingsBack, enabled = showSettings) { showSettings = false }
@@ -162,6 +165,7 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit, onPickFolder: ()
                 onPickFile = onPickFile,
                 onPickFolder = onPickFolder,
                 onOpenFolders = { showFolders = true },
+                onOpenInsights = { showInsights = true },
                 onOpenSettings = { showSettings = true },
                 onOpenAbout = { showAbout = true },
                 dockVisible = dockVisible,
@@ -189,6 +193,20 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit, onPickFolder: ()
                         flight = flight,
                     )
                 }
+            }
+        }
+
+        OverlayScreen(visible = showInsights, gesture = insightsBack, depth = depth, id = "insights", backdrop = MaterialTheme.colorScheme.surface) {
+            PaneSurface {
+                com.rotatsulabs.specty.ui.screens.InsightsScreen(
+                    tracks = library.tracks,
+                    verdicts = verdicts,
+                    keyFor = keyFor,
+                    onBack = { showInsights = false },
+                    onOpenTrack = openTrack,
+                    dockVisible = dockVisible,
+                    flight = flight,
+                )
             }
         }
 

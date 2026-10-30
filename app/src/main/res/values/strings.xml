@@ -504,4 +504,19 @@
     <string name="report_preview">Preview</string>
     <string name="report_caption">Add a caption (optional)</string>
     <string name="report_png">PNG image</string>
+    <string name="library_menu_insights">Library insights</string>
+    <string name="insights_title">Library insights</string>
+    <string name="insights_totals">%1$d tracks  ·  %2$s  ·  %3$s</string>
+    <string name="insights_checked">%1$d of %2$d checked</string>
+    <string name="insights_formats">Formats</string>
+    <string name="insights_duplicates">Duplicates</string>
+    <string name="insights_duplicates_hint">Keep the best copy of each.</string>
+    <string name="insights_duplicates_none">No song appears twice.</string>
+    <string name="insights_best">Best copy</string>
+    <string name="insights_share">Share summary</string>
+    <string name="insights_share_title">Specty library summary</string>
+    <plurals name="insights_duplicate_songs">
+        <item quantity="one">%d song with several copies</item>
+        <item quantity="other">%d songs with several copies</item>
+    </plurals>
 </resources>
