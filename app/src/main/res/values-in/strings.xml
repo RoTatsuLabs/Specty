@@ -489,4 +489,18 @@
     <string name="report_preview">Pratinjau</string>
     <string name="report_caption">Tambahkan keterangan (opsional)</string>
     <string name="report_png">Gambar PNG</string>
+    <string name="library_menu_insights">Wawasan pustaka</string>
+    <string name="insights_title">Wawasan pustaka</string>
+    <string name="insights_totals">%1$d lagu  ·  %2$s  ·  %3$s</string>
+    <string name="insights_checked">%1$d dari %2$d sudah diperiksa</string>
+    <string name="insights_formats">Format</string>
+    <string name="insights_duplicates">Duplikat</string>
+    <string name="insights_duplicates_hint">Simpan salinan terbaik dari tiap lagu.</string>
+    <string name="insights_duplicates_none">Tidak ada lagu yang muncul dua kali.</string>
+    <string name="insights_best">Salinan terbaik</string>
+    <string name="insights_share">Bagikan ringkasan</string>
+    <string name="insights_share_title">Ringkasan pustaka Specty</string>
+    <plurals name="insights_duplicate_songs">
+        <item quantity="other">%d lagu punya beberapa salinan</item>
+    </plurals>
 </resources>

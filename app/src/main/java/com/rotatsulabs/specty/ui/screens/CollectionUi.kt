@@ -137,7 +137,7 @@ internal fun CollectionTile(c: LibraryCollection<Track>, onClick: () -> Unit, mo
 /** What a page sorts its tracks by: the library's fields without Album, which is the same for every track on a page. */
 private val PAGE_SORTS = SortField.entries - SortField.Album
 
-private fun pageFields(verdicts: Map<String, Verdict>, keyFor: (Track) -> String) = TrackFields<Track>(
+internal fun pageFields(verdicts: Map<String, Verdict>, keyFor: (Track) -> String) = TrackFields<Track>(
     title = { it.title }, artist = { it.artist }, album = { it.album }, durationMs = { it.durationMs },
     sizeBytes = { it.sizeBytes }, modifiedSec = { it.modifiedSec }, format = { it.extension },
     resultRank = { ResultFilter.ORDER.indexOf(ResultFilter.of(verdicts[keyFor(it)])) },
