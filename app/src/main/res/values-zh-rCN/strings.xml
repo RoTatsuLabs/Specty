@@ -504,13 +504,4 @@
     <plurals name="insights_duplicate_songs">
         <item quantity="other">%d 首歌有多个版本</item>
     </plurals>
-    <string name="library_menu_play_all">全部播放</string>
-    <string name="library_menu_shuffle_all">全部随机播放</string>
-    <string name="queue_play">播放</string>
-    <string name="queue_shuffle">随机播放</string>
-    <string name="player_previous">上一首</string>
-    <string name="player_play">播放</string>
-    <string name="player_pause">暂停</string>
-    <string name="player_next">下一首</string>
-    <string name="player_close">关闭播放器</string>
 </resources>

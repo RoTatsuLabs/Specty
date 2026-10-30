@@ -504,13 +504,4 @@
     <plurals name="insights_duplicate_songs">
         <item quantity="other">%d lagu punya beberapa salinan</item>
     </plurals>
-    <string name="library_menu_play_all">Putar semua</string>
-    <string name="library_menu_shuffle_all">Acak semua</string>
-    <string name="queue_play">Putar</string>
-    <string name="queue_shuffle">Acak</string>
-    <string name="player_previous">Lagu sebelumnya</string>
-    <string name="player_play">Putar</string>
-    <string name="player_pause">Jeda</string>
-    <string name="player_next">Lagu berikutnya</string>
-    <string name="player_close">Tutup pemutar</string>
 </resources>

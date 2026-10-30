@@ -83,8 +83,6 @@ import androidx.compose.material.icons.rounded.FolderOpen
 import androidx.compose.material.icons.rounded.GridView
 import androidx.compose.material.icons.rounded.Insights
 import androidx.compose.material.icons.rounded.KeyboardArrowUp
-import androidx.compose.material.icons.rounded.PlayArrow
-import androidx.compose.material.icons.rounded.Shuffle
 import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material.icons.rounded.MoreVert
 import androidx.compose.material.icons.rounded.Radar
@@ -200,7 +198,6 @@ fun LibraryScreen(
     onPickFolder: () -> Unit,
     onOpenFolders: () -> Unit,
     onOpenInsights: () -> Unit = {},
-    onPlayAll: (shuffle: Boolean) -> Unit = {},
     onOpenSettings: () -> Unit,
     onOpenAbout: () -> Unit,
     onOpenCollection: (String) -> Unit = {},
@@ -332,7 +329,6 @@ fun LibraryScreen(
                     onAbout = onOpenAbout,
                     onFolders = onOpenFolders,
                     onInsights = onOpenInsights,
-                    onPlayAll = onPlayAll,
                     canInsights = state.tracks.isNotEmpty(),
                     canRescan = hasFolders,
                     canScan = state.tracks.isNotEmpty() && !batch.running,
@@ -528,7 +524,6 @@ private fun Header(
     onAbout: () -> Unit,
     onFolders: () -> Unit,
     onInsights: () -> Unit,
-    onPlayAll: (shuffle: Boolean) -> Unit,
     canInsights: Boolean,
     canRescan: Boolean,
     canScan: Boolean,
@@ -574,16 +569,6 @@ private fun Header(
                     )
                 }
                 if (canInsights) {
-                    ExpressiveMenuItem(
-                        text = { Text(stringResource(R.string.library_menu_play_all)) },
-                        leadingIcon = { Icon(Icons.Rounded.PlayArrow, contentDescription = null) },
-                        onClick = { menu = false; onPlayAll(false) },
-                    )
-                    ExpressiveMenuItem(
-                        text = { Text(stringResource(R.string.library_menu_shuffle_all)) },
-                        leadingIcon = { Icon(Icons.Rounded.Shuffle, contentDescription = null) },
-                        onClick = { menu = false; onPlayAll(true) },
-                    )
                     ExpressiveMenuItem(
                         text = { Text(stringResource(R.string.library_menu_insights)) },
                         leadingIcon = { Icon(Icons.Rounded.Insights, contentDescription = null) },
