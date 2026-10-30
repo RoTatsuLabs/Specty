@@ -489,4 +489,18 @@
     <string name="report_preview">预览</string>
     <string name="report_caption">添加说明（可选）</string>
     <string name="report_png">PNG 图片</string>
+    <string name="library_menu_insights">曲库概览</string>
+    <string name="insights_title">曲库概览</string>
+    <string name="insights_totals">%1$d 首  ·  %2$s  ·  %3$s</string>
+    <string name="insights_checked">已检查 %1$d / %2$d</string>
+    <string name="insights_formats">格式</string>
+    <string name="insights_duplicates">重复</string>
+    <string name="insights_duplicates_hint">每首歌保留最好的一份。</string>
+    <string name="insights_duplicates_none">没有重复的歌曲。</string>
+    <string name="insights_best">最佳版本</string>
+    <string name="insights_share">分享摘要</string>
+    <string name="insights_share_title">Specty 曲库摘要</string>
+    <plurals name="insights_duplicate_songs">
+        <item quantity="other">%d 首歌有多个版本</item>
+    </plurals>
 </resources>
