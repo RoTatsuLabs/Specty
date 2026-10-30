@@ -22,6 +22,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Album
 import androidx.compose.material.icons.rounded.KeyboardArrowUp
+import androidx.compose.material.icons.rounded.PlayArrow
+import androidx.compose.material.icons.rounded.Shuffle
 import androidx.compose.material.icons.rounded.Person
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.Icon
@@ -54,6 +56,8 @@ import com.rotatsulabs.specty.ui.design.CoverFlight
 import com.rotatsulabs.specty.ui.design.CoverSource
 import com.rotatsulabs.specty.ui.design.SpectyShapes
 import com.rotatsulabs.specty.ui.design.rememberWidthDp
+import com.rotatsulabs.specty.ui.design.components.ButtonKind
+import com.rotatsulabs.specty.ui.design.components.ExpressiveButton
 import com.rotatsulabs.specty.ui.design.components.ExpressiveIconButton
 import com.rotatsulabs.specty.ui.design.components.ExpressiveMenuItem
 import com.rotatsulabs.specty.ui.theme.Motion
@@ -156,6 +160,7 @@ fun CollectionScreen(
     onBack: () -> Unit,
     onOpenTrack: (Track, Rect?, CoverSource?) -> Unit,
     onOpenCollection: (String) -> Unit,
+    onPlay: (List<Track>, shuffle: Boolean) -> Unit,
     dockVisible: Boolean,
     flight: CoverFlight?,
     modifier: Modifier = Modifier,
@@ -190,6 +195,10 @@ fun CollectionScreen(
                                 Text(Fmt.duration(totalSec), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                             }
                         }
+                    }
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        ExpressiveButton(stringResource(R.string.queue_play), { onPlay(tracks, false) }, icon = Icons.Rounded.PlayArrow)
+                        ExpressiveButton(stringResource(R.string.queue_shuffle), { onPlay(tracks, true) }, kind = ButtonKind.Tonal, icon = Icons.Rounded.Shuffle)
                     }
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         summary.forEach { (kind, n) -> ResultChip(kind, n) }
