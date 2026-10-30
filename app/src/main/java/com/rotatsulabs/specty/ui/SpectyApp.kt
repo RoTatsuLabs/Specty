@@ -135,6 +135,22 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit, onPickFolder: ()
         viewModel.analyze(track.uri)
     }
 
+    // The artist and album named in an analysis open their page when the library holds one. The analysis closes first
+    // so the page is what is left on screen.
+    val pageIds = remember(library.tracks) {
+        val tags = com.rotatsulabs.specty.ui.screens.TagFields
+        (com.rotatsulabs.specty.ui.screens.Browse.artists(library.tracks, tags) + com.rotatsulabs.specty.ui.screens.Browse.albums(library.tracks, tags))
+            .filter { it.key != null }.map { it.id }.toSet()
+    }
+    val links = com.rotatsulabs.specty.ui.screens.TagLinks(
+        canOpen = { kind, name -> com.rotatsulabs.specty.ui.screens.Browse.id(kind, name.trim()) in pageIds },
+        onOpen = { kind, name ->
+            val id = com.rotatsulabs.specty.ui.screens.Browse.id(kind, name.trim())
+            viewModel.closeAnalysis()
+            if (pages.lastOrNull() != id) pagesRaw = (pages + id).joinToString("\n")
+        },
+    )
+
     Box(Modifier.fillMaxSize()) {
         Surface(Modifier.fillMaxSize().underlay(depth), color = MaterialTheme.colorScheme.surface) {
             LibraryScreen(
@@ -160,7 +176,7 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit, onPickFolder: ()
         }
 
         OverlayScreen(visible = pages.isNotEmpty(), gesture = pageBack, depth = depth, id = "page", backdrop = MaterialTheme.colorScheme.surface) {
-            PaneSurface {
+            PaneSurface(AdaptiveMath.LIBRARY_MAX.dp) {
                 com.rotatsulabs.specty.ui.screens.findCollection(library.tracks, pageHeld.id)?.let { page ->
                     com.rotatsulabs.specty.ui.screens.CollectionScreen(
                         collection = page,
@@ -204,7 +220,7 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit, onPickFolder: ()
         ) {
             Surface(Modifier.fillMaxSize(), color = androidx.compose.ui.graphics.Color.Transparent, contentColor = MaterialTheme.colorScheme.onSurface) {
                 Box(Modifier.navigationBarsPadding()) {
-                    AnalysisScreen(held.state, onBack = viewModel::closeAnalysis, onReanalyse = viewModel::reanalyze, onFullscreen = { viewerView = it }, onCompare = onPickCompare, onExport = { showExport = true }, flight = flight)
+                    AnalysisScreen(held.state, onBack = viewModel::closeAnalysis, onReanalyse = viewModel::reanalyze, onFullscreen = { viewerView = it }, onCompare = onPickCompare, onExport = { showExport = true }, flight = flight, links = links)
                 }
             }
         }

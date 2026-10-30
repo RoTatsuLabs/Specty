@@ -19,6 +19,16 @@ class ResultFilterTest {
     }
 
     @Test
+    fun summaryListsOnlyKindsPresentWorstFirst() {
+        val summary = ResultFilter.summary(listOf(Verdict.GENUINE, null, Verdict.GENUINE, Verdict.UPSAMPLED, Verdict.HI_RES))
+        assertEquals(
+            listOf(ResultFilter.NeedsLook to 1, ResultFilter.Lossless to 2, ResultFilter.HiRes to 1, ResultFilter.Unchecked to 1),
+            summary,
+        )
+        assertTrue(ResultFilter.summary(emptyList()).isEmpty())
+    }
+
+    @Test
     fun needsALookMatchesWhatTheScanFlags() {
         val flagged = setOf(Verdict.LOSSY_SOURCE, Verdict.UPSAMPLED, Verdict.POSSIBLE_LOSSY_SOURCE)
         for (v in Verdict.entries) assertEquals(v.name, v in flagged, ResultFilter.of(v) == ResultFilter.NeedsLook)
