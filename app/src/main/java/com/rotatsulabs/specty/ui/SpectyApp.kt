@@ -9,6 +9,7 @@ import androidx.compose.animation.scaleOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.ui.Alignment
 import androidx.compose.foundation.layout.widthIn
@@ -92,12 +93,18 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit, onPickFolder: ()
     }
     val analysisOpen by viewModel.viewing.collectAsStateWithLifecycle()
     val dockVisible = !analysisOpen && analysis !is AnalysisState.Idle
+    val player = com.rotatsulabs.specty.ui.player.rememberQueuePlayer()
+    val playing = player.queue?.current
+    // Screens keep their last rows clear of whatever floats at the bottom: the dock, the player, or both.
+    val bottomBusy = dockVisible || playing != null
 
     // Keep the last non-idle state around so the screen can animate out with its content intact.
     val held = remember { object { var state: AnalysisState = AnalysisState.Idle } }
     if (analysisOpen) held.state = analysis
     val dockHeld = remember { object { var state: AnalysisState = AnalysisState.Idle } }
+    val playingHeld = remember { object { var track: com.rotatsulabs.specty.data.Track? = null } }
     if (dockVisible) dockHeld.state = analysis
+    playing?.let { playingHeld.track = it }
 
     // Drop a stale viewer request if the analysis it belonged to is gone.
     val viewerResult = (held.state as? AnalysisState.Done)?.result
@@ -166,9 +173,15 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit, onPickFolder: ()
                 onPickFolder = onPickFolder,
                 onOpenFolders = { showFolders = true },
                 onOpenInsights = { showInsights = true },
+                onPlayAll = { shuffle ->
+                    val all = com.rotatsulabs.specty.ui.screens.LibraryOrder.sort(
+                        library.tracks, com.rotatsulabs.specty.ui.screens.SortField.Title, true, com.rotatsulabs.specty.ui.screens.TagFields,
+                    )
+                    player.start(all, 0, shuffle)
+                },
                 onOpenSettings = { showSettings = true },
                 onOpenAbout = { showAbout = true },
-                dockVisible = dockVisible,
+                dockVisible = bottomBusy,
                 verdicts = verdicts,
                 keyFor = keyFor,
                 batch = batch,
@@ -189,7 +202,8 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit, onPickFolder: ()
                         onBack = { pagesRaw = pages.dropLast(1).joinToString("\n") },
                         onOpenTrack = openTrack,
                         onOpenCollection = { id -> pagesRaw = (pages + id).joinToString("\n") },
-                        dockVisible = dockVisible,
+                        onPlay = { tracks, shuffle -> player.start(tracks, 0, shuffle) },
+                        dockVisible = bottomBusy,
                         flight = flight,
                     )
                 }
@@ -205,28 +219,46 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit, onPickFolder: ()
                     onBack = { showInsights = false },
                     onOpenTrack = openTrack,
                     onCompare = { a, b -> viewModel.compareTracks(a.uri, b.uri) },
-                    dockVisible = dockVisible,
+                    dockVisible = bottomBusy,
                     flight = flight,
                 )
             }
         }
 
-        AnimatedVisibility(
-            visible = dockVisible,
-            modifier = Modifier.align(Alignment.BottomCenter),
-            enter = slideInVertically(Motion.spatial()) { it } + fadeIn(Motion.effects()) + scaleIn(Motion.spatial(), initialScale = 0.92f),
-            exit = slideOutVertically(Motion.spatial()) { it } + fadeOut(Motion.effects()) + scaleOut(Motion.spatial(), targetScale = 0.92f),
+        // The player sits above the dock when both show, so neither hides the other.
+        Column(
+            Modifier.align(Alignment.BottomCenter).navigationBarsPadding(),
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            AnalysisDock(
-                state = dockHeld.state,
-                onOpen = { origin.bounds = dockBounds; origin.corners = Corners(28.dp); flight.clear(); viewModel.openResult() },
-                onDismiss = viewModel::closeAnalysis,
-                modifier = Modifier
-                    .widthIn(max = 640.dp)
-                    .navigationBarsPadding()
-                    .padding(horizontal = 12.dp, vertical = 12.dp)
-                    .onGloballyPositioned { dockBounds = it.boundsInRoot() },
-            )
+            AnimatedVisibility(
+                visible = playing != null,
+                enter = slideInVertically(Motion.spatial()) { it } + fadeIn(Motion.effects()) + scaleIn(Motion.spatial(), initialScale = 0.92f),
+                exit = slideOutVertically(Motion.spatial()) { it } + fadeOut(Motion.effects()) + scaleOut(Motion.spatial(), targetScale = 0.92f),
+            ) {
+                playingHeld.track?.let { track ->
+                    com.rotatsulabs.specty.ui.player.MiniPlayer(
+                        player = player,
+                        track = track,
+                        onOpen = { openTrack(it, null, null) },
+                        modifier = Modifier.widthIn(max = 640.dp).padding(horizontal = 12.dp, vertical = 6.dp),
+                    )
+                }
+            }
+            AnimatedVisibility(
+                visible = dockVisible,
+                enter = slideInVertically(Motion.spatial()) { it } + fadeIn(Motion.effects()) + scaleIn(Motion.spatial(), initialScale = 0.92f),
+                exit = slideOutVertically(Motion.spatial()) { it } + fadeOut(Motion.effects()) + scaleOut(Motion.spatial(), targetScale = 0.92f),
+            ) {
+                AnalysisDock(
+                    state = dockHeld.state,
+                    onOpen = { origin.bounds = dockBounds; origin.corners = Corners(28.dp); flight.clear(); viewModel.openResult() },
+                    onDismiss = viewModel::closeAnalysis,
+                    modifier = Modifier
+                        .widthIn(max = 640.dp)
+                        .padding(horizontal = 12.dp, vertical = 12.dp)
+                        .onGloballyPositioned { dockBounds = it.boundsInRoot() },
+                )
+            }
         }
 
         ContainerTransform(
