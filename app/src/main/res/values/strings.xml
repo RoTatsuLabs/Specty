@@ -131,6 +131,18 @@
         <item quantity="one">%1$d track</item>
         <item quantity="other">%1$d tracks</item>
     </plurals>
+    <string name="browse_tracks">Tracks</string>
+    <string name="browse_albums">Albums</string>
+    <string name="browse_artists">Artists</string>
+    <plurals name="library_albums">
+        <item quantity="one">%1$d album</item>
+        <item quantity="other">%1$d albums</item>
+    </plurals>
+    <plurals name="library_artists">
+        <item quantity="one">%1$d artist</item>
+        <item quantity="other">%1$d artists</item>
+    </plurals>
+    <string name="album_various">Various artists</string>
     <string name="sort_title">Title</string>
     <string name="sort_artist">Artist</string>
     <string name="sort_length">Length</string>
@@ -445,8 +457,6 @@
     <string name="library_sort_by">Sort by</string>
     <string name="library_group_by">Group by</string>
     <string name="group_none">No grouping</string>
-    <string name="group_artist">Artist</string>
-    <string name="group_album">Album</string>
     <string name="group_result">Result</string>
     <string name="group_format">Format</string>
     <string name="group_unknown_artist">Unknown artist</string>

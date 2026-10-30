@@ -4,7 +4,10 @@ import android.content.SharedPreferences
 
 enum class SortField { Title, Artist, Album, Duration, Size, Modified, Result }
 
-enum class GroupField { None, Artist, Album, Result, Format }
+enum class GroupField { None, Result, Format }
+
+/** What the library lists: every track, or albums or artists that each open their own page. */
+enum class BrowseKind { Tracks, Albums, Artists }
 
 /** How to read a track's fields, so the ordering below can be tested without Android types. */
 class TrackFields<T>(
@@ -19,7 +22,7 @@ class TrackFields<T>(
     val resultRank: (T) -> Int,
 )
 
-/** One heading of a grouped library. [key] is the artist, album or format, null when the track has none. */
+/** One heading of a grouped library. [key] is the format, null when the track has none. */
 class TrackGroup<T>(val id: String, val key: String?, val rank: Int, val items: List<T>)
 
 object LibraryOrder {
@@ -55,11 +58,7 @@ object LibraryOrder {
             val bucket = when (by) {
                 GroupField.Result -> f.resultRank(item).let { r -> buckets.getOrPut("r$r") { Bucket("r$r", null, r, "") } }
                 else -> {
-                    val name = when (by) {
-                        GroupField.Artist -> f.artist(item).clean()
-                        GroupField.Album -> f.album(item).clean()
-                        else -> f.format(item).clean()
-                    }
+                    val name = f.format(item).clean()
                     val id = if (name == null) "unknown" else "n" + name.lowercase()
                     buckets.getOrPut(id) { Bucket(id, name, 0, name?.lowercase() ?: LAST) }
                 }
@@ -68,6 +67,50 @@ object LibraryOrder {
         }
         val ordered = if (by == GroupField.Result) buckets.values.sortedBy { it.rank } else buckets.values.sortedBy { it.sortKey }
         return ordered.map { TrackGroup(it.id, it.key, it.rank, it.items) }
+    }
+}
+
+/** An album or an artist: the tracks it holds and what to call it. A null [key] is the tracks with no tag. */
+class LibraryCollection<T>(
+    val kind: BrowseKind,
+    val key: String?,
+    /** For an album, the artist when every track agrees on one; null otherwise. */
+    val artist: String?,
+    /** True for an album whose tracks name more than one artist. */
+    val various: Boolean,
+    val items: List<T>,
+) {
+    /** Stable across launches and searches, so a page can find its collection again. */
+    val id: String get() = Browse.id(kind, key)
+}
+
+object Browse {
+    private fun String?.clean(): String? = this?.trim()?.takeIf { it.isNotEmpty() }
+
+    fun id(kind: BrowseKind, key: String?): String = kind.name + ":" + (key?.lowercase() ?: "")
+
+    /** Albums by name, A to Z with the untagged ones last. Tracks keep the order they came in. */
+    fun <T> albums(items: List<T>, f: TrackFields<T>): List<LibraryCollection<T>> =
+        build(items, BrowseKind.Albums, { f.album(it).clean() }, f)
+
+    fun <T> artists(items: List<T>, f: TrackFields<T>): List<LibraryCollection<T>> =
+        build(items, BrowseKind.Artists, { f.artist(it).clean() }, f)
+
+    fun <T> find(all: List<LibraryCollection<T>>, id: String): LibraryCollection<T>? = all.firstOrNull { it.id == id }
+
+    private fun <T> build(items: List<T>, kind: BrowseKind, key: (T) -> String?, f: TrackFields<T>): List<LibraryCollection<T>> {
+        val buckets = LinkedHashMap<String, Pair<String?, ArrayList<T>>>()
+        for (item in items) {
+            val name = key(item)
+            buckets.getOrPut(name?.lowercase() ?: "") { name to ArrayList() }.second += item
+        }
+        return buckets.values
+            .sortedBy { (name, _) -> name?.lowercase() ?: "\uFFFF" }
+            .map { (name, list) ->
+                val artists = list.mapNotNull { f.artist(it).clean() }.map { it.lowercase() }.toSet()
+                val one = if (artists.size == 1 && list.all { f.artist(it).clean() != null }) list.firstNotNullOf { f.artist(it).clean() } else null
+                LibraryCollection(kind, name, one, kind == BrowseKind.Albums && artists.size > 1, list)
+            }
     }
 }
 
@@ -89,11 +132,12 @@ data class LibraryView(
     val ascending: Boolean = true,
     val grid: Boolean = false,
     val group: GroupField = GroupField.None,
+    val browse: BrowseKind = BrowseKind.Tracks,
 ) {
     fun save(prefs: SharedPreferences) {
         prefs.edit()
             .putString(KEY_SORT, sort.name).putBoolean(KEY_ASC, ascending)
-            .putBoolean(KEY_GRID, grid).putString(KEY_GROUP, group.name)
+            .putBoolean(KEY_GRID, grid).putString(KEY_GROUP, group.name).putString(KEY_BROWSE, browse.name)
             .apply()
     }
 
@@ -102,12 +146,14 @@ data class LibraryView(
         private const val KEY_ASC = "library_ascending"
         private const val KEY_GRID = "library_grid"
         private const val KEY_GROUP = "library_group"
+        private const val KEY_BROWSE = "library_browse"
 
         fun load(prefs: SharedPreferences) = LibraryView(
             sort = SortField.entries.firstOrNull { it.name == prefs.getString(KEY_SORT, null) } ?: SortField.Title,
             ascending = prefs.getBoolean(KEY_ASC, true),
             grid = prefs.getBoolean(KEY_GRID, false),
             group = GroupField.entries.firstOrNull { it.name == prefs.getString(KEY_GROUP, null) } ?: GroupField.None,
+            browse = BrowseKind.entries.firstOrNull { it.name == prefs.getString(KEY_BROWSE, null) } ?: BrowseKind.Tracks,
         )
     }
 }
