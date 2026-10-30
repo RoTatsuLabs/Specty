@@ -1,5 +1,7 @@
 package com.rotatsulabs.specty.ui
 
+import com.rotatsulabs.specty.ui.screens.BrowseKind
+import com.rotatsulabs.specty.ui.screens.Browse
 import com.rotatsulabs.specty.ui.screens.ComparePicks
 import com.rotatsulabs.specty.ui.screens.GroupField
 import com.rotatsulabs.specty.ui.screens.LibraryOrder
@@ -71,10 +73,10 @@ class LibraryOrderTest {
     }
 
     @Test
-    fun artistGroupsRunAtoZWithTheUnnamedOneLastAndKeepTheSortOrderInside() {
-        val sorted = listOf(T("1", "Mia"), T("2", "abe"), T("3", null), T("4", "mia"), T("5", "Abe"))
-        val groups = LibraryOrder.group(sorted, GroupField.Artist, fields)
-        assertEquals(listOf("abe", "Mia", null), groups.map { it.key })
+    fun formatGroupsRunAtoZWithTheUnnamedOneLastAndKeepTheSortOrderInside() {
+        val sorted = listOf(T("1", format = "OPUS"), T("2", format = "flac"), T("3", format = ""), T("4", format = "opus"), T("5", format = "FLAC"))
+        val groups = LibraryOrder.group(sorted, GroupField.Format, fields)
+        assertEquals(listOf("flac", "OPUS", null), groups.map { it.key })
         assertEquals(listOf("2", "5"), titles(groups[0].items))
         assertEquals(listOf("1", "4"), titles(groups[1].items))
         assertEquals(listOf("3"), titles(groups[2].items))
@@ -90,8 +92,8 @@ class LibraryOrderTest {
 
     @Test
     fun everyHeadingHasItsOwnId() {
-        val sorted = listOf(T("1", "A"), T("2", null), T("3", "B"))
-        val ids = LibraryOrder.group(sorted, GroupField.Artist, fields).map { it.id }
+        val sorted = listOf(T("1", format = "A"), T("2", format = ""), T("3", format = "B"))
+        val ids = LibraryOrder.group(sorted, GroupField.Format, fields).map { it.id }
         assertEquals(ids.size, ids.toSet().size)
     }
 
@@ -112,5 +114,41 @@ class LibraryOrderTest {
         val picks = listOf("content://a/1", "content://b/2")
         assertEquals(picks, ComparePicks.decode(ComparePicks.encode(picks)))
         assertEquals(emptyList<String>(), ComparePicks.decode(""))
+    }
+
+    @Test
+    fun albumsRunAtoZWithTheUntaggedOneLastAndShareOneArtistWhenAllAgree() {
+        val items = listOf(
+            T("1", "Mia", "Two"), T("2", "Mia", "two"), T("3", "Abe", "One"), T("4", null, null), T("5", "Abe", "One"),
+        )
+        val albums = Browse.albums(items, fields)
+        assertEquals(listOf("One", "Two", null), albums.map { it.key })
+        assertEquals(listOf("Abe", "Mia", null), albums.map { it.artist })
+        assertEquals(listOf(2, 2, 1), albums.map { it.items.size })
+        assertEquals(listOf(false, false, false), albums.map { it.various })
+    }
+
+    @Test
+    fun anAlbumWithSeveralArtistsIsVariousAndNamesNone() {
+        val albums = Browse.albums(listOf(T("1", "Mia", "Mix"), T("2", "Abe", "Mix")), fields)
+        assertEquals(1, albums.size)
+        assertEquals(true, albums[0].various)
+        assertEquals(null, albums[0].artist)
+    }
+
+    @Test
+    fun artistsGroupWithoutRegardToCaseAndFindTheirPage() {
+        val artists = Browse.artists(listOf(T("1", "Mia"), T("2", "mia"), T("3", "Abe")), fields)
+        assertEquals(listOf("Abe", "Mia"), artists.map { it.key })
+        val mia = Browse.find(artists, Browse.id(BrowseKind.Artists, "MIA"))!!
+        assertEquals(listOf("1", "2"), titles(mia.items))
+        assertEquals(null, Browse.find(artists, Browse.id(BrowseKind.Albums, "Mia")))
+    }
+
+    @Test
+    fun collectionIdsAreUniquePerKind() {
+        val a = Browse.albums(listOf(T("1", "X", "X"), T("2", null, null)), fields).map { it.id }
+        assertEquals(a.size, a.toSet().size)
+        assertEquals(false, Browse.id(BrowseKind.Albums, "x") == Browse.id(BrowseKind.Artists, "x"))
     }
 }

@@ -78,6 +78,8 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit, onPickFolder: ()
     var showLog by rememberSaveable { mutableStateOf(false) }
     var showFolders by rememberSaveable { mutableStateOf(false) }
     var showExport by rememberSaveable { mutableStateOf(false) }
+    // Pages of albums and artists, newest last; an artist page can open one of its albums on top of itself.
+    var pagesRaw by rememberSaveable { mutableStateOf("") }
     var viewerView by rememberSaveable { mutableStateOf<Int?>(null) }
     // Hashing every track is not free, so remember each key for as long as the settings it depends on stay put.
     val keyFor = remember(fftSize, windowFn) {
@@ -112,6 +114,11 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit, onPickFolder: ()
     val logBack = remember { BackGesture() }
     val foldersBack = remember { BackGesture() }
     val exportBack = remember { BackGesture() }
+    val pageBack = remember { BackGesture() }
+    val pages = pagesRaw.split('\n').filter { it.isNotEmpty() }
+    val pageHeld = remember { object { var id: String = "" } }
+    pages.lastOrNull()?.let { pageHeld.id = it }
+    PredictiveBack(pageBack, enabled = pages.isNotEmpty()) { pagesRaw = pages.dropLast(1).joinToString("\n") }
     PredictiveBack(analysisBack, enabled = analysisOpen) { viewModel.closeAnalysis() }
     PredictiveBack(settingsBack, enabled = showSettings) { showSettings = false }
     PredictiveBack(aboutBack, enabled = showAbout) { showAbout = false }
@@ -121,17 +128,20 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit, onPickFolder: ()
     PredictiveBack(compareBack, enabled = compare !is CompareState.Idle) { viewModel.closeCompare() }
     PredictiveBack(viewerBack, enabled = viewerView != null) { viewerView = null }
 
+    val openTrack = { track: com.rotatsulabs.specty.data.Track, bounds: Rect?, cover: com.rotatsulabs.specty.ui.design.CoverSource? ->
+        origin.bounds = bounds
+        origin.corners = SpectyShapes.Row
+        flight.begin(track.uri, cover)
+        viewModel.analyze(track.uri)
+    }
+
     Box(Modifier.fillMaxSize()) {
         Surface(Modifier.fillMaxSize().underlay(depth), color = MaterialTheme.colorScheme.surface) {
             LibraryScreen(
                 state = library,
                 onLoad = viewModel::loadLibrary,
-                onOpen = { track, bounds, cover ->
-                    origin.bounds = bounds
-                    origin.corners = SpectyShapes.Row
-                    flight.begin(track.uri, cover)
-                    viewModel.analyze(track.uri)
-                },
+                onOpen = openTrack,
+                onOpenCollection = { id -> pagesRaw = (pages + id).joinToString("\n") },
                 flight = flight,
                 onPickFile = onPickFile,
                 onPickFolder = onPickFolder,
@@ -147,6 +157,23 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit, onPickFolder: ()
                 onCancelScan = viewModel::cancelScan,
                 onDismissScan = viewModel::dismissScanSummary,
             )
+        }
+
+        OverlayScreen(visible = pages.isNotEmpty(), gesture = pageBack, depth = depth, id = "page", backdrop = MaterialTheme.colorScheme.surface) {
+            PaneSurface {
+                com.rotatsulabs.specty.ui.screens.findCollection(library.tracks, pageHeld.id)?.let { page ->
+                    com.rotatsulabs.specty.ui.screens.CollectionScreen(
+                        collection = page,
+                        verdicts = verdicts,
+                        keyFor = keyFor,
+                        onBack = { pagesRaw = pages.dropLast(1).joinToString("\n") },
+                        onOpenTrack = openTrack,
+                        onOpenCollection = { id -> pagesRaw = (pages + id).joinToString("\n") },
+                        dockVisible = dockVisible,
+                        flight = flight,
+                    )
+                }
+            }
         }
 
         AnimatedVisibility(

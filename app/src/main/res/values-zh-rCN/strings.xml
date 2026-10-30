@@ -126,6 +126,16 @@
     <plurals name="library_tracks">
         <item quantity="other">%1$d 首曲目</item>
     </plurals>
+    <string name="browse_tracks">曲目</string>
+    <string name="browse_albums">专辑</string>
+    <string name="browse_artists">艺术家</string>
+    <plurals name="library_albums">
+        <item quantity="other">%1$d 张专辑</item>
+    </plurals>
+    <plurals name="library_artists">
+        <item quantity="other">%1$d 位艺术家</item>
+    </plurals>
+    <string name="album_various">群星</string>
     <string name="sort_title">标题</string>
     <string name="sort_artist">艺术家</string>
     <string name="sort_length">时长</string>
@@ -432,8 +442,6 @@
     <string name="library_sort_by">排序方式</string>
     <string name="library_group_by">分组方式</string>
     <string name="group_none">不分组</string>
-    <string name="group_artist">艺术家</string>
-    <string name="group_album">专辑</string>
     <string name="group_result">结果</string>
     <string name="group_format">格式</string>
     <string name="group_unknown_artist">未知艺术家</string>
