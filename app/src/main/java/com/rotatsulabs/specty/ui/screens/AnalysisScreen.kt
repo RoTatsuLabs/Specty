@@ -145,7 +145,7 @@ import com.rotatsulabs.specty.ui.theme.Motion
 import kotlinx.coroutines.delay
 
 @Composable
-fun AnalysisScreen(state: AnalysisState, onBack: () -> Unit, onReanalyse: () -> Unit, modifier: Modifier = Modifier, onFullscreen: (Int) -> Unit = {}, onCompare: () -> Unit = {}, onExport: () -> Unit = {}, flight: CoverFlight? = null) {
+fun AnalysisScreen(state: AnalysisState, onBack: () -> Unit, onReanalyse: () -> Unit, modifier: Modifier = Modifier, onFullscreen: (Int) -> Unit = {}, onCompare: () -> Unit = {}, onExport: () -> Unit = {}, flight: CoverFlight? = null, links: TagLinks = TagLinks.None) {
     val title = when (state) {
         is AnalysisState.Running -> state.title
         is AnalysisState.Failed -> state.title
@@ -179,7 +179,7 @@ fun AnalysisScreen(state: AnalysisState, onBack: () -> Unit, onReanalyse: () -> 
             when (state) {
                 is AnalysisState.Running -> RunningContent(state)
                 is AnalysisState.Failed -> FailedContent(failureText(state.failure, state.detail), onBack)
-                is AnalysisState.Done -> ResultContent(state.result, onFullscreen, flight)
+                is AnalysisState.Done -> ResultContent(state.result, onFullscreen, flight, links)
                 is AnalysisState.Limited -> LimitedContent(state.info, state.report)
                 AnalysisState.Idle -> Unit
             }
@@ -239,7 +239,7 @@ private fun LimitedContent(info: AudioInfo, report: AuthenticityReport) {
 }
 
 @Composable
-private fun ResultContent(result: AnalysisResult, onFullscreen: (Int) -> Unit, flight: CoverFlight?) {
+private fun ResultContent(result: AnalysisResult, onFullscreen: (Int) -> Unit, flight: CoverFlight?, links: TagLinks) {
     val wide = rememberIsWide()
     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
     Column(
@@ -249,7 +249,7 @@ private fun ResultContent(result: AnalysisResult, onFullscreen: (Int) -> Unit, f
         // Two columns on a wide window: what the file is on the left, how it measures on the right.
         // On a narrow one the same cards stack in one column, in the same order.
         val about: @Composable () -> Unit = {
-            Hero(result, flight)
+            Hero(result, flight, links)
             Reveal(1) { VerdictCard(result.authenticity) }
             Reveal(2) { MetricTiles(result) }
             Reveal(3) { ConfidenceCard(result.authenticity, result.info) }
@@ -285,7 +285,7 @@ private fun ResultContent(result: AnalysisResult, onFullscreen: (Int) -> Unit, f
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun Hero(result: AnalysisResult, flight: CoverFlight?) {
+private fun Hero(result: AnalysisResult, flight: CoverFlight?, links: TagLinks) {
     val info = result.info
     val verdict = result.authenticity.verdict
     val scheme = MaterialTheme.colorScheme
@@ -327,6 +327,7 @@ private fun Hero(result: AnalysisResult, flight: CoverFlight?) {
                 if (isExplicit(info.tags)) ExplicitMark()
             }
         }
+        TagLine(info, links)
         Reveal(2) {
             FlowRow(
                 Modifier.fillMaxWidth(),
