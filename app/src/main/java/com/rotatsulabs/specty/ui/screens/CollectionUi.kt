@@ -1,6 +1,19 @@
 package com.rotatsulabs.specty.ui.screens
 
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.ui.layout.boundsInRoot
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.text.style.TextAlign
+import com.rotatsulabs.specty.ui.components.Reveal
+import com.rotatsulabs.specty.ui.components.withoutExplicitMark
+import com.rotatsulabs.specty.ui.design.components.VerdictPill
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
@@ -37,6 +50,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.text.font.FontWeight
@@ -91,8 +105,12 @@ private fun LibraryCollection<Track>.subtitle(): String {
 }
 
 @Composable
-private fun CollectionCover(c: LibraryCollection<Track>, size: Modifier, sizePx: Int) {
-    val shape = if (c.kind == BrowseKind.Artists) CircleShape else SpectyShapes.Cover.toShape()
+private fun CollectionCover(c: LibraryCollection<Track>, size: Modifier, sizePx: Int, feature: Boolean = false) {
+    val shape = when {
+        c.kind == BrowseKind.Artists -> CircleShape
+        feature -> SpectyShapes.Feature.toShape()
+        else -> SpectyShapes.Cover.toShape()
+    }
     CoverImage(uri = c.items.first().uri, shape = shape, modifier = size, sizePx = sizePx) {
         Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.tertiaryContainer, contentColor = MaterialTheme.colorScheme.onTertiaryContainer) {
             Box(contentAlignment = Alignment.Center) {
@@ -144,8 +162,8 @@ internal fun pageFields(verdicts: Map<String, Verdict>, keyFor: (Track) -> Strin
 )
 
 /**
- * The page of one album or artist: a header with how its tracks measured, then (for an artist) its albums, then the
- * tracks. A track opens its analysis the same way it does from the library.
+ * The page of one album or artist. A centred hero (cover, name, what is on it, how it measured) opens the page; an
+ * artist's albums follow as a row of tiles, then the numbered tracks. A track opens its analysis.
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -169,45 +187,18 @@ fun CollectionScreen(
     val fields = remember(verdicts, keyFor) { pageFields(verdicts, keyFor) }
     val tracks = remember(collection, sort, ascending, fields) { LibraryOrder.sort(collection.items, sort, ascending, fields) }
     val summary = remember(collection, verdicts, keyFor) { ResultFilter.summary(collection.items.map { verdicts[keyFor(it)] }) }
-    val totalSec = remember(collection) { collection.items.sumOf { it.durationMs } / 1000.0 }
-    val width = rememberWidthDp()
-    val columns = if (AdaptiveMath.isWide(width)) AdaptiveMath.columns(width, minTileDp = 180) else 1
+    val listState = rememberLazyListState()
+    // The title joins the top bar once the hero has scrolled away, so it is never shown twice.
+    val scrolled by remember { derivedStateOf { listState.firstVisibleItemIndex > 0 } }
     Column(modifier.fillMaxSize()) {
-        ExpressiveTopBar(title = collection.title(), subtitle = collection.subtitle(), onBack = onBack)
-        LazyColumn(Modifier.fillMaxWidth().weight(1f)) {
-            item(key = "head") {
-                Column(Modifier.padding(horizontal = 24.dp, vertical = 12.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        CollectionCover(collection, Modifier.size(132.dp), 400)
-                        Spacer(Modifier.width(20.dp))
-                        Column {
-                            Text(collection.title(), style = MaterialTheme.typography.headlineSmall, maxLines = 3, overflow = TextOverflow.Ellipsis)
-                            Text(
-                                collection.subtitle(), style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
-                            if (totalSec > 0) {
-                                Text(Fmt.duration(totalSec), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                            }
-                        }
-                    }
-                    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        summary.forEach { (kind, n) -> ResultChip(kind, n) }
-                    }
-                }
-            }
+        ExpressiveTopBar(title = if (scrolled) collection.title() else "", onBack = onBack)
+        LazyColumn(Modifier.fillMaxWidth().weight(1f), state = listState) {
+            item(key = "hero") { Hero(collection, summary, onOpenCollection) }
             if (albums.isNotEmpty()) {
                 item(key = "albumsHeader") { PageHeader(stringResource(R.string.browse_albums)) }
-                if (columns == 1) {
-                    items(albums, key = { "a" + it.id }) { a ->
-                        CollectionRow(a, { onOpenCollection(a.id) }, Modifier.padding(horizontal = 10.dp))
-                    }
-                } else {
-                    items(albums.chunked(columns), key = { "a" + it.first().id }) { row ->
-                        Row(Modifier.padding(horizontal = 18.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            row.forEach { a -> CollectionTile(a, { onOpenCollection(a.id) }, Modifier.weight(1f)) }
-                            repeat(columns - row.size) { Spacer(Modifier.weight(1f)) }
-                        }
+                item(key = "albums") {
+                    LazyRow(contentPadding = PaddingValues(horizontal = 18.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        items(albums, key = { it.id }) { a -> CollectionTile(a, { onOpenCollection(a.id) }, Modifier.width(150.dp)) }
                     }
                 }
             }
@@ -219,12 +210,136 @@ fun CollectionScreen(
             }
             items(tracks.size, key = { "t" + tracks[it].uri }) { i ->
                 val t = tracks[i]
-                TrackRow(
-                    t, i, verdicts[keyFor(t)], { b, c -> onOpenTrack(t, b, c) },
-                    Modifier.padding(horizontal = 10.dp), flight,
+                PageTrackRow(
+                    track = t, number = i + 1, verdict = verdicts[keyFor(t)],
+                    showAlbum = collection.kind == BrowseKind.Artists,
+                    onOpen = { bounds -> onOpenTrack(t, bounds, null) },
+                    modifier = Modifier.padding(horizontal = 10.dp),
                 )
             }
             item(key = "bottom") { Spacer(Modifier.navigationBarsPadding().height(if (dockVisible) 130.dp else 40.dp)) }
+        }
+    }
+}
+
+/** What the page holds, without the artist: "10 tracks  ·  38:12", with the album count first on an artist page. */
+@Composable
+private fun LibraryCollection<Track>.stats(): String {
+    val parts = ArrayList<String>()
+    if (kind == BrowseKind.Artists) {
+        val n = Browse.albums(items, TagFields).count { it.key != null }
+        if (n > 0) parts += pluralStringResource(R.plurals.library_albums, n, n)
+    }
+    parts += pluralStringResource(R.plurals.library_tracks, items.size, items.size)
+    val seconds = items.sumOf { it.durationMs } / 1000.0
+    if (seconds > 0) parts += Fmt.duration(seconds)
+    return parts.joinToString("  ·  ")
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun Hero(collection: LibraryCollection<Track>, summary: List<Pair<ResultFilter, Int>>, onOpenCollection: (String) -> Unit) {
+    val scheme = MaterialTheme.colorScheme
+    Column(
+        Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 8.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        Reveal(0) { CollectionCover(collection, Modifier.fillMaxWidth(0.6f).widthIn(max = 320.dp).aspectRatio(1f), 768, feature = true) }
+        Reveal(1) {
+            Text(
+                collection.title(), style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Center, maxLines = 3, overflow = TextOverflow.Ellipsis,
+            )
+        }
+        Reveal(2) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                // An album names its artist when every track agrees on one, and that name opens the artist's page.
+                val artist = collection.artist
+                if (collection.kind == BrowseKind.Albums) {
+                    when {
+                        artist != null -> MorphSurface(
+                            Modifier, corners = SpectyShapes.Pill, color = scheme.secondaryContainer,
+                            onClick = { onOpenCollection(Browse.id(BrowseKind.Artists, artist)) },
+                        ) {
+                            Text(
+                                artist, style = MaterialTheme.typography.labelLarge, color = scheme.onSecondaryContainer,
+                                maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
+                            )
+                        }
+                        collection.various -> Text(stringResource(R.string.album_various), style = MaterialTheme.typography.bodyLarge, color = scheme.onSurfaceVariant)
+                    }
+                }
+                Text(collection.stats(), style = MaterialTheme.typography.bodyMedium, color = scheme.onSurfaceVariant)
+            }
+        }
+        if (summary.isNotEmpty()) {
+            Reveal(3) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    ResultBar(summary)
+                    FlowRow(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                    ) { summary.forEach { (kind, n) -> ResultChip(kind, n) } }
+                }
+            }
+        }
+    }
+}
+
+/** The page's tracks as one bar, each result a slice as wide as its share, so a mostly clean album reads at a glance. */
+@Composable
+private fun ResultBar(summary: List<Pair<ResultFilter, Int>>) {
+    val scheme = MaterialTheme.colorScheme
+    Row(Modifier.fillMaxWidth(0.8f).height(8.dp).clip(CircleShape)) {
+        summary.forEach { (kind, n) ->
+            val color = when (kind) {
+                ResultFilter.Lossless, ResultFilter.HiRes, ResultFilter.Atmos -> scheme.tertiary
+                ResultFilter.NeedsLook, ResultFilter.LossyFormat -> scheme.error
+                else -> scheme.outline
+            }
+            Box(Modifier.weight(n.toFloat()).fillMaxHeight().background(color))
+        }
+    }
+}
+
+/** A numbered track: no cover, since an album's tracks share one. On an artist page the album name is added. */
+@Composable
+private fun PageTrackRow(
+    track: Track,
+    number: Int,
+    verdict: Verdict?,
+    showAlbum: Boolean,
+    onOpen: (Rect?) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    var bounds by remember { mutableStateOf<Rect?>(null) }
+    MorphSurface(
+        modifier.fillMaxWidth().onGloballyPositioned { bounds = it.boundsInRoot() },
+        corners = SpectyShapes.Row, color = androidx.compose.ui.graphics.Color.Transparent, onClick = { onOpen(bounds) },
+    ) {
+        Row(Modifier.padding(horizontal = 12.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                number.toString(), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center, modifier = Modifier.width(32.dp),
+            )
+            Spacer(Modifier.width(8.dp))
+            Column(Modifier.weight(1f)) {
+                Text(track.title.withoutExplicitMark(), style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                val parts = listOfNotNull(
+                    track.album?.trim()?.takeIf { showAlbum && it.isNotEmpty() },
+                    Fmt.duration(track.durationMs / 1000.0),
+                    track.extension.takeIf { it.isNotEmpty() },
+                )
+                Text(
+                    parts.joinToString("  ·  "), style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis,
+                )
+            }
+            if (verdict != null) {
+                Spacer(Modifier.width(8.dp))
+                VerdictPill(verdict)
+            }
         }
     }
 }
