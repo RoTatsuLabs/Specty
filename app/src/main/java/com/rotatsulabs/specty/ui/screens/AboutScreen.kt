@@ -82,6 +82,7 @@ fun AboutScreen(
     onReplayIntro: () -> Unit,
     developer: Boolean,
     onUnlockDeveloper: () -> Unit,
+    onOpenLicences: () -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -157,6 +158,11 @@ fun AboutScreen(
                             onOpen = { open(library.url) },
                         )
                     }
+                    ListRow(
+                        stringResource(R.string.licences_title), supporting = stringResource(R.string.licences_row_desc), icon = Icons.Rounded.Description,
+                        corners = SpectyShapes.Tile, onClick = onOpenLicences,
+                        modifier = Modifier.padding(top = 12.dp),
+                    )
                     Text(
                         stringResource(R.string.about_libraries_hint),
                         style = MaterialTheme.typography.bodySmall,

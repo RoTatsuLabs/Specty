@@ -76,6 +76,7 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit, onPickFolder: ()
     var showSettings by rememberSaveable { mutableStateOf(false) }
     var showAbout by rememberSaveable { mutableStateOf(false) }
     var showLog by rememberSaveable { mutableStateOf(false) }
+    var showLicences by rememberSaveable { mutableStateOf(false) }
     var showFolders by rememberSaveable { mutableStateOf(false) }
     var showExport by rememberSaveable { mutableStateOf(false) }
     var showInsights by rememberSaveable { mutableStateOf(false) }
@@ -117,9 +118,11 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit, onPickFolder: ()
     val exportBack = remember { BackGesture() }
     val pageBack = remember { BackGesture() }
     val insightsBack = remember { BackGesture() }
+    val licencesBack = remember { BackGesture() }
     val pages = pagesRaw.split('\n').filter { it.isNotEmpty() }
     val pageHeld = remember { object { var id: String = "" } }
     pages.lastOrNull()?.let { pageHeld.id = it }
+    PredictiveBack(licencesBack, enabled = showLicences) { showLicences = false }
     PredictiveBack(insightsBack, enabled = showInsights) { showInsights = false }
     PredictiveBack(pageBack, enabled = pages.isNotEmpty()) { pagesRaw = pages.dropLast(1).joinToString("\n") }
     PredictiveBack(analysisBack, enabled = analysisOpen) { viewModel.closeAnalysis() }
@@ -298,8 +301,15 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit, onPickFolder: ()
                     onReplayIntro = { showAbout = false; viewModel.replayOnboarding() },
                     developer = developer,
                     onUnlockDeveloper = { viewModel.setDeveloper(true) },
+                    onOpenLicences = { showLicences = true },
                     onBack = { showAbout = false },
                 )
+            }
+        }
+
+        OverlayScreen(visible = showLicences, gesture = licencesBack, depth = depth, id = "licences", backdrop = MaterialTheme.colorScheme.surface) {
+            PaneSurface {
+                com.rotatsulabs.specty.ui.screens.LicensesScreen(onBack = { showLicences = false })
             }
         }
 

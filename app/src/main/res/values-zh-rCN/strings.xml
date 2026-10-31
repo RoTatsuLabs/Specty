@@ -50,7 +50,7 @@
     <string name="about_licence">许可证</string>
     <string name="about_licence_tap">%1$s。点按阅读全文。</string>
     <string name="about_libraries">开源库</string>
-    <string name="about_libraries_hint">Specty 建立在这些项目的成果之上。点按任意一项可查看详情及其许可证。</string>
+    <string name="about_libraries_hint">这两项需要说明。许可页面列出了应用中的所有库。</string>
     <string name="about_made_by">由 RoTatsu Labs 制作</string>
     <string name="about_tagline">音频质量实验室</string>
     <string name="about_hero">看清音频文件的真实内容：频谱、响度与动态，以及无损文件是否原本来自有损音源。</string>
@@ -75,14 +75,6 @@
     <string name="lib_ffmpeg_note">读取并解码 Specty 分析的每一个音频文件。其中包含 FFmpeg 库（libavcodec、libavformat、libavutil 等），同样遵循 LGPL。源代码可通过上方链接获取。</string>
     <string name="lib_mornye_summary">来自 Mornye 音乐应用的 Hi-Res 检测：升采样与 16 位噪声底。</string>
     <string name="lib_mornye_note">Specty 的采样保持、插值和 16 位噪声底检测，是 Mornye Hi-Res 证据代码的 Kotlin 移植版，依据 LGPL 使用，并依据 GPL 与 Specty 合并。感谢其作者。源代码可通过上方链接获取。</string>
-    <string name="lib_compose_summary">UI 工具包：UI、Graphics、Foundation、Material 3 和 Material Icons Extended。</string>
-    <string name="lib_compose_note">绘制整个界面。图标来自 Material Icons 图标集。</string>
-    <string name="lib_activity_summary">面向 Activity、结果协定和边到边显示的 Compose 集成。</string>
-    <string name="lib_lifecycle_summary">适用于 Compose 的 ViewModel 与生命周期感知状态。</string>
-    <string name="lib_core_summary">Android 框架的 Kotlin 扩展。</string>
-    <string name="lib_androidx_summary">Annotation、Collection、Saved State、Startup 以及上述库所依赖的其他 AndroidX 库。</string>
-    <string name="lib_kotlin_summary">Kotlin 运行时。</string>
-    <string name="lib_coroutines_summary">用于分析和曲库扫描的后台任务与取消机制。</string>
 
     <!-- Onboarding -->
     <string name="onboarding_progress">%1$d / %2$d</string>
@@ -504,4 +496,8 @@
     <plurals name="insights_duplicate_songs">
         <item quantity="other">%d 首歌有多个版本</item>
     </plurals>
+    <string name="licences_title">开源许可</string>
+    <string name="licences_row_desc">应用中的所有库，附版本和许可证</string>
+    <string name="licences_search">搜索库</string>
+    <string name="licences_empty">没有匹配的库。</string>
 </resources>

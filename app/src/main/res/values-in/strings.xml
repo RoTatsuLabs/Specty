@@ -50,7 +50,7 @@
     <string name="about_licence">Lisensi</string>
     <string name="about_licence_tap">%1$s. Ketuk untuk membacanya.</string>
     <string name="about_libraries">Pustaka sumber terbuka</string>
-    <string name="about_libraries_hint">Specty dibangun di atas karya proyek-proyek ini. Ketuk salah satunya untuk melihat detail dan lisensinya.</string>
+    <string name="about_libraries_hint">Dua ini perlu catatan. Halaman lisensi memuat semua pustaka di aplikasi.</string>
     <string name="about_made_by">Dibuat oleh RoTatsu Labs</string>
     <string name="about_tagline">Lab kualitas audio</string>
     <string name="about_hero">Lihat apa yang sebenarnya terkandung dalam sebuah file audio: spektrumnya, kenyaringan dan dinamikanya, serta apakah file lossless berasal dari sumber lossy.</string>
@@ -75,14 +75,6 @@
     <string name="lib_ffmpeg_note">Membaca dan mendekode setiap file audio yang dianalisis Specty. Mencakup pustaka FFmpeg (libavcodec, libavformat, libavutil, dan lainnya), juga di bawah LGPL. Kode sumbernya tersedia di tautan di atas.</string>
     <string name="lib_mornye_summary">Pemeriksaan Hi-Res untuk upsampling dan lantai derau audio 16-bit, dari aplikasi musik Mornye.</string>
     <string name="lib_mornye_note">Pemeriksaan sample-and-hold, interpolasi, dan lantai derau 16-bit di Specty adalah port Kotlin dari kode bukti Hi-Res Mornye, dipakai di bawah LGPL dan digabungkan dengan Specty di bawah GPL. Terima kasih kepada para penulisnya. Kode sumbernya tersedia di tautan di atas.</string>
-    <string name="lib_compose_summary">Toolkit UI: UI, Graphics, Foundation, Material 3, dan Material Icons Extended.</string>
-    <string name="lib_compose_note">Menggambar seluruh antarmuka. Ikonnya berasal dari kumpulan Material Icons.</string>
-    <string name="lib_activity_summary">Integrasi Compose untuk activity, result contract, dan edge-to-edge.</string>
-    <string name="lib_lifecycle_summary">ViewModel dan state yang peka siklus hidup untuk Compose.</string>
-    <string name="lib_core_summary">Ekstensi Kotlin untuk framework Android.</string>
-    <string name="lib_androidx_summary">Annotation, Collection, Saved State, Startup, dan pustaka AndroidX lain yang menjadi dependensi pustaka di atas.</string>
-    <string name="lib_kotlin_summary">Runtime Kotlin.</string>
-    <string name="lib_coroutines_summary">Pekerjaan latar belakang dan pembatalan untuk analisis dan pemindaian pustaka.</string>
 
     <!-- Onboarding -->
     <string name="onboarding_progress">%1$d dari %2$d</string>
@@ -504,4 +496,8 @@
     <plurals name="insights_duplicate_songs">
         <item quantity="other">%d lagu punya beberapa salinan</item>
     </plurals>
+    <string name="licences_title">Lisensi sumber terbuka</string>
+    <string name="licences_row_desc">Semua pustaka di aplikasi, lengkap dengan versi dan lisensinya</string>
+    <string name="licences_search">Cari pustaka</string>
+    <string name="licences_empty">Tidak ada pustaka yang cocok.</string>
 </resources>
