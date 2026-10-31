@@ -53,7 +53,7 @@
     <string name="about_licence">Licence</string>
     <string name="about_licence_tap">%1$s. Tap to read it.</string>
     <string name="about_libraries">Open source libraries</string>
-    <string name="about_libraries_hint">Specty is built on the work of these projects. Tap one for details and its licence.</string>
+    <string name="about_libraries_hint">These two need a note. The licences page lists every library in the app.</string>
     <string name="about_made_by">Made by RoTatsu Labs</string>
     <string name="about_tagline">Audio quality lab</string>
     <string name="about_hero">See what an audio file really contains: its spectrum, loudness and dynamics, and whether a lossless file started life as a lossy one.</string>
@@ -79,14 +79,6 @@
     <string name="lib_ffmpeg_note">Reads and decodes every audio file Specty analyses. It includes the FFmpeg libraries (libavcodec, libavformat, libavutil and others), also under the LGPL. The source is available from the link above.</string>
     <string name="lib_mornye_summary">Hi-Res checks for upsampling and for the noise floor of 16-bit audio, from the Mornye music app.</string>
     <string name="lib_mornye_note">Specty\'s sample-and-hold, interpolation and 16-bit noise floor checks are Kotlin ports of Mornye\'s Hi-Res evidence code, used under the LGPL and combined with Specty under the GPL. Thank you to its authors. The source is available from the link above.</string>
-    <string name="lib_compose_summary">UI toolkit: UI, Graphics, Foundation, Material 3 and Material Icons Extended.</string>
-    <string name="lib_compose_note">Draws the whole interface. The icons come from the Material Icons set.</string>
-    <string name="lib_activity_summary">Compose integration for activities, result contracts and edge-to-edge.</string>
-    <string name="lib_lifecycle_summary">ViewModel and lifecycle-aware state for Compose.</string>
-    <string name="lib_core_summary">Kotlin extensions for the Android framework.</string>
-    <string name="lib_androidx_summary">Annotation, Collection, Saved State, Startup and other AndroidX libraries that the ones above depend on.</string>
-    <string name="lib_kotlin_summary">The Kotlin runtime.</string>
-    <string name="lib_coroutines_summary">Background work and cancellation for analysis and library scanning.</string>
 
     <!-- Onboarding -->
     <string name="onboarding_progress">%1$d of %2$d</string>
@@ -520,4 +512,8 @@
         <item quantity="one">%d song with several copies</item>
         <item quantity="other">%d songs with several copies</item>
     </plurals>
+    <string name="licences_title">Open source licences</string>
+    <string name="licences_row_desc">Every library in the app, with its version and licence</string>
+    <string name="licences_search">Search libraries</string>
+    <string name="licences_empty">No library matches.</string>
 </resources>

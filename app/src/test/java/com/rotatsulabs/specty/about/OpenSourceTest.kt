@@ -25,27 +25,21 @@ class OpenSourceTest {
     fun listedVersionsMatchTheVersionCatalog() {
         val v = catalogVersions()
         assertEquals(v["ffmpegKit"], versionOf("FFmpegKitNext"))
-        assertEquals("BOM " + v["composeBom"], versionOf("Jetpack Compose"))
-        assertEquals(v["activityCompose"], versionOf("Activity Compose"))
-        assertEquals(v["lifecycle"], versionOf("Lifecycle"))
-        assertEquals(v["coreKtx"], versionOf("Core KTX"))
-        assertEquals(v["kotlin"], versionOf("Kotlin Standard Library"))
-        assertEquals(v["coroutines"], versionOf("kotlinx.coroutines"))
     }
 
     @Test
-    fun everyShippedDependencyIsListed() {
-        // Every module's build file counts; a library two modules both use is one dependency. Modules of this project
-        // are not libraries.
-        val files = listOf(File(root(), "app/build.gradle.kts")) +
-            File(root(), "core").listFiles { f -> f.isDirectory }!!.map { File(it, "build.gradle.kts") }
-        val shipped = files.flatMap { it.readLines() }
-            .mapNotNull { Regex("""^\s*(?:implementation|api)\((.+)\)\s*$""").find(it)?.groupValues?.get(1)?.removePrefix("platform(")?.removeSuffix(")") }
-            .filter { !it.startsWith("project(") }
-            .toSet()
-        // BOM + 6 Compose, Activity, 2 Lifecycle, Core, coroutines, ffmpeg-kit. A new dependency needs an entry in
-        // OpenSource.libraries (or a note that an existing one covers it) and this count updated.
-        assertEquals(shipped.toString(), 13, shipped.size)
+    fun theFullListIsGeneratedFromTheDependencies() {
+        // Dependencies are listed by the AboutLibraries plugin, so the app needs the plugin, the reader and the keep
+        // rule that stops resource shrinking from dropping the generated file.
+        val app = File(root(), "app/build.gradle.kts").readText()
+        assertTrue(app.contains("libs.plugins.aboutlibraries"))
+        assertTrue(app.contains("libs.aboutlibraries.core"))
+        assertTrue(File(root(), "app/src/main/res/raw/keep.xml").readText().contains("@raw/aboutlibraries"))
+    }
+
+    @Test
+    fun onlyCreditsWithANoteAreWrittenByHand() {
+        assertEquals(listOf("FFmpegKitNext", "Mornye"), OpenSource.libraries.map { it.name })
     }
 
     @Test

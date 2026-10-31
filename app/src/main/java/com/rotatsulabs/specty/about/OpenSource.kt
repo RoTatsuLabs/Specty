@@ -22,8 +22,8 @@ data class Library(
 )
 
 /**
- * Everything compiled into the app. Versions follow `gradle/libs.versions.toml`; a unit test fails when they drift.
- * Tools used only to build or test Specty are not shipped and are not listed.
+ * The credits that need a note of their own: a library with a licence obligation, and code ported from another app.
+ * Every library the build pulls in is listed on the licences page, which is generated from the dependencies.
  */
 object OpenSource {
     const val SOURCE_URL = "https://github.com/RoTatsuLabs/Specty"
@@ -50,42 +50,6 @@ object OpenSource {
             "https://github.com/mornyeapp/Mornye",
             R.string.lib_mornye_summary,
             R.string.lib_mornye_note,
-        ),
-        Library(
-            "Jetpack Compose", "Google / Android Open Source Project", "BOM 2026.03.01", LicenseKind.Apache2,
-            "https://developer.android.com/jetpack/compose",
-            R.string.lib_compose_summary,
-            R.string.lib_compose_note,
-        ),
-        Library(
-            "Activity Compose", "Google / Android Open Source Project", "1.11.0", LicenseKind.Apache2,
-            "https://developer.android.com/jetpack/androidx/releases/activity",
-            R.string.lib_activity_summary,
-        ),
-        Library(
-            "Lifecycle", "Google / Android Open Source Project", "2.9.4", LicenseKind.Apache2,
-            "https://developer.android.com/jetpack/androidx/releases/lifecycle",
-            R.string.lib_lifecycle_summary,
-        ),
-        Library(
-            "Core KTX", "Google / Android Open Source Project", "1.17.0", LicenseKind.Apache2,
-            "https://developer.android.com/jetpack/androidx/releases/core",
-            R.string.lib_core_summary,
-        ),
-        Library(
-            "Other AndroidX components", "Google / Android Open Source Project", null, LicenseKind.Apache2,
-            "https://developer.android.com/jetpack/androidx",
-            R.string.lib_androidx_summary,
-        ),
-        Library(
-            "Kotlin Standard Library", "JetBrains", "2.3.21", LicenseKind.Apache2,
-            "https://kotlinlang.org",
-            R.string.lib_kotlin_summary,
-        ),
-        Library(
-            "kotlinx.coroutines", "JetBrains", "1.10.2", LicenseKind.Apache2,
-            "https://github.com/Kotlin/kotlinx.coroutines",
-            R.string.lib_coroutines_summary,
         ),
     )
 }
