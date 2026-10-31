@@ -520,13 +520,4 @@
         <item quantity="one">%d song with several copies</item>
         <item quantity="other">%d songs with several copies</item>
     </plurals>
-    <string name="library_menu_play_all">Play all</string>
-    <string name="library_menu_shuffle_all">Shuffle all</string>
-    <string name="queue_play">Play</string>
-    <string name="queue_shuffle">Shuffle</string>
-    <string name="player_previous">Previous track</string>
-    <string name="player_play">Play</string>
-    <string name="player_pause">Pause</string>
-    <string name="player_next">Next track</string>
-    <string name="player_close">Close player</string>
 </resources>

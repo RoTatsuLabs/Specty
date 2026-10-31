@@ -19,18 +19,6 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import kotlinx.coroutines.delay
 
-/** Lets one player at a time make sound: a player that starts pauses whichever one was playing before it. */
-object PlaybackGate {
-    private var owner: Any? = null
-    private var pauseOwner: (() -> Unit)? = null
-
-    fun claim(by: Any, pause: () -> Unit) {
-        if (owner !== by) pauseOwner?.invoke()
-        owner = by
-        pauseOwner = pause
-    }
-}
-
 /**
  * Plays the analysed file with the platform [MediaPlayer] so the spectrogram can show where the sound is. The player
  * is created on first use and released with the screen. A format the device cannot play sets [failed].
@@ -86,7 +74,6 @@ class Playback(private val context: Context, private val uri: Uri) {
     }
 
     private fun startNow(p: MediaPlayer) {
-        PlaybackGate.claim(this) { pause() }
         p.start()
         playing = true
     }
