@@ -516,4 +516,8 @@
     <string name="licences_row_desc">Every library in the app, with its version and licence</string>
     <string name="licences_search">Search libraries</string>
     <string name="licences_empty">No library matches.</string>
+    <plurals name="licences_count">
+        <item quantity="one">%d library</item>
+        <item quantity="other">%d libraries</item>
+    </plurals>
 </resources>

@@ -500,4 +500,7 @@
     <string name="licences_row_desc">应用中的所有库，附版本和许可证</string>
     <string name="licences_search">搜索库</string>
     <string name="licences_empty">没有匹配的库。</string>
+    <plurals name="licences_count">
+        <item quantity="other">%d 个库</item>
+    </plurals>
 </resources>

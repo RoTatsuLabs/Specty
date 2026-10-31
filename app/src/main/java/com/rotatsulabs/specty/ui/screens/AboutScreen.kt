@@ -20,6 +20,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
 import androidx.compose.material.icons.automirrored.rounded.OpenInNew
 import androidx.compose.material.icons.rounded.BugReport
 import androidx.compose.material.icons.rounded.Code
@@ -46,6 +47,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -95,7 +97,7 @@ fun AboutScreen(
     licence?.let { kind -> LicenseDialog(kind, onDismiss = { licence = null }, onOpenOnline = { open(kind.url) }) }
 
     Column(modifier.fillMaxSize()) {
-        ExpressiveTopBar(stringResource(R.string.about_title), onBack = onBack)
+        ExpressiveTopBar(title = "", onBack = onBack)
 
         Column(
             Modifier
@@ -104,9 +106,15 @@ fun AboutScreen(
                 .padding(horizontal = 16.dp, vertical = 8.dp),
             verticalArrangement = Arrangement.spacedBy(24.dp),
         ) {
-            Reveal(0) { Hero(developer, onUnlockDeveloper) }
+            Reveal(0) {
+                Text(
+                    stringResource(R.string.about_title), style = MaterialTheme.typography.displaySmall,
+                    fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 4.dp),
+                )
+            }
+            Reveal(1) { Hero(developer, onUnlockDeveloper) }
 
-            Reveal(1) {
+            Reveal(2) {
                 SettingGroup(stringResource(R.string.about_project)) {
                     ListRow(
                         stringResource(R.string.about_source), supporting = "github.com/RoTatsuLabs/Specty", icon = Icons.Rounded.Code,
@@ -121,11 +129,12 @@ fun AboutScreen(
                     ListRow(
                         stringResource(R.string.about_intro), icon = Icons.Rounded.Replay,
                         corners = groupCorners(2, 3), onClick = onReplayIntro,
+                        trailing = { Chevron() },
                     )
                 }
             }
 
-            Reveal(2) {
+            Reveal(3) {
                 SettingGroup(stringResource(R.string.about_privacy)) {
                     ListRow(
                         stringResource(R.string.about_privacy_title),
@@ -136,16 +145,17 @@ fun AboutScreen(
                 }
             }
 
-            Reveal(3) {
+            Reveal(4) {
                 SettingGroup(stringResource(R.string.about_licence)) {
                     ListRow(
                         stringResource(R.string.app_name), supporting = stringResource(R.string.about_licence_tap, OpenSource.app.license.title), icon = Icons.Rounded.Gavel,
                         corners = SpectyShapes.Tile, onClick = { licence = OpenSource.app.license },
+                        trailing = { Chevron() },
                     )
                 }
             }
 
-            Reveal(4) {
+            Reveal(5) {
                 SettingGroup(stringResource(R.string.about_libraries)) {
                     val libraries = OpenSource.libraries
                     libraries.forEachIndexed { index, library ->
@@ -162,6 +172,7 @@ fun AboutScreen(
                         stringResource(R.string.licences_title), supporting = stringResource(R.string.licences_row_desc), icon = Icons.Rounded.Description,
                         corners = SpectyShapes.Tile, onClick = onOpenLicences,
                         modifier = Modifier.padding(top = 12.dp),
+                        trailing = { Chevron() },
                     )
                     Text(
                         stringResource(R.string.about_libraries_hint),
@@ -195,22 +206,12 @@ private fun Hero(developer: Boolean, onUnlockDeveloper: () -> Unit) {
         toast = Toast.makeText(context, text, Toast.LENGTH_SHORT).also { it.show() }
     }
     SpectyCard(Modifier.fillMaxWidth(), corners = SpectyShapes.Hero) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
+        Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
             EqualizerMark()
-            Spacer(Modifier.width(16.dp))
-            Column {
-                Text(stringResource(R.string.app_name), style = MaterialTheme.typography.headlineLarge)
-                Text(stringResource(R.string.about_tagline), style = MaterialTheme.typography.titleSmall, color = scheme.onSurfaceVariant)
-            }
-        }
-        Spacer(Modifier.height(16.dp))
-        Text(
-            stringResource(R.string.about_hero),
-            style = MaterialTheme.typography.bodyMedium,
-            color = scheme.onSurfaceVariant,
-        )
-        Spacer(Modifier.height(16.dp))
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Spacer(Modifier.height(16.dp))
+            Text(stringResource(R.string.app_name), style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.Bold)
+            Text(stringResource(R.string.about_tagline), style = MaterialTheme.typography.titleSmall, color = scheme.onSurfaceVariant)
+            Spacer(Modifier.height(12.dp))
             Pill(
                 stringResource(R.string.about_version, BuildConfig.VERSION_NAME),
                 Modifier.clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) {
@@ -223,10 +224,27 @@ private fun Hero(developer: Boolean, onUnlockDeveloper: () -> Unit) {
                         }
                     }
                 },
+                container = scheme.primaryContainer, content = scheme.onPrimaryContainer,
             )
-            Pill(OpenSource.app.license.spdx, icon = Icons.Rounded.Gavel)
+            Spacer(Modifier.height(16.dp))
+            Text(
+                stringResource(R.string.about_hero),
+                style = MaterialTheme.typography.bodyMedium,
+                color = scheme.onSurfaceVariant,
+                textAlign = TextAlign.Center,
+            )
+            Spacer(Modifier.height(16.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Pill(OpenSource.app.license.spdx, icon = Icons.Rounded.Gavel)
+                Pill("Android", icon = Icons.Rounded.Code)
+            }
         }
     }
+}
+
+@Composable
+private fun Chevron() {
+    Icon(Icons.AutoMirrored.Rounded.KeyboardArrowRight, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
 }
 
 @Composable
