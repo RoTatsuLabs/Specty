@@ -3,6 +3,7 @@ package com.rotatsulabs.specty.ui.screens
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
@@ -220,8 +221,8 @@ fun CollectionScreen(
                 val t = tracks[i]
                 Column(Modifier.padding(horizontal = 16.dp)) {
                     PageTrackRow(
-                        track = t, number = i + 1, verdict = verdicts[keyFor(t)], thumb = artistPage,
-                        onOpen = { bounds -> onOpenTrack(t, bounds, null) },
+                        track = t, number = i + 1, verdict = verdicts[keyFor(t)], thumb = artistPage, flight = flight,
+                        onOpen = { bounds, cover -> onOpenTrack(t, bounds, cover) },
                     )
                     if (i < tracks.size - 1) {
                         HorizontalDivider(Modifier.padding(start = if (artistPage) 72.dp else 44.dp), color = scheme.outlineVariant.copy(alpha = 0.5f))
@@ -230,7 +231,7 @@ fun CollectionScreen(
             }
             item(key = "bottom") { Spacer(Modifier.navigationBarsPadding().height(if (dockVisible) 130.dp else 40.dp)) }
         }
-        Box(Modifier.fillMaxWidth().background(if (scrolled) scheme.background.copy(alpha = 0.95f) else androidx.compose.ui.graphics.Color.Transparent)) {
+        Box(Modifier.fillMaxWidth().background(if (scrolled) scheme.surface.copy(alpha = 0.95f) else androidx.compose.ui.graphics.Color.Transparent)) {
             ExpressiveTopBar(title = if (scrolled) collection.title() else "", onBack = onBack)
         }
     }
@@ -297,7 +298,7 @@ private fun ArtistHero(collection: LibraryCollection<Track>) {
                 Modifier.fillMaxSize().background(
                     Brush.verticalGradient(
                         0.45f to androidx.compose.ui.graphics.Color.Transparent,
-                        1f to scheme.background,
+                        1f to scheme.surface,
                     ),
                 ),
             )
@@ -375,17 +376,24 @@ private fun PageTrackRow(
     number: Int,
     verdict: Verdict?,
     thumb: Boolean,
-    onOpen: (Rect?) -> Unit,
+    flight: CoverFlight?,
+    onOpen: (Rect?, CoverSource?) -> Unit,
 ) {
     val scheme = MaterialTheme.colorScheme
     var bounds by remember { mutableStateOf<Rect?>(null) }
+    var coverBounds by remember { mutableStateOf<Rect?>(null) }
     MorphSurface(
         Modifier.fillMaxWidth().onGloballyPositioned { bounds = it.boundsInRoot() },
-        corners = SpectyShapes.Row, color = androidx.compose.ui.graphics.Color.Transparent, onClick = { onOpen(bounds) },
+        corners = SpectyShapes.Row, color = androidx.compose.ui.graphics.Color.Transparent,
+        onClick = { onOpen(bounds, if (thumb) CoverSource(coverBounds, SpectyShapes.Cover, 156) else null) },
     ) {
         Row(Modifier.padding(vertical = 10.dp, horizontal = 4.dp), verticalAlignment = Alignment.CenterVertically) {
             if (thumb) {
-                CoverImage(uri = track.uri, shape = SpectyShapes.Cover.toShape(), modifier = Modifier.size(52.dp), sizePx = 156) {
+                CoverImage(uri = track.uri, shape = SpectyShapes.Cover.toShape(),
+                    modifier = Modifier.size(52.dp).onGloballyPositioned { coverBounds = it.boundsInRoot() }
+                        .graphicsLayer { alpha = if (flight?.hides(track.uri) == true) 0f else 1f },
+                    sizePx = 156,
+                ) {
                     Surface(Modifier.fillMaxSize(), color = scheme.tertiaryContainer) {}
                 }
                 Spacer(Modifier.width(16.dp))
