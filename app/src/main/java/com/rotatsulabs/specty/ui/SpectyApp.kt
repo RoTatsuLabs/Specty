@@ -25,6 +25,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.background
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.unit.Dp
@@ -184,17 +186,32 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit, onPickFolder: ()
 
         OverlayScreen(visible = pages.isNotEmpty(), gesture = pageBack, depth = depth, id = "page", backdrop = MaterialTheme.colorScheme.surface) {
             PaneSurface(AdaptiveMath.LIBRARY_MAX.dp) {
-                com.rotatsulabs.specty.ui.screens.findCollection(library.tracks, pageHeld.id)?.let { page ->
-                    com.rotatsulabs.specty.ui.screens.CollectionScreen(
-                        collection = page,
-                        verdicts = verdicts,
-                        keyFor = keyFor,
-                        onBack = { pagesRaw = pages.dropLast(1).joinToString("\n") },
-                        onOpenTrack = openTrack,
-                        onOpenCollection = { id -> pagesRaw = (pages + id).joinToString("\n") },
-                        dockVisible = dockVisible,
-                        flight = flight,
-                    )
+                // Moving between pages (an album to its artist and back) slides the new page in over the old one.
+                androidx.compose.animation.AnimatedContent(
+                    targetState = pageHeld.id to pages.size,
+                    contentKey = { it.first },
+                    transitionSpec = {
+                        val forward = targetState.second >= initialState.second
+                        val spec = androidx.compose.animation.core.tween<androidx.compose.ui.unit.IntOffset>(320, easing = androidx.compose.animation.core.FastOutSlowInEasing)
+                        val fade = androidx.compose.animation.core.tween<Float>(220)
+                        (androidx.compose.animation.slideInHorizontally(spec) { if (forward) it / 3 else -it / 5 } + androidx.compose.animation.fadeIn(fade)) togetherWith
+                            (androidx.compose.animation.slideOutHorizontally(spec) { if (forward) -it / 5 else it / 3 } + androidx.compose.animation.fadeOut(fade))
+                    },
+                    label = "pageSwap",
+                ) { (id, _) ->
+                    com.rotatsulabs.specty.ui.screens.findCollection(library.tracks, id)?.let { page ->
+                        com.rotatsulabs.specty.ui.screens.CollectionScreen(
+                            collection = page,
+                            verdicts = verdicts,
+                            keyFor = keyFor,
+                            onBack = { pagesRaw = pages.dropLast(1).joinToString("\n") },
+                            onOpenTrack = openTrack,
+                            onOpenCollection = { next -> pagesRaw = (pages + next).joinToString("\n") },
+                            dockVisible = dockVisible,
+                            flight = flight,
+                            modifier = Modifier.background(MaterialTheme.colorScheme.surface),
+                        )
+                    }
                 }
             }
         }

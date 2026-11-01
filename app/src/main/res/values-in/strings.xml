@@ -500,4 +500,7 @@
     <string name="licences_row_desc">Semua pustaka di aplikasi, lengkap dengan versi dan lisensinya</string>
     <string name="licences_search">Cari pustaka</string>
     <string name="licences_empty">Tidak ada pustaka yang cocok.</string>
+    <plurals name="licences_count">
+        <item quantity="other">%d pustaka</item>
+    </plurals>
 </resources>
