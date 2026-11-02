@@ -1,5 +1,6 @@
 package com.rotatsulabs.specty.ui.screens
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
@@ -13,8 +14,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.rotatsulabs.specty.audio.AudioInfo
-import com.rotatsulabs.specty.ui.design.SpectyShapes
-import com.rotatsulabs.specty.ui.design.components.MorphSurface
 
 /**
  * Lets the analysis jump to an artist's or album's page. [canOpen] says whether the library has that page, so a name
@@ -57,11 +56,10 @@ private fun TagName(name: String, kind: BrowseKind, links: TagLinks, modifier: M
         )
         return
     }
-    // A page exists: show the name as a tonal chip rather than link-coloured text.
-    MorphSurface(modifier, corners = SpectyShapes.Pill, color = scheme.secondaryContainer, onClick = { links.onOpen(kind, name) }) {
-        Text(
-            name, style = MaterialTheme.typography.labelLarge, color = scheme.onSecondaryContainer,
-            maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
-        )
-    }
+    // A page exists: the name stays plain grey text and a tap opens it.
+    Text(
+        name, style = MaterialTheme.typography.bodyMedium, color = scheme.onSurfaceVariant,
+        textAlign = TextAlign.Center, maxLines = 1, overflow = TextOverflow.Ellipsis,
+        modifier = modifier.clickable { links.onOpen(kind, name) },
+    )
 }
