@@ -504,6 +504,7 @@
     </plurals>
     <string name="nav_library">曲库</string>
     <string name="nav_insights">概览</string>
-    <string name="nav_settings">设置</string>
+    <string name="nav_folders">文件夹</string>
+    <string name="nav_search">搜索</string>
     <string name="settings_more">更多</string>
 </resources>

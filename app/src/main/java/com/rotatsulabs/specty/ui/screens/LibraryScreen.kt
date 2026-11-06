@@ -197,7 +197,7 @@ fun LibraryScreen(
     onOpen: (Track, androidx.compose.ui.geometry.Rect?, CoverSource?) -> Unit,
     onPickFile: () -> Unit,
     onPickFolder: () -> Unit,
-    onOpenFolders: () -> Unit,
+    onOpenSettings: () -> Unit,
     onOpenAbout: () -> Unit,
     onOpenCollection: (String) -> Unit = {},
     verdicts: Map<String, Verdict>,
@@ -209,9 +209,13 @@ fun LibraryScreen(
     onCompare: (Track, Track) -> Unit = { _, _ -> },
     dockVisible: Boolean = false,
     flight: CoverFlight? = null,
+    searching: Boolean = false,
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
+    val searchFocus = remember { androidx.compose.ui.focus.FocusRequester() }
+    val focusManager = androidx.compose.ui.platform.LocalFocusManager.current
+    LaunchedEffect(searching) { if (searching) searchFocus.requestFocus() else focusManager.clearFocus() }
     val hasFolders = state.folders.isNotEmpty()
     LaunchedEffect(Unit) { onLoad(false) }
     // Notifications are optional: the scan runs either way, the permission only shows its progress.
@@ -325,7 +329,7 @@ fun LibraryScreen(
                 Header(
                     onRescan = { onLoad(true) },
                     onAbout = onOpenAbout,
-                    onFolders = onOpenFolders,
+                    onSettings = onOpenSettings,
                     canRescan = hasFolders,
                     canScan = state.tracks.isNotEmpty() && !batch.running,
                     unscanned = unscanned,
@@ -342,7 +346,7 @@ fun LibraryScreen(
             item(key = "search") {
                 Spacer(Modifier.height(Spacing.Md))
                 Box {
-                    SearchPill(query, { query = it }) {
+                    SearchPill(query, { query = it }, searchFocus) {
                         if (hasTracks) {
                             Spacer(Modifier.width(8.dp))
                             FilterButton(filters.size, { showFilter = true })
@@ -517,7 +521,7 @@ fun LibraryScreen(
 private fun Header(
     onRescan: () -> Unit,
     onAbout: () -> Unit,
-    onFolders: () -> Unit,
+    onSettings: () -> Unit,
     canRescan: Boolean,
     canScan: Boolean,
     unscanned: Int,
@@ -562,9 +566,9 @@ private fun Header(
                     )
                 }
                 ExpressiveMenuItem(
-                    text = { Text(stringResource(R.string.library_menu_folders)) },
-                    leadingIcon = { Icon(Icons.Rounded.FolderOpen, contentDescription = null) },
-                    onClick = { menu = false; onFolders() },
+                    text = { Text(stringResource(R.string.settings_title)) },
+                    leadingIcon = { Icon(Icons.Rounded.Settings, contentDescription = null) },
+                    onClick = { menu = false; onSettings() },
                 )
                 ExpressiveMenuItem(
                     text = { Text(stringResource(R.string.about_title)) },
@@ -664,9 +668,9 @@ private fun BatchCard(batch: BatchScanner.State, onCancel: () -> Unit, onDismiss
 // ---- search, filters, section bar ---------------------------------------------------------------
 
 @Composable
-private fun SearchPill(query: String, onChange: (String) -> Unit, trailing: @Composable () -> Unit = {}) {
+private fun SearchPill(query: String, onChange: (String) -> Unit, focus: androidx.compose.ui.focus.FocusRequester, trailing: @Composable () -> Unit = {}) {
     Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), verticalAlignment = Alignment.CenterVertically) {
-        SearchField(query, onChange, Modifier.weight(1f), placeholder = stringResource(R.string.library_search))
+        SearchField(query, onChange, Modifier.weight(1f), placeholder = stringResource(R.string.library_search), focusRequester = focus)
         trailing()
     }
 }

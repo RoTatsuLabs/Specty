@@ -48,7 +48,7 @@ fun FoldersScreen(
     onRemoveIncluded: (Uri) -> Unit,
     onAddExcluded: () -> Unit,
     onRemoveExcluded: (Uri) -> Unit,
-    onBack: () -> Unit,
+    onBack: (() -> Unit)?,
     modifier: Modifier = Modifier,
 ) {
     val scheme = MaterialTheme.colorScheme

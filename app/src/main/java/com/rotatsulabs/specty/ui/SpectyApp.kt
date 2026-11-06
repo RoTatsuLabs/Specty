@@ -7,10 +7,12 @@ import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Insights
 import androidx.compose.material.icons.outlined.LibraryMusic
-import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.material.icons.outlined.FolderOpen
+import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.rounded.Insights
 import androidx.compose.material.icons.rounded.LibraryMusic
-import androidx.compose.material.icons.rounded.Settings
+import androidx.compose.material.icons.rounded.FolderOpen
+import androidx.compose.material.icons.rounded.Search
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
@@ -97,9 +99,9 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit, onPickFolder: ()
     var tab by rememberSaveable { mutableIntStateOf(0) }
     var barHeightPx by remember { mutableIntStateOf(0) }
     var showAbout by rememberSaveable { mutableStateOf(false) }
+    var showSettings by rememberSaveable { mutableStateOf(false) }
     var showLog by rememberSaveable { mutableStateOf(false) }
     var showLicences by rememberSaveable { mutableStateOf(false) }
-    var showFolders by rememberSaveable { mutableStateOf(false) }
     var showExport by rememberSaveable { mutableStateOf(false) }
     // Pages of albums and artists, newest last; an artist page can open one of its albums on top of itself.
     var pagesRaw by rememberSaveable { mutableStateOf("") }
@@ -134,7 +136,7 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit, onPickFolder: ()
     val compareBack = remember { BackGesture() }
     val viewerBack = remember { BackGesture() }
     val logBack = remember { BackGesture() }
-    val foldersBack = remember { BackGesture() }
+    val settingsBack = remember { BackGesture() }
     val exportBack = remember { BackGesture() }
     val pageBack = remember { BackGesture() }
     val licencesBack = remember { BackGesture() }
@@ -148,7 +150,7 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit, onPickFolder: ()
     PredictiveBack(analysisBack, enabled = analysisOpen) { viewModel.closeAnalysis() }
     PredictiveBack(aboutBack, enabled = showAbout) { showAbout = false }
     PredictiveBack(logBack, enabled = showLog) { showLog = false }
-    PredictiveBack(foldersBack, enabled = showFolders) { showFolders = false }
+    PredictiveBack(settingsBack, enabled = showSettings) { showSettings = false }
     PredictiveBack(exportBack, enabled = showExport) { showExport = false }
     PredictiveBack(compareBack, enabled = compare !is CompareState.Idle) { viewModel.closeCompare() }
     PredictiveBack(viewerBack, enabled = viewerView != null) { viewerView = null }
@@ -189,9 +191,10 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit, onPickFolder: ()
                         flight = flight,
                         onPickFile = onPickFile,
                         onPickFolder = onPickFolder,
-                        onOpenFolders = { showFolders = true },
+                        onOpenSettings = { showSettings = true },
                         onOpenAbout = { showAbout = true },
                         dockVisible = dockVisible,
+                        searching = tab == 3,
                         verdicts = verdicts,
                         keyFor = keyFor,
                         batch = batch,
@@ -200,7 +203,7 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit, onPickFolder: ()
                         onCancelScan = viewModel::cancelScan,
                         onDismissScan = viewModel::dismissScanSummary,
                     )
-                    AnimatedVisibility(visible = tab == 1, enter = FadeThrough.enter(), exit = FadeThrough.exit()) {
+                    AnimatedVisibility(visible = tab == 2, enter = FadeThrough.enter(), exit = FadeThrough.exit()) {
                         Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.surface) {
                             PaneSurface {
                                 com.rotatsulabs.specty.ui.screens.InsightsScreen(
@@ -216,29 +219,17 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit, onPickFolder: ()
                             }
                         }
                     }
-                    AnimatedVisibility(visible = tab == 2, enter = FadeThrough.enter(), exit = FadeThrough.exit()) {
+                    AnimatedVisibility(visible = tab == 1, enter = FadeThrough.enter(), exit = FadeThrough.exit()) {
                         Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.surface) {
                             PaneSurface {
-                                SettingsScreen(
-                                    appearance = appearance,
-                                    onThemeMode = viewModel::setThemeMode,
-                                    onDynamicColor = viewModel::setDynamicColor,
-                                    onSeed = viewModel::setSeed,
-                                    onPureBlack = viewModel::setPureBlack,
-                                    fftSize = fftSize,
-                                    onFftSize = viewModel::setFftSize,
-                                    windowFn = windowFn,
-                                    onWindowFn = viewModel::setWindowFn,
-                                    savedCount = verdicts.size,
-                                    onClearCache = viewModel::clearCache,
-                                    developer = developer,
-                                    logging = logging,
-                                    onLogging = viewModel::setLogging,
-                                    onOpenLog = { showLog = true },
-                                    onDeveloperOff = { viewModel.setDeveloper(false); showLog = false },
-                                    onOpenFolders = { showFolders = true },
-                                    onOpenAbout = { showAbout = true },
-                                    dockVisible = dockVisible,
+                                com.rotatsulabs.specty.ui.screens.FoldersScreen(
+                                    included = library.folders,
+                                    excluded = library.excluded,
+                                    onAddIncluded = onPickFolder,
+                                    onRemoveIncluded = viewModel::removeFolder,
+                                    onAddExcluded = onPickExcluded,
+                                    onRemoveExcluded = viewModel::includeFolder,
+                                    onBack = null,
                                 )
                             }
                         }
@@ -246,10 +237,14 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit, onPickFolder: ()
                 }
                 val navItems = listOf(
                     NavItem(stringResource(R.string.nav_library), Icons.Outlined.LibraryMusic, Icons.Rounded.LibraryMusic),
+                    NavItem(stringResource(R.string.nav_folders), Icons.Outlined.FolderOpen, Icons.Rounded.FolderOpen),
                     NavItem(stringResource(R.string.nav_insights), Icons.Outlined.Insights, Icons.Rounded.Insights),
-                    NavItem(stringResource(R.string.nav_settings), Icons.Outlined.Settings, Icons.Rounded.Settings),
+                    NavItem(stringResource(R.string.nav_search), Icons.Outlined.Search, Icons.Rounded.Search),
                 )
-                SpectyNavigationBar(navItems, tab, { tab = it }, Modifier.align(Alignment.BottomCenter).onSizeChanged { barHeightPx = it.height })
+                SpectyNavigationBar(
+                    navItems, tab, { tab = it }, Modifier.align(Alignment.BottomCenter).onSizeChanged { barHeightPx = it.height },
+                    separated = 1,
+                )
             }
         }
 
@@ -320,16 +315,27 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit, onPickFolder: ()
 
         CoverFlightLayer(flight, open = analysisOpen, currentUri = viewerResult?.uri)
 
-        OverlayScreen(visible = showFolders, gesture = foldersBack, depth = depth, id = "folders", backdrop = MaterialTheme.colorScheme.surface) {
+        OverlayScreen(visible = showSettings, gesture = settingsBack, depth = depth, id = "settings", backdrop = MaterialTheme.colorScheme.surface) {
             PaneSurface {
-                com.rotatsulabs.specty.ui.screens.FoldersScreen(
-                    included = library.folders,
-                    excluded = library.excluded,
-                    onAddIncluded = onPickFolder,
-                    onRemoveIncluded = viewModel::removeFolder,
-                    onAddExcluded = onPickExcluded,
-                    onRemoveExcluded = viewModel::includeFolder,
-                    onBack = { showFolders = false },
+                SettingsScreen(
+                    appearance = appearance,
+                    onThemeMode = viewModel::setThemeMode,
+                    onDynamicColor = viewModel::setDynamicColor,
+                    onSeed = viewModel::setSeed,
+                    onPureBlack = viewModel::setPureBlack,
+                    fftSize = fftSize,
+                    onFftSize = viewModel::setFftSize,
+                    windowFn = windowFn,
+                    onWindowFn = viewModel::setWindowFn,
+                    savedCount = verdicts.size,
+                    onClearCache = viewModel::clearCache,
+                    developer = developer,
+                    logging = logging,
+                    onLogging = viewModel::setLogging,
+                    onOpenLog = { showLog = true },
+                    onDeveloperOff = { viewModel.setDeveloper(false); showLog = false },
+                    onOpenAbout = { showAbout = true },
+                    onBack = { showSettings = false },
                 )
             }
         }

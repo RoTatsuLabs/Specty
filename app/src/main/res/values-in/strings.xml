@@ -504,6 +504,7 @@
     </plurals>
     <string name="nav_library">Pustaka</string>
     <string name="nav_insights">Wawasan</string>
-    <string name="nav_settings">Pengaturan</string>
+    <string name="nav_folders">Folder</string>
+    <string name="nav_search">Cari</string>
     <string name="settings_more">Lainnya</string>
 </resources>

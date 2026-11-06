@@ -77,9 +77,8 @@ fun SettingsScreen(
     onLogging: (Boolean) -> Unit,
     onOpenLog: () -> Unit,
     onDeveloperOff: () -> Unit,
-    onOpenFolders: () -> Unit,
     onOpenAbout: () -> Unit,
-    dockVisible: Boolean,
+    onBack: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val dark = isDarkFor(appearance)
@@ -89,7 +88,7 @@ fun SettingsScreen(
         if (reveal == null) change() else if (origin != null) reveal.start(origin, change) else reveal.start(change = change)
     }
     Column(modifier.fillMaxSize()) {
-        ExpressiveTopBar(stringResource(R.string.settings_title))
+        ExpressiveTopBar(stringResource(R.string.settings_title), onBack = onBack)
 
         Column(
             Modifier
@@ -217,18 +216,13 @@ fun SettingsScreen(
             Reveal(5) {
                 SettingGroup(stringResource(R.string.settings_more)) {
                     ListRow(
-                        stringResource(R.string.library_menu_folders), icon = Icons.Rounded.FolderOpen,
-                        corners = groupCorners(0, 2), onClick = onOpenFolders,
-                        trailing = { Icon(Icons.AutoMirrored.Rounded.KeyboardArrowRight, null, tint = MaterialTheme.colorScheme.onSurfaceVariant) },
-                    )
-                    ListRow(
                         stringResource(R.string.about_title), supporting = stringResource(R.string.about_tagline), icon = Icons.Rounded.Info,
-                        corners = groupCorners(1, 2), onClick = onOpenAbout,
+                        corners = groupCorners(0, 1), onClick = onOpenAbout,
                         trailing = { Icon(Icons.AutoMirrored.Rounded.KeyboardArrowRight, null, tint = MaterialTheme.colorScheme.onSurfaceVariant) },
                     )
                 }
             }
-            Spacer(Modifier.height(if (dockVisible) 120.dp else 16.dp))
+            Spacer(Modifier.height(16.dp))
         }
     }
 }
