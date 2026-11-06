@@ -29,6 +29,9 @@ import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material3.Icon
+import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.material3.TextField
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -53,7 +56,7 @@ import com.rotatsulabs.specty.ui.design.tonal.SeedPalette
 import com.rotatsulabs.specty.ui.design.tonal.SeedScheme
 import com.rotatsulabs.specty.ui.theme.Motion
 
-/** Search box with an asymmetric, softly morphing outline and a clear button that springs in. */
+/** Pill-shaped search field with a leading search icon and a clear button once something is typed. */
 @Composable
 fun SearchField(
     query: String,
@@ -62,45 +65,31 @@ fun SearchField(
     placeholder: String = stringResource(R.string.search_default),
     focusRequester: androidx.compose.ui.focus.FocusRequester? = null,
 ) {
-    val source = remember { MutableInteractionSource() }
-    val focused by source.collectIsFocusedAsState()
-    val radius by animateDpAsState(if (focused) 18.dp else 32.dp, Motion.spatial(), label = "searchRadius")
-    val shape = androidx.compose.foundation.shape.RoundedCornerShape(
-        topStart = 14.dp, topEnd = radius, bottomEnd = radius, bottomStart = radius,
-    )
-    val container = animateTone(
-        if (focused) MaterialTheme.colorScheme.surfaceContainerHigh else MaterialTheme.colorScheme.surfaceContainer,
-    )
-    Row(
-        modifier.fillMaxWidth().clip(shape).background(container, shape).padding(horizontal = 16.dp, vertical = 14.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Icon(Icons.Rounded.Search, null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
-        Box(Modifier.weight(1f).padding(horizontal = 12.dp)) {
-            if (query.isEmpty()) {
-                Text(placeholder, style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+    val scheme = MaterialTheme.colorScheme
+    TextField(
+        value = query,
+        onValueChange = onChange,
+        modifier = modifier.fillMaxWidth().then(
+            if (focusRequester != null) Modifier.focusRequester(focusRequester) else Modifier,
+        ),
+        singleLine = true,
+        placeholder = { Text(placeholder) },
+        leadingIcon = { Icon(Icons.Rounded.Search, null) },
+        trailingIcon = {
+            AnimatedVisibility(query.isNotEmpty(), enter = scaleIn(Motion.spatialFast()) + fadeIn(), exit = scaleOut() + fadeOut()) {
+                IconButton(onClick = { onChange("") }) { Icon(Icons.Rounded.Close, stringResource(R.string.search_clear)) }
             }
-            BasicTextField(
-                value = query,
-                onValueChange = onChange,
-                singleLine = true,
-                interactionSource = source,
-                textStyle = MaterialTheme.typography.bodyLarge.copy(color = MaterialTheme.colorScheme.onSurface),
-                cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                modifier = Modifier.fillMaxWidth().then(
-                    if (focusRequester != null) Modifier.focusRequester(focusRequester) else Modifier,
-                ),
-            )
-        }
-        AnimatedVisibility(query.isNotEmpty(), enter = scaleIn(Motion.spatialFast()) + fadeIn(), exit = scaleOut() + fadeOut()) {
-            Icon(
-                Icons.Rounded.Close, stringResource(R.string.search_clear),
-                Modifier.size(24.dp).clip(CircleShape).clickable { onChange("") },
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
-    }
+        },
+        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+        shape = CircleShape,
+        colors = TextFieldDefaults.colors(
+            focusedContainerColor = scheme.surfaceContainerHigh,
+            unfocusedContainerColor = scheme.surfaceContainer,
+            focusedIndicatorColor = Color.Transparent,
+            unfocusedIndicatorColor = Color.Transparent,
+            disabledIndicatorColor = Color.Transparent,
+        ),
+    )
 }
 
 /** Row of round colour swatches for picking a tonal palette; the selected one grows a check and a ring. */
