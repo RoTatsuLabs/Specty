@@ -23,7 +23,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.rotatsulabs.specty.ui.design.Spacing
-import com.rotatsulabs.specty.ui.design.SpectyShapes
+import androidx.compose.foundation.shape.CircleShape
 import com.rotatsulabs.specty.ui.design.animateTone
 
 /** One destination of the bottom bar. [icon] is shown when it is not selected and [selectedIcon] when it is. */
@@ -62,7 +62,7 @@ fun SpectyNavigationBar(
 private fun NavPill(modifier: Modifier = Modifier, content: @Composable () -> Unit) {
     Surface(
         modifier,
-        shape = SpectyShapes.Pill,
+        shape = CircleShape,
         color = MaterialTheme.colorScheme.surfaceContainerHigh,
         shadowElevation = 3.dp,
     ) {
@@ -78,12 +78,12 @@ private fun NavDestination(item: NavItem, selected: Boolean, onClick: () -> Unit
     Box(
         modifier
             .heightIn(min = Spacing.MinTarget + Spacing.Sm)
-            .clip(SpectyShapes.Pill)
+            .clip(CircleShape)
             .selectable(selected = selected, onClick = onClick, role = Role.Tab)
             .then(Modifier),
         contentAlignment = Alignment.Center,
     ) {
-        Surface(Modifier.matchParentSize(), shape = SpectyShapes.Pill, color = container) {}
+        Surface(Modifier.matchParentSize(), shape = CircleShape, color = container) {}
         Column(Modifier.padding(horizontal = Spacing.Sm, vertical = Spacing.Xs), horizontalAlignment = Alignment.CenterHorizontally) {
             Icon(if (selected) item.selectedIcon else item.icon, contentDescription = null, tint = content)
             Text(item.label, style = MaterialTheme.typography.labelMedium, color = content, maxLines = 1, overflow = TextOverflow.Ellipsis)
