@@ -384,8 +384,6 @@ fun SpectrogramViewer(spectrogram: Spectrogram, title: String, initialView: Int,
                         onSelect = { paletteIndex = it; prefs.edit().putInt("spectrogram_palette", it).apply() },
                         scrollable = true,
                         modifier = Modifier.fillMaxWidth(),
-                        indicator = MaterialTheme.colorScheme.secondaryContainer,
-                        onIndicator = MaterialTheme.colorScheme.onSecondaryContainer,
                     )
                     Text(stringResource(R.string.spec_freq_scale), style = caption, color = Color.White.copy(alpha = 0.7f))
                     SegmentedControl(
@@ -393,8 +391,6 @@ fun SpectrogramViewer(spectrogram: Spectrogram, title: String, initialView: Int,
                         selected = options.log,
                         onSelect = { options = options.copy(log = it).also { o -> o.save(prefs) }; resetZoom() },
                         modifier = Modifier.fillMaxWidth(),
-                        indicator = MaterialTheme.colorScheme.secondaryContainer,
-                        onIndicator = MaterialTheme.colorScheme.onSecondaryContainer,
                     )
                     Text(stringResource(R.string.spec_level_range), style = caption, color = Color.White.copy(alpha = 0.7f))
                     SegmentedControl(
@@ -402,8 +398,6 @@ fun SpectrogramViewer(spectrogram: Spectrogram, title: String, initialView: Int,
                         selected = options.range,
                         onSelect = { options = options.copy(range = it).also { o -> o.save(prefs) } },
                         modifier = Modifier.fillMaxWidth(),
-                        indicator = MaterialTheme.colorScheme.secondaryContainer,
-                        onIndicator = MaterialTheme.colorScheme.onSecondaryContainer,
                     )
                 }
             }

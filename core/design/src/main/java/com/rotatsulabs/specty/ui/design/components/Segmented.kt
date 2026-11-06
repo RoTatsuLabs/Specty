@@ -17,7 +17,6 @@ import androidx.compose.material3.ToggleButtonDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextOverflow
 
@@ -36,19 +35,11 @@ fun <T> SegmentedControl(
     onSelect: (T) -> Unit,
     modifier: Modifier = Modifier,
     scrollable: Boolean = false,
-    indicator: Color = Color.Unspecified,
-    onIndicator: Color = Color.Unspecified,
 ) {
-    val colors = if (indicator == Color.Unspecified) {
-        ToggleButtonDefaults.toggleButtonColors()
-    } else {
-        ToggleButtonDefaults.toggleButtonColors(checkedContainerColor = indicator, checkedContentColor = onIndicator)
-    }
     val row = if (scrollable) modifier.horizontalScroll(rememberScrollState()) else modifier.fillMaxWidth()
     Row(row, horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween)) {
         segments.forEachIndexed { i, seg ->
             val shapes = when {
-                segments.size == 1 -> ToggleButtonDefaults.shapes()
                 i == 0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
                 i == segments.lastIndex -> ButtonGroupDefaults.connectedTrailingButtonShapes()
                 else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
@@ -58,7 +49,6 @@ fun <T> SegmentedControl(
                 onCheckedChange = { if (it) onSelect(seg.value) },
                 modifier = if (scrollable) Modifier else Modifier.weight(1f),
                 shapes = shapes,
-                colors = colors,
             ) {
                 if (seg.icon != null) {
                     Icon(seg.icon, null, Modifier.size(ToggleButtonDefaults.IconSize))

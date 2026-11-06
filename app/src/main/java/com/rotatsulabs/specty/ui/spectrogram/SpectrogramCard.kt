@@ -176,17 +176,12 @@ fun SpectrogramCard(
         morphOnPress = false,
     ) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            val tonal = MaterialTheme.colorScheme.secondaryContainer
-            val onTonal = MaterialTheme.colorScheme.onSecondaryContainer
-            // Selection uses the tonal colour, so the solid primary stays free for the main action below.
             SegmentedControl(
                 segments = viewLabels(spectrogram).mapIndexed { i, l -> Segment(i, l) },
                 selected = selected,
                 onSelect = { selected = it },
                 scrollable = spectrogram.displayLabels.size > 3,
                 modifier = Modifier.fillMaxWidth(),
-                indicator = tonal,
-                onIndicator = onTonal,
             )
 
             val seekable = if (playback == null) Modifier else Modifier
@@ -352,8 +347,6 @@ fun SpectrogramCard(
                         },
                         scrollable = true,
                         modifier = Modifier.fillMaxWidth(),
-                        indicator = tonal,
-                        onIndicator = onTonal,
                     )
                     Text(stringResource(R.string.spec_freq_scale), style = MaterialTheme.typography.labelMedium, color = axisColor)
                     SegmentedControl(
@@ -361,8 +354,6 @@ fun SpectrogramCard(
                         selected = options.log,
                         onSelect = { set(options.copy(log = it)) },
                         modifier = Modifier.fillMaxWidth(),
-                        indicator = tonal,
-                        onIndicator = onTonal,
                     )
                     Text(stringResource(R.string.spec_level_range), style = MaterialTheme.typography.labelMedium, color = axisColor)
                     SegmentedControl(
@@ -370,8 +361,6 @@ fun SpectrogramCard(
                         selected = options.range,
                         onSelect = { set(options.copy(range = it)) },
                         modifier = Modifier.fillMaxWidth(),
-                        indicator = tonal,
-                        onIndicator = onTonal,
                     )
                 }
             }
