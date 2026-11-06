@@ -197,8 +197,6 @@ fun LibraryScreen(
     onPickFile: () -> Unit,
     onPickFolder: () -> Unit,
     onOpenFolders: () -> Unit,
-    onOpenInsights: () -> Unit = {},
-    onOpenSettings: () -> Unit,
     onOpenAbout: () -> Unit,
     onOpenCollection: (String) -> Unit = {},
     verdicts: Map<String, Verdict>,
@@ -325,11 +323,8 @@ fun LibraryScreen(
                 }
                 Header(
                     onRescan = { onLoad(true) },
-                    onSettings = onOpenSettings,
                     onAbout = onOpenAbout,
                     onFolders = onOpenFolders,
-                    onInsights = onOpenInsights,
-                    canInsights = state.tracks.isNotEmpty(),
                     canRescan = hasFolders,
                     canScan = state.tracks.isNotEmpty() && !batch.running,
                     unscanned = unscanned,
@@ -520,11 +515,8 @@ fun LibraryScreen(
 @Composable
 private fun Header(
     onRescan: () -> Unit,
-    onSettings: () -> Unit,
     onAbout: () -> Unit,
     onFolders: () -> Unit,
-    onInsights: () -> Unit,
-    canInsights: Boolean,
     canRescan: Boolean,
     canScan: Boolean,
     unscanned: Int,
@@ -568,22 +560,10 @@ private fun Header(
                         onClick = { menu = false; onScanAll() },
                     )
                 }
-                if (canInsights) {
-                    ExpressiveMenuItem(
-                        text = { Text(stringResource(R.string.library_menu_insights)) },
-                        leadingIcon = { Icon(Icons.Rounded.Insights, contentDescription = null) },
-                        onClick = { menu = false; onInsights() },
-                    )
-                }
                 ExpressiveMenuItem(
                     text = { Text(stringResource(R.string.library_menu_folders)) },
                     leadingIcon = { Icon(Icons.Rounded.FolderOpen, contentDescription = null) },
                     onClick = { menu = false; onFolders() },
-                )
-                ExpressiveMenuItem(
-                    text = { Text(stringResource(R.string.settings_title)) },
-                    leadingIcon = { Icon(Icons.Rounded.Settings, contentDescription = null) },
-                    onClick = { menu = false; onSettings() },
                 )
                 ExpressiveMenuItem(
                     text = { Text(stringResource(R.string.about_title)) },

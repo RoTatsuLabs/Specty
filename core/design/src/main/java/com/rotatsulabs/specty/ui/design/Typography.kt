@@ -22,22 +22,27 @@ private fun TextStyle.styled(weight: FontWeight, tracking: Float = letterSpacing
  * titles are semibold, body stays calm and labels are semibold with a little air.
  */
 val SpectyTypography = Typography(
-    displayLarge = base.displayLarge.styled(FontWeight.ExtraBold, -1.5f),
-    displayMedium = base.displayMedium.styled(FontWeight.ExtraBold, -1f),
+    displayLarge = base.displayLarge.styled(FontWeight.Bold, -1f),
+    displayMedium = base.displayMedium.styled(FontWeight.Bold, -0.75f),
     displaySmall = base.displaySmall.styled(FontWeight.Bold, -0.5f),
-    headlineLarge = base.headlineLarge.styled(FontWeight.ExtraBold, -0.5f),
-    headlineMedium = base.headlineMedium.styled(FontWeight.Bold, -0.25f),
-    headlineSmall = base.headlineSmall.styled(FontWeight.Bold, 0f),
-    titleLarge = base.titleLarge.styled(FontWeight.Bold, 0f),
-    titleMedium = base.titleMedium.styled(FontWeight.SemiBold, 0.1f),
-    titleSmall = base.titleSmall.styled(FontWeight.SemiBold, 0.1f),
+    headlineLarge = base.headlineLarge.styled(FontWeight.Bold, -0.25f),
+    headlineMedium = base.headlineMedium.styled(FontWeight.SemiBold, -0.1f),
+    headlineSmall = base.headlineSmall.styled(FontWeight.SemiBold, 0f),
+    titleLarge = base.titleLarge.styled(FontWeight.SemiBold, 0f),
+    titleMedium = base.titleMedium.styled(FontWeight.Medium, 0.1f),
+    titleSmall = base.titleSmall.styled(FontWeight.Medium, 0.1f),
     bodyLarge = base.bodyLarge.styled(FontWeight.Normal),
     bodyMedium = base.bodyMedium.styled(FontWeight.Normal),
     bodySmall = base.bodySmall.styled(FontWeight.Normal),
-    labelLarge = base.labelLarge.styled(FontWeight.SemiBold, 0.1f),
-    labelMedium = base.labelMedium.styled(FontWeight.SemiBold, 0.5f),
-    labelSmall = base.labelSmall.styled(FontWeight.SemiBold, 0.5f),
+    labelLarge = base.labelLarge.styled(FontWeight.Medium, 0.1f),
+    labelMedium = base.labelMedium.styled(FontWeight.Medium, 0.4f),
+    labelSmall = base.labelSmall.styled(FontWeight.Medium, 0.4f),
 )
+
+/** Figures that line up in columns and do not jitter while a value changes: tabular numerals. */
+val Typography.numericLarge: TextStyle get() = headlineMedium.copy(fontFeatureSettings = "tnum")
+val Typography.numericMedium: TextStyle get() = titleLarge.copy(fontFeatureSettings = "tnum")
+val Typography.numericSmall: TextStyle get() = bodyMedium.copy(fontFeatureSettings = "tnum")
 
 // Emphasized variants: the same sizes one or two steps heavier, for the one line on a screen that should lead.
 val Typography.displayEmphasized: TextStyle get() = displayLarge.copy(fontWeight = FontWeight.Black, letterSpacing = (-2).sp)

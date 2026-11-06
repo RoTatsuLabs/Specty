@@ -481,7 +481,6 @@
     <string name="report_preview">Pratinjau</string>
     <string name="report_caption">Tambahkan keterangan (opsional)</string>
     <string name="report_png">Gambar PNG</string>
-    <string name="library_menu_insights">Wawasan pustaka</string>
     <string name="insights_title">Wawasan pustaka</string>
     <string name="insights_totals">%1$d lagu  ·  %2$s  ·  %3$s</string>
     <string name="insights_checked">%1$d dari %2$d sudah diperiksa</string>
@@ -503,4 +502,8 @@
     <plurals name="licences_count">
         <item quantity="other">%d pustaka</item>
     </plurals>
+    <string name="nav_library">Pustaka</string>
+    <string name="nav_insights">Wawasan</string>
+    <string name="nav_settings">Pengaturan</string>
+    <string name="settings_more">Lainnya</string>
 </resources>

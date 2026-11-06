@@ -55,7 +55,7 @@ fun InsightsScreen(
     tracks: List<Track>,
     verdicts: Map<String, Verdict>,
     keyFor: (Track) -> String,
-    onBack: () -> Unit,
+    onBack: (() -> Unit)?,
     onOpenTrack: (Track, Rect?, CoverSource?) -> Unit,
     onCompare: (Track, Track) -> Unit,
     dockVisible: Boolean,

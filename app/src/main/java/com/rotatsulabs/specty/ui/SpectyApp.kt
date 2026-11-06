@@ -1,5 +1,23 @@
 package com.rotatsulabs.specty.ui
 
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.consumeWindowInsets
+import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Insights
+import androidx.compose.material.icons.outlined.LibraryMusic
+import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.material.icons.rounded.Insights
+import androidx.compose.material.icons.rounded.LibraryMusic
+import androidx.compose.material.icons.rounded.Settings
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.stringResource
+import com.rotatsulabs.specty.R
+import com.rotatsulabs.specty.ui.design.components.NavItem
+import com.rotatsulabs.specty.ui.design.components.SpectyNavigationBar
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
@@ -75,13 +93,14 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit, onPickFolder: ()
     val origin = rememberContainerOrigin()
     val flight = remember { CoverFlight() }
     var dockBounds by remember { mutableStateOf<Rect?>(null) }
-    var showSettings by rememberSaveable { mutableStateOf(false) }
+    // 0 library, 1 insights, 2 settings: the destinations of the bottom bar.
+    var tab by rememberSaveable { mutableIntStateOf(0) }
+    var barHeightPx by remember { mutableIntStateOf(0) }
     var showAbout by rememberSaveable { mutableStateOf(false) }
     var showLog by rememberSaveable { mutableStateOf(false) }
     var showLicences by rememberSaveable { mutableStateOf(false) }
     var showFolders by rememberSaveable { mutableStateOf(false) }
     var showExport by rememberSaveable { mutableStateOf(false) }
-    var showInsights by rememberSaveable { mutableStateOf(false) }
     // Pages of albums and artists, newest last; an artist page can open one of its albums on top of itself.
     var pagesRaw by rememberSaveable { mutableStateOf("") }
     var viewerView by rememberSaveable { mutableStateOf<Int?>(null) }
@@ -111,7 +130,6 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit, onPickFolder: ()
     // Each screen that covers another follows its own back swipe. Registered bottom to top: the last one enabled wins.
     val depth = remember { OverlayDepth() }
     val analysisBack = remember { BackGesture() }
-    val settingsBack = remember { BackGesture() }
     val aboutBack = remember { BackGesture() }
     val compareBack = remember { BackGesture() }
     val viewerBack = remember { BackGesture() }
@@ -119,16 +137,15 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit, onPickFolder: ()
     val foldersBack = remember { BackGesture() }
     val exportBack = remember { BackGesture() }
     val pageBack = remember { BackGesture() }
-    val insightsBack = remember { BackGesture() }
     val licencesBack = remember { BackGesture() }
     val pages = pagesRaw.split('\n').filter { it.isNotEmpty() }
     val pageHeld = remember { object { var id: String = "" } }
     pages.lastOrNull()?.let { pageHeld.id = it }
+    // Registered first, so every screen above the tabs handles back before this does.
+    androidx.activity.compose.BackHandler(enabled = tab != 0) { tab = 0 }
     PredictiveBack(licencesBack, enabled = showLicences) { showLicences = false }
-    PredictiveBack(insightsBack, enabled = showInsights) { showInsights = false }
     PredictiveBack(pageBack, enabled = pages.isNotEmpty()) { pagesRaw = pages.dropLast(1).joinToString("\n") }
     PredictiveBack(analysisBack, enabled = analysisOpen) { viewModel.closeAnalysis() }
-    PredictiveBack(settingsBack, enabled = showSettings) { showSettings = false }
     PredictiveBack(aboutBack, enabled = showAbout) { showAbout = false }
     PredictiveBack(logBack, enabled = showLog) { showLog = false }
     PredictiveBack(foldersBack, enabled = showFolders) { showFolders = false }
@@ -161,27 +178,78 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit, onPickFolder: ()
 
     Box(Modifier.fillMaxSize()) {
         Surface(Modifier.fillMaxSize().underlay(depth), color = MaterialTheme.colorScheme.surface) {
-            LibraryScreen(
-                state = library,
-                onLoad = viewModel::loadLibrary,
-                onOpen = openTrack,
-                onOpenCollection = { id -> pagesRaw = (pages + id).joinToString("\n") },
-                flight = flight,
-                onPickFile = onPickFile,
-                onPickFolder = onPickFolder,
-                onOpenFolders = { showFolders = true },
-                onOpenInsights = { showInsights = true },
-                onOpenSettings = { showSettings = true },
-                onOpenAbout = { showAbout = true },
-                dockVisible = dockVisible,
-                verdicts = verdicts,
-                keyFor = keyFor,
-                batch = batch,
-                onScanAll = viewModel::scanLibrary,
-                onCompare = { a, b -> viewModel.compareTracks(a.uri, b.uri) },
-                onCancelScan = viewModel::cancelScan,
-                onDismissScan = viewModel::dismissScanSummary,
-            )
+            Column(Modifier.fillMaxSize()) {
+                Box(Modifier.weight(1f).consumeWindowInsets(WindowInsets.navigationBars)) {
+                    LibraryScreen(
+                        state = library,
+                        onLoad = viewModel::loadLibrary,
+                        onOpen = openTrack,
+                        onOpenCollection = { id -> pagesRaw = (pages + id).joinToString("\n") },
+                        flight = flight,
+                        onPickFile = onPickFile,
+                        onPickFolder = onPickFolder,
+                        onOpenFolders = { showFolders = true },
+                        onOpenAbout = { showAbout = true },
+                        dockVisible = dockVisible,
+                        verdicts = verdicts,
+                        keyFor = keyFor,
+                        batch = batch,
+                        onScanAll = viewModel::scanLibrary,
+                        onCompare = { a, b -> viewModel.compareTracks(a.uri, b.uri) },
+                        onCancelScan = viewModel::cancelScan,
+                        onDismissScan = viewModel::dismissScanSummary,
+                    )
+                    AnimatedVisibility(visible = tab == 1, enter = FadeThrough.enter(), exit = FadeThrough.exit()) {
+                        Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.surface) {
+                            PaneSurface {
+                                com.rotatsulabs.specty.ui.screens.InsightsScreen(
+                                    tracks = library.tracks,
+                                    verdicts = verdicts,
+                                    keyFor = keyFor,
+                                    onBack = null,
+                                    onOpenTrack = openTrack,
+                                    onCompare = { a, b -> viewModel.compareTracks(a.uri, b.uri) },
+                                    dockVisible = dockVisible,
+                                    flight = flight,
+                                )
+                            }
+                        }
+                    }
+                    AnimatedVisibility(visible = tab == 2, enter = FadeThrough.enter(), exit = FadeThrough.exit()) {
+                        Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.surface) {
+                            PaneSurface {
+                                SettingsScreen(
+                                    appearance = appearance,
+                                    onThemeMode = viewModel::setThemeMode,
+                                    onDynamicColor = viewModel::setDynamicColor,
+                                    onSeed = viewModel::setSeed,
+                                    onPureBlack = viewModel::setPureBlack,
+                                    fftSize = fftSize,
+                                    onFftSize = viewModel::setFftSize,
+                                    windowFn = windowFn,
+                                    onWindowFn = viewModel::setWindowFn,
+                                    savedCount = verdicts.size,
+                                    onClearCache = viewModel::clearCache,
+                                    developer = developer,
+                                    logging = logging,
+                                    onLogging = viewModel::setLogging,
+                                    onOpenLog = { showLog = true },
+                                    onDeveloperOff = { viewModel.setDeveloper(false); showLog = false },
+                                    onOpenFolders = { showFolders = true },
+                                    onOpenAbout = { showAbout = true },
+                                    dockVisible = dockVisible,
+                                )
+                            }
+                        }
+                    }
+                }
+                val navItems = listOf(
+                    NavItem(stringResource(R.string.nav_library), Icons.Outlined.LibraryMusic, Icons.Rounded.LibraryMusic),
+                    NavItem(stringResource(R.string.nav_insights), Icons.Outlined.Insights, Icons.Rounded.Insights),
+                    NavItem(stringResource(R.string.nav_settings), Icons.Outlined.Settings, Icons.Rounded.Settings),
+                )
+                SpectyNavigationBar(navItems, tab, { tab = it }, Modifier.onSizeChanged { barHeightPx = it.height })
+            }
         }
 
         OverlayScreen(visible = pages.isNotEmpty(), gesture = pageBack, depth = depth, id = "page", backdrop = MaterialTheme.colorScheme.surface) {
@@ -216,21 +284,6 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit, onPickFolder: ()
             }
         }
 
-        OverlayScreen(visible = showInsights, gesture = insightsBack, depth = depth, id = "insights", backdrop = MaterialTheme.colorScheme.surface) {
-            PaneSurface {
-                com.rotatsulabs.specty.ui.screens.InsightsScreen(
-                    tracks = library.tracks,
-                    verdicts = verdicts,
-                    keyFor = keyFor,
-                    onBack = { showInsights = false },
-                    onOpenTrack = openTrack,
-                    onCompare = { a, b -> viewModel.compareTracks(a.uri, b.uri) },
-                    dockVisible = dockVisible,
-                    flight = flight,
-                )
-            }
-        }
-
         AnimatedVisibility(
             visible = dockVisible,
             modifier = Modifier.align(Alignment.BottomCenter),
@@ -243,7 +296,7 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit, onPickFolder: ()
                 onDismiss = viewModel::closeAnalysis,
                 modifier = Modifier
                     .widthIn(max = 640.dp)
-                    .navigationBarsPadding()
+                    .padding(bottom = with(LocalDensity.current) { barHeightPx.toDp() })
                     .padding(horizontal = 12.dp, vertical = 12.dp)
                     .onGloballyPositioned { dockBounds = it.boundsInRoot() },
             )
@@ -265,30 +318,6 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit, onPickFolder: ()
         }
 
         CoverFlightLayer(flight, open = analysisOpen, currentUri = viewerResult?.uri)
-
-        OverlayScreen(visible = showSettings, gesture = settingsBack, depth = depth, id = "settings", backdrop = MaterialTheme.colorScheme.surface) {
-            PaneSurface {
-                SettingsScreen(
-                    appearance = appearance,
-                    onThemeMode = viewModel::setThemeMode,
-                    onDynamicColor = viewModel::setDynamicColor,
-                    onSeed = viewModel::setSeed,
-                    onPureBlack = viewModel::setPureBlack,
-                    fftSize = fftSize,
-                    onFftSize = viewModel::setFftSize,
-                    windowFn = windowFn,
-                    onWindowFn = viewModel::setWindowFn,
-                    savedCount = verdicts.size,
-                    onClearCache = viewModel::clearCache,
-                    developer = developer,
-                    logging = logging,
-                    onLogging = viewModel::setLogging,
-                    onOpenLog = { showLog = true },
-                    onDeveloperOff = { viewModel.setDeveloper(false); showLog = false },
-                    onBack = { showSettings = false },
-                )
-            }
-        }
 
         OverlayScreen(visible = showFolders, gesture = foldersBack, depth = depth, id = "folders", backdrop = MaterialTheme.colorScheme.surface) {
             PaneSurface {
