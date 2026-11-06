@@ -505,6 +505,9 @@
     <string name="nav_library">Pustaka</string>
     <string name="nav_insights">Wawasan</string>
     <string name="nav_folders">Folder</string>
+    <string name="analysis_tab_overview">Ringkasan</string>
+    <string name="analysis_tab_levels">Level</string>
+    <string name="analysis_tab_spectrogram">Spektrogram</string>
     <string name="nav_search">Cari</string>
     <string name="settings_more">Lainnya</string>
 </resources>

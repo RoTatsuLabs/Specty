@@ -522,6 +522,9 @@
     <string name="nav_library">Library</string>
     <string name="nav_insights">Insights</string>
     <string name="nav_folders">Folders</string>
+    <string name="analysis_tab_overview">Overview</string>
+    <string name="analysis_tab_levels">Levels</string>
+    <string name="analysis_tab_spectrogram">Spectrogram</string>
     <string name="nav_search">Search</string>
     <string name="settings_more">More</string>
 </resources>
