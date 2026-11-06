@@ -40,6 +40,7 @@ import androidx.compose.ui.unit.dp
 import com.rotatsulabs.specty.R
 import com.rotatsulabs.specty.ui.AnalysisState
 import com.rotatsulabs.specty.ui.theme.Motion
+import com.rotatsulabs.specty.ui.design.Spacing
 
 /** Compact progress / result card docked over the library, so analysis never blocks the screen. */
 @Composable
@@ -77,7 +78,7 @@ fun AnalysisDock(state: AnalysisState, onOpen: () -> Unit, onDismiss: () -> Unit
 
     MorphSurface(
         modifier = modifier.fillMaxWidth(),
-        corners = Corners(28.dp),
+        corners = Corners(Spacing.Xl),
         color = container,
         contentColor = content,
         onClick = { if (done) onOpen() },
@@ -86,7 +87,7 @@ fun AnalysisDock(state: AnalysisState, onOpen: () -> Unit, onDismiss: () -> Unit
     ) {
         Column {
             Row(
-                Modifier.padding(start = 18.dp, end = 6.dp, top = 12.dp, bottom = 12.dp),
+                Modifier.padding(start = Spacing.Lg, end = Spacing.Xs, top = Spacing.Md, bottom = Spacing.Md),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 when {
@@ -94,7 +95,7 @@ fun AnalysisDock(state: AnalysisState, onOpen: () -> Unit, onDismiss: () -> Unit
                     done -> Icon(Icons.Rounded.Verified, contentDescription = null, modifier = Modifier.size(28.dp))
                     else -> ShapeLoader(size = 28.dp, color = content)
                 }
-                Spacer(Modifier.width(16.dp))
+                Spacer(Modifier.width(Spacing.Lg))
                 Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                     Text(title, style = MaterialTheme.typography.titleSmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     Text(subtitle, style = MaterialTheme.typography.bodySmall, maxLines = 2, overflow = TextOverflow.Ellipsis)
@@ -104,7 +105,7 @@ fun AnalysisDock(state: AnalysisState, onOpen: () -> Unit, onDismiss: () -> Unit
             if (state is AnalysisState.Running) {
                 WavyProgressBar(
                     progress,
-                    modifier = Modifier.padding(horizontal = 18.dp).padding(bottom = 12.dp),
+                    modifier = Modifier.padding(horizontal = Spacing.Lg).padding(bottom = Spacing.Md),
                     color = content,
                     track = content.copy(alpha = 0.18f),
                 )
