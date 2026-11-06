@@ -178,8 +178,9 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit, onPickFolder: ()
 
     Box(Modifier.fillMaxSize()) {
         Surface(Modifier.fillMaxSize().underlay(depth), color = MaterialTheme.colorScheme.surface) {
-            Column(Modifier.fillMaxSize()) {
-                Box(Modifier.weight(1f).consumeWindowInsets(WindowInsets.navigationBars)) {
+            Box(Modifier.fillMaxSize()) {
+                val barDp = with(LocalDensity.current) { barHeightPx.toDp() }
+                Box(Modifier.fillMaxSize().padding(bottom = barDp).consumeWindowInsets(WindowInsets.navigationBars)) {
                     LibraryScreen(
                         state = library,
                         onLoad = viewModel::loadLibrary,
@@ -248,7 +249,7 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit, onPickFolder: ()
                     NavItem(stringResource(R.string.nav_insights), Icons.Outlined.Insights, Icons.Rounded.Insights),
                     NavItem(stringResource(R.string.nav_settings), Icons.Outlined.Settings, Icons.Rounded.Settings),
                 )
-                SpectyNavigationBar(navItems, tab, { tab = it }, Modifier.onSizeChanged { barHeightPx = it.height })
+                SpectyNavigationBar(navItems, tab, { tab = it }, Modifier.align(Alignment.BottomCenter).onSizeChanged { barHeightPx = it.height })
             }
         }
 
