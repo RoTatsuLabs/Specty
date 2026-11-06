@@ -51,7 +51,7 @@
     <string name="about_licence_tap">%1$s。点按阅读全文。</string>
     <string name="about_libraries">开源库</string>
     <string name="about_libraries_hint">这两项需要说明。许可页面列出了应用中的所有库。</string>
-    <string name="about_made_by">由 RoTatsu Labs 制作</string>
+    <string name="about_made_by">由 RoTatsuLabs 制作</string>
     <string name="about_tagline">音频质量实验室</string>
     <string name="about_hero">看清音频文件的真实内容：频谱、响度与动态，以及无损文件是否原本来自有损音源。</string>
     <string name="about_version">版本 %1$s</string>

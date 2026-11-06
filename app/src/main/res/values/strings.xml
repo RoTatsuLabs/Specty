@@ -54,7 +54,7 @@
     <string name="about_licence_tap">%1$s. Tap to read it.</string>
     <string name="about_libraries">Open source libraries</string>
     <string name="about_libraries_hint">These two need a note. The licences page lists every library in the app.</string>
-    <string name="about_made_by">Made by RoTatsu Labs</string>
+    <string name="about_made_by">Made by RoTatsuLabs</string>
     <string name="about_tagline">Audio quality lab</string>
     <string name="about_hero">See what an audio file really contains: its spectrum, loudness and dynamics, and whether a lossless file started life as a lossy one.</string>
     <string name="about_version">Version %1$s</string>
