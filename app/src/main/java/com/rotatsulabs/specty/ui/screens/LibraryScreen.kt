@@ -5,6 +5,7 @@ import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.layout.onGloballyPositioned
 import com.rotatsulabs.specty.ui.design.SpectyShapes
+import com.rotatsulabs.specty.ui.design.Spacing
 import com.rotatsulabs.specty.ui.design.components.ExpressiveMenuItem
 import com.rotatsulabs.specty.ui.design.components.ButtonKind
 import com.rotatsulabs.specty.ui.design.components.EmptyState
@@ -339,7 +340,7 @@ fun LibraryScreen(
                 }
             }
             item(key = "search") {
-                Spacer(Modifier.height(14.dp))
+                Spacer(Modifier.height(Spacing.Md))
                 Box {
                     SearchPill(query, { query = it }) {
                         if (hasTracks) {
@@ -354,7 +355,7 @@ fun LibraryScreen(
                     OptionSegmentedControl(
                         BrowseKind.entries, layout.browse, { setLayout(layout.copy(browse = it)) },
                         { stringResource(it.labelRes()) },
-                        Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp),
+                        Modifier.fillMaxWidth().padding(horizontal = Spacing.Gutter, vertical = Spacing.Md),
                     )
                 }
             }
@@ -461,7 +462,7 @@ fun LibraryScreen(
                 }
             }
             item(key = "bottom") {
-                Spacer(Modifier.navigationBarsPadding().height(if (dockVisible) 130.dp else 110.dp))
+                Spacer(Modifier.height(if (dockVisible) 128.dp else 104.dp))
             }
         }
 
@@ -473,7 +474,7 @@ fun LibraryScreen(
         ) {
             val haptic = LocalHapticFeedback.current
             MorphSurface(
-                Modifier.navigationBarsPadding().padding(20.dp),
+                Modifier.padding(Spacing.Lg),
                 corners = SpectyShapes.Feature,
                 color = MaterialTheme.colorScheme.primaryContainer,
                 onClick = {
@@ -504,7 +505,7 @@ fun LibraryScreen(
                         pickedRaw = ""
                     }
                 },
-                modifier = Modifier.navigationBarsPadding().padding(bottom = if (dockVisible) 112.dp else 0.dp),
+                modifier = Modifier.padding(bottom = if (dockVisible) 112.dp else 0.dp),
             )
         }
     }
@@ -526,7 +527,7 @@ private fun Header(
     var menu by remember { mutableStateOf(false) }
     val menuTurn by animateFloatAsState(if (menu) 90f else 0f, Motion.spatial(), label = "menuTurn")
     Row(
-        Modifier.fillMaxWidth().padding(start = 20.dp, end = 12.dp, top = 16.dp, bottom = 8.dp),
+        Modifier.fillMaxWidth().padding(start = Spacing.Gutter + Spacing.Xs, end = Spacing.Md, top = Spacing.Lg, bottom = Spacing.Sm),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Row(Modifier.weight(1f).then(brandModifier), verticalAlignment = Alignment.CenterVertically) {
