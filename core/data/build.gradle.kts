@@ -2,12 +2,11 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
     alias(libs.plugins.android.library)
-    alias(libs.plugins.kotlin.android)
 }
 
 android {
     namespace = "com.rotatsulabs.specty.core.data"
-    compileSdk = 36
+    compileSdk = 37
 
     defaultConfig {
         minSdk = 26
