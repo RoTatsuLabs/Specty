@@ -77,10 +77,10 @@ fun ExpressiveButton(
     }
     val sized = modifier.heightIn(min = ButtonDefaults.MinHeight)
     when (kind) {
-        ButtonKind.Filled -> Button(onClick, sized, enabled, shapes = shapes, contentPadding = padding, content = label)
-        ButtonKind.Tonal -> FilledTonalButton(onClick, sized, enabled, shapes = shapes, contentPadding = padding, content = label)
-        ButtonKind.Outlined -> OutlinedButton(onClick, sized, enabled, shapes = shapes, contentPadding = padding, content = label)
-        ButtonKind.Text -> TextButton(onClick, sized, enabled, shapes = shapes, content = label)
+        ButtonKind.Filled -> Button(onClick = onClick, shapes = shapes, modifier = sized, enabled = enabled, contentPadding = padding, content = label)
+        ButtonKind.Tonal -> FilledTonalButton(onClick = onClick, shapes = shapes, modifier = sized, enabled = enabled, contentPadding = padding, content = label)
+        ButtonKind.Outlined -> OutlinedButton(onClick = onClick, shapes = shapes, modifier = sized, enabled = enabled, contentPadding = padding, content = label)
+        ButtonKind.Text -> TextButton(onClick = onClick, shapes = shapes, modifier = sized, enabled = enabled, content = label)
     }
 }
 
@@ -110,9 +110,9 @@ fun ExpressiveIconButton(
     val sized = modifier.size(size).semantics { contentDescription = description; selected = toggled }
     val shapes = IconButtonDefaults.shapes()
     when {
-        toggled -> FilledIconButton(onClick, sized, shapes = shapes, content = body)
-        tonal -> FilledTonalIconButton(onClick, sized, shapes = shapes, content = body)
-        else -> IconButton(onClick, sized, shapes = shapes, content = body)
+        toggled -> FilledIconButton(onClick = onClick, shapes = shapes, modifier = sized, content = body)
+        tonal -> FilledTonalIconButton(onClick = onClick, shapes = shapes, modifier = sized, content = body)
+        else -> IconButton(onClick = onClick, shapes = shapes, modifier = sized, content = body)
     }
 }
 
