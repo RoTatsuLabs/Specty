@@ -508,6 +508,8 @@
     <string name="analysis_tab_overview">Ringkasan</string>
     <string name="analysis_tab_levels">Level</string>
     <string name="analysis_tab_spectrogram">Spektrogram</string>
+    <string name="compare_tab_summary">Ringkasan</string>
+    <string name="compare_tab_spectra">Spektrum</string>
     <string name="nav_search">Cari</string>
     <string name="settings_more">Lainnya</string>
 </resources>

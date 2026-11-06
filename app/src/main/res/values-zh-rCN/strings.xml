@@ -508,6 +508,8 @@
     <string name="analysis_tab_overview">概览</string>
     <string name="analysis_tab_levels">电平</string>
     <string name="analysis_tab_spectrogram">频谱图</string>
+    <string name="compare_tab_summary">摘要</string>
+    <string name="compare_tab_spectra">频谱</string>
     <string name="nav_search">搜索</string>
     <string name="settings_more">更多</string>
 </resources>
