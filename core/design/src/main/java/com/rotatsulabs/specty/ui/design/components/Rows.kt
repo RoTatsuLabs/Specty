@@ -11,7 +11,12 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.ListItem
+import androidx.compose.material3.ListItemDefaults
+import androidx.compose.material3.Surface
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
@@ -55,20 +60,25 @@ fun ListRow(
     leading: (@Composable () -> Unit)? = null,
     trailing: (@Composable () -> Unit)? = null,
 ) {
-    MorphSurface(modifier.fillMaxWidth(), corners, color, onClick = onClick) {
-        Row(Modifier.padding(horizontal = 16.dp, vertical = 14.dp), verticalAlignment = Alignment.CenterVertically) {
-            when {
-                leading != null -> { leading(); Spacer(Modifier.width(14.dp)) }
-                icon != null -> { IconBadge(icon); Spacer(Modifier.width(14.dp)) }
-            }
-            Column(Modifier.weight(1f)) {
-                Text(title, style = MaterialTheme.typography.titleMedium)
-                if (supporting != null) {
-                    Text(supporting, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                }
-            }
-            if (trailing != null) { Spacer(Modifier.width(12.dp)); trailing() }
-        }
+    val lead: (@Composable () -> Unit)? = when {
+        leading != null -> leading
+        icon != null -> ({ IconBadge(icon) })
+        else -> null
+    }
+    val body: @Composable () -> Unit = {
+        ListItem(
+            headlineContent = { Text(title) },
+            supportingContent = if (supporting != null) ({ Text(supporting) }) else null,
+            leadingContent = lead,
+            trailingContent = trailing,
+            colors = ListItemDefaults.colors(containerColor = Color.Transparent),
+        )
+    }
+    val shape = corners.toShape()
+    if (onClick != null) {
+        Surface(onClick = onClick, modifier = modifier.fillMaxWidth(), shape = shape, color = color, content = body)
+    } else {
+        Surface(modifier = modifier.fillMaxWidth(), shape = shape, color = color, content = body)
     }
 }
 
@@ -134,7 +144,11 @@ fun SettingBlock(
     corners: Corners = SpectyShapes.Row,
     content: @Composable () -> Unit,
 ) {
-    MorphSurface(modifier.fillMaxWidth(), corners, MaterialTheme.colorScheme.surfaceContainer, morphOnPress = false) {
+    Card(
+        modifier.fillMaxWidth(),
+        shape = corners.toShape(),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
+    ) {
         Column(Modifier.padding(16.dp)) {
             Text(title, style = MaterialTheme.typography.titleMedium)
             if (supporting != null) {

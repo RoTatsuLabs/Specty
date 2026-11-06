@@ -13,6 +13,8 @@ import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.LocalContentColor
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
@@ -103,7 +105,15 @@ fun SpectyCard(
     onClick: (() -> Unit)? = null,
     content: @Composable ColumnScope.() -> Unit,
 ) {
-    MorphSurface(modifier, corners, color, onClick = onClick) {
-        Column(Modifier.padding(padding), content = content)
+    val shape = corners.toShape()
+    val colors = CardDefaults.cardColors(containerColor = color)
+    if (onClick != null) {
+        Card(onClick = onClick, modifier = modifier, shape = shape, colors = colors) {
+            Column(Modifier.padding(padding), content = content)
+        }
+    } else {
+        Card(modifier = modifier, shape = shape, colors = colors) {
+            Column(Modifier.padding(padding), content = content)
+        }
     }
 }
