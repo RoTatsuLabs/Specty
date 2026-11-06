@@ -1,6 +1,6 @@
 [versions]
 agp = "9.1.0"
-kotlin = "2.3.21"
+kotlin = "2.4.0"
 composeBom = "2026.03.01"
 activityCompose = "1.11.0"
 lifecycle = "2.9.4"
@@ -9,8 +9,7 @@ coroutines = "1.10.2"
 # FFmpegKitNext, arthenica's continuation of ffmpeg-kit (same com.arthenica.ffmpegkit API), built in RoTatsuLabs/Forge.
 ffmpegKit = "9.0.2-r1"
 junit = "4.13.2"
-# 13.x matches Kotlin 2.3 and compile SDK 36; 14 and 15 need Kotlin 2.4 and compile SDK 37.
-aboutLibraries = "13.2.1"
+aboutLibraries = "15.0.0"
 
 [libraries]
 androidx-compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "composeBom" }
