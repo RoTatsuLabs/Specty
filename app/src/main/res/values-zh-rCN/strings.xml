@@ -51,7 +51,7 @@
     <string name="about_licence_tap">%1$s。点按阅读全文。</string>
     <string name="about_made_by">由 RoTatsuLabs 制作</string>
     <string name="about_tagline">音频质量实验室</string>
-    <string name="about_hero">看清音频文件的真实内容：频谱、响度与动态，以及无损文件是否原本来自有损音源。</string>
+    <string name="about_hero">看看音频文件里有什么：频谱、响度与动态，以及无损文件是否原本来自有损音源。</string>
     <string name="about_version">版本 %1$s</string>
     <plurals name="about_dev_taps">
         <item quantity="other">再点按 %1$d 次即可成为开发者</item>
@@ -78,12 +78,12 @@
     <string name="onboarding_skip">跳过</string>
     <string name="onboarding_start">开始使用</string>
     <string name="onboarding_0_title">认识 Specty</string>
-    <string name="onboarding_0_body">为你的音乐打造的质量实验室。深入任意音频文件内部，看清它真正包含什么。</string>
+    <string name="onboarding_0_body">你的音乐质量实验室。打开任意音频文件，查看它的频谱、响度和质量。</string>
     <string name="onboarding_1_title">查看频谱</string>
     <string name="onboarding_1_body">频谱图显示各个频率随时间的变化。可全屏打开，双指张开放大高频部分，触摸即可读取精确数值。</string>
     <string name="onboarding_2_title">揪出伪无损</string>
     <string name="onboarding_2_body">由 MP3 转成的无损文件会保留 MP3 的截止频率。Specty 能找到这条边界，告诉你判断的把握有多大，以及它类似哪种编码器。</string>
-    <string name="onboarding_3_title">全面测量</string>
+    <string name="onboarding_3_title">测量各项电平</string>
     <string name="onboarding_3_body">响度、真峰值、动态范围、削波和立体声状况，外加对整个曲库的后台扫描。一切都在你的设备上运行。</string>
     <string name="onboarding_folder_added">已添加文件夹</string>
     <string name="onboarding_folder_title">曲库文件夹</string>

@@ -51,7 +51,7 @@
     <string name="about_licence_tap">%1$s. Ketuk untuk membacanya.</string>
     <string name="about_made_by">Dibuat oleh RoTatsuLabs</string>
     <string name="about_tagline">Lab kualitas audio</string>
-    <string name="about_hero">Lihat apa yang sebenarnya terkandung dalam sebuah file audio: spektrumnya, kenyaringan dan dinamikanya, serta apakah file lossless berasal dari sumber lossy.</string>
+    <string name="about_hero">Lihat isi sebuah file audio: spektrum, kenyaringan dan dinamikanya, serta apakah file lossless berasal dari sumber lossy.</string>
     <string name="about_version">Versi %1$s</string>
     <plurals name="about_dev_taps">
         <item quantity="other">%1$d ketukan lagi untuk menjadi pengembang</item>
@@ -78,12 +78,12 @@
     <string name="onboarding_skip">Lewati</string>
     <string name="onboarding_start">Mulai</string>
     <string name="onboarding_0_title">Kenali Specty</string>
-    <string name="onboarding_0_body">Lab kualitas untuk musik Anda. Intip isi file audio apa pun dan lihat apa yang sebenarnya dikandungnya.</string>
+    <string name="onboarding_0_body">Lab kualitas untuk musik Anda. Buka file audio apa pun untuk melihat spektrum, kenyaringan dan kualitasnya.</string>
     <string name="onboarding_1_title">Lihat spektrumnya</string>
     <string name="onboarding_1_body">Spektrogram menampilkan setiap frekuensi dari waktu ke waktu. Buka layar penuh, cubit untuk memperbesar bagian atas, dan sentuh untuk membaca nilai persisnya.</string>
     <string name="onboarding_2_title">Tangkap lossless palsu</string>
     <string name="onboarding_2_body">File lossless yang dibuat dari MP3 mempertahankan cutoff MP3 tersebut. Specty menemukan batas itu, menyebutkan seberapa yakin hasilnya, dan encoder mana yang mirip.</string>
-    <string name="onboarding_3_title">Ukur semuanya</string>
+    <string name="onboarding_3_title">Ukur levelnya</string>
     <string name="onboarding_3_body">Kenyaringan, true peak, rentang dinamis, clipping, dan kondisi stereo, plus pemindaian latar belakang untuk seluruh pustaka Anda. Semuanya berjalan di perangkat Anda.</string>
     <string name="onboarding_folder_added">Folder ditambahkan</string>
     <string name="onboarding_folder_title">Folder pustaka</string>

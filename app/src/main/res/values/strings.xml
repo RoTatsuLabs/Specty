@@ -54,7 +54,7 @@
     <string name="about_licence_tap">%1$s. Tap to read it.</string>
     <string name="about_made_by">Made by RoTatsuLabs</string>
     <string name="about_tagline">Audio quality lab</string>
-    <string name="about_hero">See what an audio file really contains: its spectrum, loudness and dynamics, and whether a lossless file started life as a lossy one.</string>
+    <string name="about_hero">See what is inside an audio file: its spectrum, loudness and dynamics, and whether a lossless file started life as a lossy one.</string>
     <string name="about_version">Version %1$s</string>
     <plurals name="about_dev_taps">
         <item quantity="one">%1$d more tap to become a developer</item>
@@ -82,12 +82,12 @@
     <string name="onboarding_skip">Skip</string>
     <string name="onboarding_start">Get started</string>
     <string name="onboarding_0_title">Meet Specty</string>
-    <string name="onboarding_0_body">A quality lab for your music. Look inside any audio file and see what it really contains.</string>
+    <string name="onboarding_0_body">A quality lab for your music. Open any audio file to see its spectrum, loudness and quality.</string>
     <string name="onboarding_1_title">See the spectrum</string>
     <string name="onboarding_1_body">The spectrogram shows every frequency over time. Open it fullscreen, pinch to zoom into the top end and touch it to read exact values.</string>
     <string name="onboarding_2_title">Catch fake lossless</string>
     <string name="onboarding_2_body">A lossless file made from an MP3 keeps the MP3\'s cutoff. Specty finds that edge, says how sure it is and which encoder it resembles.</string>
-    <string name="onboarding_3_title">Measure everything</string>
+    <string name="onboarding_3_title">Measure the levels</string>
     <string name="onboarding_3_body">Loudness, true peak, dynamic range, clipping and stereo health, plus a background scan of your whole library. It all runs on your device.</string>
     <string name="onboarding_folder_added">Folder added</string>
     <string name="onboarding_folder_title">Library folders</string>
