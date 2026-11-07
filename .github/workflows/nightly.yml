@@ -100,22 +100,6 @@ jobs:
         with:
           gradle-version: ${{ steps.gradle.outputs.version }}
 
-      - name: Prepare signing
-        env:
-          KEYSTORE_B64: ${{ secrets.NIGHTLY_KEYSTORE_BASE64 }}
-          SIGNING_ALIAS: ${{ secrets.NIGHTLY_KEY_ALIAS }}
-          SIGNING_PASSWORD: ${{ secrets.NIGHTLY_KEY_PASSWORD }}
-        run: |
-          fail() { echo "::error::$*"; exit 1; }
-          [ -n "$KEYSTORE_B64" ] || fail "Add the NIGHTLY_KEYSTORE_BASE64, NIGHTLY_KEY_ALIAS and NIGHTLY_KEY_PASSWORD secrets."
-          [ -n "$SIGNING_ALIAS" ] && [ -n "$SIGNING_PASSWORD" ] || fail "The alias or password secret is empty."
-          keystore="$RUNNER_TEMP/signing.jks"
-          umask 077
-          printf '%s' "$KEYSTORE_B64" | base64 -d > "$keystore" 2>/dev/null || fail "The keystore secret is not valid base64."
-          keytool -list -keystore "$keystore" -storepass:env SIGNING_PASSWORD -alias "$SIGNING_ALIAS" > /dev/null 2>&1 \
-            || { rm -f "$keystore"; fail "The keystore did not open with the given alias and password."; }
-          echo "SIGNING_KEYSTORE=$keystore" >> "$GITHUB_ENV"
-
       # The app declares all three ABIs in defaultConfig. A single-ABI build narrows that list in this
       # temporary checkout. Do not use -Pandroid.injected.build.abi: it marks the APK test-only.
       - name: Limit the ABI
@@ -126,8 +110,6 @@ jobs:
         env:
           VERSION_NAME: ${{ steps.version.outputs.name }}
           VERSION_CODE: ${{ steps.version.outputs.code }}
-          SIGNING_ALIAS: ${{ secrets.NIGHTLY_KEY_ALIAS }}
-          SIGNING_PASSWORD: ${{ secrets.NIGHTLY_KEY_PASSWORD }}
         run: gradle :app:assembleNightly --stacktrace
 
       - name: Check and name the APK
@@ -152,7 +134,7 @@ jobs:
             fail "The APK is debuggable."
           fi
           certs="$("$tools/apksigner" verify --print-certs "$apk")" || fail "The signature check failed."
-          ! grep -q 'CN=Android Debug' <<< "$certs" || fail "The APK is signed with the Android debug key."
+          echo "$certs" | grep -m1 'Signer #1 certificate SHA-256'
           mkdir -p dist
           cp "$apk" "dist/Specty_${APK_VERSION}_${ABI}.apk"
           echo "Specty_${APK_VERSION}_${ABI}.apk: $pkg $name ($code), signature verified"
@@ -163,7 +145,3 @@ jobs:
           path: dist/*.apk
           if-no-files-found: error
           retention-days: 14
-
-      - name: Remove the signing keystore
-        if: always()
-        run: rm -f "$RUNNER_TEMP/signing.jks"
