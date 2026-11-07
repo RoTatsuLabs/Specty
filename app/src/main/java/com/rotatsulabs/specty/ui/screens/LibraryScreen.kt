@@ -98,7 +98,6 @@ import androidx.compose.material.icons.rounded.ViewAgenda
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material.icons.rounded.KeyboardArrowDown
 import androidx.compose.material3.AssistChipDefaults
