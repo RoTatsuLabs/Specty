@@ -6,13 +6,15 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.ButtonGroupDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.ToggleButton
+import androidx.compose.material3.TonalToggleButton
 import androidx.compose.material3.ToggleButtonDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -44,10 +46,11 @@ fun <T> SegmentedControl(
                 i == segments.lastIndex -> ButtonGroupDefaults.connectedTrailingButtonShapes()
                 else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
             }
-            ToggleButton(
+            // Tonal buttons keep a visible fill when unselected, and the 52dp height clears the 48dp touch target.
+            TonalToggleButton(
                 checked = seg.value == selected,
                 onCheckedChange = { if (it) onSelect(seg.value) },
-                modifier = if (scrollable) Modifier else Modifier.weight(1f),
+                modifier = (if (scrollable) Modifier else Modifier.weight(1f)).heightIn(min = 52.dp),
                 shapes = shapes,
             ) {
                 if (seg.icon != null) {
@@ -55,7 +58,7 @@ fun <T> SegmentedControl(
                     Spacer(Modifier.size(ToggleButtonDefaults.IconSpacing))
                 }
                 if (seg.badge == null) {
-                    Text(seg.label, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    Text(seg.label, style = MaterialTheme.typography.titleSmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 } else {
                     // Label over a small count, so several segments with counts still fit one row.
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
