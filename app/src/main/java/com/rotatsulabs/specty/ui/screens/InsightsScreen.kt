@@ -21,6 +21,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.IosShare
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -192,8 +193,11 @@ private fun ResultBar(label: String, kind: ResultFilter, count: Int, total: Int)
             Text(label, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
             Text(count.toString(), style = MaterialTheme.typography.bodyMedium, color = scheme.onSurfaceVariant)
         }
-        Box(Modifier.fillMaxWidth().height(8.dp).clip(CircleShape).background(scheme.surfaceVariant)) {
-            Box(Modifier.fillMaxHeight().fillMaxWidth((count.toFloat() / total.coerceAtLeast(1)).coerceIn(0.02f, 1f)).clip(CircleShape).background(color))
-        }
+        LinearProgressIndicator(
+            progress = { (count.toFloat() / total.coerceAtLeast(1)).coerceIn(0f, 1f) },
+            modifier = Modifier.fillMaxWidth(),
+            color = color,
+            trackColor = scheme.surfaceVariant,
+        )
     }
 }
