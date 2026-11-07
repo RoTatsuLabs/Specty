@@ -14,7 +14,6 @@ import com.rotatsulabs.specty.ui.design.components.ExpressiveIconButton
 import com.rotatsulabs.specty.ui.design.components.MorphSurface
 import com.rotatsulabs.specty.ui.design.components.Pill
 import com.rotatsulabs.specty.ui.design.components.RingProgress
-import com.rotatsulabs.specty.ui.design.components.SearchField
 import com.rotatsulabs.specty.ui.design.components.ShapeLoader
 import com.rotatsulabs.specty.ui.design.components.OptionSegmentedControl
 import com.rotatsulabs.specty.ui.design.components.SpectyCard
@@ -216,12 +215,11 @@ fun LibraryScreen(
     dockVisible: Boolean = false,
     flight: CoverFlight? = null,
     searching: Boolean = false,
+    /** The text typed in the Search tab's field, which the app draws at the bottom of the screen. */
+    query: String = "",
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
-    val searchFocus = remember { androidx.compose.ui.focus.FocusRequester() }
-    val focusManager = androidx.compose.ui.platform.LocalFocusManager.current
-    LaunchedEffect(searching) { if (searching) searchFocus.requestFocus() else focusManager.clearFocus() }
     val hasFolders = state.folders.isNotEmpty()
     LaunchedEffect(Unit) { onLoad(false) }
     // Notifications are optional: the scan runs either way, the permission only shows its progress.
@@ -233,9 +231,6 @@ fun LibraryScreen(
         if (allowed) onScanAll() else notificationLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
     }
 
-    var query by rememberSaveable { mutableStateOf("") }
-    // The query only filters while the Search tab is open; leaving it shows the whole library again.
-    LaunchedEffect(searching) { if (!searching) query = "" }
     // The layout is remembered between launches; the filter and the picks only for this visit.
     val prefs = remember { context.getSharedPreferences("specty", Context.MODE_PRIVATE) }
     var layout by remember { mutableStateOf(LibraryView.load(prefs)) }
@@ -354,16 +349,6 @@ fun LibraryScreen(
                     BatchCard(batch, onCancel = onCancelScan, onDismiss = onDismissScan)
                 }
             }
-            if (searching) {
-                item(key = "search") {
-                    SearchField(
-                        query, { query = it },
-                        Modifier.padding(horizontal = Spacing.Gutter, vertical = Spacing.Sm),
-                        placeholder = stringResource(R.string.library_search),
-                        focusRequester = searchFocus,
-                    )
-                }
-            }
             if (hasTracks) {
                 item(key = "browse") {
                     OptionSegmentedControl(
@@ -476,7 +461,7 @@ fun LibraryScreen(
                 }
             }
             item(key = "bottom") {
-                Spacer(Modifier.height(if (dockVisible) 128.dp else 104.dp))
+                Spacer(Modifier.height((if (dockVisible) 128.dp else 104.dp) + (if (searching) 72.dp else 0.dp)))
             }
         }
 
