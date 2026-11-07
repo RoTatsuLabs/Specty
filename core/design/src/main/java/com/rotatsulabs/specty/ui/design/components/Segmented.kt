@@ -14,7 +14,7 @@ import androidx.compose.material3.ButtonGroupDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TonalToggleButton
+import androidx.compose.material3.FilledTonalToggleButton
 import androidx.compose.material3.ToggleButtonDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -47,7 +47,7 @@ fun <T> SegmentedControl(
                 else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
             }
             // Tonal buttons keep a visible fill when unselected, and the 52dp height clears the 48dp touch target.
-            TonalToggleButton(
+            FilledTonalToggleButton(
                 checked = seg.value == selected,
                 onCheckedChange = { if (it) onSelect(seg.value) },
                 modifier = (if (scrollable) Modifier else Modifier.weight(1f)).heightIn(min = 52.dp),
