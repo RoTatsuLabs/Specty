@@ -1,5 +1,18 @@
 package com.rotatsulabs.specty.ui.design.components
 
+import androidx.compose.animation.core.Animatable
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.ime
+import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.size
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.layout.boundsInParent
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.IntOffset
+import kotlinx.coroutines.launch
+import kotlin.math.roundToInt
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
@@ -7,7 +20,6 @@ import androidx.compose.animation.core.spring
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
-import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.runtime.getValue
@@ -78,6 +90,7 @@ fun SpectyNavigationBar(
     val split = items.size - separated
     // Hold a finger on the bar and slide it across the destinations: the highlight follows, and lifting selects.
     val bounds = remember { mutableStateMapOf<Int, Rect>() }
+    val local = remember { mutableStateMapOf<Int, Rect>() }
     var origin by remember { mutableStateOf(Offset.Zero) }
     var preview by remember { mutableStateOf<Int?>(null) }
     val haptic = LocalHapticFeedback.current
@@ -87,11 +100,14 @@ fun SpectyNavigationBar(
 
     fun hit(x: Float): Int? = bounds.entries.minByOrNull { (_, r) -> kotlin.math.abs(r.center.x - (x + origin.x)) }?.key
 
+    // The keyboard lifts only this bar, in step with its own animation; the screen behind stays where it is.
+    val ime = WindowInsets.ime
+    val navInset = WindowInsets.navigationBars
     Row(
         modifier
+            .offset { IntOffset(0, -(ime.getBottom(this) - navInset.getBottom(this)).coerceAtLeast(0)) }
             .fillMaxWidth()
             .navigationBarsPadding()
-            .imePadding()
             .padding(horizontal = Spacing.Gutter, vertical = Spacing.Sm)
             .onGloballyPositioned { origin = it.positionInRoot() }
             .pointerInput(items.size, searching) {
@@ -133,24 +149,22 @@ fun SpectyNavigationBar(
             Row(horizontalArrangement = Arrangement.spacedBy(Spacing.Sm), verticalAlignment = Alignment.CenterVertically) {
                 if (open) {
                     // Everything but search folds into one button; search stretches across the rest of the row.
-                    NavPill {
+                    NavPill(0..0, emptyMap(), -1) {
                         NavDestination(items[backTo], false, false, false, { current(backTo) }, Modifier.width(76.dp))
                     }
-                    NavPill(Modifier.weight(1f)) {
-                        androidx.compose.foundation.layout.Box(Modifier.weight(1f).heightIn(min = Spacing.MinTarget + Spacing.Sm), contentAlignment = Alignment.CenterStart) {
-                            SearchField(query, onQuery, Modifier.fillMaxWidth(), placeholder = placeholder, focusRequester = focusRequester)
-                        }
+                    Surface(Modifier.weight(1f), shape = CircleShape, color = MaterialTheme.colorScheme.surfaceContainerHigh, shadowElevation = 3.dp) {
+                        SearchField(query, onQuery, Modifier.fillMaxWidth(), placeholder = placeholder, focusRequester = focusRequester)
                     }
                 } else {
-                    NavPill(Modifier.weight(1f)) {
+                    NavPill(0 until split, local, shown, Modifier.weight(1f)) {
                         for (i in 0 until split) {
-                            NavDestination(items[i], i == selected, i == shown, dragging, { current(i) }, Modifier.weight(1f).onGloballyPositioned { bounds[i] = it.boundsInRoot() })
+                            NavDestination(items[i], i == selected, i == shown, dragging, { current(i) }, Modifier.weight(1f).onGloballyPositioned { bounds[i] = it.boundsInRoot(); local[i] = it.boundsInParent() })
                         }
                     }
                     if (separated > 0) {
-                        NavPill {
+                        NavPill(split until items.size, local, shown) {
                             for (i in split until items.size) {
-                                NavDestination(items[i], i == selected, i == shown, dragging, { current(i) }, Modifier.width(76.dp).onGloballyPositioned { bounds[i] = it.boundsInRoot() })
+                                NavDestination(items[i], i == selected, i == shown, dragging, { current(i) }, Modifier.width(76.dp).onGloballyPositioned { bounds[i] = it.boundsInRoot(); local[i] = it.boundsInParent() })
                             }
                         }
                     }
@@ -160,15 +174,45 @@ fun SpectyNavigationBar(
     }
 }
 
+/** A floating pill. A highlight glides behind whichever of its destinations is [shown], following a held finger. */
 @Composable
-private fun NavPill(modifier: Modifier = Modifier, content: @Composable () -> Unit) {
+private fun NavPill(indices: IntRange, local: Map<Int, Rect>, shown: Int, modifier: Modifier = Modifier, content: @Composable () -> Unit) {
+    val target = if (shown in indices) local[shown] else null
+    val x = remember { Animatable(0f) }
+    val w = remember { Animatable(0f) }
+    val y = remember { Animatable(0f) }
+    val h = remember { Animatable(0f) }
+    var placed by remember { mutableStateOf(false) }
+    val alpha by animateFloatAsState(if (target != null) 1f else 0f, spring(stiffness = Spring.StiffnessMedium), label = "navIndicatorAlpha")
+    LaunchedEffect(target) {
+        if (target == null) return@LaunchedEffect
+        y.snapTo(target.top); h.snapTo(target.height)
+        if (!placed) {
+            x.snapTo(target.left); w.snapTo(target.width); placed = true
+        } else {
+            // A slightly bouncy spring lets the highlight stretch and settle like a drop of liquid.
+            val spec = spring<Float>(dampingRatio = 0.72f, stiffness = 520f)
+            launch { x.animateTo(target.left, spec) }
+            launch { w.animateTo(target.width, spec) }
+        }
+    }
     Surface(
         modifier,
         shape = CircleShape,
         color = MaterialTheme.colorScheme.surfaceContainerHigh,
         shadowElevation = 3.dp,
     ) {
-        Row(Modifier.padding(Spacing.Xs), horizontalArrangement = Arrangement.spacedBy(Spacing.Xs)) { content() }
+        Box(Modifier.padding(Spacing.Xs)) {
+            val density = LocalDensity.current
+            Box(
+                Modifier
+                    .offset { IntOffset(x.value.roundToInt(), y.value.roundToInt()) }
+                    .size(with(density) { w.value.toDp() }, with(density) { h.value.toDp() })
+                    .graphicsLayer { this.alpha = alpha }
+                    .background(MaterialTheme.colorScheme.secondaryContainer, CircleShape),
+            )
+            Row(horizontalArrangement = Arrangement.spacedBy(Spacing.Xs)) { content() }
+        }
     }
 }
 
@@ -176,7 +220,6 @@ private fun NavPill(modifier: Modifier = Modifier, content: @Composable () -> Un
 private fun NavDestination(item: NavItem, selected: Boolean, active: Boolean, dragging: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
     val scheme = MaterialTheme.colorScheme
     val lift by animateFloatAsState(if (dragging && active) 1.12f else 1f, MaterialTheme.motionScheme.fastSpatialSpec(), label = "navLift")
-    val container = animateTone(if (active) scheme.secondaryContainer else scheme.surfaceContainerHigh, label = "navContainer")
     val content = animateTone(if (active) scheme.onSecondaryContainer else scheme.onSurfaceVariant, label = "navContent")
     Box(
         modifier
@@ -187,7 +230,6 @@ private fun NavDestination(item: NavItem, selected: Boolean, active: Boolean, dr
             .then(Modifier),
         contentAlignment = Alignment.Center,
     ) {
-        Surface(Modifier.matchParentSize(), shape = CircleShape, color = container) {}
         Column(Modifier.padding(horizontal = Spacing.Sm, vertical = Spacing.Xs), horizontalAlignment = Alignment.CenterHorizontally) {
             Icon(if (active) item.selectedIcon else item.icon, contentDescription = null, tint = content)
             Text(item.label, style = MaterialTheme.typography.labelMedium, color = content, maxLines = 1, overflow = TextOverflow.Ellipsis)

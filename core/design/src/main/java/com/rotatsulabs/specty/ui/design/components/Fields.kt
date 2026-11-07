@@ -73,7 +73,7 @@ fun SearchField(
             if (focusRequester != null) Modifier.focusRequester(focusRequester) else Modifier,
         ),
         singleLine = true,
-        placeholder = { Text(placeholder) },
+        placeholder = { Text(placeholder, maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis) },
         leadingIcon = { Icon(Icons.Rounded.Search, null) },
         trailingIcon = {
             AnimatedVisibility(query.isNotEmpty(), enter = scaleIn(Motion.spatialFast()) + fadeIn(), exit = scaleOut() + fadeOut()) {
