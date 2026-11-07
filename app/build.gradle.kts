@@ -22,9 +22,16 @@ android {
         }
     }
 
-    // CI injects the keystore through env vars. Without them, release and nightly stay unsigned.
+    // CI injects the keystore through env vars. Without them, release stays unsigned and nightly uses the debug key.
     val ciKeystore = System.getenv("SIGNING_KEYSTORE")
     signingConfigs {
+        // A fixed debug key, so every debug and nightly build is signed alike and installs over the last one.
+        getByName("debug") {
+            storeFile = file("debug.keystore")
+            storePassword = "android"
+            keyAlias = "androiddebugkey"
+            keyPassword = "android"
+        }
         if (ciKeystore != null) {
             create("ci") {
                 storeFile = file(ciKeystore)
@@ -60,7 +67,7 @@ android {
             initWith(getByName("release"))
             applicationIdSuffix = ".nightly"
             versionNameSuffix = "-nightly"
-            signingConfig = signingConfigs.findByName("ci")
+            signingConfig = signingConfigs.findByName("ci") ?: signingConfigs.getByName("debug")
             matchingFallbacks += "release"
         }
     }
