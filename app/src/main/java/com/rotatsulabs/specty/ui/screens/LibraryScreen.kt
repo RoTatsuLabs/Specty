@@ -100,6 +100,9 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material.icons.rounded.KeyboardArrowDown
+import androidx.compose.material3.AssistChipDefaults
+import androidx.compose.material3.AssistChip
 import com.rotatsulabs.specty.ui.design.components.ExpressiveTopBar
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.PaddingValues
@@ -744,16 +747,11 @@ private fun SectionBar(
             )
         }
         if (browse == BrowseKind.Tracks) Box {
-            MorphSurface(
-                Modifier.height(40.dp),
-                corners = SpectyShapes.Pill,
-                color = MaterialTheme.colorScheme.secondaryContainer,
+            AssistChip(
                 onClick = { menu = true },
-            ) {
-                Box(Modifier.height(40.dp).padding(horizontal = 18.dp), contentAlignment = Alignment.Center) {
-                    Text(stringResource(sort.labelRes()), style = MaterialTheme.typography.labelLarge)
-                }
-            }
+                label = { Text(stringResource(sort.labelRes())) },
+                trailingIcon = { Icon(Icons.Rounded.KeyboardArrowDown, null, Modifier.size(AssistChipDefaults.IconSize)) },
+            )
             DropdownMenu(expanded = menu, onDismissRequest = { menu = false }, shape = RoundedCornerShape(20.dp)) {
                 MenuLabel(stringResource(R.string.library_sort_by))
                 SortField.entries.forEach { key ->
