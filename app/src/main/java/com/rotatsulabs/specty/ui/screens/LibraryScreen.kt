@@ -461,7 +461,7 @@ fun LibraryScreen(
                 }
             }
             item(key = "bottom") {
-                Spacer(Modifier.height((if (dockVisible) 128.dp else 104.dp) + (if (searching) 72.dp else 0.dp)))
+                Spacer(Modifier.height((if (dockVisible) 128.dp else 104.dp)))
             }
         }
 

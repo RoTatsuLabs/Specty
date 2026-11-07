@@ -1,6 +1,13 @@
 package com.rotatsulabs.specty.ui.design.components
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.runtime.getValue
@@ -60,6 +67,13 @@ fun SpectyNavigationBar(
     onSelect: (Int) -> Unit,
     modifier: Modifier = Modifier,
     separated: Int = 0,
+    /** While true the last item opens up into a text field and the rest fold into one button that returns to [backTo]. */
+    searching: Boolean = false,
+    query: String = "",
+    onQuery: (String) -> Unit = {},
+    placeholder: String = "",
+    focusRequester: androidx.compose.ui.focus.FocusRequester? = null,
+    backTo: Int = 0,
 ) {
     val split = items.size - separated
     // Hold a finger on the bar and slide it across the destinations: the highlight follows, and lifting selects.
@@ -77,9 +91,11 @@ fun SpectyNavigationBar(
         modifier
             .fillMaxWidth()
             .navigationBarsPadding()
+            .imePadding()
             .padding(horizontal = Spacing.Gutter, vertical = Spacing.Sm)
             .onGloballyPositioned { origin = it.positionInRoot() }
-            .pointerInput(items.size) {
+            .pointerInput(items.size, searching) {
+                if (searching) return@pointerInput
                 awaitEachGesture {
                     val down = awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial)
                     var moved = false
@@ -108,15 +124,36 @@ fun SpectyNavigationBar(
         horizontalArrangement = Arrangement.spacedBy(Spacing.Sm),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        NavPill(Modifier.weight(1f)) {
-            for (i in 0 until split) {
-                NavDestination(items[i], i == selected, i == shown, dragging, { current(i) }, Modifier.weight(1f).onGloballyPositioned { bounds[i] = it.boundsInRoot() })
-            }
-        }
-        if (separated > 0) {
-            NavPill {
-                for (i in split until items.size) {
-                    NavDestination(items[i], i == selected, i == shown, dragging, { current(i) }, Modifier.width(76.dp).onGloballyPositioned { bounds[i] = it.boundsInRoot() })
+        AnimatedContent(
+            targetState = searching,
+            modifier = Modifier.fillMaxWidth(),
+            transitionSpec = { fadeIn(spring(stiffness = Spring.StiffnessMedium)) togetherWith fadeOut(spring(stiffness = Spring.StiffnessMedium)) },
+            label = "navSearch",
+        ) { open ->
+            Row(horizontalArrangement = Arrangement.spacedBy(Spacing.Sm), verticalAlignment = Alignment.CenterVertically) {
+                if (open) {
+                    // Everything but search folds into one button; search stretches across the rest of the row.
+                    NavPill {
+                        NavDestination(items[backTo], false, false, false, { current(backTo) }, Modifier.width(76.dp))
+                    }
+                    NavPill(Modifier.weight(1f)) {
+                        androidx.compose.foundation.layout.Box(Modifier.weight(1f).heightIn(min = Spacing.MinTarget + Spacing.Sm), contentAlignment = Alignment.CenterStart) {
+                            SearchField(query, onQuery, Modifier.fillMaxWidth(), placeholder = placeholder, focusRequester = focusRequester)
+                        }
+                    }
+                } else {
+                    NavPill(Modifier.weight(1f)) {
+                        for (i in 0 until split) {
+                            NavDestination(items[i], i == selected, i == shown, dragging, { current(i) }, Modifier.weight(1f).onGloballyPositioned { bounds[i] = it.boundsInRoot() })
+                        }
+                    }
+                    if (separated > 0) {
+                        NavPill {
+                            for (i in split until items.size) {
+                                NavDestination(items[i], i == selected, i == shown, dragging, { current(i) }, Modifier.width(76.dp).onGloballyPositioned { bounds[i] = it.boundsInRoot() })
+                            }
+                        }
+                    }
                 }
             }
         }

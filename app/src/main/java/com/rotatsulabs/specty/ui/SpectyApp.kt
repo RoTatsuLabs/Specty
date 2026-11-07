@@ -97,10 +97,12 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit, onPickFolder: ()
     var dockBounds by remember { mutableStateOf<Rect?>(null) }
     // 0 library, 1 insights, 2 settings: the destinations of the bottom bar.
     var tab by rememberSaveable { mutableIntStateOf(0) }
+    var lastTab by rememberSaveable { mutableIntStateOf(0) }
     var query by rememberSaveable { mutableStateOf("") }
     val searchFocus = remember { androidx.compose.ui.focus.FocusRequester() }
     val focusManager = androidx.compose.ui.platform.LocalFocusManager.current
     // Search is its own tab: the field opens focused, and leaving the tab clears it so the library shows in full again.
+    LaunchedEffect(tab) { if (tab != 2) lastTab = tab }
     LaunchedEffect(tab) { if (tab == 2) searchFocus.requestFocus() else { focusManager.clearFocus(); query = "" } }
     var barHeightPx by remember { mutableIntStateOf(0) }
     var showAbout by rememberSaveable { mutableStateOf(false) }
@@ -238,22 +240,13 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit, onPickFolder: ()
                 SpectyNavigationBar(
                     navItems, tab, { tab = it }, Modifier.align(Alignment.BottomCenter).onSizeChanged { barHeightPx = it.height },
                     separated = 1,
+                    searching = tab == 2,
+                    query = query,
+                    onQuery = { query = it },
+                    placeholder = stringResource(R.string.library_search),
+                    focusRequester = searchFocus,
+                    backTo = lastTab,
                 )
-                // The field sits just above the bar, and rides up above the keyboard when it opens.
-                val imeDp = with(LocalDensity.current) { WindowInsets.ime.getBottom(this).toDp() }
-                androidx.compose.animation.AnimatedVisibility(
-                    visible = tab == 2,
-                    modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = maxOf(barDp, imeDp)),
-                    enter = androidx.compose.animation.slideInVertically { it } + androidx.compose.animation.fadeIn(),
-                    exit = androidx.compose.animation.slideOutVertically { it } + androidx.compose.animation.fadeOut(),
-                ) {
-                    com.rotatsulabs.specty.ui.design.components.SearchField(
-                        query, { query = it },
-                        Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
-                        placeholder = stringResource(R.string.library_search),
-                        focusRequester = searchFocus,
-                    )
-                }
             }
         }
 
