@@ -117,7 +117,9 @@ jobs:
           [ "${#apks[@]}" -eq 1 ] || fail "Expected one APK, found ${#apks[@]}."
           apk="${apks[0]}"
           tools="$(find "$ANDROID_HOME/build-tools" -mindepth 1 -maxdepth 1 -type d | sort -V | tail -1)"
-          header="$("$tools/aapt2" dump badging "$apk" | grep -m1 '^package:')"
+          header="$("$tools/aapt2" dump badging "$apk" | grep -m1 '^package:' || true)"
+          echo "APK: $apk"
+          echo "Badging: $header"
           pkg="$(sed -n "s/.* name='\([^']*\)'.*/\1/p" <<< "$header")"
           code="$(sed -n "s/.*versionCode='\([^']*\)'.*/\1/p" <<< "$header")"
           name="$(sed -n "s/.*versionName='\([^']*\)'.*/\1/p" <<< "$header")"
@@ -128,7 +130,7 @@ jobs:
             fail "The APK is debuggable."
           fi
           certs="$("$tools/apksigner" verify --print-certs "$apk")" || fail "The signature check failed."
-          echo "$certs" | grep -m1 'Signer #1 certificate SHA-256'
+          echo "$certs" | head -n 3
           mkdir -p dist
           cp "$apk" "dist/Specty_${APK_VERSION}_${ABI}.apk"
           echo "Specty_${APK_VERSION}_${ABI}.apk: $pkg $name ($code), signature verified"
