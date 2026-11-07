@@ -494,7 +494,9 @@
     <string name="report_preview">Preview</string>
     <string name="report_caption">Add a caption (optional)</string>
     <string name="report_png">PNG image</string>
-    <string name="insights_title">Library insights</string>
+    <string name="lab_title">Lab</string>
+    <string name="lab_compare_title">Compare two files</string>
+    <string name="lab_compare_desc">Pick two tracks to see them side by side.</string>
     <string name="insights_totals">%1$d tracks  ·  %2$s  ·  %3$s</string>
     <string name="insights_checked">%1$d of %2$d checked</string>
     <string name="insights_formats">Formats</string>
@@ -518,13 +520,14 @@
         <item quantity="other">%d libraries</item>
     </plurals>
     <string name="nav_library">Library</string>
-    <string name="nav_insights">Insights</string>
-    <string name="nav_folders">Folders</string>
     <string name="analysis_tab_overview">Overview</string>
     <string name="analysis_tab_levels">Levels</string>
     <string name="analysis_tab_spectrogram">Spectrogram</string>
     <string name="compare_tab_summary">Summary</string>
     <string name="compare_tab_spectra">Spectra</string>
     <string name="nav_search">Search</string>
+    <string name="nav_lab">Lab</string>
     <string name="settings_more">More</string>
+    <string name="settings_library">Library</string>
+    <string name="settings_library_desc">Choose which folders the library reads.</string>
 </resources>

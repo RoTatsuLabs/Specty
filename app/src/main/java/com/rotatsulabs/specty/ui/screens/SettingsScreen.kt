@@ -78,6 +78,7 @@ fun SettingsScreen(
     onOpenLog: () -> Unit,
     onDeveloperOff: () -> Unit,
     onOpenAbout: () -> Unit,
+    onOpenFolders: () -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -148,6 +149,16 @@ fun SettingsScreen(
                             { stringResource(it.labelRes) },
                         )
                     }
+                }
+            }
+
+            Reveal(1) {
+                SettingGroup(stringResource(R.string.settings_library)) {
+                    ListRow(
+                        stringResource(R.string.library_menu_folders), supporting = stringResource(R.string.settings_library_desc), icon = Icons.Rounded.FolderOpen,
+                        corners = groupCorners(0, 1), onClick = onOpenFolders,
+                        trailing = { Icon(Icons.AutoMirrored.Rounded.KeyboardArrowRight, null, tint = MaterialTheme.colorScheme.onSurfaceVariant) },
+                    )
                 }
             }
 

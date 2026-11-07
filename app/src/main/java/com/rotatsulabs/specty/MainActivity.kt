@@ -57,6 +57,10 @@ class MainActivity : ComponentActivity() {
         if (uri != null) viewModel.startCompare(uri)
     }
 
+    private val pairPicker = registerForActivityResult(ActivityResultContracts.OpenMultipleDocuments()) { uris ->
+        if (uris.size == 2) viewModel.compareTracks(uris[0], uris[1])
+    }
+
     override fun attachBaseContext(newBase: Context) {
         super.attachBaseContext(AppLanguage.wrap(newBase))
     }
@@ -100,6 +104,7 @@ class MainActivity : ComponentActivity() {
                                     onPickFolder = { folderPicker.launch(null) },
                                     onPickExcluded = { excludePicker.launch(null) },
                                     onPickCompare = { comparePicker.launch(arrayOf("audio/*", "application/ogg")) },
+                                    onPickPair = { pairPicker.launch(arrayOf("audio/*", "application/ogg")) },
                                 )
                             }
                         }

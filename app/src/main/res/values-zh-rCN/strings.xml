@@ -479,7 +479,9 @@
     <string name="report_preview">预览</string>
     <string name="report_caption">添加说明（可选）</string>
     <string name="report_png">PNG 图片</string>
-    <string name="insights_title">曲库概览</string>
+    <string name="lab_title">实验室</string>
+    <string name="lab_compare_title">对比两个文件</string>
+    <string name="lab_compare_desc">选择两首曲目并排查看。</string>
     <string name="insights_totals">%1$d 首  ·  %2$s  ·  %3$s</string>
     <string name="insights_checked">已检查 %1$d / %2$d</string>
     <string name="insights_formats">格式</string>
@@ -501,13 +503,14 @@
         <item quantity="other">%d 个库</item>
     </plurals>
     <string name="nav_library">曲库</string>
-    <string name="nav_insights">概览</string>
-    <string name="nav_folders">文件夹</string>
     <string name="analysis_tab_overview">概览</string>
     <string name="analysis_tab_levels">电平</string>
     <string name="analysis_tab_spectrogram">频谱图</string>
     <string name="compare_tab_summary">摘要</string>
     <string name="compare_tab_spectra">频谱</string>
     <string name="nav_search">搜索</string>
+    <string name="nav_lab">实验室</string>
     <string name="settings_more">更多</string>
+    <string name="settings_library">曲库</string>
+    <string name="settings_library_desc">选择曲库读取哪些文件夹。</string>
 </resources>

@@ -479,7 +479,9 @@
     <string name="report_preview">Pratinjau</string>
     <string name="report_caption">Tambahkan keterangan (opsional)</string>
     <string name="report_png">Gambar PNG</string>
-    <string name="insights_title">Wawasan pustaka</string>
+    <string name="lab_title">Lab</string>
+    <string name="lab_compare_title">Bandingkan dua berkas</string>
+    <string name="lab_compare_desc">Pilih dua lagu untuk dilihat berdampingan.</string>
     <string name="insights_totals">%1$d lagu  ·  %2$s  ·  %3$s</string>
     <string name="insights_checked">%1$d dari %2$d sudah diperiksa</string>
     <string name="insights_formats">Format</string>
@@ -501,13 +503,14 @@
         <item quantity="other">%d pustaka</item>
     </plurals>
     <string name="nav_library">Pustaka</string>
-    <string name="nav_insights">Wawasan</string>
-    <string name="nav_folders">Folder</string>
     <string name="analysis_tab_overview">Ringkasan</string>
     <string name="analysis_tab_levels">Level</string>
     <string name="analysis_tab_spectrogram">Spektrogram</string>
     <string name="compare_tab_summary">Ringkasan</string>
     <string name="compare_tab_spectra">Spektrum</string>
     <string name="nav_search">Cari</string>
+    <string name="nav_lab">Lab</string>
     <string name="settings_more">Lainnya</string>
+    <string name="settings_library">Pustaka</string>
+    <string name="settings_library_desc">Pilih folder yang dibaca pustaka.</string>
 </resources>

@@ -20,6 +20,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.CompareArrows
 import androidx.compose.material.icons.rounded.IosShare
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -52,13 +53,14 @@ import com.rotatsulabs.specty.ui.design.components.ExpressiveTopBar
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun InsightsScreen(
+fun LabScreen(
     tracks: List<Track>,
     verdicts: Map<String, Verdict>,
     keyFor: (Track) -> String,
     onBack: (() -> Unit)?,
     onOpenTrack: (Track, Rect?, CoverSource?) -> Unit,
     onCompare: (Track, Track) -> Unit,
+    onPickPair: () -> Unit,
     dockVisible: Boolean,
     flight: CoverFlight?,
     modifier: Modifier = Modifier,
@@ -76,7 +78,7 @@ fun InsightsScreen(
     val checked = stringResource(R.string.insights_checked, report.checked, report.total)
     Column(modifier.fillMaxSize()) {
         ExpressiveTopBar(
-            title = stringResource(R.string.insights_title),
+            title = stringResource(R.string.lab_title),
             onBack = onBack,
             actions = {
                 if (report.total > 0) {
@@ -98,6 +100,21 @@ fun InsightsScreen(
             },
         )
         LazyColumn(Modifier.fillMaxWidth().weight(1f)) {
+            item(key = "compareTool") {
+                androidx.compose.material3.Card(
+                    onClick = onPickPair,
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+                    colors = androidx.compose.material3.CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer),
+                ) {
+                    Row(Modifier.padding(20.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                        androidx.compose.material3.Icon(Icons.AutoMirrored.Rounded.CompareArrows, null, tint = MaterialTheme.colorScheme.onSecondaryContainer)
+                        Column(Modifier.weight(1f)) {
+                            Text(stringResource(R.string.lab_compare_title), style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSecondaryContainer)
+                            Text(stringResource(R.string.lab_compare_desc), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSecondaryContainer)
+                        }
+                    }
+                }
+            }
             item(key = "summary") {
                 Column(Modifier.padding(horizontal = 24.dp, vertical = 12.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     Text(totals, style = MaterialTheme.typography.titleMedium)
