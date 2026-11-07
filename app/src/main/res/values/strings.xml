@@ -457,12 +457,6 @@
     <string name="report_portrait">Portrait</string>
     <string name="report_square">Square</string>
     <string name="report_landscape">Landscape</string>
-    <string name="report_portrait_good">Fits every section. Made for stories, chat and wallpapers.</string>
-    <string name="report_portrait_bad">Narrow, so the spectrogram is small.</string>
-    <string name="report_square_good">Compact. Sits well in feeds and grids.</string>
-    <string name="report_square_bad">Little room: text shrinks when many sections are on.</string>
-    <string name="report_landscape_good">Wide spectrogram. Fits slides, desktops and Discord.</string>
-    <string name="report_landscape_bad">Short, so key levels sit in a narrow column.</string>
     <string name="report_content">Show in the image</string>
     <string name="report_section_details">File details</string>
     <string name="report_section_verdict">Verdict</string>
@@ -477,9 +471,7 @@
     <string name="report_look">Colours</string>
     <string name="report_look_auto">Match app</string>
     <string name="report_look_amoled">AMOLED</string>
-    <string name="report_preview">Preview</string>
     <string name="report_caption">Add a caption (optional)</string>
-    <string name="report_png">PNG image</string>
     <string name="lab_title">Lab</string>
     <string name="lab_compare_title">Compare two files</string>
     <string name="lab_compare_desc">Pick two tracks to see them side by side.</string>

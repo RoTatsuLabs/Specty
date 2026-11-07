@@ -442,12 +442,6 @@
     <string name="report_portrait">Potret</string>
     <string name="report_square">Persegi</string>
     <string name="report_landscape">Lanskap</string>
-    <string name="report_portrait_good">Muat semua bagian. Cocok untuk story, chat, dan wallpaper.</string>
-    <string name="report_portrait_bad">Sempit, jadi spektrogram kecil.</string>
-    <string name="report_square_good">Ringkas. Pas untuk feed dan grid.</string>
-    <string name="report_square_bad">Ruang terbatas: teks mengecil jika banyak bagian aktif.</string>
-    <string name="report_landscape_good">Spektrogram lebar. Cocok untuk slide, desktop, dan Discord.</string>
-    <string name="report_landscape_bad">Pendek, jadi level utama berada di kolom sempit.</string>
     <string name="report_content">Tampilkan di gambar</string>
     <string name="report_section_details">Detail berkas</string>
     <string name="report_section_verdict">Vonis</string>
@@ -462,9 +456,7 @@
     <string name="report_look">Warna</string>
     <string name="report_look_auto">Ikuti aplikasi</string>
     <string name="report_look_amoled">AMOLED</string>
-    <string name="report_preview">Pratinjau</string>
     <string name="report_caption">Tambahkan keterangan (opsional)</string>
-    <string name="report_png">Gambar PNG</string>
     <string name="lab_title">Lab</string>
     <string name="lab_compare_title">Bandingkan dua berkas</string>
     <string name="lab_compare_desc">Pilih dua lagu untuk dilihat berdampingan.</string>
