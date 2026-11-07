@@ -282,6 +282,7 @@
     <string name="spec_cutoff">Cutoff</string>
     <string name="spec_display_options">Opsi tampilan</string>
     <string name="spec_palette">Palet warna</string>
+    <string name="spec_channel">Saluran</string>
     <string name="spec_freq_scale">Skala frekuensi</string>
     <string name="spec_linear">Linear</string>
     <string name="spec_log">Log</string>

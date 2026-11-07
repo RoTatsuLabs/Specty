@@ -292,6 +292,7 @@
     <string name="spec_cutoff">Cutoff</string>
     <string name="spec_display_options">Display options</string>
     <string name="spec_palette">Colour palette</string>
+    <string name="spec_channel">Channel</string>
     <string name="spec_freq_scale">Frequency scale</string>
     <string name="spec_linear">Linear</string>
     <string name="spec_log">Log</string>

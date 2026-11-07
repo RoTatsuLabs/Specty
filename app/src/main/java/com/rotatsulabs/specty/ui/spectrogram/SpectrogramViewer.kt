@@ -27,6 +27,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -125,6 +127,7 @@ internal fun niceStep(range: Double, target: Int = 5): Double {
  * Full-screen spectrogram. One finger reads out frequency, time and level under the touch; two fingers
  * zoom (each axis follows the finger spread) and pan; double tap resets the view.
  */
+@OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 @Composable
 fun SpectrogramViewer(spectrogram: Spectrogram, title: String, initialView: Int, onClose: () -> Unit, cutoffHz: Double? = null) {
     val context = LocalContext.current
@@ -351,33 +354,20 @@ fun SpectrogramViewer(spectrogram: Spectrogram, title: String, initialView: Int,
                     container = Color.Black.copy(alpha = 0.55f), content = Color.White,
                 )
             }
-            if (spectrogram.views.size > 1) {
-                ExpressiveButton(
-                    viewLabels(spectrogram)[view], { view = (view + 1) % spectrogram.views.size },
-                    kind = ButtonKind.Tonal, modifier = Modifier.widthIn(min = 72.dp),
-                )
-            }
             ExpressiveIconButton(Icons.Rounded.Tune, stringResource(R.string.spec_display_options), { showOptions = !showOptions }, toggled = showOptions)
             ExpressiveIconButton(Icons.Rounded.CropRotate, stringResource(R.string.spec_landscape), { landscape = !landscape }, toggled = landscape)
             ExpressiveIconButton(Icons.Rounded.ZoomOutMap, stringResource(R.string.spec_reset_zoom), { resetZoom() })
         }
 
-        AnimatedVisibility(
-            visible = showOptions,
-            modifier = Modifier.align(Alignment.TopEnd).padding(top = BAR_HEIGHT, end = 12.dp),
-            enter = fadeIn(Motion.effects()) + scaleIn(Motion.spatial(), initialScale = 0.9f, transformOrigin = TransformOrigin(1f, 0f)),
-            exit = fadeOut(Motion.effects()) + scaleOut(Motion.spatial(), targetScale = 0.9f, transformOrigin = TransformOrigin(1f, 0f)),
-        ) {
-            MorphSurface(
-                Modifier.width(380.dp).heightIn(max = 280.dp),
-                Corners(24.dp), Color(0xFF1B171A).copy(alpha = 0.96f), Color.White, morphOnPress = false,
-            ) {
+        if (showOptions) {
+            ModalBottomSheet(onDismissRequest = { showOptions = false }, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
                 Column(
-                    Modifier.verticalScroll(rememberScrollState()).padding(16.dp),
+                    Modifier.verticalScroll(rememberScrollState()).padding(horizontal = 24.dp).padding(bottom = 24.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
-                    val caption = MaterialTheme.typography.labelMedium
-                    Text(stringResource(R.string.spec_palette), style = caption, color = Color.White.copy(alpha = 0.7f))
+                    val caption = MaterialTheme.typography.labelLarge
+                    val muted = MaterialTheme.colorScheme.onSurfaceVariant
+                    Text(stringResource(R.string.spec_palette), style = caption, color = muted)
                     SegmentedControl(
                         segments = SpectrogramPalette.entries.mapIndexed { i, p -> Segment(i, p.label) },
                         selected = paletteIndex,
@@ -385,20 +375,30 @@ fun SpectrogramViewer(spectrogram: Spectrogram, title: String, initialView: Int,
                         scrollable = true,
                         modifier = Modifier.fillMaxWidth(),
                     )
-                    Text(stringResource(R.string.spec_freq_scale), style = caption, color = Color.White.copy(alpha = 0.7f))
+                    Text(stringResource(R.string.spec_freq_scale), style = caption, color = muted)
                     SegmentedControl(
                         segments = listOf(Segment(false, stringResource(R.string.spec_linear)), Segment(true, stringResource(R.string.spec_log))),
                         selected = options.log,
                         onSelect = { options = options.copy(log = it).also { o -> o.save(prefs) }; resetZoom() },
                         modifier = Modifier.fillMaxWidth(),
                     )
-                    Text(stringResource(R.string.spec_level_range), style = caption, color = Color.White.copy(alpha = 0.7f))
+                    Text(stringResource(R.string.spec_level_range), style = caption, color = muted)
                     SegmentedControl(
                         segments = DbRange.entries.map { Segment(it, stringResource(it.labelRes)) },
                         selected = options.range,
                         onSelect = { options = options.copy(range = it).also { o -> o.save(prefs) } },
                         modifier = Modifier.fillMaxWidth(),
                     )
+                    if (spectrogram.views.size > 1) {
+                        Text(stringResource(R.string.spec_channel), style = caption, color = muted)
+                        SegmentedControl(
+                            segments = viewLabels(spectrogram).mapIndexed { i, l -> Segment(i, l) },
+                            selected = view,
+                            onSelect = { view = it },
+                            scrollable = true,
+                            modifier = Modifier.fillMaxWidth(),
+                        )
+                    }
                 }
             }
         }
