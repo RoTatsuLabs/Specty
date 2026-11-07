@@ -5,12 +5,6 @@ on:
     # 00:00 in Jakarta, every day.
     - cron: '0 17 * * *'
   workflow_dispatch:
-    inputs:
-      ref:
-        description: Branch or tag to build
-        required: false
-        default: main
-        type: string
 
 permissions:
   contents: read
@@ -33,7 +27,7 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ inputs.ref || github.ref }}
+          ref: ${{ github.ref }}
           fetch-depth: 50
           persist-credentials: false
 
@@ -64,7 +58,7 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ inputs.ref || github.ref }}
+          ref: ${{ github.ref }}
           fetch-depth: 0
           fetch-tags: true
           persist-credentials: false
