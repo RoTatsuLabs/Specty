@@ -42,7 +42,7 @@
 
     <!-- About -->
     <string name="about_title">About</string>
-    <string name="about_project">Project</string>
+    <string name="about_more">More</string>
     <string name="about_source">Source code</string>
     <string name="about_report">Report a problem</string>
     <string name="about_report_desc">Open an issue on GitHub</string>
@@ -52,8 +52,6 @@
     <string name="about_privacy_desc">All analysis runs on your device and nothing is uploaded. Specty does not declare the internet permission.</string>
     <string name="about_licence">Licence</string>
     <string name="about_licence_tap">%1$s. Tap to read it.</string>
-    <string name="about_libraries">Open source libraries</string>
-    <string name="about_libraries_hint">These two need a note. The licences page lists every library in the app.</string>
     <string name="about_made_by">Made by RoTatsuLabs</string>
     <string name="about_tagline">Audio quality lab</string>
     <string name="about_hero">See what an audio file really contains: its spectrum, loudness and dynamics, and whether a lossless file started life as a lossy one.</string>

@@ -39,7 +39,7 @@
 
     <!-- About -->
     <string name="about_title">Tentang</string>
-    <string name="about_project">Proyek</string>
+    <string name="about_more">Lainnya</string>
     <string name="about_source">Kode sumber</string>
     <string name="about_report">Laporkan masalah</string>
     <string name="about_report_desc">Buka isu di GitHub</string>
@@ -49,8 +49,6 @@
     <string name="about_privacy_desc">Semua analisis berjalan di perangkat Anda dan tidak ada yang diunggah. Specty tidak mendeklarasikan izin internet.</string>
     <string name="about_licence">Lisensi</string>
     <string name="about_licence_tap">%1$s. Ketuk untuk membacanya.</string>
-    <string name="about_libraries">Pustaka sumber terbuka</string>
-    <string name="about_libraries_hint">Dua ini perlu catatan. Halaman lisensi memuat semua pustaka di aplikasi.</string>
     <string name="about_made_by">Dibuat oleh RoTatsuLabs</string>
     <string name="about_tagline">Lab kualitas audio</string>
     <string name="about_hero">Lihat apa yang sebenarnya terkandung dalam sebuah file audio: spektrumnya, kenyaringan dan dinamikanya, serta apakah file lossless berasal dari sumber lossy.</string>
