@@ -391,8 +391,6 @@ private fun Hero(result: AnalysisResult, flight: CoverFlight?, links: TagLinks) 
                 InfoChip(Fmt.size(info.sizeBytes))
                 when {
                     info.isDolbyAtmos -> QualityBadge(stringResource(R.string.badge_atmos), Icons.Rounded.SurroundSound, scheme.primary, scheme.tertiary)
-                    verdict == Verdict.HI_RES -> QualityBadge(stringResource(R.string.badge_hires_lossless), Icons.Rounded.HighQuality, scheme.primary, scheme.secondary)
-                    verdict == Verdict.GENUINE -> QualityBadge(stringResource(R.string.badge_lossless), Icons.Rounded.Verified, scheme.tertiary, scheme.secondary)
                 }
             }
         }

@@ -193,8 +193,6 @@
     <string name="analysis_share_title">Share analysis</string>
     <string name="analysis_failed_title">Could not analyse this file</string>
     <string name="badge_atmos" translatable="false">DOLBY ATMOS</string>
-    <string name="badge_hires_lossless">HI-RES LOSSLESS</string>
-    <string name="badge_lossless">LOSSLESS</string>
     <string name="verdict_head_genuine">Lossless, no sign of a lossy origin</string>
     <string name="verdict_head_hires">Hi-Res lossless, no sign of a lossy origin</string>
     <string name="verdict_head_lossy_source">Likely transcoded from a lossy source</string>
@@ -527,8 +525,6 @@
     <string name="analysis_tab_spectrogram">Spectrogram</string>
     <string name="compare_tab_summary">Summary</string>
     <string name="compare_tab_spectra">Spectra</string>
-    <string name="library_overview_checked">%1$d of %2$d checked</string>
-    <string name="library_overview_action">Check now</string>
     <string name="nav_search">Search</string>
     <string name="settings_more">More</string>
 </resources>

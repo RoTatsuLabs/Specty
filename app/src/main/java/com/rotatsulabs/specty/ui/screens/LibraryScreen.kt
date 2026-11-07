@@ -234,6 +234,8 @@ fun LibraryScreen(
     }
 
     var query by rememberSaveable { mutableStateOf("") }
+    // The query only filters while the Search tab is open; leaving it shows the whole library again.
+    LaunchedEffect(searching) { if (!searching) query = "" }
     // The layout is remembered between launches; the filter and the picks only for this visit.
     val prefs = remember { context.getSharedPreferences("specty", Context.MODE_PRIVATE) }
     var layout by remember { mutableStateOf(LibraryView.load(prefs)) }
@@ -334,6 +336,8 @@ fun LibraryScreen(
                 }
                 Header(
                     trackCount = state.tracks.size,
+                    filterCount = if (hasTracks) filters.size else -1,
+                    onFilter = { showFilter = true },
                     onRescan = { onLoad(true) },
                     onAbout = onOpenAbout,
                     onSettings = onOpenSettings,
@@ -345,25 +349,19 @@ fun LibraryScreen(
                 )
             }
 
-            if (hasTracks && !batch.running && !batch.finished) {
-                item(key = "overview") {
-                    OverviewCard(total = state.tracks.size, unchecked = unscanned, onCheck = startScan)
-                }
-            }
             if (batch.running || batch.finished) {
                 item(key = "batch") {
                     BatchCard(batch, onCancel = onCancelScan, onDismiss = onDismissScan)
                 }
             }
-            item(key = "search") {
-                Spacer(Modifier.height(Spacing.Md))
-                Box {
-                    SearchPill(query, { query = it }, searchFocus) {
-                        if (hasTracks) {
-                            Spacer(Modifier.width(8.dp))
-                            FilterButton(filters.size, { showFilter = true })
-                        }
-                    }
+            if (searching) {
+                item(key = "search") {
+                    SearchField(
+                        query, { query = it },
+                        Modifier.padding(horizontal = Spacing.Gutter, vertical = Spacing.Sm),
+                        placeholder = stringResource(R.string.library_search),
+                        focusRequester = searchFocus,
+                    )
                 }
             }
             if (hasTracks) {
@@ -532,6 +530,8 @@ fun LibraryScreen(
 @Composable
 private fun Header(
     trackCount: Int,
+    filterCount: Int,
+    onFilter: () -> Unit,
     onRescan: () -> Unit,
     onAbout: () -> Unit,
     onSettings: () -> Unit,
@@ -548,6 +548,7 @@ private fun Header(
         modifier = brandModifier.consumeWindowInsets(WindowInsets.statusBars),
         subtitle = if (trackCount > 0) pluralStringResource(R.plurals.library_tracks, trackCount, trackCount) else null,
         actions = {
+            if (filterCount >= 0) FilterButton(filterCount, onFilter)
             Box {
                 IconButton(onClick = { menu = true }) { Icon(Icons.Rounded.MoreVert, stringResource(R.string.library_more)) }
                 DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
@@ -585,31 +586,6 @@ private fun Header(
             }
         },
     )
-}
-
-/** How much of the library has been checked, with the one action that moves it forward. */
-@Composable
-private fun OverviewCard(total: Int, unchecked: Int, onCheck: () -> Unit) {
-    val checked = total - unchecked
-    SpectyCard(
-        Modifier.fillMaxWidth().padding(horizontal = Spacing.Gutter, vertical = Spacing.Sm),
-        corners = SpectyShapes.Card,
-        color = MaterialTheme.colorScheme.surfaceContainerLow,
-        padding = PaddingValues(Spacing.Lg),
-    ) {
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Spacing.Lg)) {
-            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(Spacing.Sm)) {
-                Text(
-                    stringResource(R.string.library_overview_checked, checked, total),
-                    style = MaterialTheme.typography.titleMedium.copy(fontFeatureSettings = "tnum"),
-                )
-                WavyProgressBar(if (total == 0) 0f else checked.toFloat() / total)
-            }
-            if (unchecked > 0) {
-                ExpressiveButton(stringResource(R.string.library_overview_action), onCheck, kind = ButtonKind.Tonal)
-            }
-        }
-    }
 }
 
 /** The app mark: four bars that keep dancing out of phase. */
@@ -698,14 +674,6 @@ private fun BatchCard(batch: BatchScanner.State, onCancel: () -> Unit, onDismiss
 // ---- library health ---------------------------------------------------------------------------
 
 // ---- search, filters, section bar ---------------------------------------------------------------
-
-@Composable
-private fun SearchPill(query: String, onChange: (String) -> Unit, focus: androidx.compose.ui.focus.FocusRequester, trailing: @Composable () -> Unit = {}) {
-    Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), verticalAlignment = Alignment.CenterVertically) {
-        SearchField(query, onChange, Modifier.weight(1f), placeholder = stringResource(R.string.library_search), focusRequester = focus)
-        trailing()
-    }
-}
 
 @Composable
 private fun SectionBar(

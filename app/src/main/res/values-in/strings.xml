@@ -185,8 +185,6 @@
     <string name="analysis_share_image">Bagikan gambar</string>
     <string name="analysis_share_title">Bagikan analisis</string>
     <string name="analysis_failed_title">File ini tidak dapat dianalisis</string>
-    <string name="badge_hires_lossless">LOSSLESS HI-RES</string>
-    <string name="badge_lossless">LOSSLESS</string>
     <string name="verdict_head_genuine">Lossless, tanpa tanda berasal dari sumber lossy</string>
     <string name="verdict_head_hires">Lossless Hi-Res, tanpa tanda berasal dari sumber lossy</string>
     <string name="verdict_head_lossy_source">Kemungkinan hasil transkode dari sumber lossy</string>
@@ -510,8 +508,6 @@
     <string name="analysis_tab_spectrogram">Spektrogram</string>
     <string name="compare_tab_summary">Ringkasan</string>
     <string name="compare_tab_spectra">Spektrum</string>
-    <string name="library_overview_checked">%1$d dari %2$d sudah diperiksa</string>
-    <string name="library_overview_action">Periksa sekarang</string>
     <string name="nav_search">Cari</string>
     <string name="settings_more">Lainnya</string>
 </resources>

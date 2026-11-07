@@ -185,8 +185,6 @@
     <string name="analysis_share_image">分享图片</string>
     <string name="analysis_share_title">分享分析结果</string>
     <string name="analysis_failed_title">无法分析此文件</string>
-    <string name="badge_hires_lossless">HI-RES 无损</string>
-    <string name="badge_lossless">无损</string>
     <string name="verdict_head_genuine">无损，没有来自有损音源的迹象</string>
     <string name="verdict_head_hires">Hi-Res 无损，没有来自有损音源的迹象</string>
     <string name="verdict_head_lossy_source">疑似由有损音源转码而来</string>
@@ -510,8 +508,6 @@
     <string name="analysis_tab_spectrogram">频谱图</string>
     <string name="compare_tab_summary">摘要</string>
     <string name="compare_tab_spectra">频谱</string>
-    <string name="library_overview_checked">已检查 %1$d / %2$d</string>
-    <string name="library_overview_action">立即检查</string>
     <string name="nav_search">搜索</string>
     <string name="settings_more">更多</string>
 </resources>
