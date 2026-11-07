@@ -527,6 +527,8 @@
     <string name="analysis_tab_spectrogram">Spectrogram</string>
     <string name="compare_tab_summary">Summary</string>
     <string name="compare_tab_spectra">Spectra</string>
+    <string name="library_overview_checked">%1$d of %2$d checked</string>
+    <string name="library_overview_action">Check now</string>
     <string name="nav_search">Search</string>
     <string name="settings_more">More</string>
 </resources>

@@ -100,6 +100,9 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
+import com.rotatsulabs.specty.ui.design.components.ExpressiveTopBar
+import androidx.compose.foundation.layout.consumeWindowInsets
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.AlertDialog
@@ -327,6 +330,7 @@ fun LibraryScreen(
                     transformOrigin = TransformOrigin(0f, 0.5f)
                 }
                 Header(
+                    trackCount = state.tracks.size,
                     onRescan = { onLoad(true) },
                     onAbout = onOpenAbout,
                     onSettings = onOpenSettings,
@@ -338,6 +342,11 @@ fun LibraryScreen(
                 )
             }
 
+            if (hasTracks && !batch.running && !batch.finished) {
+                item(key = "overview") {
+                    OverviewCard(total = state.tracks.size, unchecked = unscanned, onCheck = startScan)
+                }
+            }
             if (batch.running || batch.finished) {
                 item(key = "batch") {
                     BatchCard(batch, onCancel = onCancelScan, onDismiss = onDismissScan)
@@ -519,6 +528,7 @@ fun LibraryScreen(
 
 @Composable
 private fun Header(
+    trackCount: Int,
     onRescan: () -> Unit,
     onAbout: () -> Unit,
     onSettings: () -> Unit,
@@ -529,52 +539,71 @@ private fun Header(
     brandModifier: Modifier,
 ) {
     var menu by remember { mutableStateOf(false) }
-    val menuTurn by animateFloatAsState(if (menu) 90f else 0f, Motion.spatial(), label = "menuTurn")
-    Row(
-        Modifier.fillMaxWidth().padding(start = Spacing.Gutter + Spacing.Xs, end = Spacing.Md, top = Spacing.Lg, bottom = Spacing.Sm),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Row(Modifier.weight(1f).then(brandModifier), verticalAlignment = Alignment.CenterVertically) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Column {
-                    Text(stringResource(R.string.app_name), style = MaterialTheme.typography.headlineLarge)
-                    Text(stringResource(R.string.about_tagline), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+    // The list already pads for the status bar, so the bar must not add it a second time.
+    ExpressiveTopBar(
+        title = stringResource(R.string.nav_library),
+        modifier = brandModifier.consumeWindowInsets(WindowInsets.statusBars),
+        subtitle = if (trackCount > 0) pluralStringResource(R.plurals.library_tracks, trackCount, trackCount) else null,
+        actions = {
+            Box {
+                IconButton(onClick = { menu = true }) { Icon(Icons.Rounded.MoreVert, stringResource(R.string.library_more)) }
+                DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
+                    if (canRescan) {
+                        ExpressiveMenuItem(
+                            text = { Text(stringResource(R.string.library_menu_rescan)) },
+                            leadingIcon = { Icon(Icons.Rounded.Refresh, contentDescription = null) },
+                            onClick = { menu = false; onRescan() },
+                        )
+                    }
+                    if (canScan) {
+                        ExpressiveMenuItem(
+                            text = {
+                                Text(
+                                    if (unscanned > 0) stringResource(R.string.library_menu_scan_new, unscanned)
+                                    else stringResource(R.string.library_menu_scanned),
+                                )
+                            },
+                            leadingIcon = { Icon(Icons.Rounded.Radar, contentDescription = null) },
+                            enabled = unscanned > 0,
+                            onClick = { menu = false; onScanAll() },
+                        )
+                    }
+                    ExpressiveMenuItem(
+                        text = { Text(stringResource(R.string.settings_title)) },
+                        leadingIcon = { Icon(Icons.Rounded.Settings, contentDescription = null) },
+                        onClick = { menu = false; onSettings() },
+                    )
+                    ExpressiveMenuItem(
+                        text = { Text(stringResource(R.string.about_title)) },
+                        leadingIcon = { Icon(Icons.Rounded.Info, contentDescription = null) },
+                        onClick = { menu = false; onAbout() },
+                    )
                 }
             }
-        }
-        Box {
-            ExpressiveIconButton(Icons.Rounded.MoreVert, stringResource(R.string.library_more), { menu = true }, toggled = menu, iconModifier = Modifier.rotate(menuTurn))
-            DropdownMenu(expanded = menu, onDismissRequest = { menu = false }, shape = RoundedCornerShape(20.dp)) {
-                if (canRescan) {
-                    ExpressiveMenuItem(
-                        text = { Text(stringResource(R.string.library_menu_rescan)) },
-                        leadingIcon = { Icon(Icons.Rounded.Refresh, contentDescription = null) },
-                        onClick = { menu = false; onRescan() },
-                    )
-                }
-                if (canScan) {
-                    ExpressiveMenuItem(
-                        text = {
-                            Text(
-                                if (unscanned > 0) stringResource(R.string.library_menu_scan_new, unscanned)
-                                else stringResource(R.string.library_menu_scanned),
-                            )
-                        },
-                        leadingIcon = { Icon(Icons.Rounded.Radar, contentDescription = null) },
-                        enabled = unscanned > 0,
-                        onClick = { menu = false; onScanAll() },
-                    )
-                }
-                ExpressiveMenuItem(
-                    text = { Text(stringResource(R.string.settings_title)) },
-                    leadingIcon = { Icon(Icons.Rounded.Settings, contentDescription = null) },
-                    onClick = { menu = false; onSettings() },
+        },
+    )
+}
+
+/** How much of the library has been checked, with the one action that moves it forward. */
+@Composable
+private fun OverviewCard(total: Int, unchecked: Int, onCheck: () -> Unit) {
+    val checked = total - unchecked
+    SpectyCard(
+        Modifier.fillMaxWidth().padding(horizontal = Spacing.Gutter, vertical = Spacing.Sm),
+        corners = SpectyShapes.Card,
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
+        padding = PaddingValues(Spacing.Lg),
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Spacing.Lg)) {
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(Spacing.Sm)) {
+                Text(
+                    stringResource(R.string.library_overview_checked, checked, total),
+                    style = MaterialTheme.typography.titleMedium.copy(fontFeatureSettings = "tnum"),
                 )
-                ExpressiveMenuItem(
-                    text = { Text(stringResource(R.string.about_title)) },
-                    leadingIcon = { Icon(Icons.Rounded.Info, contentDescription = null) },
-                    onClick = { menu = false; onAbout() },
-                )
+                WavyProgressBar(if (total == 0) 0f else checked.toFloat() / total)
+            }
+            if (unchecked > 0) {
+                ExpressiveButton(stringResource(R.string.library_overview_action), onCheck, kind = ButtonKind.Tonal)
             }
         }
     }

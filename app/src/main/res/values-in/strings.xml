@@ -510,6 +510,8 @@
     <string name="analysis_tab_spectrogram">Spektrogram</string>
     <string name="compare_tab_summary">Ringkasan</string>
     <string name="compare_tab_spectra">Spektrum</string>
+    <string name="library_overview_checked">%1$d dari %2$d sudah diperiksa</string>
+    <string name="library_overview_action">Periksa sekarang</string>
     <string name="nav_search">Cari</string>
     <string name="settings_more">Lainnya</string>
 </resources>
