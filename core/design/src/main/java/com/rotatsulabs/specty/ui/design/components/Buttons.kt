@@ -29,6 +29,10 @@ import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.Surface
+import androidx.compose.material3.InputChipDefaults
+import androidx.compose.material3.InputChip
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.OutlinedButton
@@ -125,7 +129,7 @@ fun Pill(
     content: Color = MaterialTheme.colorScheme.onSecondaryContainer,
     icon: ImageVector? = null,
 ) {
-    MorphSurface(modifier, SpectyShapes.Pill, container, content) {
+    Surface(modifier, shape = CircleShape, color = container, contentColor = content) {
         Row(
             Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
             verticalAlignment = Alignment.CenterVertically,
@@ -140,7 +144,7 @@ fun Pill(
 }
 
 
-/** Menu row that squashes under the finger like the rest of the app's controls. */
+/** Menu row; [checked] marks the current choice in a menu of options. */
 @Composable
 fun ExpressiveMenuItem(
     text: @Composable () -> Unit,
@@ -149,23 +153,20 @@ fun ExpressiveMenuItem(
     leadingIcon: (@Composable () -> Unit)? = null,
     trailingIcon: (@Composable () -> Unit)? = null,
     enabled: Boolean = true,
-    /** Marks the current choice in a menu of options. */
     checked: Boolean = false,
 ) {
-    val source = remember { MutableInteractionSource() }
     val trailing: (@Composable () -> Unit)? = if (checked) { { Icon(Icons.Rounded.Check, contentDescription = null) } } else trailingIcon
     DropdownMenuItem(
         text = text,
         onClick = onClick,
-        modifier = modifier.pressScale(source, 0.96f),
+        modifier = modifier,
         leadingIcon = leadingIcon,
         trailingIcon = trailing,
         enabled = enabled,
-        interactionSource = source,
     )
 }
 
-/** Removable chip: a capsule that squashes when pressed, with a close icon. */
+/** Removable input chip with a close icon. */
 @Composable
 fun ExpressiveChip(
     text: String,
@@ -173,21 +174,11 @@ fun ExpressiveChip(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    MorphSurface(
-        modifier = modifier.defaultMinSize(minHeight = 32.dp),
-        corners = SpectyShapes.Pill,
-        color = MaterialTheme.colorScheme.secondaryContainer,
-        contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+    InputChip(
+        selected = false,
         onClick = onClick,
-        role = Role.Button,
-    ) {
-        Row(
-            Modifier.padding(start = 14.dp, end = 8.dp, top = 6.dp, bottom = 6.dp),
-            horizontalArrangement = Arrangement.spacedBy(6.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Text(text, style = MaterialTheme.typography.labelLarge, maxLines = 1)
-            Icon(Icons.Rounded.Close, closeDescription, Modifier.size(18.dp))
-        }
-    }
+        label = { Text(text, maxLines = 1) },
+        modifier = modifier,
+        trailingIcon = { Icon(Icons.Rounded.Close, closeDescription, Modifier.size(InputChipDefaults.IconSize)) },
+    )
 }
