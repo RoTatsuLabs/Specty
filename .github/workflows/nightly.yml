@@ -1,0 +1,169 @@
+name: Nightly
+
+on:
+  schedule:
+    # 00:00 in Jakarta, every day.
+    - cron: '0 17 * * *'
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: Branch or tag to build
+        required: false
+        default: main
+        type: string
+
+permissions:
+  contents: read
+  packages: read
+
+concurrency:
+  group: nightly
+  cancel-in-progress: false
+
+env:
+  PACKAGE_ID: com.rotatsulabs.specty.nightly
+
+jobs:
+  check:
+    name: Check for changes
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      build: ${{ steps.changes.outputs.build }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.ref || github.ref }}
+          fetch-depth: 50
+          persist-credentials: false
+
+      # A scheduled run with no commits in the last day has nothing new to ship.
+      - name: Look for new commits
+        id: changes
+        run: |
+          if [ "$GITHUB_EVENT_NAME" = schedule ] && [ -z "$(git log --since='25 hours ago' --format=%H -1)" ]; then
+            echo "build=false" >> "$GITHUB_OUTPUT"
+            echo "No commits in the last day, skipping."
+          else
+            echo "build=true" >> "$GITHUB_OUTPUT"
+          fi
+
+  build:
+    name: Build ${{ matrix.abi }}
+    needs: check
+    if: needs.check.outputs.build == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        abi: [universal, arm64-v8a, armeabi-v7a, x86_64]
+    env:
+      FORGE_PACKAGES_USER: ${{ github.actor }}
+      FORGE_PACKAGES_TOKEN: ${{ secrets.FORGE_PACKAGES_TOKEN || secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.ref || github.ref }}
+          fetch-depth: 0
+          fetch-tags: true
+          persist-credentials: false
+
+      # Same version as the quality workflow, so the two never drift apart.
+      - name: Read the Gradle version
+        id: gradle
+        run: |
+          version="$(sed -n 's/^ *gradle-version: *//p' .github/workflows/quality.yml | head -1)"
+          [ -n "$version" ] || { echo "::error::No gradle-version in quality.yml."; exit 1; }
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+      # The nightly is named after the latest release, for example 2.0.0-nightly. The build type adds the suffix.
+      - name: Work out the version
+        id: version
+        env:
+          RUN_NUMBER: ${{ github.run_number }}
+        run: |
+          tag="$(git describe --tags --abbrev=0 --match 'v[0-9]*' 2>/dev/null || true)"
+          base="${tag#v}"
+          base="${base:-0.1.0}"
+          echo "name=$base" >> "$GITHUB_OUTPUT"
+          echo "code=$RUN_NUMBER" >> "$GITHUB_OUTPUT"
+          echo "apk=${base}-nightly" >> "$GITHUB_OUTPUT"
+          echo "Version ${base}-nightly, versionCode $RUN_NUMBER"
+
+      - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - uses: gradle/actions/setup-gradle@b9bee63ef481cc545e4517ec730544a4d8b1dfa0 # v6.4.0
+        with:
+          gradle-version: ${{ steps.gradle.outputs.version }}
+
+      - name: Prepare signing
+        env:
+          KEYSTORE_B64: ${{ secrets.NIGHTLY_KEYSTORE_BASE64 }}
+          SIGNING_ALIAS: ${{ secrets.NIGHTLY_KEY_ALIAS }}
+          SIGNING_PASSWORD: ${{ secrets.NIGHTLY_KEY_PASSWORD }}
+        run: |
+          fail() { echo "::error::$*"; exit 1; }
+          [ -n "$KEYSTORE_B64" ] || fail "Add the NIGHTLY_KEYSTORE_BASE64, NIGHTLY_KEY_ALIAS and NIGHTLY_KEY_PASSWORD secrets."
+          [ -n "$SIGNING_ALIAS" ] && [ -n "$SIGNING_PASSWORD" ] || fail "The alias or password secret is empty."
+          keystore="$RUNNER_TEMP/signing.jks"
+          umask 077
+          printf '%s' "$KEYSTORE_B64" | base64 -d > "$keystore" 2>/dev/null || fail "The keystore secret is not valid base64."
+          keytool -list -keystore "$keystore" -storepass:env SIGNING_PASSWORD -alias "$SIGNING_ALIAS" > /dev/null 2>&1 \
+            || { rm -f "$keystore"; fail "The keystore did not open with the given alias and password."; }
+          echo "SIGNING_KEYSTORE=$keystore" >> "$GITHUB_ENV"
+
+      # The app declares all three ABIs in defaultConfig. A single-ABI build narrows that list in this
+      # temporary checkout. Do not use -Pandroid.injected.build.abi: it marks the APK test-only.
+      - name: Limit the ABI
+        if: matrix.abi != 'universal'
+        run: sed -i -E 's/abiFilters[[:space:]]*\+=.*/abiFilters += listOf("${{ matrix.abi }}")/' app/build.gradle.kts
+
+      - name: Build
+        env:
+          VERSION_NAME: ${{ steps.version.outputs.name }}
+          VERSION_CODE: ${{ steps.version.outputs.code }}
+          SIGNING_ALIAS: ${{ secrets.NIGHTLY_KEY_ALIAS }}
+          SIGNING_PASSWORD: ${{ secrets.NIGHTLY_KEY_PASSWORD }}
+        run: gradle :app:assembleNightly --stacktrace
+
+      - name: Check and name the APK
+        env:
+          APK_VERSION: ${{ steps.version.outputs.apk }}
+          VERSION_CODE: ${{ steps.version.outputs.code }}
+          ABI: ${{ matrix.abi }}
+        run: |
+          fail() { echo "::error::$*"; exit 1; }
+          mapfile -t apks < <(find app/build/outputs/apk/nightly -maxdepth 1 -name '*.apk')
+          [ "${#apks[@]}" -eq 1 ] || fail "Expected one APK, found ${#apks[@]}."
+          apk="${apks[0]}"
+          tools="$(find "$ANDROID_HOME/build-tools" -mindepth 1 -maxdepth 1 -type d | sort -V | tail -1)"
+          header="$("$tools/aapt2" dump badging "$apk" | grep -m1 '^package:')"
+          pkg="$(sed -n "s/.* name='\([^']*\)'.*/\1/p" <<< "$header")"
+          code="$(sed -n "s/.*versionCode='\([^']*\)'.*/\1/p" <<< "$header")"
+          name="$(sed -n "s/.*versionName='\([^']*\)'.*/\1/p" <<< "$header")"
+          [ "$pkg" = "$PACKAGE_ID" ] || fail "Package is $pkg, expected $PACKAGE_ID."
+          [ "$code" = "$VERSION_CODE" ] || fail "versionCode is $code, expected $VERSION_CODE."
+          [ "$name" = "$APK_VERSION" ] || fail "versionName is $name, expected $APK_VERSION."
+          if "$tools/aapt2" dump xmltree --file AndroidManifest.xml "$apk" | grep 'android:debuggable' | grep -qE 'true|0xffffffff'; then
+            fail "The APK is debuggable."
+          fi
+          certs="$("$tools/apksigner" verify --print-certs "$apk")" || fail "The signature check failed."
+          ! grep -q 'CN=Android Debug' <<< "$certs" || fail "The APK is signed with the Android debug key."
+          mkdir -p dist
+          cp "$apk" "dist/Specty_${APK_VERSION}_${ABI}.apk"
+          echo "Specty_${APK_VERSION}_${ABI}.apk: $pkg $name ($code), signature verified"
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: Specty_${{ steps.version.outputs.apk }}_${{ matrix.abi }}
+          path: dist/*.apk
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Remove the signing keystore
+        if: always()
+        run: rm -f "$RUNNER_TEMP/signing.jks"
