@@ -39,11 +39,9 @@
 
     <!-- About -->
     <string name="about_title">关于</string>
-    <string name="about_more">更多</string>
     <string name="about_source">源代码</string>
     <string name="about_report">报告问题</string>
     <string name="about_report_desc">在 GitHub 上提交 issue</string>
-    <string name="about_intro">再次显示引导页</string>
     <string name="about_privacy">隐私</string>
     <string name="about_privacy_title">数据留在你的设备上</string>
     <string name="about_privacy_desc">所有分析都在你的设备上运行，不会上传任何内容。Specty 未声明联网权限。</string>
@@ -74,22 +72,7 @@
     <string name="lib_mornye_summary">来自 Mornye 音乐应用的 Hi-Res 检测：升采样与 16 位噪声底。</string>
     <string name="lib_mornye_note">Specty 的采样保持、插值和 16 位噪声底检测，是 Mornye Hi-Res 证据代码的 Kotlin 移植版，依据 LGPL 使用，并依据 GPL 与 Specty 合并。感谢其作者。源代码可通过上方链接获取。</string>
 
-    <!-- Onboarding -->
-    <string name="onboarding_skip">跳过</string>
-    <string name="onboarding_start">开始使用</string>
-    <string name="onboarding_0_title">认识 Specty</string>
-    <string name="onboarding_0_body">你的音乐质量实验室。打开任意音频文件，查看它的频谱、响度和质量。</string>
-    <string name="onboarding_1_title">查看频谱</string>
-    <string name="onboarding_1_body">频谱图显示各个频率随时间的变化。可全屏打开，双指张开放大高频部分，触摸即可读取精确数值。</string>
-    <string name="onboarding_2_title">揪出伪无损</string>
-    <string name="onboarding_2_body">由 MP3 转成的无损文件会保留 MP3 的截止频率。Specty 能找到这条边界，告诉你判断的把握有多大，以及它类似哪种编码器。</string>
-    <string name="onboarding_3_title">测量各项电平</string>
-    <string name="onboarding_3_body">响度、真峰值、动态范围、削波和立体声状况，外加对整个曲库的后台扫描。一切都在你的设备上运行。</string>
-    <string name="onboarding_folder_added">已添加文件夹</string>
-    <string name="onboarding_folder_title">曲库文件夹</string>
-    <string name="onboarding_folder_added_desc">一开始使用，你的音乐就会列出来。</string>
-    <string name="onboarding_folder_desc">选择存放音乐的文件夹。文件绝不会离开你的设备。</string>
-    <string name="onboarding_choose_folder">选择文件夹</string>
+    <string name="library_choose_folder">选择文件夹</string>
 
     <!-- Library -->
     <string name="action_cancel">取消</string>

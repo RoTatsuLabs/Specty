@@ -39,11 +39,9 @@
 
     <!-- About -->
     <string name="about_title">Tentang</string>
-    <string name="about_more">Lainnya</string>
     <string name="about_source">Kode sumber</string>
     <string name="about_report">Laporkan masalah</string>
     <string name="about_report_desc">Buka isu di GitHub</string>
-    <string name="about_intro">Tampilkan pengantar lagi</string>
     <string name="about_privacy">Privasi</string>
     <string name="about_privacy_title">Tetap di perangkat Anda</string>
     <string name="about_privacy_desc">Semua analisis berjalan di perangkat Anda dan tidak ada yang diunggah. Specty tidak mendeklarasikan izin internet.</string>
@@ -74,22 +72,7 @@
     <string name="lib_mornye_summary">Pemeriksaan Hi-Res untuk upsampling dan lantai derau audio 16-bit, dari aplikasi musik Mornye.</string>
     <string name="lib_mornye_note">Pemeriksaan sample-and-hold, interpolasi, dan lantai derau 16-bit di Specty adalah port Kotlin dari kode bukti Hi-Res Mornye, dipakai di bawah LGPL dan digabungkan dengan Specty di bawah GPL. Terima kasih kepada para penulisnya. Kode sumbernya tersedia di tautan di atas.</string>
 
-    <!-- Onboarding -->
-    <string name="onboarding_skip">Lewati</string>
-    <string name="onboarding_start">Mulai</string>
-    <string name="onboarding_0_title">Kenali Specty</string>
-    <string name="onboarding_0_body">Lab kualitas untuk musik Anda. Buka file audio apa pun untuk melihat spektrum, kenyaringan dan kualitasnya.</string>
-    <string name="onboarding_1_title">Lihat spektrumnya</string>
-    <string name="onboarding_1_body">Spektrogram menampilkan setiap frekuensi dari waktu ke waktu. Buka layar penuh, cubit untuk memperbesar bagian atas, dan sentuh untuk membaca nilai persisnya.</string>
-    <string name="onboarding_2_title">Tangkap lossless palsu</string>
-    <string name="onboarding_2_body">File lossless yang dibuat dari MP3 mempertahankan cutoff MP3 tersebut. Specty menemukan batas itu, menyebutkan seberapa yakin hasilnya, dan encoder mana yang mirip.</string>
-    <string name="onboarding_3_title">Ukur levelnya</string>
-    <string name="onboarding_3_body">Kenyaringan, true peak, rentang dinamis, clipping, dan kondisi stereo, plus pemindaian latar belakang untuk seluruh pustaka Anda. Semuanya berjalan di perangkat Anda.</string>
-    <string name="onboarding_folder_added">Folder ditambahkan</string>
-    <string name="onboarding_folder_title">Folder pustaka</string>
-    <string name="onboarding_folder_added_desc">Musik Anda akan ditampilkan begitu Anda mulai.</string>
-    <string name="onboarding_folder_desc">Pilih folder yang berisi musik Anda. File tidak pernah meninggalkan perangkat Anda.</string>
-    <string name="onboarding_choose_folder">Pilih folder</string>
+    <string name="library_choose_folder">Pilih folder</string>
 
     <!-- Library -->
     <string name="action_cancel">Batal</string>

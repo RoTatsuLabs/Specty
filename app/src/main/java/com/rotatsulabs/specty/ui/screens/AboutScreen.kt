@@ -28,7 +28,6 @@ import androidx.compose.material.icons.rounded.Description
 import androidx.compose.material.icons.rounded.ExpandMore
 import androidx.compose.material.icons.rounded.Gavel
 import androidx.compose.material.icons.rounded.Lock
-import androidx.compose.material.icons.rounded.Replay
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -78,7 +77,6 @@ import kotlinx.coroutines.withContext
 /** Full-screen about page, opened from the overflow menu: the app, where its source lives, and everything it is built from. */
 @Composable
 fun AboutScreen(
-    onReplayIntro: () -> Unit,
     developer: Boolean,
     onUnlockDeveloper: () -> Unit,
     onOpenLicences: () -> Unit,
@@ -141,14 +139,6 @@ fun AboutScreen(
                 ListRow(
                     stringResource(R.string.licences_title), supporting = stringResource(R.string.licences_row_desc), icon = Icons.Rounded.Description,
                     corners = groupCorners(rows - 1, rows), onClick = onOpenLicences,
-                    trailing = { Chevron() },
-                )
-            }
-
-            SettingGroup(stringResource(R.string.about_more)) {
-                ListRow(
-                    stringResource(R.string.about_intro), icon = Icons.Rounded.Replay,
-                    corners = groupCorners(0, 1), onClick = onReplayIntro,
                     trailing = { Chevron() },
                 )
             }

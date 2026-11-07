@@ -87,7 +87,6 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit, onPickFolder: ()
     val developer by viewModel.developer.collectAsStateWithLifecycle()
     val logging by viewModel.logging.collectAsStateWithLifecycle()
     val compare by viewModel.compare.collectAsStateWithLifecycle()
-    val onboarding by viewModel.onboarding.collectAsStateWithLifecycle()
     val compareHeld = remember { object { var state: CompareState = CompareState.Idle } }
     if (compare !is CompareState.Idle) compareHeld.state = compare
     val origin = rememberContainerOrigin()
@@ -352,7 +351,6 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit, onPickFolder: ()
         OverlayScreen(visible = showAbout, gesture = aboutBack, depth = depth, id = "about", backdrop = MaterialTheme.colorScheme.surface) {
             PaneSurface {
                 AboutScreen(
-                    onReplayIntro = { showAbout = false; viewModel.replayOnboarding() },
                     developer = developer,
                     onUnlockDeveloper = { viewModel.setDeveloper(true) },
                     onOpenLicences = { showLicences = true },
@@ -410,21 +408,6 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit, onPickFolder: ()
                 }
             }
         }
-
-        AnimatedVisibility(
-            visible = onboarding,
-            enter = FadeThrough.enter(),
-            exit = FadeThrough.exit(),
-        ) {
-            CenteredPane(maxWidth = 600.dp) {
-            com.rotatsulabs.specty.ui.screens.OnboardingScreen(
-                onFinish = viewModel::finishOnboarding,
-                hasFolders = library.folders.isNotEmpty(),
-                onPickFolder = onPickFolder,
-            )
-            }
-        }
-
     }
 }
 

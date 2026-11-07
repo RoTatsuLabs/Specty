@@ -963,7 +963,7 @@ private fun FolderPrompt(onPick: () -> Unit) {
         title = stringResource(R.string.library_prompt_title),
         message = stringResource(R.string.library_prompt_message),
         modifier = Modifier.fillMaxSize(),
-        action = { ExpressiveButton(stringResource(R.string.onboarding_choose_folder), onPick) },
+        action = { ExpressiveButton(stringResource(R.string.library_choose_folder), onPick) },
     )
 }
 
