@@ -785,59 +785,39 @@ internal fun TrackRow(
     selecting: Boolean = false,
     onToggle: () -> Unit = {},
 ) {
-    val appear = rememberAppear(index)
     var bounds by remember { mutableStateOf<Rect?>(null) }
     var coverBounds by remember { mutableStateOf<Rect?>(null) }
     MorphSurface(
-        modifier = modifier
-            .fillMaxWidth()
-            .onGloballyPositioned { bounds = it.boundsInRoot() }
-            .graphicsLayer {
-                alpha = appear.value.coerceIn(0f, 1f)
-                translationY = (1f - appear.value) * 48f
-                val pop = 0.88f + 0.12f * appear.value
-                scaleX = pop
-                scaleY = pop
-            },
+        modifier = modifier.fillMaxWidth().onGloballyPositioned { bounds = it.boundsInRoot() },
         corners = SpectyShapes.Row,
         color = if (selected) MaterialTheme.colorScheme.secondaryContainer else Color.Transparent,
         animateColor = selecting,
         onClick = { if (selecting) onToggle() else onOpen(bounds, CoverSource(coverBounds, SpectyShapes.Cover, 180)) },
         onLongClick = onToggle,
     ) {
-        Row(Modifier.padding(horizontal = 10.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-            Box {
-                CoverImage(
-                    uri = track.uri,
-                    shape = SpectyShapes.Cover.toShape(),
-                    modifier = Modifier
-                        .size(60.dp)
-                        .onGloballyPositioned { coverBounds = it.boundsInRoot() }
-                        .graphicsLayer { alpha = if (flight?.hides(track.uri) == true) 0f else 1f },
-                    sizePx = 180,
-                ) { CoverFallback(track) }
-                if (selected) SelectMark(Modifier.align(Alignment.BottomEnd))
-            }
-            Spacer(Modifier.width(16.dp))
-            Column(Modifier.weight(1f)) {
-                Text(track.title.withoutExplicitMark(), style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                val parts = listOfNotNull(track.artist, Fmt.duration(track.durationMs / 1000.0))
-                Text(
-                    parts.joinToString("  ·  "),
-                    style = MaterialTheme.typography.bodyMedium,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-            Spacer(Modifier.width(8.dp))
-            Column(horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                if (track.extension.isNotEmpty()) {
-                    Text(track.extension, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
+        androidx.compose.material3.ListItem(
+            headlineContent = { Text(track.title.withoutExplicitMark(), maxLines = 1, overflow = TextOverflow.Ellipsis) },
+            supportingContent = {
+                val parts = listOfNotNull(track.artist, Fmt.duration(track.durationMs / 1000.0), track.extension.takeIf { it.isNotEmpty() })
+                Text(parts.joinToString("  ·  "), maxLines = 1, overflow = TextOverflow.Ellipsis)
+            },
+            leadingContent = {
+                Box {
+                    CoverImage(
+                        uri = track.uri,
+                        shape = SpectyShapes.Cover.toShape(),
+                        modifier = Modifier
+                            .size(56.dp)
+                            .onGloballyPositioned { coverBounds = it.boundsInRoot() }
+                            .graphicsLayer { alpha = if (flight?.hides(track.uri) == true) 0f else 1f },
+                        sizePx = 180,
+                    ) { CoverFallback(track) }
+                    if (selected) SelectMark(Modifier.align(Alignment.BottomEnd))
                 }
-                if (verdict != null) VerdictBadge(verdict)
-            }
-        }
+            },
+            trailingContent = verdict?.let { v -> { VerdictBadge(v) } },
+            colors = androidx.compose.material3.ListItemDefaults.colors(containerColor = Color.Transparent),
+        )
     }
 }
 
@@ -854,19 +834,11 @@ private fun TrackTile(
     selecting: Boolean = false,
     onToggle: () -> Unit = {},
 ) {
-    val appear = rememberAppear(index / 2)
     var bounds by remember { mutableStateOf<Rect?>(null) }
     var coverBounds by remember { mutableStateOf<Rect?>(null) }
     MorphSurface(
         modifier = modifier
-            .onGloballyPositioned { bounds = it.boundsInRoot() }
-            .graphicsLayer {
-                alpha = appear.value.coerceIn(0f, 1f)
-                translationY = (1f - appear.value) * 64f
-                val pop = 0.86f + 0.14f * appear.value
-                scaleX = pop
-                scaleY = pop
-            },
+            .onGloballyPositioned { bounds = it.boundsInRoot() },
         corners = SpectyShapes.Tile,
         color = if (selected) MaterialTheme.colorScheme.secondaryContainer else Color.Transparent,
         animateColor = selecting,
@@ -979,17 +951,6 @@ private fun PickBar(count: Int, onClear: () -> Unit, onCompare: () -> Unit, modi
             ExpressiveButton(stringResource(R.string.pick_compare), onCompare, enabled = count == ComparePicks.MAX)
         }
     }
-}
-
-/** Staggered entrance progress (0..1) for the first screenful of items. */
-@Composable
-private fun rememberAppear(index: Int): androidx.compose.runtime.State<Float> {
-    var shown by remember { mutableStateOf(false) }
-    LaunchedEffect(Unit) {
-        if (index < 12) delay(index * 35L)
-        shown = true
-    }
-    return animateFloatAsState(if (shown) 1f else 0f, Motion.spatial(), label = "appear")
 }
 
 @Composable
