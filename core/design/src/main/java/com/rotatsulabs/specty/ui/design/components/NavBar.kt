@@ -1,5 +1,25 @@
 package com.rotatsulabs.specty.ui.design.components
 
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.changedToUp
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.boundsInRoot
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInRoot
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -42,17 +62,62 @@ fun SpectyNavigationBar(
     separated: Int = 0,
 ) {
     val split = items.size - separated
+    // Hold a finger on the bar and slide it across the destinations: the highlight follows, and lifting selects.
+    val bounds = remember { mutableStateMapOf<Int, Rect>() }
+    var origin by remember { mutableStateOf(Offset.Zero) }
+    var preview by remember { mutableStateOf<Int?>(null) }
+    val haptic = LocalHapticFeedback.current
+    val current by rememberUpdatedState(onSelect)
+    val shown = preview ?: selected
+    val dragging = preview != null
+
+    fun hit(x: Float): Int? = bounds.entries.minByOrNull { (_, r) -> kotlin.math.abs(r.center.x - (x + origin.x)) }?.key
+
     Row(
-        modifier.fillMaxWidth().navigationBarsPadding().padding(horizontal = Spacing.Gutter, vertical = Spacing.Sm),
+        modifier
+            .fillMaxWidth()
+            .navigationBarsPadding()
+            .padding(horizontal = Spacing.Gutter, vertical = Spacing.Sm)
+            .onGloballyPositioned { origin = it.positionInRoot() }
+            .pointerInput(items.size) {
+                awaitEachGesture {
+                    val down = awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial)
+                    var moved = false
+                    while (true) {
+                        val change = awaitPointerEvent(PointerEventPass.Initial).changes.firstOrNull { it.id == down.id } ?: break
+                        if (change.changedToUp()) {
+                            if (moved) { change.consume(); preview?.let { current(it) } }
+                            break
+                        }
+                        if (!moved && (change.position - down.position).getDistance() > viewConfiguration.touchSlop) {
+                            moved = true
+                            preview = hit(down.position.x)
+                        }
+                        if (moved) {
+                            change.consume()
+                            val index = hit(change.position.x)
+                            if (index != null && index != preview) {
+                                preview = index
+                                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                            }
+                        }
+                    }
+                    preview = null
+                }
+            },
         horizontalArrangement = Arrangement.spacedBy(Spacing.Sm),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         NavPill(Modifier.weight(1f)) {
-            for (i in 0 until split) NavDestination(items[i], i == selected, { onSelect(i) }, Modifier.weight(1f))
+            for (i in 0 until split) {
+                NavDestination(items[i], i == selected, i == shown, dragging, { current(i) }, Modifier.weight(1f).onGloballyPositioned { bounds[i] = it.boundsInRoot() })
+            }
         }
         if (separated > 0) {
             NavPill {
-                for (i in split until items.size) NavDestination(items[i], i == selected, { onSelect(i) }, Modifier.width(76.dp))
+                for (i in split until items.size) {
+                    NavDestination(items[i], i == selected, i == shown, dragging, { current(i) }, Modifier.width(76.dp).onGloballyPositioned { bounds[i] = it.boundsInRoot() })
+                }
             }
         }
     }
@@ -71,13 +136,15 @@ private fun NavPill(modifier: Modifier = Modifier, content: @Composable () -> Un
 }
 
 @Composable
-private fun NavDestination(item: NavItem, selected: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
+private fun NavDestination(item: NavItem, selected: Boolean, active: Boolean, dragging: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
     val scheme = MaterialTheme.colorScheme
-    val container = animateTone(if (selected) scheme.secondaryContainer else scheme.surfaceContainerHigh, label = "navContainer")
-    val content = animateTone(if (selected) scheme.onSecondaryContainer else scheme.onSurfaceVariant, label = "navContent")
+    val lift by animateFloatAsState(if (dragging && active) 1.12f else 1f, MaterialTheme.motionScheme.fastSpatialSpec(), label = "navLift")
+    val container = animateTone(if (active) scheme.secondaryContainer else scheme.surfaceContainerHigh, label = "navContainer")
+    val content = animateTone(if (active) scheme.onSecondaryContainer else scheme.onSurfaceVariant, label = "navContent")
     Box(
         modifier
             .heightIn(min = Spacing.MinTarget + Spacing.Sm)
+            .graphicsLayer { scaleX = lift; scaleY = lift }
             .clip(CircleShape)
             .selectable(selected = selected, onClick = onClick, role = Role.Tab)
             .then(Modifier),
@@ -85,7 +152,7 @@ private fun NavDestination(item: NavItem, selected: Boolean, onClick: () -> Unit
     ) {
         Surface(Modifier.matchParentSize(), shape = CircleShape, color = container) {}
         Column(Modifier.padding(horizontal = Spacing.Sm, vertical = Spacing.Xs), horizontalAlignment = Alignment.CenterHorizontally) {
-            Icon(if (selected) item.selectedIcon else item.icon, contentDescription = null, tint = content)
+            Icon(if (active) item.selectedIcon else item.icon, contentDescription = null, tint = content)
             Text(item.label, style = MaterialTheme.typography.labelMedium, color = content, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
     }
