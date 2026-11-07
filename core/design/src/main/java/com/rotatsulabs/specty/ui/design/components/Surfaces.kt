@@ -11,6 +11,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.runtime.getValue
+import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -39,17 +44,21 @@ fun MorphSurface(
     onLongClick: (() -> Unit)? = null,
     enabled: Boolean = true,
     role: Role? = null,
-    @Suppress("UNUSED_PARAMETER") morphOnPress: Boolean = true,
+    morphOnPress: Boolean = true,
     shadowElevation: androidx.compose.ui.unit.Dp = 0.dp,
     /** Crossfade colour changes (toggles, selection). Static surfaces skip the animation, which matters in long lists. */
     animateColor: Boolean = false,
     content: @Composable () -> Unit,
 ) {
-    val shape = remember(corners) { corners.toShape() }
+    // Pressing squeezes the surface and squares its corners on a bouncy spring, then it springs back.
+    val source = remember { MutableInteractionSource() }
+    val pressed by source.collectIsPressedAsState()
+    val press by animateFloatAsState(if (pressed && morphOnPress && onClick != null) 1f else 0f, MaterialTheme.motionScheme.fastSpatialSpec(), label = "morph")
+    val shape = remember(corners, press) { corners.lerpTo(corners.pressed(), press.coerceIn(0f, 1f)).toShape() }
     val container = if (animateColor) animateTone(color) else color
-    Surface(modifier, shape = shape, color = container, contentColor = contentColor, border = border, shadowElevation = shadowElevation) {
+    Surface(modifier.graphicsLayer { val k = 1f - 0.04f * press; scaleX = k; scaleY = k }, shape = shape, color = container, contentColor = contentColor, border = border, shadowElevation = shadowElevation) {
         val click = if (onClick != null) {
-            Modifier.combinedClickable(enabled = enabled, role = role, onClick = onClick, onLongClick = onLongClick)
+            Modifier.combinedClickable(interactionSource = source, indication = androidx.compose.material3.ripple(), enabled = enabled, role = role, onClick = onClick, onLongClick = onLongClick)
         } else {
             Modifier
         }

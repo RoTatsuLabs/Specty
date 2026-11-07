@@ -78,6 +78,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.Sort
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.FolderOpen
 import androidx.compose.material.icons.rounded.GridView
@@ -292,15 +293,6 @@ fun LibraryScreen(
     val hasTracks = hasFolders && state.error == null && state.tracks.isNotEmpty()
 
     val listState = rememberLazyListState()
-    var fabVisible by remember { mutableStateOf(true) }
-    LaunchedEffect(listState) {
-        var previous = 0
-        snapshotFlow { listState.firstVisibleItemIndex * 10_000 + listState.firstVisibleItemScrollOffset }.collect { now ->
-            if (now > previous + 12) fabVisible = false else if (now < previous - 12) fabVisible = true
-            previous = now
-        }
-    }
-
     Box(modifier.fillMaxSize()) {
         if (showFilter && hasTracks) {
             FilterSheet(
@@ -334,6 +326,18 @@ fun LibraryScreen(
                     filterCount = if (hasTracks) filters.size else -1,
                     onFilter = { showFilter = true },
                     onRescan = { onLoad(true) },
+                    onPickFile = onPickFile,
+                    layoutMenu = {
+                        if (hasTracks) {
+                            LayoutMenu(
+                                browse = layout.browse, sort = layout.sort, group = layout.group, ascending = layout.ascending, grid = layout.grid,
+                                onSort = { setLayout(layout.copy(sort = it)) },
+                                onGroup = { setLayout(layout.copy(group = it)) },
+                                onToggleOrder = { setLayout(layout.copy(ascending = !layout.ascending)) },
+                                onToggleGrid = { setLayout(layout.copy(grid = !layout.grid)) },
+                            )
+                        }
+                    },
                     onAbout = onOpenAbout,
                     onSettings = onOpenSettings,
                     canRescan = hasFolders,
@@ -367,25 +371,6 @@ fun LibraryScreen(
                     )
                 }
             }
-            if (hasTracks) {
-                item(key = "section") {
-                    Box {
-                    SectionBar(
-                        count = if (layout.browse == BrowseKind.Tracks) visible.size else collections.size,
-                        browse = layout.browse,
-                        sort = layout.sort,
-                        group = layout.group,
-                        ascending = layout.ascending,
-                        grid = layout.grid,
-                        onSort = { setLayout(layout.copy(sort = it)) },
-                        onGroup = { setLayout(layout.copy(group = it)) },
-                        onToggleOrder = { setLayout(layout.copy(ascending = !layout.ascending)) },
-                        onToggleGrid = { setLayout(layout.copy(grid = !layout.grid)) },
-                    )
-                    }
-                }
-            }
-
             when {
                 !hasFolders -> item(key = "folders") {
                     Box(Modifier.fillParentMaxHeight(0.6f).fillMaxWidth()) { FolderPrompt(onPickFolder) }
@@ -466,30 +451,6 @@ fun LibraryScreen(
         }
 
         AnimatedVisibility(
-            visible = fabVisible && !dockVisible && !selecting,
-            modifier = Modifier.align(Alignment.BottomEnd),
-            enter = scaleIn(Motion.spatial(), initialScale = 0.6f) + fadeIn(Motion.effects()),
-            exit = scaleOut(Motion.spatial(), targetScale = 0.6f) + fadeOut(Motion.effects()),
-        ) {
-            val haptic = LocalHapticFeedback.current
-            MorphSurface(
-                Modifier.padding(Spacing.Lg),
-                corners = SpectyShapes.Feature,
-                color = MaterialTheme.colorScheme.primaryContainer,
-                onClick = {
-                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                    onPickFile()
-                },
-                role = androidx.compose.ui.semantics.Role.Button,
-            ) {
-                Row(Modifier.padding(horizontal = 24.dp, vertical = 18.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Rounded.FolderOpen, contentDescription = null)
-                    Text(stringResource(R.string.library_analyse), style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(start = 12.dp))
-                }
-            }
-        }
-
-        AnimatedVisibility(
             visible = selecting,
             modifier = Modifier.align(Alignment.BottomCenter),
             enter = slideInVertically(Motion.spatial()) { it } + fadeIn(Motion.effects()),
@@ -518,6 +479,8 @@ private fun Header(
     filterCount: Int,
     onFilter: () -> Unit,
     onRescan: () -> Unit,
+    onPickFile: () -> Unit,
+    layoutMenu: @Composable () -> Unit,
     onAbout: () -> Unit,
     onSettings: () -> Unit,
     canRescan: Boolean,
@@ -534,9 +497,15 @@ private fun Header(
         subtitle = if (trackCount > 0) pluralStringResource(R.plurals.library_tracks, trackCount, trackCount) else null,
         actions = {
             if (filterCount >= 0) FilterButton(filterCount, onFilter)
+            layoutMenu()
             Box {
                 IconButton(onClick = { menu = true }) { Icon(Icons.Rounded.MoreVert, stringResource(R.string.library_more)) }
                 DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
+                    ExpressiveMenuItem(
+                        text = { Text(stringResource(R.string.library_analyse)) },
+                        leadingIcon = { Icon(Icons.Rounded.FolderOpen, contentDescription = null) },
+                        onClick = { menu = false; onPickFile() },
+                    )
                     if (canRescan) {
                         ExpressiveMenuItem(
                             text = { Text(stringResource(R.string.library_menu_rescan)) },
@@ -660,9 +629,9 @@ private fun BatchCard(batch: BatchScanner.State, onCancel: () -> Unit, onDismiss
 
 // ---- search, filters, section bar ---------------------------------------------------------------
 
+/** Sort, group, order and list or grid, in one menu next to the filter button. */
 @Composable
-private fun SectionBar(
-    count: Int,
+private fun LayoutMenu(
     browse: BrowseKind,
     sort: SortField,
     group: GroupField,
@@ -674,38 +643,11 @@ private fun SectionBar(
     onToggleGrid: () -> Unit,
 ) {
     var menu by remember { mutableStateOf(false) }
-    val haptic = LocalHapticFeedback.current
     val rotation by animateFloatAsState(if (ascending) 0f else 180f, Motion.spatial(), label = "sortArrow")
-    Row(
-        Modifier.fillMaxWidth().padding(start = 24.dp, end = 12.dp, top = 12.dp, bottom = 8.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        AnimatedContent(
-            targetState = count,
-            transitionSpec = { (slideInVertically(Motion.spatial()) { it / 2 } + fadeIn()) togetherWith fadeOut() },
-            modifier = Modifier.weight(1f),
-            label = "songCount",
-        ) { n ->
-            Text(
-                pluralStringResource(
-                    when (browse) {
-                        BrowseKind.Tracks -> R.plurals.library_tracks
-                        BrowseKind.Albums -> R.plurals.library_albums
-                        BrowseKind.Artists -> R.plurals.library_artists
-                    },
-                    n, n,
-                ),
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
-        if (browse == BrowseKind.Tracks) Box {
-            AssistChip(
-                onClick = { menu = true },
-                label = { Text(stringResource(sort.labelRes())) },
-                trailingIcon = { Icon(Icons.Rounded.KeyboardArrowDown, null, Modifier.size(AssistChipDefaults.IconSize)) },
-            )
-            DropdownMenu(expanded = menu, onDismissRequest = { menu = false }, shape = RoundedCornerShape(20.dp)) {
+    Box {
+        ExpressiveIconButton(Icons.AutoMirrored.Rounded.Sort, stringResource(R.string.library_sort_by), { menu = true }, tonal = false)
+        DropdownMenu(expanded = menu, onDismissRequest = { menu = false }, shape = RoundedCornerShape(20.dp)) {
+            if (browse == BrowseKind.Tracks) {
                 MenuLabel(stringResource(R.string.library_sort_by))
                 SortField.entries.forEach { key ->
                     ExpressiveMenuItem(
@@ -723,22 +665,19 @@ private fun SectionBar(
                         onClick = { menu = false; onGroup(key) },
                     )
                 }
+                HorizontalDivider(Modifier.padding(vertical = 4.dp))
             }
+            ExpressiveMenuItem(
+                text = { Text(stringResource(if (ascending) R.string.library_ascending else R.string.library_descending)) },
+                leadingIcon = { Icon(Icons.Rounded.KeyboardArrowUp, contentDescription = null, modifier = Modifier.rotate(rotation)) },
+                onClick = { onToggleOrder() },
+            )
+            ExpressiveMenuItem(
+                text = { Text(stringResource(if (grid) R.string.library_show_list else R.string.library_show_grid)) },
+                leadingIcon = { Icon(if (grid) Icons.Rounded.ViewAgenda else Icons.Rounded.GridView, contentDescription = null) },
+                onClick = { menu = false; onToggleGrid() },
+            )
         }
-        Spacer(Modifier.width(6.dp))
-        ExpressiveIconButton(
-            Icons.Rounded.KeyboardArrowUp,
-            stringResource(if (ascending) R.string.library_ascending else R.string.library_descending),
-            { haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove); onToggleOrder() },
-            iconModifier = Modifier.rotate(rotation),
-        )
-        Spacer(Modifier.width(6.dp))
-        ExpressiveIconButton(
-            if (grid) Icons.Rounded.ViewAgenda else Icons.Rounded.GridView,
-            stringResource(if (grid) R.string.library_show_list else R.string.library_show_grid),
-            { haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove); onToggleGrid() },
-            toggled = grid,
-        )
     }
 }
 
