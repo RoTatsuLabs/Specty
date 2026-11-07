@@ -77,11 +77,8 @@
     <string name="lib_mornye_note">Specty 的采样保持、插值和 16 位噪声底检测，是 Mornye Hi-Res 证据代码的 Kotlin 移植版，依据 LGPL 使用，并依据 GPL 与 Specty 合并。感谢其作者。源代码可通过上方链接获取。</string>
 
     <!-- Onboarding -->
-    <string name="onboarding_progress">%1$d / %2$d</string>
     <string name="onboarding_skip">跳过</string>
-    <string name="onboarding_previous">上一页</string>
     <string name="onboarding_start">开始使用</string>
-    <string name="onboarding_next">下一步</string>
     <string name="onboarding_0_title">认识 Specty</string>
     <string name="onboarding_0_body">为你的音乐打造的质量实验室。深入任意音频文件内部，看清它真正包含什么。</string>
     <string name="onboarding_1_title">查看频谱</string>
@@ -95,16 +92,6 @@
     <string name="onboarding_folder_added_desc">一开始使用，你的音乐就会列出来。</string>
     <string name="onboarding_folder_desc">选择存放音乐的文件夹。文件绝不会离开你的设备。</string>
     <string name="onboarding_choose_folder">选择文件夹</string>
-    <string name="onboarding_cutoff_chip">16 kHz 截止</string>
-    <string name="onboarding_verdict_genuine">真无损全频段</string>
-    <string name="onboarding_verdict_genuine_desc">内容可达 22 kHz</string>
-    <string name="onboarding_verdict_transcoded">疑似转码</string>
-    <string name="onboarding_verdict_transcoded_desc">16 kHz 附近陡然截止</string>
-    <string name="onboarding_confidence">把握度 %1$d%%</string>
-    <string name="onboarding_tile_loudness">响度</string>
-    <string name="onboarding_tile_dynamics">动态</string>
-    <string name="onboarding_tile_meter">表</string>
-    <string name="onboarding_tile_peak">真峰值</string>
 
     <!-- Library -->
     <string name="action_cancel">取消</string>

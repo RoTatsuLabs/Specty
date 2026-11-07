@@ -81,11 +81,8 @@
     <string name="lib_mornye_note">Specty\'s sample-and-hold, interpolation and 16-bit noise floor checks are Kotlin ports of Mornye\'s Hi-Res evidence code, used under the LGPL and combined with Specty under the GPL. Thank you to its authors. The source is available from the link above.</string>
 
     <!-- Onboarding -->
-    <string name="onboarding_progress">%1$d of %2$d</string>
     <string name="onboarding_skip">Skip</string>
-    <string name="onboarding_previous">Previous page</string>
     <string name="onboarding_start">Get started</string>
-    <string name="onboarding_next">Next</string>
     <string name="onboarding_0_title">Meet Specty</string>
     <string name="onboarding_0_body">A quality lab for your music. Look inside any audio file and see what it really contains.</string>
     <string name="onboarding_1_title">See the spectrum</string>
@@ -99,16 +96,6 @@
     <string name="onboarding_folder_added_desc">Your music will be listed as soon as you start.</string>
     <string name="onboarding_folder_desc">Pick the folders with your music. Files never leave your device.</string>
     <string name="onboarding_choose_folder">Choose folder</string>
-    <string name="onboarding_cutoff_chip">16 kHz cutoff</string>
-    <string name="onboarding_verdict_genuine">Lossless full-band</string>
-    <string name="onboarding_verdict_genuine_desc">Content reaches 22 kHz</string>
-    <string name="onboarding_verdict_transcoded">Likely transcoded</string>
-    <string name="onboarding_verdict_transcoded_desc">Hard cutoff near 16 kHz</string>
-    <string name="onboarding_confidence">%1$d%% confidence</string>
-    <string name="onboarding_tile_loudness">Loudness</string>
-    <string name="onboarding_tile_dynamics">Dynamics</string>
-    <string name="onboarding_tile_meter">meter</string>
-    <string name="onboarding_tile_peak">True peak</string>
 
     <!-- Library -->
     <string name="action_cancel">Cancel</string>

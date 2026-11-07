@@ -77,11 +77,8 @@
     <string name="lib_mornye_note">Pemeriksaan sample-and-hold, interpolasi, dan lantai derau 16-bit di Specty adalah port Kotlin dari kode bukti Hi-Res Mornye, dipakai di bawah LGPL dan digabungkan dengan Specty di bawah GPL. Terima kasih kepada para penulisnya. Kode sumbernya tersedia di tautan di atas.</string>
 
     <!-- Onboarding -->
-    <string name="onboarding_progress">%1$d dari %2$d</string>
     <string name="onboarding_skip">Lewati</string>
-    <string name="onboarding_previous">Halaman sebelumnya</string>
     <string name="onboarding_start">Mulai</string>
-    <string name="onboarding_next">Lanjut</string>
     <string name="onboarding_0_title">Kenali Specty</string>
     <string name="onboarding_0_body">Lab kualitas untuk musik Anda. Intip isi file audio apa pun dan lihat apa yang sebenarnya dikandungnya.</string>
     <string name="onboarding_1_title">Lihat spektrumnya</string>
@@ -95,16 +92,6 @@
     <string name="onboarding_folder_added_desc">Musik Anda akan ditampilkan begitu Anda mulai.</string>
     <string name="onboarding_folder_desc">Pilih folder yang berisi musik Anda. File tidak pernah meninggalkan perangkat Anda.</string>
     <string name="onboarding_choose_folder">Pilih folder</string>
-    <string name="onboarding_cutoff_chip">Cutoff 16 kHz</string>
-    <string name="onboarding_verdict_genuine">Lossless pita penuh</string>
-    <string name="onboarding_verdict_genuine_desc">Konten mencapai 22 kHz</string>
-    <string name="onboarding_verdict_transcoded">Kemungkinan hasil transkode</string>
-    <string name="onboarding_verdict_transcoded_desc">Cutoff tajam di sekitar 16 kHz</string>
-    <string name="onboarding_confidence">%1$d%% keyakinan</string>
-    <string name="onboarding_tile_loudness">Kenyaringan</string>
-    <string name="onboarding_tile_dynamics">Dinamika</string>
-    <string name="onboarding_tile_meter">meter</string>
-    <string name="onboarding_tile_peak">True peak</string>
 
     <!-- Library -->
     <string name="action_cancel">Batal</string>
