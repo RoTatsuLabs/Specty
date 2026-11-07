@@ -30,7 +30,7 @@ object OpenSource {
 
     val app = Library(
         name = "Specty",
-        author = "RoTatsu Labs",
+        author = "RoTatsuLabs",
         version = null,
         license = LicenseKind.Gpl3,
         url = SOURCE_URL,

@@ -102,6 +102,9 @@ import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import androidx.compose.material3.FilterChip
+import com.rotatsulabs.specty.ui.design.components.Segment
+import com.rotatsulabs.specty.ui.design.components.SegmentedControl
 
 private const val PREFS = "specty"
 private const val KEY_ASPECT = "report_aspect"
@@ -278,56 +281,23 @@ fun ExportScreen(result: AnalysisResult, appearance: Appearance, onBack: () -> U
     }
 }
 
-/**
- * The image that will be saved, in a framed card: a header with the track, the image at the shape it will have, and a
- * footer with its size. [fill] makes the card as tall as its parent and fits the image to what is left.
- */
+/** The image that will be saved, at the shape it will have. [fill] fits it to the height its parent offers. */
 @Composable
 private fun PreviewCard(title: String, aspect: ReportAspect, bitmap: Bitmap?, modifier: Modifier, fill: Boolean) {
     val scheme = MaterialTheme.colorScheme
     val ratio by animateFloatAsState(aspect.width / aspect.height.toFloat(), Motion.spatial(), label = "previewRatio")
-    Column(
-        modifier.clip(RoundedCornerShape(topStart = 36.dp, topEnd = 36.dp, bottomEnd = 36.dp, bottomStart = 14.dp)).background(scheme.surfaceContainer),
-    ) {
-        Column(
-            Modifier.fillMaxWidth()
-                .background(Brush.verticalGradient(listOf(scheme.primaryContainer, scheme.surfaceContainer)))
-                .padding(start = 24.dp, end = 24.dp, top = 22.dp, bottom = 18.dp),
-        ) {
-            Text(
-                stringResource(R.string.report_preview).uppercase(),
-                style = MaterialTheme.typography.labelMedium, color = scheme.onPrimaryContainer.copy(alpha = 0.8f),
-            )
-            Text(title, style = MaterialTheme.typography.titleLarge, color = scheme.onPrimaryContainer, maxLines = 1, overflow = TextOverflow.Ellipsis)
-        }
-        BoxWithConstraints(
-            (if (fill) Modifier.weight(1f) else Modifier).fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp),
+    BoxWithConstraints(modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+        val room = if (fill && constraints.hasBoundedHeight) maxHeight else 420.dp
+        val w = minOf(maxWidth, room * ratio.coerceAtLeast(0.1f))
+        Box(
+            Modifier.size(w, w / ratio.coerceAtLeast(0.1f)).clip(MaterialTheme.shapes.large).background(scheme.surfaceContainerHigh),
             contentAlignment = Alignment.Center,
         ) {
-            val room = if (constraints.hasBoundedHeight) maxHeight else 480.dp
-            val w = minOf(maxWidth, room * ratio.coerceAtLeast(0.1f))
-            Box(
-                Modifier.size(w, w / ratio.coerceAtLeast(0.1f)).clip(RoundedCornerShape(20.dp)).background(scheme.surfaceContainerHigh),
-                contentAlignment = Alignment.Center,
-            ) {
-                if (bitmap != null) {
-                    Image(bitmap.asImageBitmap(), contentDescription = null, modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Fit)
-                } else {
-                    ShapeLoader(size = 40.dp)
-                }
+            if (bitmap != null) {
+                Image(bitmap.asImageBitmap(), contentDescription = title, modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Fit)
+            } else {
+                ShapeLoader(size = 40.dp)
             }
-        }
-        Row(
-            Modifier.fillMaxWidth().background(scheme.surfaceContainerHigh).padding(horizontal = 20.dp, vertical = 14.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(14.dp),
-        ) {
-            IconBadge(Icons.Rounded.GraphicEq, size = 40.dp)
-            Column(Modifier.weight(1f)) {
-                Text(stringResource(R.string.app_name), style = MaterialTheme.typography.titleMedium)
-                Text(stringResource(R.string.report_png), style = MaterialTheme.typography.bodySmall, color = scheme.onSurfaceVariant)
-            }
-            Text("${aspect.width} × ${aspect.height}", style = MaterialTheme.typography.labelLarge, color = scheme.onSurfaceVariant)
         }
     }
 }
@@ -345,48 +315,34 @@ private fun Controls(
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(22.dp)) {
         Group(R.string.report_format) {
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                ReportAspect.entries.forEach { aspect ->
-                    val (icon, name) = aspectInfo(aspect)
-                    Chip(
-                        selected = aspect == options.aspect, onClick = { onOptions(options.copy(aspect = aspect)) },
-                        modifier = Modifier.weight(1f),
-                    ) {
-                        Icon(icon, contentDescription = null, modifier = Modifier.size(20.dp))
-                        Text(aspect.label, style = MaterialTheme.typography.titleMedium)
-                        Text(stringResource(name), style = MaterialTheme.typography.labelSmall, maxLines = 1)
-                    }
-                }
-            }
-            val (_, _, good, bad) = aspectInfo(options.aspect)
-            AnimatedContent(good to bad, label = "aspectNotes", transitionSpec = { fadeIn(Motion.effects()) togetherWith fadeOut(Motion.effects()) }) { (g, b) ->
-                Column(Modifier.padding(horizontal = 8.dp, vertical = 4.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Note(Icons.Rounded.Check, stringResource(g))
-                    Note(Icons.Rounded.WarningAmber, stringResource(b))
-                }
-            }
+            SegmentedControl(
+                segments = ReportAspect.entries.map { Segment(it, stringResource(aspectName(it))) },
+                selected = options.aspect,
+                onSelect = { onOptions(options.copy(aspect = it)) },
+                modifier = Modifier.fillMaxWidth(),
+            )
         }
 
         Group(R.string.report_look) {
-            Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                ReportLook.entries.forEach { l ->
-                    Chip(selected = l == look, onClick = { onLook(l) }) {
-                        Text(stringResource(l.label), style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(horizontal = 10.dp))
-                    }
-                }
-            }
+            SegmentedControl(
+                segments = ReportLook.entries.map { Segment(it, stringResource(it.label)) },
+                selected = look,
+                onSelect = onLook,
+                scrollable = true,
+                modifier = Modifier.fillMaxWidth(),
+            )
         }
 
         Group(R.string.report_content) {
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 sectionRows().forEach { row ->
                     val on = options.has(row.section)
-                    Chip(selected = on, onClick = { onOptions(options.toggled(row.section, !on)) }, compact = true) {
-                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Icon(if (on) Icons.Rounded.Check else row.icon, contentDescription = null, modifier = Modifier.size(18.dp))
-                            Text(stringResource(row.title), style = MaterialTheme.typography.titleSmall)
-                        }
-                    }
+                    FilterChip(
+                        selected = on,
+                        onClick = { onOptions(options.toggled(row.section, !on)) },
+                        label = { Text(stringResource(row.title)) },
+                        leadingIcon = { Icon(if (on) Icons.Rounded.Check else row.icon, contentDescription = null, modifier = Modifier.size(18.dp)) },
+                    )
                 }
             }
         }
@@ -397,7 +353,6 @@ private fun Controls(
             modifier = Modifier.fillMaxWidth(),
             label = { Text(stringResource(R.string.report_caption)) },
             maxLines = 3,
-            shape = RoundedCornerShape(20.dp),
         )
     }
 }
@@ -415,48 +370,10 @@ private fun Group(title: Int, content: @Composable ColumnScope.() -> Unit) {
     }
 }
 
-/** A selectable pill: filled in the primary container when picked, quiet otherwise. */
-@Composable
-private fun Chip(
-    selected: Boolean,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-    compact: Boolean = false,
-    content: @Composable ColumnScope.() -> Unit,
-) {
-    val scheme = MaterialTheme.colorScheme
-    MorphSurface(
-        modifier,
-        corners = Corners(if (compact) 20.dp else 28.dp),
-        color = if (selected) scheme.primaryContainer else scheme.surfaceContainerHigh,
-        contentColor = if (selected) scheme.onPrimaryContainer else scheme.onSurface,
-        onClick = onClick,
-        animateColor = true,
-        role = androidx.compose.ui.semantics.Role.Button,
-    ) {
-        Column(
-            Modifier.padding(horizontal = if (compact) 16.dp else 12.dp, vertical = if (compact) 11.dp else 14.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(2.dp),
-            content = content,
-        )
-    }
-}
-
-@Composable
-private fun Note(icon: ImageVector, text: String) {
-    Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.Top) {
-        Icon(icon, contentDescription = null, modifier = Modifier.padding(top = 2.dp).size(16.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
-        Text(text, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-    }
-}
-
-private data class AspectInfo(val icon: ImageVector, val name: Int, val good: Int, val bad: Int)
-
-private fun aspectInfo(aspect: ReportAspect) = when (aspect) {
-    ReportAspect.Portrait -> AspectInfo(Icons.Rounded.CropPortrait, R.string.report_portrait, R.string.report_portrait_good, R.string.report_portrait_bad)
-    ReportAspect.Square -> AspectInfo(Icons.Rounded.CropSquare, R.string.report_square, R.string.report_square_good, R.string.report_square_bad)
-    ReportAspect.Landscape -> AspectInfo(Icons.Rounded.CropLandscape, R.string.report_landscape, R.string.report_landscape_good, R.string.report_landscape_bad)
+private fun aspectName(aspect: ReportAspect) = when (aspect) {
+    ReportAspect.Portrait -> R.string.report_portrait
+    ReportAspect.Square -> R.string.report_square
+    ReportAspect.Landscape -> R.string.report_landscape
 }
 
 private class SectionRow(val section: ReportSection, val title: Int, val icon: ImageVector)

@@ -39,21 +39,17 @@
 
     <!-- About -->
     <string name="about_title">关于</string>
-    <string name="about_project">项目</string>
     <string name="about_source">源代码</string>
     <string name="about_report">报告问题</string>
     <string name="about_report_desc">在 GitHub 上提交 issue</string>
-    <string name="about_intro">再次显示引导页</string>
     <string name="about_privacy">隐私</string>
     <string name="about_privacy_title">数据留在你的设备上</string>
     <string name="about_privacy_desc">所有分析都在你的设备上运行，不会上传任何内容。Specty 未声明联网权限。</string>
     <string name="about_licence">许可证</string>
     <string name="about_licence_tap">%1$s。点按阅读全文。</string>
-    <string name="about_libraries">开源库</string>
-    <string name="about_libraries_hint">这两项需要说明。许可页面列出了应用中的所有库。</string>
-    <string name="about_made_by">由 RoTatsu Labs 制作</string>
+    <string name="about_made_by">由 RoTatsuLabs 制作</string>
     <string name="about_tagline">音频质量实验室</string>
-    <string name="about_hero">看清音频文件的真实内容：频谱、响度与动态，以及无损文件是否原本来自有损音源。</string>
+    <string name="about_hero">看看音频文件里有什么：频谱、响度与动态，以及无损文件是否原本来自有损音源。</string>
     <string name="about_version">版本 %1$s</string>
     <plurals name="about_dev_taps">
         <item quantity="other">再点按 %1$d 次即可成为开发者</item>
@@ -76,35 +72,7 @@
     <string name="lib_mornye_summary">来自 Mornye 音乐应用的 Hi-Res 检测：升采样与 16 位噪声底。</string>
     <string name="lib_mornye_note">Specty 的采样保持、插值和 16 位噪声底检测，是 Mornye Hi-Res 证据代码的 Kotlin 移植版，依据 LGPL 使用，并依据 GPL 与 Specty 合并。感谢其作者。源代码可通过上方链接获取。</string>
 
-    <!-- Onboarding -->
-    <string name="onboarding_progress">%1$d / %2$d</string>
-    <string name="onboarding_skip">跳过</string>
-    <string name="onboarding_previous">上一页</string>
-    <string name="onboarding_start">开始使用</string>
-    <string name="onboarding_next">下一步</string>
-    <string name="onboarding_0_title">认识 Specty</string>
-    <string name="onboarding_0_body">为你的音乐打造的质量实验室。深入任意音频文件内部，看清它真正包含什么。</string>
-    <string name="onboarding_1_title">查看频谱</string>
-    <string name="onboarding_1_body">频谱图显示各个频率随时间的变化。可全屏打开，双指张开放大高频部分，触摸即可读取精确数值。</string>
-    <string name="onboarding_2_title">揪出伪无损</string>
-    <string name="onboarding_2_body">由 MP3 转成的无损文件会保留 MP3 的截止频率。Specty 能找到这条边界，告诉你判断的把握有多大，以及它类似哪种编码器。</string>
-    <string name="onboarding_3_title">全面测量</string>
-    <string name="onboarding_3_body">响度、真峰值、动态范围、削波和立体声状况，外加对整个曲库的后台扫描。一切都在你的设备上运行。</string>
-    <string name="onboarding_folder_added">已添加文件夹</string>
-    <string name="onboarding_folder_title">曲库文件夹</string>
-    <string name="onboarding_folder_added_desc">一开始使用，你的音乐就会列出来。</string>
-    <string name="onboarding_folder_desc">选择存放音乐的文件夹。文件绝不会离开你的设备。</string>
-    <string name="onboarding_choose_folder">选择文件夹</string>
-    <string name="onboarding_cutoff_chip">16 kHz 截止</string>
-    <string name="onboarding_verdict_genuine">真无损全频段</string>
-    <string name="onboarding_verdict_genuine_desc">内容可达 22 kHz</string>
-    <string name="onboarding_verdict_transcoded">疑似转码</string>
-    <string name="onboarding_verdict_transcoded_desc">16 kHz 附近陡然截止</string>
-    <string name="onboarding_confidence">把握度 %1$d%%</string>
-    <string name="onboarding_tile_loudness">响度</string>
-    <string name="onboarding_tile_dynamics">动态</string>
-    <string name="onboarding_tile_meter">表</string>
-    <string name="onboarding_tile_peak">真峰值</string>
+    <string name="library_choose_folder">选择文件夹</string>
 
     <!-- Library -->
     <string name="action_cancel">取消</string>
@@ -185,8 +153,6 @@
     <string name="analysis_share_image">分享图片</string>
     <string name="analysis_share_title">分享分析结果</string>
     <string name="analysis_failed_title">无法分析此文件</string>
-    <string name="badge_hires_lossless">HI-RES 无损</string>
-    <string name="badge_lossless">无损</string>
     <string name="verdict_head_genuine">无损，没有来自有损音源的迹象</string>
     <string name="verdict_head_hires">Hi-Res 无损，没有来自有损音源的迹象</string>
     <string name="verdict_head_lossy_source">疑似由有损音源转码而来</string>
@@ -299,6 +265,7 @@
     <string name="spec_cutoff">截止线</string>
     <string name="spec_display_options">显示选项</string>
     <string name="spec_palette">调色板</string>
+    <string name="spec_channel">声道</string>
     <string name="spec_freq_scale">频率刻度</string>
     <string name="spec_linear">线性</string>
     <string name="spec_log">对数</string>
@@ -458,12 +425,6 @@
     <string name="report_portrait">竖版</string>
     <string name="report_square">方形</string>
     <string name="report_landscape">横版</string>
-    <string name="report_portrait_good">容纳所有内容，适合快拍、聊天和壁纸。</string>
-    <string name="report_portrait_bad">画面较窄，频谱图偏小。</string>
-    <string name="report_square_good">紧凑，适合动态和宫格。</string>
-    <string name="report_square_bad">空间有限：内容较多时文字会缩小。</string>
-    <string name="report_landscape_good">频谱图更宽，适合幻灯片、桌面和 Discord。</string>
-    <string name="report_landscape_bad">高度较短，关键指标挤在窄栏中。</string>
     <string name="report_content">图片中显示的内容</string>
     <string name="report_section_details">文件详情</string>
     <string name="report_section_verdict">结论</string>
@@ -478,11 +439,10 @@
     <string name="report_look">配色</string>
     <string name="report_look_auto">跟随应用</string>
     <string name="report_look_amoled">AMOLED</string>
-    <string name="report_preview">预览</string>
     <string name="report_caption">添加说明（可选）</string>
-    <string name="report_png">PNG 图片</string>
-    <string name="library_menu_insights">曲库概览</string>
-    <string name="insights_title">曲库概览</string>
+    <string name="lab_title">实验室</string>
+    <string name="lab_compare_title">对比两个文件</string>
+    <string name="lab_compare_desc">选择两首曲目并排查看。</string>
     <string name="insights_totals">%1$d 首  ·  %2$s  ·  %3$s</string>
     <string name="insights_checked">已检查 %1$d / %2$d</string>
     <string name="insights_formats">格式</string>
@@ -503,4 +463,15 @@
     <plurals name="licences_count">
         <item quantity="other">%d 个库</item>
     </plurals>
+    <string name="nav_library">曲库</string>
+    <string name="analysis_tab_overview">概览</string>
+    <string name="analysis_tab_levels">电平</string>
+    <string name="analysis_tab_spectrogram">频谱图</string>
+    <string name="compare_tab_summary">摘要</string>
+    <string name="compare_tab_spectra">频谱</string>
+    <string name="nav_search">搜索</string>
+    <string name="nav_lab">实验室</string>
+    <string name="settings_more">更多</string>
+    <string name="settings_library">曲库</string>
+    <string name="settings_library_desc">选择曲库读取哪些文件夹。</string>
 </resources>

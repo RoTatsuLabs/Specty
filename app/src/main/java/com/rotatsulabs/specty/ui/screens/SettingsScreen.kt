@@ -10,6 +10,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
+import androidx.compose.material.icons.rounded.FolderOpen
+import androidx.compose.material.icons.rounded.Info
+import androidx.compose.material3.Icon
 import androidx.compose.material.icons.rounded.Contrast
 import androidx.compose.material.icons.rounded.Palette
 import androidx.compose.material3.MaterialTheme
@@ -54,7 +58,7 @@ import com.rotatsulabs.specty.ui.theme.isDarkFor
 
 private val fftChoices = listOf(1024, 2048, 4096)
 
-/** Full-screen settings, opened from the overflow menu. */
+/** The settings tab. */
 @Composable
 fun SettingsScreen(
     appearance: Appearance,
@@ -73,6 +77,8 @@ fun SettingsScreen(
     onLogging: (Boolean) -> Unit,
     onOpenLog: () -> Unit,
     onDeveloperOff: () -> Unit,
+    onOpenAbout: () -> Unit,
+    onOpenFolders: () -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -146,6 +152,16 @@ fun SettingsScreen(
                 }
             }
 
+            Reveal(1) {
+                SettingGroup(stringResource(R.string.settings_library)) {
+                    ListRow(
+                        stringResource(R.string.library_menu_folders), supporting = stringResource(R.string.settings_library_desc), icon = Icons.Rounded.FolderOpen,
+                        corners = groupCorners(0, 1), onClick = onOpenFolders,
+                        trailing = { Icon(Icons.AutoMirrored.Rounded.KeyboardArrowRight, null, tint = MaterialTheme.colorScheme.onSurfaceVariant) },
+                    )
+                }
+            }
+
             Reveal(2) {
                 SettingGroup(stringResource(R.string.settings_spectrogram)) {
                     SettingBlock(
@@ -208,7 +224,16 @@ fun SettingsScreen(
                 }
             }
 
-            Spacer(Modifier.navigationBarsPadding().height(16.dp))
+            Reveal(5) {
+                SettingGroup(stringResource(R.string.settings_more)) {
+                    ListRow(
+                        stringResource(R.string.about_title), supporting = stringResource(R.string.about_tagline), icon = Icons.Rounded.Info,
+                        corners = groupCorners(0, 1), onClick = onOpenAbout,
+                        trailing = { Icon(Icons.AutoMirrored.Rounded.KeyboardArrowRight, null, tint = MaterialTheme.colorScheme.onSurfaceVariant) },
+                    )
+                }
+            }
+            Spacer(Modifier.height(16.dp))
         }
     }
 }

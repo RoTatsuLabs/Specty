@@ -28,7 +28,6 @@ import androidx.compose.material.icons.rounded.Description
 import androidx.compose.material.icons.rounded.ExpandMore
 import androidx.compose.material.icons.rounded.Gavel
 import androidx.compose.material.icons.rounded.Lock
-import androidx.compose.material.icons.rounded.Replay
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -61,9 +60,7 @@ import com.rotatsulabs.specty.dev.TapCounter
 import com.rotatsulabs.specty.about.Library
 import com.rotatsulabs.specty.about.LicenseKind
 import com.rotatsulabs.specty.about.OpenSource
-import com.rotatsulabs.specty.ui.components.Reveal
 import com.rotatsulabs.specty.ui.design.Corners
-import com.rotatsulabs.specty.ui.design.SpectyShapes
 import com.rotatsulabs.specty.ui.design.components.ButtonKind
 import com.rotatsulabs.specty.ui.design.components.ExpressiveButton
 import com.rotatsulabs.specty.ui.design.components.ExpressiveTopBar
@@ -72,7 +69,6 @@ import com.rotatsulabs.specty.ui.design.components.MorphSurface
 import com.rotatsulabs.specty.ui.design.components.Pill
 import com.rotatsulabs.specty.ui.design.components.SettingGroup
 import com.rotatsulabs.specty.ui.design.components.ShapeLoader
-import com.rotatsulabs.specty.ui.design.components.SpectyCard
 import com.rotatsulabs.specty.ui.design.components.groupCorners
 import com.rotatsulabs.specty.ui.theme.Motion
 import kotlinx.coroutines.Dispatchers
@@ -81,7 +77,6 @@ import kotlinx.coroutines.withContext
 /** Full-screen about page, opened from the overflow menu: the app, where its source lives, and everything it is built from. */
 @Composable
 fun AboutScreen(
-    onReplayIntro: () -> Unit,
     developer: Boolean,
     onUnlockDeveloper: () -> Unit,
     onOpenLicences: () -> Unit,
@@ -97,7 +92,7 @@ fun AboutScreen(
     licence?.let { kind -> LicenseDialog(kind, onDismiss = { licence = null }, onOpenOnline = { open(kind.url) }) }
 
     Column(modifier.fillMaxSize()) {
-        ExpressiveTopBar(title = "", onBack = onBack)
+        ExpressiveTopBar(title = stringResource(R.string.about_title), onBack = onBack)
 
         Column(
             Modifier
@@ -106,81 +101,46 @@ fun AboutScreen(
                 .padding(horizontal = 16.dp, vertical = 8.dp),
             verticalArrangement = Arrangement.spacedBy(24.dp),
         ) {
-            Reveal(0) {
-                Text(
-                    stringResource(R.string.about_title), style = MaterialTheme.typography.displaySmall,
-                    fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 4.dp),
+            Hero(developer, onUnlockDeveloper)
+
+            // The three things a person comes here for sit right under the name.
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally)) {
+                ExpressiveButton(stringResource(R.string.about_source), { open(OpenSource.SOURCE_URL) }, kind = ButtonKind.Tonal, icon = Icons.Rounded.Code)
+                ExpressiveButton(stringResource(R.string.about_report), { open(OpenSource.SOURCE_URL + "/issues") }, kind = ButtonKind.Tonal, icon = Icons.Rounded.BugReport)
+            }
+
+            SettingGroup(stringResource(R.string.about_privacy)) {
+                ListRow(
+                    stringResource(R.string.about_privacy_title),
+                    supporting = stringResource(R.string.about_privacy_desc),
+                    icon = Icons.Rounded.Lock,
+                    corners = groupCorners(0, 1),
                 )
             }
-            Reveal(1) { Hero(developer, onUnlockDeveloper) }
 
-            Reveal(2) {
-                SettingGroup(stringResource(R.string.about_project)) {
-                    ListRow(
-                        stringResource(R.string.about_source), supporting = "github.com/RoTatsuLabs/Specty", icon = Icons.Rounded.Code,
-                        corners = groupCorners(0, 3), onClick = { open(OpenSource.SOURCE_URL) },
-                        trailing = { OpenIcon() },
-                    )
-                    ListRow(
-                        stringResource(R.string.about_report), supporting = stringResource(R.string.about_report_desc), icon = Icons.Rounded.BugReport,
-                        corners = groupCorners(1, 3), onClick = { open(OpenSource.SOURCE_URL + "/issues") },
-                        trailing = { OpenIcon() },
-                    )
-                    ListRow(
-                        stringResource(R.string.about_intro), icon = Icons.Rounded.Replay,
-                        corners = groupCorners(2, 3), onClick = onReplayIntro,
-                        trailing = { Chevron() },
+            SettingGroup(stringResource(R.string.about_licence)) {
+                val libraries = OpenSource.libraries
+                val rows = libraries.size + 2
+                ListRow(
+                    stringResource(R.string.app_name), supporting = stringResource(R.string.about_licence_tap, OpenSource.app.license.title), icon = Icons.Rounded.Gavel,
+                    corners = groupCorners(0, rows), onClick = { licence = OpenSource.app.license },
+                    trailing = { Chevron() },
+                )
+                libraries.forEachIndexed { index, library ->
+                    LibraryRow(
+                        library = library,
+                        corners = groupCorners(index + 1, rows),
+                        expanded = expanded == library.name,
+                        onToggle = { expanded = if (expanded == library.name) null else library.name },
+                        onLicense = { licence = library.license },
+                        onOpen = { open(library.url) },
                     )
                 }
-            }
-
-            Reveal(3) {
-                SettingGroup(stringResource(R.string.about_privacy)) {
-                    ListRow(
-                        stringResource(R.string.about_privacy_title),
-                        supporting = stringResource(R.string.about_privacy_desc),
-                        icon = Icons.Rounded.Lock,
-                        corners = SpectyShapes.Tile,
-                    )
-                }
-            }
-
-            Reveal(4) {
-                SettingGroup(stringResource(R.string.about_licence)) {
-                    ListRow(
-                        stringResource(R.string.app_name), supporting = stringResource(R.string.about_licence_tap, OpenSource.app.license.title), icon = Icons.Rounded.Gavel,
-                        corners = SpectyShapes.Tile, onClick = { licence = OpenSource.app.license },
-                        trailing = { Chevron() },
-                    )
-                }
-            }
-
-            Reveal(5) {
-                SettingGroup(stringResource(R.string.about_libraries)) {
-                    val libraries = OpenSource.libraries
-                    libraries.forEachIndexed { index, library ->
-                        LibraryRow(
-                            library = library,
-                            corners = groupCorners(index, libraries.size),
-                            expanded = expanded == library.name,
-                            onToggle = { expanded = if (expanded == library.name) null else library.name },
-                            onLicense = { licence = library.license },
-                            onOpen = { open(library.url) },
-                        )
-                    }
-                    ListRow(
-                        stringResource(R.string.licences_title), supporting = stringResource(R.string.licences_row_desc), icon = Icons.Rounded.Description,
-                        corners = SpectyShapes.Tile, onClick = onOpenLicences,
-                        modifier = Modifier.padding(top = 12.dp),
-                        trailing = { Chevron() },
-                    )
-                    Text(
-                        stringResource(R.string.about_libraries_hint),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(start = 20.dp, end = 20.dp, top = 12.dp),
-                    )
-                }
+                ListRow(
+                    stringResource(R.string.licences_title), supporting = stringResource(R.string.licences_row_desc), icon = Icons.Rounded.Description,
+                    corners = groupCorners(rows - 1, rows), onClick = onOpenLicences,
+                    trailing = { Chevron() },
+                )
             }
 
             Text(
@@ -205,40 +165,34 @@ private fun Hero(developer: Boolean, onUnlockDeveloper: () -> Unit) {
         toast?.cancel()
         toast = Toast.makeText(context, text, Toast.LENGTH_SHORT).also { it.show() }
     }
-    SpectyCard(Modifier.fillMaxWidth(), corners = SpectyShapes.Hero) {
-        Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
-            EqualizerMark()
-            Spacer(Modifier.height(16.dp))
-            Text(stringResource(R.string.app_name), style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.Bold)
-            Text(stringResource(R.string.about_tagline), style = MaterialTheme.typography.titleSmall, color = scheme.onSurfaceVariant)
-            Spacer(Modifier.height(12.dp))
-            Pill(
-                stringResource(R.string.about_version, BuildConfig.VERSION_NAME),
-                Modifier.clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) {
-                    when (val r = taps.tap(SystemClock.elapsedRealtime())) {
-                        TapCounter.Result.Idle -> Unit
-                        is TapCounter.Result.Remaining -> if (!developer) say(context.resources.getQuantityString(R.plurals.about_dev_taps, r.taps, r.taps))
-                        TapCounter.Result.Unlocked -> if (developer) say(context.getString(R.string.about_dev_already)) else {
-                            onUnlockDeveloper()
-                            say(context.getString(R.string.about_dev_on))
-                        }
+    Column(Modifier.fillMaxWidth().padding(top = 8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+        EqualizerMark()
+        Spacer(Modifier.height(16.dp))
+        Text(stringResource(R.string.app_name), style = MaterialTheme.typography.displaySmall, fontWeight = FontWeight.Bold)
+        Text(stringResource(R.string.about_tagline), style = MaterialTheme.typography.titleMedium, color = scheme.onSurfaceVariant)
+        Spacer(Modifier.height(12.dp))
+        Pill(
+            stringResource(R.string.about_version, BuildConfig.VERSION_NAME),
+            Modifier.clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) {
+                when (val r = taps.tap(SystemClock.elapsedRealtime())) {
+                    TapCounter.Result.Idle -> Unit
+                    is TapCounter.Result.Remaining -> if (!developer) say(context.resources.getQuantityString(R.plurals.about_dev_taps, r.taps, r.taps))
+                    TapCounter.Result.Unlocked -> if (developer) say(context.getString(R.string.about_dev_already)) else {
+                        onUnlockDeveloper()
+                        say(context.getString(R.string.about_dev_on))
                     }
-                },
-                container = scheme.primaryContainer, content = scheme.onPrimaryContainer,
-            )
-            Spacer(Modifier.height(16.dp))
-            Text(
-                stringResource(R.string.about_hero),
-                style = MaterialTheme.typography.bodyMedium,
-                color = scheme.onSurfaceVariant,
-                textAlign = TextAlign.Center,
-            )
-            Spacer(Modifier.height(16.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Pill(OpenSource.app.license.spdx, icon = Icons.Rounded.Gavel)
-                Pill("Android", icon = Icons.Rounded.Code)
-            }
-        }
+                }
+            },
+            container = scheme.primaryContainer, content = scheme.onPrimaryContainer,
+        )
+        Spacer(Modifier.height(16.dp))
+        Text(
+            stringResource(R.string.about_hero),
+            style = MaterialTheme.typography.bodyLarge,
+            color = scheme.onSurfaceVariant,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.padding(horizontal = 8.dp),
+        )
     }
 }
 

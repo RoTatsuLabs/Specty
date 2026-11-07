@@ -39,21 +39,17 @@
 
     <!-- About -->
     <string name="about_title">Tentang</string>
-    <string name="about_project">Proyek</string>
     <string name="about_source">Kode sumber</string>
     <string name="about_report">Laporkan masalah</string>
     <string name="about_report_desc">Buka isu di GitHub</string>
-    <string name="about_intro">Tampilkan pengantar lagi</string>
     <string name="about_privacy">Privasi</string>
     <string name="about_privacy_title">Tetap di perangkat Anda</string>
     <string name="about_privacy_desc">Semua analisis berjalan di perangkat Anda dan tidak ada yang diunggah. Specty tidak mendeklarasikan izin internet.</string>
     <string name="about_licence">Lisensi</string>
     <string name="about_licence_tap">%1$s. Ketuk untuk membacanya.</string>
-    <string name="about_libraries">Pustaka sumber terbuka</string>
-    <string name="about_libraries_hint">Dua ini perlu catatan. Halaman lisensi memuat semua pustaka di aplikasi.</string>
-    <string name="about_made_by">Dibuat oleh RoTatsu Labs</string>
+    <string name="about_made_by">Dibuat oleh RoTatsuLabs</string>
     <string name="about_tagline">Lab kualitas audio</string>
-    <string name="about_hero">Lihat apa yang sebenarnya terkandung dalam sebuah file audio: spektrumnya, kenyaringan dan dinamikanya, serta apakah file lossless berasal dari sumber lossy.</string>
+    <string name="about_hero">Lihat isi sebuah file audio: spektrum, kenyaringan dan dinamikanya, serta apakah file lossless berasal dari sumber lossy.</string>
     <string name="about_version">Versi %1$s</string>
     <plurals name="about_dev_taps">
         <item quantity="other">%1$d ketukan lagi untuk menjadi pengembang</item>
@@ -76,35 +72,7 @@
     <string name="lib_mornye_summary">Pemeriksaan Hi-Res untuk upsampling dan lantai derau audio 16-bit, dari aplikasi musik Mornye.</string>
     <string name="lib_mornye_note">Pemeriksaan sample-and-hold, interpolasi, dan lantai derau 16-bit di Specty adalah port Kotlin dari kode bukti Hi-Res Mornye, dipakai di bawah LGPL dan digabungkan dengan Specty di bawah GPL. Terima kasih kepada para penulisnya. Kode sumbernya tersedia di tautan di atas.</string>
 
-    <!-- Onboarding -->
-    <string name="onboarding_progress">%1$d dari %2$d</string>
-    <string name="onboarding_skip">Lewati</string>
-    <string name="onboarding_previous">Halaman sebelumnya</string>
-    <string name="onboarding_start">Mulai</string>
-    <string name="onboarding_next">Lanjut</string>
-    <string name="onboarding_0_title">Kenali Specty</string>
-    <string name="onboarding_0_body">Lab kualitas untuk musik Anda. Intip isi file audio apa pun dan lihat apa yang sebenarnya dikandungnya.</string>
-    <string name="onboarding_1_title">Lihat spektrumnya</string>
-    <string name="onboarding_1_body">Spektrogram menampilkan setiap frekuensi dari waktu ke waktu. Buka layar penuh, cubit untuk memperbesar bagian atas, dan sentuh untuk membaca nilai persisnya.</string>
-    <string name="onboarding_2_title">Tangkap lossless palsu</string>
-    <string name="onboarding_2_body">File lossless yang dibuat dari MP3 mempertahankan cutoff MP3 tersebut. Specty menemukan batas itu, menyebutkan seberapa yakin hasilnya, dan encoder mana yang mirip.</string>
-    <string name="onboarding_3_title">Ukur semuanya</string>
-    <string name="onboarding_3_body">Kenyaringan, true peak, rentang dinamis, clipping, dan kondisi stereo, plus pemindaian latar belakang untuk seluruh pustaka Anda. Semuanya berjalan di perangkat Anda.</string>
-    <string name="onboarding_folder_added">Folder ditambahkan</string>
-    <string name="onboarding_folder_title">Folder pustaka</string>
-    <string name="onboarding_folder_added_desc">Musik Anda akan ditampilkan begitu Anda mulai.</string>
-    <string name="onboarding_folder_desc">Pilih folder yang berisi musik Anda. File tidak pernah meninggalkan perangkat Anda.</string>
-    <string name="onboarding_choose_folder">Pilih folder</string>
-    <string name="onboarding_cutoff_chip">Cutoff 16 kHz</string>
-    <string name="onboarding_verdict_genuine">Lossless pita penuh</string>
-    <string name="onboarding_verdict_genuine_desc">Konten mencapai 22 kHz</string>
-    <string name="onboarding_verdict_transcoded">Kemungkinan hasil transkode</string>
-    <string name="onboarding_verdict_transcoded_desc">Cutoff tajam di sekitar 16 kHz</string>
-    <string name="onboarding_confidence">%1$d%% keyakinan</string>
-    <string name="onboarding_tile_loudness">Kenyaringan</string>
-    <string name="onboarding_tile_dynamics">Dinamika</string>
-    <string name="onboarding_tile_meter">meter</string>
-    <string name="onboarding_tile_peak">True peak</string>
+    <string name="library_choose_folder">Pilih folder</string>
 
     <!-- Library -->
     <string name="action_cancel">Batal</string>
@@ -185,8 +153,6 @@
     <string name="analysis_share_image">Bagikan gambar</string>
     <string name="analysis_share_title">Bagikan analisis</string>
     <string name="analysis_failed_title">File ini tidak dapat dianalisis</string>
-    <string name="badge_hires_lossless">LOSSLESS HI-RES</string>
-    <string name="badge_lossless">LOSSLESS</string>
     <string name="verdict_head_genuine">Lossless, tanpa tanda berasal dari sumber lossy</string>
     <string name="verdict_head_hires">Lossless Hi-Res, tanpa tanda berasal dari sumber lossy</string>
     <string name="verdict_head_lossy_source">Kemungkinan hasil transkode dari sumber lossy</string>
@@ -299,6 +265,7 @@
     <string name="spec_cutoff">Cutoff</string>
     <string name="spec_display_options">Opsi tampilan</string>
     <string name="spec_palette">Palet warna</string>
+    <string name="spec_channel">Saluran</string>
     <string name="spec_freq_scale">Skala frekuensi</string>
     <string name="spec_linear">Linear</string>
     <string name="spec_log">Log</string>
@@ -458,12 +425,6 @@
     <string name="report_portrait">Potret</string>
     <string name="report_square">Persegi</string>
     <string name="report_landscape">Lanskap</string>
-    <string name="report_portrait_good">Muat semua bagian. Cocok untuk story, chat, dan wallpaper.</string>
-    <string name="report_portrait_bad">Sempit, jadi spektrogram kecil.</string>
-    <string name="report_square_good">Ringkas. Pas untuk feed dan grid.</string>
-    <string name="report_square_bad">Ruang terbatas: teks mengecil jika banyak bagian aktif.</string>
-    <string name="report_landscape_good">Spektrogram lebar. Cocok untuk slide, desktop, dan Discord.</string>
-    <string name="report_landscape_bad">Pendek, jadi level utama berada di kolom sempit.</string>
     <string name="report_content">Tampilkan di gambar</string>
     <string name="report_section_details">Detail berkas</string>
     <string name="report_section_verdict">Vonis</string>
@@ -478,11 +439,10 @@
     <string name="report_look">Warna</string>
     <string name="report_look_auto">Ikuti aplikasi</string>
     <string name="report_look_amoled">AMOLED</string>
-    <string name="report_preview">Pratinjau</string>
     <string name="report_caption">Tambahkan keterangan (opsional)</string>
-    <string name="report_png">Gambar PNG</string>
-    <string name="library_menu_insights">Wawasan pustaka</string>
-    <string name="insights_title">Wawasan pustaka</string>
+    <string name="lab_title">Lab</string>
+    <string name="lab_compare_title">Bandingkan dua berkas</string>
+    <string name="lab_compare_desc">Pilih dua lagu untuk dilihat berdampingan.</string>
     <string name="insights_totals">%1$d lagu  ·  %2$s  ·  %3$s</string>
     <string name="insights_checked">%1$d dari %2$d sudah diperiksa</string>
     <string name="insights_formats">Format</string>
@@ -503,4 +463,15 @@
     <plurals name="licences_count">
         <item quantity="other">%d pustaka</item>
     </plurals>
+    <string name="nav_library">Pustaka</string>
+    <string name="analysis_tab_overview">Ringkasan</string>
+    <string name="analysis_tab_levels">Level</string>
+    <string name="analysis_tab_spectrogram">Spektrogram</string>
+    <string name="compare_tab_summary">Ringkasan</string>
+    <string name="compare_tab_spectra">Spektrum</string>
+    <string name="nav_search">Cari</string>
+    <string name="nav_lab">Lab</string>
+    <string name="settings_more">Lainnya</string>
+    <string name="settings_library">Pustaka</string>
+    <string name="settings_library_desc">Pilih folder yang dibaca pustaka.</string>
 </resources>

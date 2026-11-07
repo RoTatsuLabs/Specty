@@ -1,6 +1,6 @@
 [versions]
-agp = "8.13.2"
-kotlin = "2.3.21"
+agp = "9.1.0"
+kotlin = "2.4.0"
 composeBom = "2026.03.01"
 activityCompose = "1.11.0"
 lifecycle = "2.9.4"
@@ -9,8 +9,7 @@ coroutines = "1.10.2"
 # FFmpegKitNext, arthenica's continuation of ffmpeg-kit (same com.arthenica.ffmpegkit API), built in RoTatsuLabs/Forge.
 ffmpegKit = "9.0.2-r1"
 junit = "4.13.2"
-# 13.x matches Kotlin 2.3 and compile SDK 36; 14 and 15 need Kotlin 2.4 and compile SDK 37.
-aboutLibraries = "13.2.1"
+aboutLibraries = "15.0.0"
 
 [libraries]
 androidx-compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "composeBom" }
@@ -19,7 +18,7 @@ androidx-compose-ui-graphics = { group = "androidx.compose.ui", name = "ui-graph
 androidx-compose-ui-tooling = { group = "androidx.compose.ui", name = "ui-tooling" }
 androidx-compose-ui-tooling-preview = { group = "androidx.compose.ui", name = "ui-tooling-preview" }
 androidx-compose-foundation = { group = "androidx.compose.foundation", name = "foundation" }
-androidx-compose-material3 = { group = "androidx.compose.material3", name = "material3" }
+androidx-compose-material3 = { group = "androidx.compose.material3", name = "material3", version = "1.5.0-beta02" }
 androidx-compose-icons-extended = { group = "androidx.compose.material", name = "material-icons-extended" }
 androidx-activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "activityCompose" }
 androidx-lifecycle-viewmodel-compose = { group = "androidx.lifecycle", name = "lifecycle-viewmodel-compose", version.ref = "lifecycle" }
@@ -34,6 +33,5 @@ aboutlibraries-core = { module = "com.mikepenz:aboutlibraries-core", version.ref
 android-application = { id = "com.android.application", version.ref = "agp" }
 android-library = { id = "com.android.library", version.ref = "agp" }
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
-kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 aboutlibraries = { id = "com.mikepenz.aboutlibraries.plugin.android", version.ref = "aboutLibraries" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }

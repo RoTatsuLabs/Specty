@@ -5,6 +5,7 @@ import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.layout.onGloballyPositioned
 import com.rotatsulabs.specty.ui.design.SpectyShapes
+import com.rotatsulabs.specty.ui.design.Spacing
 import com.rotatsulabs.specty.ui.design.components.ExpressiveMenuItem
 import com.rotatsulabs.specty.ui.design.components.ButtonKind
 import com.rotatsulabs.specty.ui.design.components.EmptyState
@@ -13,7 +14,6 @@ import com.rotatsulabs.specty.ui.design.components.ExpressiveIconButton
 import com.rotatsulabs.specty.ui.design.components.MorphSurface
 import com.rotatsulabs.specty.ui.design.components.Pill
 import com.rotatsulabs.specty.ui.design.components.RingProgress
-import com.rotatsulabs.specty.ui.design.components.SearchField
 import com.rotatsulabs.specty.ui.design.components.ShapeLoader
 import com.rotatsulabs.specty.ui.design.components.OptionSegmentedControl
 import com.rotatsulabs.specty.ui.design.components.SpectyCard
@@ -78,6 +78,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.Sort
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.FolderOpen
 import androidx.compose.material.icons.rounded.GridView
@@ -97,8 +98,13 @@ import androidx.compose.material.icons.rounded.ViewAgenda
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material.icons.rounded.KeyboardArrowDown
+import androidx.compose.material3.AssistChipDefaults
+import androidx.compose.material3.AssistChip
+import com.rotatsulabs.specty.ui.design.components.ExpressiveTopBar
+import androidx.compose.foundation.layout.consumeWindowInsets
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.AlertDialog
@@ -196,8 +202,6 @@ fun LibraryScreen(
     onOpen: (Track, androidx.compose.ui.geometry.Rect?, CoverSource?) -> Unit,
     onPickFile: () -> Unit,
     onPickFolder: () -> Unit,
-    onOpenFolders: () -> Unit,
-    onOpenInsights: () -> Unit = {},
     onOpenSettings: () -> Unit,
     onOpenAbout: () -> Unit,
     onOpenCollection: (String) -> Unit = {},
@@ -210,6 +214,9 @@ fun LibraryScreen(
     onCompare: (Track, Track) -> Unit = { _, _ -> },
     dockVisible: Boolean = false,
     flight: CoverFlight? = null,
+    searching: Boolean = false,
+    /** The text typed in the Search tab's field, which the app draws at the bottom of the screen. */
+    query: String = "",
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
@@ -224,7 +231,6 @@ fun LibraryScreen(
         if (allowed) onScanAll() else notificationLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
     }
 
-    var query by rememberSaveable { mutableStateOf("") }
     // The layout is remembered between launches; the filter and the picks only for this visit.
     val prefs = remember { context.getSharedPreferences("specty", Context.MODE_PRIVATE) }
     var layout by remember { mutableStateOf(LibraryView.load(prefs)) }
@@ -286,15 +292,6 @@ fun LibraryScreen(
     val hasTracks = hasFolders && state.error == null && state.tracks.isNotEmpty()
 
     val listState = rememberLazyListState()
-    var fabVisible by remember { mutableStateOf(true) }
-    LaunchedEffect(listState) {
-        var previous = 0
-        snapshotFlow { listState.firstVisibleItemIndex * 10_000 + listState.firstVisibleItemScrollOffset }.collect { now ->
-            if (now > previous + 12) fabVisible = false else if (now < previous - 12) fabVisible = true
-            previous = now
-        }
-    }
-
     Box(modifier.fillMaxSize()) {
         if (showFilter && hasTracks) {
             FilterSheet(
@@ -324,12 +321,24 @@ fun LibraryScreen(
                     transformOrigin = TransformOrigin(0f, 0.5f)
                 }
                 Header(
+                    trackCount = state.tracks.size,
+                    filterCount = if (hasTracks) filters.size else -1,
+                    onFilter = { showFilter = true },
                     onRescan = { onLoad(true) },
-                    onSettings = onOpenSettings,
+                    onPickFile = onPickFile,
+                    layoutMenu = {
+                        if (hasTracks) {
+                            LayoutMenu(
+                                browse = layout.browse, sort = layout.sort, group = layout.group, ascending = layout.ascending, grid = layout.grid,
+                                onSort = { setLayout(layout.copy(sort = it)) },
+                                onGroup = { setLayout(layout.copy(group = it)) },
+                                onToggleOrder = { setLayout(layout.copy(ascending = !layout.ascending)) },
+                                onToggleGrid = { setLayout(layout.copy(grid = !layout.grid)) },
+                            )
+                        }
+                    },
                     onAbout = onOpenAbout,
-                    onFolders = onOpenFolders,
-                    onInsights = onOpenInsights,
-                    canInsights = state.tracks.isNotEmpty(),
+                    onSettings = onOpenSettings,
                     canRescan = hasFolders,
                     canScan = state.tracks.isNotEmpty() && !batch.running,
                     unscanned = unscanned,
@@ -343,23 +352,12 @@ fun LibraryScreen(
                     BatchCard(batch, onCancel = onCancelScan, onDismiss = onDismissScan)
                 }
             }
-            item(key = "search") {
-                Spacer(Modifier.height(14.dp))
-                Box {
-                    SearchPill(query, { query = it }) {
-                        if (hasTracks) {
-                            Spacer(Modifier.width(8.dp))
-                            FilterButton(filters.size, { showFilter = true })
-                        }
-                    }
-                }
-            }
             if (hasTracks) {
                 item(key = "browse") {
                     OptionSegmentedControl(
                         BrowseKind.entries, layout.browse, { setLayout(layout.copy(browse = it)) },
                         { stringResource(it.labelRes()) },
-                        Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp),
+                        Modifier.fillMaxWidth().padding(horizontal = Spacing.Gutter, vertical = Spacing.Md),
                     )
                 }
             }
@@ -372,25 +370,6 @@ fun LibraryScreen(
                     )
                 }
             }
-            if (hasTracks) {
-                item(key = "section") {
-                    Box {
-                    SectionBar(
-                        count = if (layout.browse == BrowseKind.Tracks) visible.size else collections.size,
-                        browse = layout.browse,
-                        sort = layout.sort,
-                        group = layout.group,
-                        ascending = layout.ascending,
-                        grid = layout.grid,
-                        onSort = { setLayout(layout.copy(sort = it)) },
-                        onGroup = { setLayout(layout.copy(group = it)) },
-                        onToggleOrder = { setLayout(layout.copy(ascending = !layout.ascending)) },
-                        onToggleGrid = { setLayout(layout.copy(grid = !layout.grid)) },
-                    )
-                    }
-                }
-            }
-
             when {
                 !hasFolders -> item(key = "folders") {
                     Box(Modifier.fillParentMaxHeight(0.6f).fillMaxWidth()) { FolderPrompt(onPickFolder) }
@@ -466,31 +445,7 @@ fun LibraryScreen(
                 }
             }
             item(key = "bottom") {
-                Spacer(Modifier.navigationBarsPadding().height(if (dockVisible) 130.dp else 110.dp))
-            }
-        }
-
-        AnimatedVisibility(
-            visible = fabVisible && !dockVisible && !selecting,
-            modifier = Modifier.align(Alignment.BottomEnd),
-            enter = scaleIn(Motion.spatial(), initialScale = 0.6f) + fadeIn(Motion.effects()),
-            exit = scaleOut(Motion.spatial(), targetScale = 0.6f) + fadeOut(Motion.effects()),
-        ) {
-            val haptic = LocalHapticFeedback.current
-            MorphSurface(
-                Modifier.navigationBarsPadding().padding(20.dp),
-                corners = SpectyShapes.Feature,
-                color = MaterialTheme.colorScheme.primaryContainer,
-                onClick = {
-                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                    onPickFile()
-                },
-                role = androidx.compose.ui.semantics.Role.Button,
-            ) {
-                Row(Modifier.padding(horizontal = 24.dp, vertical = 18.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Rounded.FolderOpen, contentDescription = null)
-                    Text(stringResource(R.string.library_analyse), style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(start = 12.dp))
-                }
+                Spacer(Modifier.height((if (dockVisible) 128.dp else 104.dp)))
             }
         }
 
@@ -509,7 +464,7 @@ fun LibraryScreen(
                         pickedRaw = ""
                     }
                 },
-                modifier = Modifier.navigationBarsPadding().padding(bottom = if (dockVisible) 112.dp else 0.dp),
+                modifier = Modifier.padding(bottom = if (dockVisible) 112.dp else 0.dp),
             )
         }
     }
@@ -519,12 +474,14 @@ fun LibraryScreen(
 
 @Composable
 private fun Header(
+    trackCount: Int,
+    filterCount: Int,
+    onFilter: () -> Unit,
     onRescan: () -> Unit,
-    onSettings: () -> Unit,
+    onPickFile: () -> Unit,
+    layoutMenu: @Composable () -> Unit,
     onAbout: () -> Unit,
-    onFolders: () -> Unit,
-    onInsights: () -> Unit,
-    canInsights: Boolean,
+    onSettings: () -> Unit,
     canRescan: Boolean,
     canScan: Boolean,
     unscanned: Int,
@@ -532,67 +489,56 @@ private fun Header(
     brandModifier: Modifier,
 ) {
     var menu by remember { mutableStateOf(false) }
-    val menuTurn by animateFloatAsState(if (menu) 90f else 0f, Motion.spatial(), label = "menuTurn")
-    Row(
-        Modifier.fillMaxWidth().padding(start = 20.dp, end = 12.dp, top = 16.dp, bottom = 8.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Row(Modifier.weight(1f).then(brandModifier), verticalAlignment = Alignment.CenterVertically) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Column {
-                    Text(stringResource(R.string.app_name), style = MaterialTheme.typography.headlineLarge)
-                    Text(stringResource(R.string.about_tagline), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+    // The list already pads for the status bar, so the bar must not add it a second time.
+    ExpressiveTopBar(
+        title = stringResource(R.string.nav_library),
+        modifier = brandModifier.consumeWindowInsets(WindowInsets.statusBars),
+        subtitle = if (trackCount > 0) pluralStringResource(R.plurals.library_tracks, trackCount, trackCount) else null,
+        actions = {
+            if (filterCount >= 0) FilterButton(filterCount, onFilter)
+            layoutMenu()
+            Box {
+                IconButton(onClick = { menu = true }) { Icon(Icons.Rounded.MoreVert, stringResource(R.string.library_more)) }
+                DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
+                    ExpressiveMenuItem(
+                        text = { Text(stringResource(R.string.library_analyse)) },
+                        leadingIcon = { Icon(Icons.Rounded.FolderOpen, contentDescription = null) },
+                        onClick = { menu = false; onPickFile() },
+                    )
+                    if (canRescan) {
+                        ExpressiveMenuItem(
+                            text = { Text(stringResource(R.string.library_menu_rescan)) },
+                            leadingIcon = { Icon(Icons.Rounded.Refresh, contentDescription = null) },
+                            onClick = { menu = false; onRescan() },
+                        )
+                    }
+                    if (canScan) {
+                        ExpressiveMenuItem(
+                            text = {
+                                Text(
+                                    if (unscanned > 0) stringResource(R.string.library_menu_scan_new, unscanned)
+                                    else stringResource(R.string.library_menu_scanned),
+                                )
+                            },
+                            leadingIcon = { Icon(Icons.Rounded.Radar, contentDescription = null) },
+                            enabled = unscanned > 0,
+                            onClick = { menu = false; onScanAll() },
+                        )
+                    }
+                    ExpressiveMenuItem(
+                        text = { Text(stringResource(R.string.settings_title)) },
+                        leadingIcon = { Icon(Icons.Rounded.Settings, contentDescription = null) },
+                        onClick = { menu = false; onSettings() },
+                    )
+                    ExpressiveMenuItem(
+                        text = { Text(stringResource(R.string.about_title)) },
+                        leadingIcon = { Icon(Icons.Rounded.Info, contentDescription = null) },
+                        onClick = { menu = false; onAbout() },
+                    )
                 }
             }
-        }
-        Box {
-            ExpressiveIconButton(Icons.Rounded.MoreVert, stringResource(R.string.library_more), { menu = true }, toggled = menu, iconModifier = Modifier.rotate(menuTurn))
-            DropdownMenu(expanded = menu, onDismissRequest = { menu = false }, shape = RoundedCornerShape(20.dp)) {
-                if (canRescan) {
-                    ExpressiveMenuItem(
-                        text = { Text(stringResource(R.string.library_menu_rescan)) },
-                        leadingIcon = { Icon(Icons.Rounded.Refresh, contentDescription = null) },
-                        onClick = { menu = false; onRescan() },
-                    )
-                }
-                if (canScan) {
-                    ExpressiveMenuItem(
-                        text = {
-                            Text(
-                                if (unscanned > 0) stringResource(R.string.library_menu_scan_new, unscanned)
-                                else stringResource(R.string.library_menu_scanned),
-                            )
-                        },
-                        leadingIcon = { Icon(Icons.Rounded.Radar, contentDescription = null) },
-                        enabled = unscanned > 0,
-                        onClick = { menu = false; onScanAll() },
-                    )
-                }
-                if (canInsights) {
-                    ExpressiveMenuItem(
-                        text = { Text(stringResource(R.string.library_menu_insights)) },
-                        leadingIcon = { Icon(Icons.Rounded.Insights, contentDescription = null) },
-                        onClick = { menu = false; onInsights() },
-                    )
-                }
-                ExpressiveMenuItem(
-                    text = { Text(stringResource(R.string.library_menu_folders)) },
-                    leadingIcon = { Icon(Icons.Rounded.FolderOpen, contentDescription = null) },
-                    onClick = { menu = false; onFolders() },
-                )
-                ExpressiveMenuItem(
-                    text = { Text(stringResource(R.string.settings_title)) },
-                    leadingIcon = { Icon(Icons.Rounded.Settings, contentDescription = null) },
-                    onClick = { menu = false; onSettings() },
-                )
-                ExpressiveMenuItem(
-                    text = { Text(stringResource(R.string.about_title)) },
-                    leadingIcon = { Icon(Icons.Rounded.Info, contentDescription = null) },
-                    onClick = { menu = false; onAbout() },
-                )
-            }
-        }
-    }
+        },
+    )
 }
 
 /** The app mark: four bars that keep dancing out of phase. */
@@ -682,17 +628,9 @@ private fun BatchCard(batch: BatchScanner.State, onCancel: () -> Unit, onDismiss
 
 // ---- search, filters, section bar ---------------------------------------------------------------
 
+/** Sort, group, order and list or grid, in one menu next to the filter button. */
 @Composable
-private fun SearchPill(query: String, onChange: (String) -> Unit, trailing: @Composable () -> Unit = {}) {
-    Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), verticalAlignment = Alignment.CenterVertically) {
-        SearchField(query, onChange, Modifier.weight(1f), placeholder = stringResource(R.string.library_search))
-        trailing()
-    }
-}
-
-@Composable
-private fun SectionBar(
-    count: Int,
+private fun LayoutMenu(
     browse: BrowseKind,
     sort: SortField,
     group: GroupField,
@@ -704,43 +642,11 @@ private fun SectionBar(
     onToggleGrid: () -> Unit,
 ) {
     var menu by remember { mutableStateOf(false) }
-    val haptic = LocalHapticFeedback.current
     val rotation by animateFloatAsState(if (ascending) 0f else 180f, Motion.spatial(), label = "sortArrow")
-    Row(
-        Modifier.fillMaxWidth().padding(start = 24.dp, end = 12.dp, top = 12.dp, bottom = 8.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        AnimatedContent(
-            targetState = count,
-            transitionSpec = { (slideInVertically(Motion.spatial()) { it / 2 } + fadeIn()) togetherWith fadeOut() },
-            modifier = Modifier.weight(1f),
-            label = "songCount",
-        ) { n ->
-            Text(
-                pluralStringResource(
-                    when (browse) {
-                        BrowseKind.Tracks -> R.plurals.library_tracks
-                        BrowseKind.Albums -> R.plurals.library_albums
-                        BrowseKind.Artists -> R.plurals.library_artists
-                    },
-                    n, n,
-                ),
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
-        if (browse == BrowseKind.Tracks) Box {
-            MorphSurface(
-                Modifier.height(40.dp),
-                corners = SpectyShapes.Pill,
-                color = MaterialTheme.colorScheme.secondaryContainer,
-                onClick = { menu = true },
-            ) {
-                Box(Modifier.height(40.dp).padding(horizontal = 18.dp), contentAlignment = Alignment.Center) {
-                    Text(stringResource(sort.labelRes()), style = MaterialTheme.typography.labelLarge)
-                }
-            }
-            DropdownMenu(expanded = menu, onDismissRequest = { menu = false }, shape = RoundedCornerShape(20.dp)) {
+    Box {
+        ExpressiveIconButton(Icons.AutoMirrored.Rounded.Sort, stringResource(R.string.library_sort_by), { menu = true }, tonal = false)
+        DropdownMenu(expanded = menu, onDismissRequest = { menu = false }, shape = RoundedCornerShape(20.dp)) {
+            if (browse == BrowseKind.Tracks) {
                 MenuLabel(stringResource(R.string.library_sort_by))
                 SortField.entries.forEach { key ->
                     ExpressiveMenuItem(
@@ -758,22 +664,19 @@ private fun SectionBar(
                         onClick = { menu = false; onGroup(key) },
                     )
                 }
+                HorizontalDivider(Modifier.padding(vertical = 4.dp))
             }
+            ExpressiveMenuItem(
+                text = { Text(stringResource(if (ascending) R.string.library_ascending else R.string.library_descending)) },
+                leadingIcon = { Icon(Icons.Rounded.KeyboardArrowUp, contentDescription = null, modifier = Modifier.rotate(rotation)) },
+                onClick = { onToggleOrder() },
+            )
+            ExpressiveMenuItem(
+                text = { Text(stringResource(if (grid) R.string.library_show_list else R.string.library_show_grid)) },
+                leadingIcon = { Icon(if (grid) Icons.Rounded.ViewAgenda else Icons.Rounded.GridView, contentDescription = null) },
+                onClick = { menu = false; onToggleGrid() },
+            )
         }
-        Spacer(Modifier.width(6.dp))
-        ExpressiveIconButton(
-            Icons.Rounded.KeyboardArrowUp,
-            stringResource(if (ascending) R.string.library_ascending else R.string.library_descending),
-            { haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove); onToggleOrder() },
-            iconModifier = Modifier.rotate(rotation),
-        )
-        Spacer(Modifier.width(6.dp))
-        ExpressiveIconButton(
-            if (grid) Icons.Rounded.ViewAgenda else Icons.Rounded.GridView,
-            stringResource(if (grid) R.string.library_show_list else R.string.library_show_grid),
-            { haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove); onToggleGrid() },
-            toggled = grid,
-        )
     }
 }
 
@@ -805,59 +708,39 @@ internal fun TrackRow(
     selecting: Boolean = false,
     onToggle: () -> Unit = {},
 ) {
-    val appear = rememberAppear(index)
     var bounds by remember { mutableStateOf<Rect?>(null) }
     var coverBounds by remember { mutableStateOf<Rect?>(null) }
     MorphSurface(
-        modifier = modifier
-            .fillMaxWidth()
-            .onGloballyPositioned { bounds = it.boundsInRoot() }
-            .graphicsLayer {
-                alpha = appear.value.coerceIn(0f, 1f)
-                translationY = (1f - appear.value) * 48f
-                val pop = 0.88f + 0.12f * appear.value
-                scaleX = pop
-                scaleY = pop
-            },
+        modifier = modifier.fillMaxWidth().onGloballyPositioned { bounds = it.boundsInRoot() },
         corners = SpectyShapes.Row,
         color = if (selected) MaterialTheme.colorScheme.secondaryContainer else Color.Transparent,
         animateColor = selecting,
         onClick = { if (selecting) onToggle() else onOpen(bounds, CoverSource(coverBounds, SpectyShapes.Cover, 180)) },
         onLongClick = onToggle,
     ) {
-        Row(Modifier.padding(horizontal = 10.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-            Box {
-                CoverImage(
-                    uri = track.uri,
-                    shape = SpectyShapes.Cover.toShape(),
-                    modifier = Modifier
-                        .size(60.dp)
-                        .onGloballyPositioned { coverBounds = it.boundsInRoot() }
-                        .graphicsLayer { alpha = if (flight?.hides(track.uri) == true) 0f else 1f },
-                    sizePx = 180,
-                ) { CoverFallback(track) }
-                if (selected) SelectMark(Modifier.align(Alignment.BottomEnd))
-            }
-            Spacer(Modifier.width(16.dp))
-            Column(Modifier.weight(1f)) {
-                Text(track.title.withoutExplicitMark(), style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                val parts = listOfNotNull(track.artist, Fmt.duration(track.durationMs / 1000.0))
-                Text(
-                    parts.joinToString("  ·  "),
-                    style = MaterialTheme.typography.bodyMedium,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-            Spacer(Modifier.width(8.dp))
-            Column(horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                if (track.extension.isNotEmpty()) {
-                    Text(track.extension, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
+        androidx.compose.material3.ListItem(
+            headlineContent = { Text(track.title.withoutExplicitMark(), maxLines = 1, overflow = TextOverflow.Ellipsis) },
+            supportingContent = {
+                val parts = listOfNotNull(track.artist, Fmt.duration(track.durationMs / 1000.0), track.extension.takeIf { it.isNotEmpty() })
+                Text(parts.joinToString("  ·  "), maxLines = 1, overflow = TextOverflow.Ellipsis)
+            },
+            leadingContent = {
+                Box {
+                    CoverImage(
+                        uri = track.uri,
+                        shape = SpectyShapes.Cover.toShape(),
+                        modifier = Modifier
+                            .size(56.dp)
+                            .onGloballyPositioned { coverBounds = it.boundsInRoot() }
+                            .graphicsLayer { alpha = if (flight?.hides(track.uri) == true) 0f else 1f },
+                        sizePx = 180,
+                    ) { CoverFallback(track) }
+                    if (selected) SelectMark(Modifier.align(Alignment.BottomEnd))
                 }
-                if (verdict != null) VerdictBadge(verdict)
-            }
-        }
+            },
+            trailingContent = verdict?.let { v -> { VerdictBadge(v) } },
+            colors = androidx.compose.material3.ListItemDefaults.colors(containerColor = Color.Transparent),
+        )
     }
 }
 
@@ -874,19 +757,11 @@ private fun TrackTile(
     selecting: Boolean = false,
     onToggle: () -> Unit = {},
 ) {
-    val appear = rememberAppear(index / 2)
     var bounds by remember { mutableStateOf<Rect?>(null) }
     var coverBounds by remember { mutableStateOf<Rect?>(null) }
     MorphSurface(
         modifier = modifier
-            .onGloballyPositioned { bounds = it.boundsInRoot() }
-            .graphicsLayer {
-                alpha = appear.value.coerceIn(0f, 1f)
-                translationY = (1f - appear.value) * 64f
-                val pop = 0.86f + 0.14f * appear.value
-                scaleX = pop
-                scaleY = pop
-            },
+            .onGloballyPositioned { bounds = it.boundsInRoot() },
         corners = SpectyShapes.Tile,
         color = if (selected) MaterialTheme.colorScheme.secondaryContainer else Color.Transparent,
         animateColor = selecting,
@@ -1001,17 +876,6 @@ private fun PickBar(count: Int, onClear: () -> Unit, onCompare: () -> Unit, modi
     }
 }
 
-/** Staggered entrance progress (0..1) for the first screenful of items. */
-@Composable
-private fun rememberAppear(index: Int): androidx.compose.runtime.State<Float> {
-    var shown by remember { mutableStateOf(false) }
-    LaunchedEffect(Unit) {
-        if (index < 12) delay(index * 35L)
-        shown = true
-    }
-    return animateFloatAsState(if (shown) 1f else 0f, Motion.spatial(), label = "appear")
-}
-
 @Composable
 private fun VerdictBadge(verdict: Verdict) = VerdictPill(verdict)
 
@@ -1022,7 +886,7 @@ private fun FolderPrompt(onPick: () -> Unit) {
         title = stringResource(R.string.library_prompt_title),
         message = stringResource(R.string.library_prompt_message),
         modifier = Modifier.fillMaxSize(),
-        action = { ExpressiveButton(stringResource(R.string.onboarding_choose_folder), onPick) },
+        action = { ExpressiveButton(stringResource(R.string.library_choose_folder), onPick) },
     )
 }
 

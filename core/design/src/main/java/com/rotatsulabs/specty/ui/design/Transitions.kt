@@ -42,7 +42,7 @@ import kotlinx.coroutines.launch
 /** Material "fade through": the old content fades out, then the new content fades in while scaling up slightly. */
 object FadeThrough {
     fun enter(): EnterTransition = fadeIn(tween(MotionTokens.FadeIn, MotionTokens.FadeOut, MotionTokens.EmphasizedDecelerate)) +
-        scaleIn(tween(MotionTokens.FadeIn + MotionTokens.FadeOut, 0, MotionTokens.EmphasizedDecelerate), initialScale = 0.92f)
+        scaleIn(androidx.compose.animation.core.spring(dampingRatio = 0.72f, stiffness = 380f), initialScale = 0.88f)
 
     fun exit(): ExitTransition = fadeOut(tween(MotionTokens.FadeOut, 0, MotionTokens.EmphasizedAccelerate))
 
