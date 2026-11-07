@@ -19,6 +19,9 @@ import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.toggleableState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -129,7 +132,10 @@ fun SettingToggleRow(
         supporting = supporting,
         icon = icon,
         corners = corners,
-        modifier = modifier,
+        modifier = modifier.semantics(mergeDescendants = true) {
+            role = androidx.compose.ui.semantics.Role.Switch
+            toggleableState = androidx.compose.ui.state.ToggleableState(checked)
+        },
         onClick = if (enabled) ({ onChecked(!checked) }) else null,
         trailing = { Switch(checked = checked, onCheckedChange = null, enabled = enabled) },
     )
