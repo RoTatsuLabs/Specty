@@ -1,10 +1,19 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 108 108" width="512" height="512" role="img" aria-label="Specty app icon">
-  <rect width="108" height="108" rx="26" fill="#1B1226"/>
-  <g fill="#FFFFFF">
-    <rect x="26" y="44" width="8" height="20"/>
-    <rect x="38" y="36" width="8" height="36"/>
-    <rect x="50" y="30" width="8" height="48"/>
-    <rect x="62" y="39" width="8" height="30"/>
-    <rect x="74" y="46" width="8" height="16"/>
-  </g>
+  <style>
+    .bg { fill: #F6F7FB; }
+    .bar { stroke: #F6F7FB; stroke-width: 3.4; }
+    @media (prefers-color-scheme: dark) {
+      .bg { fill: #15151D; }
+      .bar { stroke: #15151D; }
+    }
+  </style>
+  <defs>
+    <linearGradient id="a" x1="0" y1="26" x2="0" y2="80" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#7FA8FF"/><stop offset="1" stop-color="#3D6BFF"/></linearGradient>
+    <linearGradient id="b" x1="0" y1="22" x2="0" y2="88" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#FFC24D"/><stop offset="1" stop-color="#FF4F87"/></linearGradient>
+    <linearGradient id="c" x1="0" y1="44" x2="0" y2="82" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#5CE0C0"/><stop offset="1" stop-color="#2F9BFF"/></linearGradient>
+  </defs>
+  <rect class="bg" width="108" height="108" rx="26"/>
+  <rect class="bar" x="21" y="36" width="25" height="38" rx="12.5" fill="url(#a)"/>
+  <rect class="bar" x="61" y="40" width="25" height="44" rx="12.5" fill="url(#c)"/>
+  <rect class="bar" x="41" y="21" width="25" height="66" rx="12.5" fill="url(#b)"/>
 </svg>
