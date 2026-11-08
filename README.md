@@ -26,8 +26,6 @@ An open-source audio analyzer for Android. It draws the spectrogram, measures lo
 - Measurements cover peak, true peak, loudness (LUFS), dynamic range, clipping and effective bit depth, per channel.
 - The library scans your music folders in the background. Filter by verdict, compare two tracks or look for duplicates.
 
-Analysis happens on your device and no file leaves it. The app is in English, Indonesian and Simplified Chinese.
-
 ## Install
 
 Download an APK from the [latest release](https://github.com/RoTatsuLabs/Specty/releases/latest) and open it on a device running Android 8.0 or newer.
@@ -38,8 +36,6 @@ Download an APK from the [latest release](https://github.com/RoTatsuLabs/Specty/
 | `armeabi-v7a` | Older 32-bit phones |
 | `x86_64` | Emulators and x86 devices |
 | `universal` | Any device, larger download |
-
-Install a newer APK over the old one to update.
 
 ## Build
 
@@ -56,8 +52,7 @@ The analysis code lives in `:core:audio`, plain Kotlin with no Android dependenc
 
 Specty is released under the [GNU General Public License v3.0](LICENSE). The About page lists every bundled library with its licence.
 
-Audio is decoded with FFmpeg through [FFmpegKitNext](https://github.com/arthenica/ffmpeg-kit-next) (LGPL v3.0). Some of the Hi-Res evidence checks are Kotlin ports of code from [Mornye](https://github.com/mornyeapp/Mornye) (LGPL v3.0), used with credit.
+## Acknowledgements
 
-<div align="center">
-<sub>Made by RoTatsuLabs</sub>
-</div>
+- [FFmpegKitNext](https://github.com/arthenica/ffmpeg-kit-next) (LGPL v3.0) decodes audio through FFmpeg.
+- [Mornye](https://github.com/mornyeapp/Mornye) (LGPL v3.0) is the source of the Hi-Res evidence checks that Specty ports to Kotlin.
