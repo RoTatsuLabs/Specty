@@ -4,7 +4,7 @@
 
 # Specty
 
-**See what is really inside your audio files.**
+**See what is actually inside your audio files.**
 
 An open-source audio analyzer for Android. It draws the spectrogram, measures loudness and dynamics, and tells you whether a "lossless" file was ever lossless.
 
@@ -21,12 +21,12 @@ An open-source audio analyzer for Android. It draws the spectrogram, measures lo
 
 ## What it does
 
-- **Verdict first.** Open a file and get a plain answer: genuine, lossy source, upsampled or band limited, with the cutoff frequency and how sure Specty is.
-- **Spectrogram.** Full-screen viewer with zoom, pan and a readout of frequency, time and level. Export it as a PNG.
-- **Measurements.** Peak, true peak, loudness (LUFS), dynamic range, clipping and effective bit depth, per channel.
-- **Library.** Scan your music folders in the background, filter by verdict, compare two tracks and find duplicates.
+- Open a file and the verdict comes first: genuine, lossy source, upsampled or band limited, along with the cutoff frequency and how confident Specty is.
+- The spectrogram opens full screen with zoom, pan and a readout of frequency, time and level. You can export it as a PNG.
+- Measurements cover peak, true peak, loudness (LUFS), dynamic range, clipping and effective bit depth, per channel.
+- The library scans your music folders in the background. Filter by verdict, compare two tracks or look for duplicates.
 
-Everything runs on your device. Specty reads your files and nothing leaves your phone. Available in English, Indonesian and Simplified Chinese.
+Analysis happens on your device and no file leaves it. The app is in English, Indonesian and Simplified Chinese.
 
 ## Install
 
