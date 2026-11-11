@@ -169,11 +169,6 @@ internal fun SortField.labelRes(): Int = when (this) {
 }
 
 @StringRes
-private fun BrowseKind.labelRes(): Int = when (this) {
-    BrowseKind.Tracks -> R.string.browse_tracks
-    BrowseKind.Albums -> R.string.browse_albums
-    BrowseKind.Artists -> R.string.browse_artists
-}
 
 /** Results from the ones worth a look down to tracks not checked yet; this is the order of the Result sort. */
 private val RESULT_ORDER = ResultFilter.ORDER
@@ -191,6 +186,10 @@ fun LibraryScreen(
     onPickFolder: () -> Unit,
     onOpenSettings: () -> Unit,
     onOpenCollection: (String, Rect?, CoverSource?) -> Unit = { _, _, _ -> },
+    /** Carries a tapped album or artist cover into its page; the tapped cover hides while it flies. */
+    pageFlight: CoverFlight? = null,
+    /** Which list this tab shows: tracks, albums or artists. */
+    browse: BrowseKind = BrowseKind.Tracks,
     verdicts: Map<String, Verdict>,
     keyFor: (Track) -> String,
     batch: BatchScanner.State = BatchScanner.State(),
@@ -219,8 +218,9 @@ fun LibraryScreen(
 
     // The layout is remembered between launches; the filter and the picks only for this visit.
     val prefs = remember { context.getSharedPreferences("specty", Context.MODE_PRIVATE) }
-    var layout by remember { mutableStateOf(LibraryView.load(prefs)) }
-    val setLayout = { next: LibraryView -> layout = next; next.save(prefs) }
+    var stored by remember { mutableStateOf(LibraryView.load(prefs)) }
+    val layout = stored.copy(browse = browse)
+    val setLayout = { next: LibraryView -> stored = next; next.save(prefs) }
     var filterMask by rememberSaveable { mutableStateOf(0) }
     var showFilter by rememberSaveable { mutableStateOf(false) }
     var pickedRaw by rememberSaveable { mutableStateOf("") }
@@ -337,15 +337,6 @@ fun LibraryScreen(
                 }
             }
             if (hasTracks) {
-                item(key = "browse") {
-                    OptionSegmentedControl(
-                        BrowseKind.entries, layout.browse, { setLayout(layout.copy(browse = it)) },
-                        { stringResource(it.labelRes()) },
-                        Modifier.fillMaxWidth().padding(horizontal = Spacing.Gutter, vertical = Spacing.Md),
-                    )
-                }
-            }
-            if (hasTracks) {
                 item(key = "activeFilters") {
                     ActiveFilters(
                         selected = filters,
@@ -384,13 +375,13 @@ fun LibraryScreen(
                                 Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp).animateItem(fadeInSpec = null, fadeOutSpec = null, placementSpec = Motion.spatial()),
                                 horizontalArrangement = Arrangement.spacedBy(14.dp),
                             ) {
-                                row.forEach { c -> CollectionTile(c, { b, cover -> onOpenCollection(c.id, b, cover) }, Modifier.weight(1f)) }
+                                row.forEach { c -> CollectionTile(c, { b, cover -> onOpenCollection(c.id, b, cover) }, Modifier.weight(1f), flight = pageFlight) }
                                 repeat(columns - row.size) { Spacer(Modifier.weight(1f)) }
                             }
                         }
                     } else {
                         itemsIndexed(collections, key = { _, c -> "c" + c.id }) { _, c ->
-                            CollectionRow(c, { b, cover -> onOpenCollection(c.id, b, cover) }, Modifier.animateItem(fadeInSpec = null, fadeOutSpec = null, placementSpec = Motion.spatial()), flight = pageFlight)
+                            CollectionRow(c, { b, cover -> onOpenCollection(c.id, b, cover) }, Modifier.animateItem(placementSpec = Motion.spatial()), flight = pageFlight)
                         }
                     }
                 }

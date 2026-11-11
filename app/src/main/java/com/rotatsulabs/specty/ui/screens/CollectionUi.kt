@@ -112,13 +112,19 @@ private fun LibraryCollection<Track>.subtitle(): String {
 }
 
 @Composable
-private fun CollectionCover(c: LibraryCollection<Track>, size: Modifier, sizePx: Int, feature: Boolean = false) {
-    val shape = when {
-        c.kind == BrowseKind.Artists -> CircleShape
-        feature -> SpectyShapes.Feature.toShape()
-        else -> SpectyShapes.Cover.toShape()
-    }
-    CoverImage(uri = c.items.first().uri, shape = shape, modifier = size, sizePx = sizePx) {
+private fun CollectionCover(
+    c: LibraryCollection<Track>, size: Modifier, sizePx: Int, tile: Boolean = false,
+    flight: CoverFlight? = null, onBounds: (androidx.compose.ui.geometry.Rect) -> Unit = {},
+) {
+    val style = com.rotatsulabs.specty.ui.LocalRowStyle.current
+    // The same shape as a track's cover, chosen once in Settings, so a track, an album and an artist always match.
+    val shape = if (tile && style.coverShape == com.rotatsulabs.specty.ui.CoverShape.Rounded) SpectyShapes.Tile.toShape() else style.coverShape.toShape()
+    val uri = c.items.first().uri
+    CoverImage(
+        uri = uri, shape = shape,
+        modifier = size.reportBounds(onBounds).graphicsLayer { alpha = if (flight?.hides(uri) == true) 0f else 1f },
+        sizePx = sizePx,
+    ) {
         Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.tertiaryContainer, contentColor = MaterialTheme.colorScheme.onTertiaryContainer) {
             Box(contentAlignment = Alignment.Center) {
                 Icon(if (c.kind == BrowseKind.Artists) Icons.Rounded.Person else Icons.Rounded.Album, contentDescription = null, modifier = Modifier.size(28.dp))
@@ -127,25 +133,26 @@ private fun CollectionCover(c: LibraryCollection<Track>, size: Modifier, sizePx:
     }
 }
 
-/** The outline of a collection's cover: round for an artist, softly rounded for an album. */
-private fun coverSpec(c: LibraryCollection<Track>): com.rotatsulabs.specty.ui.design.CoverSpec =
-    if (c.kind == BrowseKind.Artists) com.rotatsulabs.specty.ui.design.CoverSpec.Circle else com.rotatsulabs.specty.ui.design.CoverSpec.rounded(14f)
+/** The outline a tile's cover has: the list shape, with the rounded one a little larger at tile size. */
+private fun tileSpec(style: com.rotatsulabs.specty.ui.RowStyle): com.rotatsulabs.specty.ui.design.CoverSpec =
+    if (style.coverShape == com.rotatsulabs.specty.ui.CoverShape.Rounded) com.rotatsulabs.specty.ui.design.CoverSpec.rounded(20f) else com.rotatsulabs.specty.ui.rowCoverSpec(style)
 
 /** Reports where the element sits in the window, which is what a page grows out of. */
 private fun Modifier.reportBounds(onBounds: (androidx.compose.ui.geometry.Rect) -> Unit): Modifier =
     this.then(Modifier.onGloballyPositioned { onBounds(it.boundsInRoot()) })
 
 @Composable
-internal fun CollectionRow(c: LibraryCollection<Track>, onClick: (androidx.compose.ui.geometry.Rect?, CoverSource?) -> Unit, modifier: Modifier = Modifier) {
+internal fun CollectionRow(c: LibraryCollection<Track>, onClick: (androidx.compose.ui.geometry.Rect?, CoverSource?) -> Unit, modifier: Modifier = Modifier, flight: CoverFlight? = null) {
+    val style = com.rotatsulabs.specty.ui.LocalRowStyle.current
     var coverBounds by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf<androidx.compose.ui.geometry.Rect?>(null) }
     var bounds by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf<androidx.compose.ui.geometry.Rect?>(null) }
     MorphSurface(
         modifier.fillMaxWidth().reportBounds { bounds = it }, corners = SpectyShapes.Row,
         color = androidx.compose.ui.graphics.Color.Transparent,
-        onClick = { onClick(bounds, CoverSource(coverBounds, coverSpec(c), 180)) },
+        onClick = { onClick(bounds, CoverSource(coverBounds, com.rotatsulabs.specty.ui.rowCoverSpec(style), 180)) },
     ) {
         Row(Modifier.padding(horizontal = 10.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-            CollectionCover(c, Modifier.size(60.dp).reportBounds { coverBounds = it }, 180)
+            CollectionCover(c, Modifier.size(if (style.compact) 52.dp else 60.dp), 180, flight = flight, onBounds = { coverBounds = it })
             Spacer(Modifier.width(16.dp))
             Column(Modifier.weight(1f)) {
                 Text(c.title(), style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
@@ -159,16 +166,17 @@ internal fun CollectionRow(c: LibraryCollection<Track>, onClick: (androidx.compo
 }
 
 @Composable
-internal fun CollectionTile(c: LibraryCollection<Track>, onClick: (androidx.compose.ui.geometry.Rect?, CoverSource?) -> Unit, modifier: Modifier = Modifier) {
+internal fun CollectionTile(c: LibraryCollection<Track>, onClick: (androidx.compose.ui.geometry.Rect?, CoverSource?) -> Unit, modifier: Modifier = Modifier, flight: CoverFlight? = null) {
+    val style = com.rotatsulabs.specty.ui.LocalRowStyle.current
     var coverBounds by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf<androidx.compose.ui.geometry.Rect?>(null) }
     var bounds by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf<androidx.compose.ui.geometry.Rect?>(null) }
     MorphSurface(
         modifier.reportBounds { bounds = it }, corners = SpectyShapes.Row,
         color = androidx.compose.ui.graphics.Color.Transparent,
-        onClick = { onClick(bounds, CoverSource(coverBounds, coverSpec(c), 360)) },
+        onClick = { onClick(bounds, CoverSource(coverBounds, tileSpec(style), 360)) },
     ) {
         Column(Modifier.padding(6.dp)) {
-            CollectionCover(c, Modifier.fillMaxWidth().aspectRatio(1f).reportBounds { coverBounds = it }, 360)
+            CollectionCover(c, Modifier.fillMaxWidth().aspectRatio(1f), 360, tile = true, flight = flight, onBounds = { coverBounds = it })
             Spacer(Modifier.height(8.dp))
             Text(c.title(), style = MaterialTheme.typography.titleSmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
             Text(
@@ -284,7 +292,7 @@ private fun CollectionHero(collection: LibraryCollection<Track>, onOpenCollectio
     val lead = collection.items.first().uri
     // The text waits for the cover to land, then fades in beside it.
     val settled by androidx.compose.animation.core.animateFloatAsState(
-        if (heroFlight?.hides(lead) == true) 0f else 1f,
+        if (heroFlight?.pending(lead) == true) 0f else 1f,
         androidx.compose.animation.core.tween(260), label = "heroText",
     )
     Column(Modifier.fillMaxWidth().statusBarsPadding().padding(top = 64.dp, start = 20.dp, end = 20.dp)) {

@@ -567,11 +567,7 @@ private fun AppearancePreview(style: RowStyle, tracks: List<Track>, navLabels: c
 @Composable
 private fun PreviewNavBar(labels: com.rotatsulabs.specty.ui.design.components.NavLabels) {
     var selected by androidx.compose.runtime.remember { androidx.compose.runtime.mutableIntStateOf(0) }
-    val items = listOf(
-        com.rotatsulabs.specty.ui.design.components.NavItem(stringResource(R.string.nav_library), Icons.Outlined.LibraryMusic, Icons.Rounded.LibraryMusic),
-        com.rotatsulabs.specty.ui.design.components.NavItem(stringResource(R.string.nav_lab), Icons.Outlined.Science, Icons.Rounded.Science),
-        com.rotatsulabs.specty.ui.design.components.NavItem(stringResource(R.string.nav_search), Icons.Outlined.Search, Icons.Rounded.Search),
-    )
+    val items = com.rotatsulabs.specty.ui.spectyNavItems()
     com.rotatsulabs.specty.ui.design.components.SpectyNavigationBar(
         items, selected, { selected = it }, Modifier.fillMaxWidth(),
         separated = 1, labels = labels, embedded = true,

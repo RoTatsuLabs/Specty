@@ -101,15 +101,17 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit, onPickFolder: ()
     val pageFlight = remember { CoverFlight() }
     val flight = remember { CoverFlight() }
     var dockBounds by remember { mutableStateOf<Rect?>(null) }
-    // 0 library, 1 insights, 2 settings: the destinations of the bottom bar.
+    // The destinations of the bottom bar: see [Tabs].
     var tab by rememberSaveable { mutableIntStateOf(0) }
     var lastTab by rememberSaveable { mutableIntStateOf(0) }
+    // The list the library shows: tracks, albums or artists, kept while the lab or search is open.
+    var listTab by rememberSaveable { mutableIntStateOf(0) }
     var query by rememberSaveable { mutableStateOf("") }
     val searchFocus = remember { androidx.compose.ui.focus.FocusRequester() }
     val focusManager = androidx.compose.ui.platform.LocalFocusManager.current
     // Search is its own tab: the field opens focused, and leaving the tab clears it so the library shows in full again.
-    LaunchedEffect(tab) { if (tab != 2) lastTab = tab }
-    LaunchedEffect(tab) { if (tab == 2) searchFocus.requestFocus() else { focusManager.clearFocus(); query = "" } }
+    LaunchedEffect(tab) { if (tab != Tabs.SEARCH) lastTab = tab; if (tab <= Tabs.ARTISTS) listTab = tab }
+    LaunchedEffect(tab) { if (tab == Tabs.SEARCH) searchFocus.requestFocus() else { focusManager.clearFocus(); query = "" } }
     var barHeightPx by remember { mutableIntStateOf(0) }
     var showAbout by rememberSaveable { mutableStateOf(false) }
     var showSettings by rememberSaveable { mutableStateOf(false) }
@@ -214,33 +216,12 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit, onPickFolder: ()
                     // Switching between Tracks, Albums and Artists: the old list clears in 80 ms, then the new one slides in
                     // from the side the tab sits on. Below zero the list is arriving, above zero it is leaving.
                     val reduced = com.rotatsulabs.specty.ui.theme.LocalReducedMotion.current
-                    var shownTab by remember { mutableIntStateOf(listTab) }
-                    var swapDir by remember { mutableFloatStateOf(1f) }
-                    val swap = remember { androidx.compose.animation.core.Animatable(0f) }
-                    LaunchedEffect(listTab) {
-                        if (listTab == shownTab) return@LaunchedEffect
-                        if (reduced) { shownTab = listTab; return@LaunchedEffect }
-                        swapDir = if (listTab > shownTab) 1f else -1f
-                        swap.animateTo(1f, androidx.compose.animation.core.tween(80, easing = androidx.compose.animation.core.FastOutLinearInEasing))
-                        shownTab = listTab
-                        swap.snapTo(-1f)
-                        swap.animateTo(0f, androidx.compose.animation.core.tween(185, easing = androidx.compose.animation.core.CubicBezierEasing(0.05f, 0.7f, 0.1f, 1f)))
-                    }
-                    Box(
-                        Modifier.fillMaxSize().graphicsLayer {
-                            val v = swap.value
-                            if (v >= 0f) {
-                                alpha = 1f - v
-                                translationX = -swapDir * 18.dp.toPx() * v
-                                scaleX = 1f - 0.015f * v; scaleY = scaleX
-                            } else {
-                                val q = -v
-                                alpha = 1f - q
-                                translationX = swapDir * 24.dp.toPx() * q
-                                scaleX = 1f - 0.03f * q; scaleY = scaleX
-                            }
-                        },
-                    ) {
+                    val lab by androidx.compose.animation.core.animateFloatAsState(
+                        if (tab == Tabs.LAB) 1f else 0f,
+                        if (reduced) androidx.compose.animation.core.snap() else androidx.compose.animation.core.spring(dampingRatio = 0.9f, stiffness = 380f),
+                        label = "labShift",
+                    )
+                    Box(Modifier.fillMaxSize().graphicsLayer { translationX = -lab * size.width * 0.18f; alpha = 1f - 0.6f * lab }) {
                         LibraryScreen(
                             state = library,
                             onLoad = viewModel::loadLibrary,
@@ -257,7 +238,7 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit, onPickFolder: ()
                             onOpenSettings = { settingsSection = null; showSettings = true },
                             dockVisible = dockVisible,
                             searching = tab == Tabs.SEARCH,
-                            browse = when (shownTab) { Tabs.ALBUMS -> com.rotatsulabs.specty.ui.screens.BrowseKind.Albums; Tabs.ARTISTS -> com.rotatsulabs.specty.ui.screens.BrowseKind.Artists; else -> com.rotatsulabs.specty.ui.screens.BrowseKind.Tracks },
+                            browse = when (listTab) { Tabs.ALBUMS -> com.rotatsulabs.specty.ui.screens.BrowseKind.Albums; Tabs.ARTISTS -> com.rotatsulabs.specty.ui.screens.BrowseKind.Artists; else -> com.rotatsulabs.specty.ui.screens.BrowseKind.Tracks },
                             pageFlight = pageFlight,
                             query = query,
                             verdicts = verdicts,
@@ -269,17 +250,36 @@ fun SpectyApp(viewModel: MainViewModel, onPickFile: () -> Unit, onPickFolder: ()
                             onDismissScan = viewModel::dismissScanSummary,
                         )
                     }
+                    AnimatedVisibility(
+                        visible = tab == Tabs.LAB,
+                        enter = if (reduced) androidx.compose.animation.fadeIn() else androidx.compose.animation.slideInHorizontally(androidx.compose.animation.core.spring(dampingRatio = 0.9f, stiffness = 380f)) { it / 3 } + androidx.compose.animation.fadeIn(),
+                        exit = if (reduced) androidx.compose.animation.fadeOut() else androidx.compose.animation.slideOutHorizontally(androidx.compose.animation.core.spring(dampingRatio = 0.9f, stiffness = 380f)) { it / 3 } + androidx.compose.animation.fadeOut(),
+                    ) {
+                        Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.surface) {
+                            PaneSurface {
+                                com.rotatsulabs.specty.ui.screens.LabScreen(
+                                    tracks = library.tracks,
+                                    verdicts = verdicts,
+                                    keyFor = keyFor,
+                                    onBack = null,
+                                    onOpenTrack = openTrack,
+                                    onCompare = { a, b -> viewModel.compareTracks(a.uri, b.uri) },
+                                    onPickPair = onPickPair,
+                                    onScanNew = viewModel::scanLibrary,
+                                    unscanned = library.tracks.count { verdicts[keyFor(it)] == null },
+                                    dockVisible = dockVisible,
+                                    flight = flight,
+                                )
+                            }
+                        }
+                    }
                 }
                 }
-                val navItems = listOf(
-                    NavItem(stringResource(R.string.nav_library), Icons.Outlined.LibraryMusic, Icons.Rounded.LibraryMusic),
-                    NavItem(stringResource(R.string.nav_lab), Icons.Outlined.Science, Icons.Rounded.Science),
-                    NavItem(stringResource(R.string.nav_search), Icons.Outlined.Search, Icons.Rounded.Search),
-                )
+                val navItems = com.rotatsulabs.specty.ui.spectyNavItems()
                 SpectyNavigationBar(
                     navItems, tab, { tab = it }, Modifier.align(Alignment.BottomCenter).onSizeChanged { barHeightPx = it.height },
                     separated = 1,
-                    searching = tab == 2,
+                    searching = tab == Tabs.SEARCH,
                     query = query,
                     onQuery = { query = it },
                     placeholder = stringResource(R.string.library_search),

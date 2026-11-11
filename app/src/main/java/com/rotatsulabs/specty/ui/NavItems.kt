@@ -4,10 +4,12 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Album
 import androidx.compose.material.icons.outlined.LibraryMusic
 import androidx.compose.material.icons.outlined.Person
+import androidx.compose.material.icons.outlined.Science
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.rounded.Album
 import androidx.compose.material.icons.rounded.LibraryMusic
 import androidx.compose.material.icons.rounded.Person
+import androidx.compose.material.icons.rounded.Science
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
@@ -19,14 +21,16 @@ object Tabs {
     const val TRACKS = 0
     const val ALBUMS = 1
     const val ARTISTS = 2
-    const val SEARCH = 3
+    const val LAB = 3
+    const val SEARCH = 4
 }
 
-/** The destinations of the bottom bar: the three library lists and search set apart. */
+/** The destinations of the bottom bar: the three library lists, the lab, and search set apart. */
 @Composable
 fun spectyNavItems(): List<NavItem> = listOf(
     NavItem(stringResource(R.string.browse_tracks), Icons.Outlined.LibraryMusic, Icons.Rounded.LibraryMusic),
     NavItem(stringResource(R.string.browse_albums), Icons.Outlined.Album, Icons.Rounded.Album),
     NavItem(stringResource(R.string.browse_artists), Icons.Outlined.Person, Icons.Rounded.Person),
+    NavItem(stringResource(R.string.nav_lab), Icons.Outlined.Science, Icons.Rounded.Science),
     NavItem(stringResource(R.string.nav_search), Icons.Outlined.Search, Icons.Rounded.Search),
 )

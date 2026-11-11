@@ -109,6 +109,9 @@ class CoverFlight {
 
     /** True while [candidate]'s real cover is invisible because the travelling copy stands in for it. */
     fun hides(candidate: Uri) = flying && uri == candidate
+
+    /** True from the tap until the flight has landed: whatever should appear after the cover (a title) waits for this to end. */
+    fun pending(candidate: Uri) = (flying || waiting) && uri == candidate
 }
 
 /** Marks a page's cover as where the flight lands, in [shape], and hides it while the travelling copy is on screen. */
