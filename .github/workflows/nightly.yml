@@ -53,8 +53,8 @@ jobs:
       matrix:
         abi: [universal, arm64-v8a, armeabi-v7a, x86_64]
     env:
-      FORGE_PACKAGES_USER: ${{ github.actor }}
-      FORGE_PACKAGES_TOKEN: ${{ secrets.FORGE_PACKAGES_TOKEN || secrets.GITHUB_TOKEN }}
+      SPECTY_PACKAGES_USER: ${{ github.actor }}
+      SPECTY_PACKAGES_TOKEN: ${{ secrets.SPECTY_PACKAGES_TOKEN || secrets.GITHUB_TOKEN }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:

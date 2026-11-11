@@ -11,15 +11,15 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
-        // FFmpegKitNext, built by RoTatsuLabs/Forge. Reading it needs a token with read:packages.
+        // FFmpegKitNext, built by this repository (ffmpegkit.yml). GitHub Packages needs a token with read:packages, even for public packages.
         maven {
-            name = "forge"
-            url = uri("https://maven.pkg.github.com/RoTatsuLabs/Forge")
+            name = "specty"
+            url = uri("https://maven.pkg.github.com/RoTatsuLabs/Specty")
             credentials {
-                username = providers.gradleProperty("forge.user").orElse(providers.environmentVariable("FORGE_PACKAGES_USER")).orNull
-                password = providers.gradleProperty("forge.token").orElse(providers.environmentVariable("FORGE_PACKAGES_TOKEN")).orNull
+                username = providers.gradleProperty("specty.user").orElse(providers.environmentVariable("SPECTY_PACKAGES_USER")).orNull
+                password = providers.gradleProperty("specty.token").orElse(providers.environmentVariable("SPECTY_PACKAGES_TOKEN")).orNull
             }
-            content { includeGroup("com.rotatsulabs.forge") }
+            content { includeGroup("com.rotatsulabs.specty") }
         }
     }
 }
