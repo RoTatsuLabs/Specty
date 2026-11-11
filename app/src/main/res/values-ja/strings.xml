@@ -45,7 +45,6 @@
     <string name="about_privacy_desc">解析はすべて端末内で行い、何もアップロードしません。Specty はインターネット権限を宣言していません。</string>
     <string name="about_licence">ライセンス</string>
     <string name="about_licence_tap">%1$s。タップして全文を読む。</string>
-    <string name="about_made_by">制作: RoTatsuLabs</string>
     <string name="about_tagline">音質ラボ</string>
     <string name="about_hero">音声ファイルの中身を確かめます。スペクトル、ラウドネス、ダイナミクス、そしてロスレスのファイルが元は非可逆だったかどうかを調べます。</string>
     <string name="about_version">バージョン %1$s</string>
@@ -387,8 +386,6 @@
     <plurals name="filter_show">
         <item quantity="other">%1$d 曲を表示</item>
     </plurals>
-    <string name="library_menu_scan_new">新規と変更分をスキャン(%1$d)</string>
-    <string name="library_menu_scanned">すべてスキャン済み</string>
     <string name="sort_album">アルバム</string>
     <string name="sort_modified">更新日時</string>
     <string name="sort_result">結果</string>

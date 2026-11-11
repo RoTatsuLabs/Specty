@@ -45,7 +45,6 @@
     <string name="about_privacy_desc">Semua analisis berjalan di perangkat Anda dan tidak ada yang diunggah. Specty tidak mendeklarasikan izin internet.</string>
     <string name="about_licence">Lisensi</string>
     <string name="about_licence_tap">%1$s. Ketuk untuk membacanya.</string>
-    <string name="about_made_by">Dibuat oleh RoTatsuLabs</string>
     <string name="about_tagline">Lab kualitas audio</string>
     <string name="about_hero">Lihat isi sebuah file audio: spektrum, kenyaringan dan dinamikanya, serta apakah file lossless berasal dari sumber lossy.</string>
     <string name="about_version">Versi %1$s</string>
@@ -387,8 +386,6 @@
     <plurals name="filter_show">
         <item quantity="other">Tampilkan %1$d lagu</item>
     </plurals>
-    <string name="library_menu_scan_new">Pindai yang baru dan berubah (%1$d)</string>
-    <string name="library_menu_scanned">Semua sudah dipindai</string>
     <string name="sort_album">Album</string>
     <string name="sort_modified">Diubah</string>
     <string name="sort_result">Hasil</string>

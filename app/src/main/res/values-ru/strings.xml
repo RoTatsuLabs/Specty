@@ -48,7 +48,6 @@
     <string name="about_privacy_desc">Весь анализ выполняется на вашем устройстве, ничего не загружается. Specty не запрашивает разрешение на доступ в интернет.</string>
     <string name="about_licence">Лицензия</string>
     <string name="about_licence_tap">%1$s. Нажмите, чтобы прочитать.</string>
-    <string name="about_made_by">Создано RoTatsuLabs</string>
     <string name="about_tagline">Лаборатория качества звука</string>
     <string name="about_hero">Посмотрите, что внутри аудиофайла: спектр, громкость и динамику, а также не получен ли lossless-файл из lossy-источника.</string>
     <string name="about_version">Версия %1$s</string>
@@ -408,8 +407,6 @@
         <item quantity="many">Показать %1$d треков</item>
         <item quantity="other">Показать %1$d трека</item>
     </plurals>
-    <string name="library_menu_scan_new">Сканировать новые и изменённые (%1$d)</string>
-    <string name="library_menu_scanned">Всё отсканировано</string>
     <string name="sort_album">Альбом</string>
     <string name="sort_modified">Изменён</string>
     <string name="sort_result">Результат</string>

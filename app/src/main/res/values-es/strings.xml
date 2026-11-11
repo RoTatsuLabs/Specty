@@ -47,7 +47,6 @@
     <string name="about_privacy_desc">Todo el análisis se hace en el dispositivo y no se sube nada. Specty no declara el permiso de internet.</string>
     <string name="about_licence">Licencia</string>
     <string name="about_licence_tap">%1$s. Tocar para leerla.</string>
-    <string name="about_made_by">Hecho por RoTatsuLabs</string>
     <string name="about_tagline">Laboratorio de calidad de audio</string>
     <string name="about_hero">Mira qué hay dentro de un archivo de audio: su espectro, sonoridad y dinámica, y si un archivo sin pérdida empezó como uno con pérdida.</string>
     <string name="about_version">Versión %1$s</string>
@@ -401,8 +400,6 @@
         <item quantity="many">Mostrar %1$d de pistas</item>
         <item quantity="other">Mostrar %1$d pistas</item>
     </plurals>
-    <string name="library_menu_scan_new">Escanear nuevos y modificados (%1$d)</string>
-    <string name="library_menu_scanned">Todo está escaneado</string>
     <string name="sort_album">Álbum</string>
     <string name="sort_modified">Modificado</string>
     <string name="sort_result">Resultado</string>

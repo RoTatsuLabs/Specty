@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!-- Mornye badge: a download arrow over two ticks on a deep teal tile. -->
-<vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="512dp" android:height="512dp" android:viewportWidth="512" android:viewportHeight="512">
-    <path android:pathData="M115.2,0 H396.8 A115.2,115.2 0 0 1 512,115.2 V396.8 A115.2,115.2 0 0 1 396.8,512 H115.2 A115.2,115.2 0 0 1 0,396.8 V115.2 A115.2,115.2 0 0 1 115.2,0z" android:fillColor="#1E4E4F"/>
-    <group android:translateX="-30.72" android:translateY="-19.251" android:scaleX="5.7344" android:scaleY="5.7344">
-        <path android:pathData="M50,27V68M38,57L50,69L62,57M35,36V46M65,36V46" android:strokeColor="#BBEBEC" android:strokeWidth="7" android:strokeLineCap="round" android:strokeLineJoin="round" android:fillColor="#00000000"/>
-    </group>
-</vector>

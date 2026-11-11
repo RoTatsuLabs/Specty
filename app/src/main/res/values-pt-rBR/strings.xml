@@ -47,7 +47,6 @@
     <string name="about_privacy_desc">Toda a análise roda no seu dispositivo e nada é enviado. O Specty não declara a permissão de internet.</string>
     <string name="about_licence">Licença</string>
     <string name="about_licence_tap">%1$s. Toque para ler.</string>
-    <string name="about_made_by">Feito por RoTatsuLabs</string>
     <string name="about_tagline">Laboratório de qualidade de áudio</string>
     <string name="about_hero">Veja o que há dentro de um arquivo de áudio: o espectro, a loudness e a dinâmica, e se um arquivo lossless começou como lossy.</string>
     <string name="about_version">Versão %1$s</string>
@@ -401,8 +400,6 @@
         <item quantity="many">Mostrar %1$d de faixas</item>
         <item quantity="other">Mostrar %1$d faixas</item>
     </plurals>
-    <string name="library_menu_scan_new">Analisar novos e alterados (%1$d)</string>
-    <string name="library_menu_scanned">Tudo já foi analisado</string>
     <string name="sort_album">Álbum</string>
     <string name="sort_modified">Modificação</string>
     <string name="sort_result">Resultado</string>

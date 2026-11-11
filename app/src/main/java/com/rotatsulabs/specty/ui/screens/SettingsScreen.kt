@@ -164,6 +164,7 @@ fun SettingsScreen(
     /** Which category is open, or null for the list. Held by the caller so a screen opened over settings returns to it. */
     section: String?,
     onSection: (String?) -> Unit,
+    sectionBack: BackGesture,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -179,21 +180,10 @@ fun SettingsScreen(
     val open = section?.let { name -> Section.entries.firstOrNull { it.name == name } }
     var query by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf("") }
 
-    Column(modifier.fillMaxSize()) {
-        ExpressiveTopBar(
-            stringResource(open?.titleRes ?: R.string.settings_title),
-            onBack = { if (open != null) onSection(null) else onBack() },
-        )
-
-        AnimatedContent(
-            targetState = open,
-            modifier = Modifier.weight(1f),
-            transitionSpec = {
-                val forward = targetState != null
-                Springy.enterX(forward) togetherWith Springy.exitX(forward)
-            },
-            label = "settingsSection",
-        ) { current ->
+    var lastOpen by remember { mutableStateOf(open) }
+    if (open != null) lastOpen = open
+    val sectionDepth = remember { OverlayDepth() }
+    val page: @Composable (Section?) -> Unit = { current ->
             Column(
                 Modifier
                     .fillMaxSize()
@@ -530,6 +520,18 @@ fun SettingsScreen(
                     Section.About -> Unit
                 }
                 Spacer(Modifier.height(16.dp))
+            }
+        }
+    Box(modifier.fillMaxSize()) {
+        Column(Modifier.fillMaxSize().underlay(sectionDepth)) {
+            ExpressiveTopBar(stringResource(R.string.settings_title), onBack = onBack)
+            Box(Modifier.weight(1f)) { page(null) }
+        }
+        // A category opens over the list and follows the back swipe the way every other screen does.
+        OverlayScreen(visible = open != null, gesture = sectionBack, depth = sectionDepth, id = "settingsSection", backdrop = MaterialTheme.colorScheme.surface) {
+            Column(Modifier.fillMaxSize()) {
+                ExpressiveTopBar(stringResource((lastOpen ?: Section.About).titleRes), onBack = { onSection(null) })
+                Box(Modifier.weight(1f)) { page(lastOpen) }
             }
         }
     }

@@ -62,6 +62,11 @@ class BackGesture {
         fromRight = event.swipeEdge == BackEventCompat.EDGE_RIGHT
     }
 
+    /** Forgets a finished swipe, so the next close by button is not mistaken for it. */
+    fun forget() {
+        if (!active) committed = false
+    }
+
     internal fun finish(commit: Boolean) {
         committed = commit
         active = false

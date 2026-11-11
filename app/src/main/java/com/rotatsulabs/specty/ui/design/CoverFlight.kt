@@ -83,6 +83,10 @@ class CoverFlight {
     var flying: Boolean by mutableStateOf(false)
         internal set
 
+    /** True from the tap until the flight has taken off or been dropped, so the page does not flash its own cover. */
+    var waiting: Boolean by mutableStateOf(false)
+        internal set
+
     internal var source: CoverSource? = null
     internal var target: Rect? by mutableStateOf(null)
 
@@ -96,6 +100,7 @@ class CoverFlight {
         this.source = source?.takeIf { it.bounds != null }
         this.uri = uri
         target = null
+        waiting = this.source != null
     }
 
     /** Forget the source, so the next open (from the dock, say) has no cover to follow. */
@@ -142,18 +147,18 @@ fun CoverFlightLayer(flight: CoverFlight, open: Boolean, currentUri: Uri?, pose:
             wasOpen = true
             if (uri == null || uri != currentUri || source == null) {
                 flight.flying = false
+                flight.waiting = false
                 return@LaunchedEffect
             }
-            flight.flying = true
             flight.progress.snapTo(0f)
             // The page cover reports where it will rest once the page has been laid out.
             val landed = withTimeoutOrNull(500) { snapshotFlow { flight.target }.first { it != null } }
             if (landed == null) {
-                flight.flying = false
+                flight.waiting = false
                 return@LaunchedEffect
             }
-            // The same bitmap the page cover starts from, so handing over never changes the picture.
-            CoverArt.load(context, uri, flight.targetPx)
+            flight.flying = true
+            flight.waiting = false
             flight.progress.animateTo(1f, spring(dampingRatio = 0.62f, stiffness = 300f))
             flight.flying = false
         } else if (wasOpen) {

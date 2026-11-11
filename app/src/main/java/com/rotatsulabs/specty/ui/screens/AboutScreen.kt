@@ -149,13 +149,6 @@ fun AboutScreen(
                 )
             }
 
-            Text(
-                stringResource(R.string.about_made_by),
-                style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.fillMaxWidth(),
-            )
             Spacer(Modifier.navigationBarsPadding().height(16.dp))
         }
     }
@@ -212,24 +205,16 @@ private fun OpenIcon() {
     Icon(Icons.AutoMirrored.Rounded.OpenInNew, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
 }
 
-/** Each credited library shows its own mark; one without a mark gets a plain puzzle piece. */
+/** Each credited library shows its own mark in the same badge as every other row. */
 @Composable
 private fun LibraryMark(library: Library) {
-    when {
-        library.name.contains("FFmpeg", ignoreCase = true) ->
-            androidx.compose.material3.Surface(Modifier.size(44.dp), shape = rememberCookieShape(), color = androidx.compose.ui.graphics.Color.White) {
-                androidx.compose.foundation.Image(
-                    androidx.compose.ui.res.painterResource(R.drawable.ic_lib_ffmpeg), contentDescription = null,
-                    modifier = Modifier.padding(9.dp),
-                )
-            }
-        library.name.contains("Mornye", ignoreCase = true) ->
-            androidx.compose.foundation.Image(
-                androidx.compose.ui.res.painterResource(R.drawable.ic_lib_mornye), contentDescription = null,
-                modifier = Modifier.size(44.dp),
-            )
-        else -> IconBadge(Icons.Rounded.Extension)
-    }
+    IconBadge(
+        when {
+            library.name.contains("FFmpeg", ignoreCase = true) -> com.rotatsulabs.specty.ui.design.BrandIcons.Ffmpeg
+            library.name.contains("Mornye", ignoreCase = true) -> com.rotatsulabs.specty.ui.design.BrandIcons.Mornye
+            else -> Icons.Rounded.Extension
+        },
+    )
 }
 
 @Composable

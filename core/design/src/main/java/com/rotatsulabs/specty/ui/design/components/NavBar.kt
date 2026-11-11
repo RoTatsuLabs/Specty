@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -157,7 +158,7 @@ fun SpectyNavigationBar(
     var labelOwner by remember { mutableIntStateOf(selected) }
     LaunchedEffect(selected) {
         if (!dragging && labelOwner != selected) {
-            androidx.compose.runtime.snapshotFlow { abs(slot.value - selected) }.first { it <= 0.35f }
+            androidx.compose.runtime.snapshotFlow { abs(slot.value - selected) <= 0.1f && abs(wall.value) < 0.002f }.first { it }
             labelOwner = selected
         }
     }
@@ -168,7 +169,7 @@ fun SpectyNavigationBar(
             magnify.snapTo(0f)
         } else {
             // Let go and the pill drops back and pinches in below its resting size before it rebounds, like a droplet settling.
-            if (magnify.value > 0.05f) magnify.animateTo(0f, spring(dampingRatio = 0.28f, stiffness = 170f))
+            if (magnify.value > 0.05f) magnify.animateTo(0f, spring(dampingRatio = 0.5f, stiffness = 420f))
         }
     }
     // 0 while the bar shows destinations, 1 once search has filled the row.
@@ -190,9 +191,9 @@ fun SpectyNavigationBar(
                 wall.snapTo(wall.value + (targetWall - wall.value) * (1f - exp(-WallFollowRate * dt)))
             }
         } else {
-            launch { wall.animateTo(0f, tween(480, easing = SettleEasing)) }
+            launch { wall.animateTo(0f, tween(200, easing = SettleEasing)) }
             settleTo?.let { target ->
-                slot.animateTo(target.toFloat(), spring(dampingRatio = 0.7f, stiffness = 300f))
+                slot.animateTo(target.toFloat(), spring(dampingRatio = 0.8f, stiffness = 520f))
                 settleTo = null
             }
         }
@@ -360,7 +361,6 @@ fun SpectyNavigationBar(
                         val target = if (released) hover.coerceIn(0, n - 1) else currentSelected
                         targetWall = 0f
                         settleTo = target
-                        labelOwner = target
                         dragging = false
                         if (target != currentSelected) current(target)
                     }
@@ -386,9 +386,9 @@ fun SpectyNavigationBar(
                 },
                 indicator = drawIndicator, stretch = { wall.value },
             ) {
-                Box(Modifier.fillMaxSize().clip(CircleShape), contentAlignment = Alignment.Center) {
+                Box(Modifier.fillMaxHeight().clip(CircleShape), contentAlignment = Alignment.Center) {
                     Row(
-                        Modifier.fillMaxWidth().graphicsLayer { alpha = (1f - 2f * open).coerceIn(0f, 1f) },
+                        Modifier.graphicsLayer { alpha = (1f - 2f * open).coerceIn(0f, 1f) },
                         horizontalArrangement = Arrangement.spacedBy(Spacing.Xs),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
@@ -448,18 +448,23 @@ fun SpectyNavigationBar(
  */
 @Composable
 private fun MorphRow(progress: Float, modifier: Modifier = Modifier, content: @Composable () -> Unit) {
+    // The main pill is measured at the width its destinations need; that width is kept while the search field opens.
+    val natural = remember { IntArray(1) }
     Layout(content, modifier) { measurables, constraints ->
         val h = PillHeight.roundToPx()
         val gap = Spacing.Sm.roundToPx()
         val w = constraints.maxWidth
         val p = progress.coerceIn(0f, 1f)
-        val natural = measurables[0].maxIntrinsicWidth(h).coerceAtMost(w - h - gap)
-        val mainW = lerp(natural.toFloat(), h.toFloat(), p).roundToInt()
+        val a = if (p < 0.001f) {
+            measurables[0].measure(Constraints(0, (w - h - gap).coerceAtLeast(0), h, h)).also { natural[0] = it.width }
+        } else {
+            measurables[0].measure(Constraints.fixed(lerp(natural[0].toFloat(), h.toFloat(), p).roundToInt().coerceAtLeast(0), h))
+        }
+        val mainW = a.width
         val searchW = lerp(h.toFloat(), (w - h - gap).toFloat(), p).roundToInt()
+        val b = measurables[1].measure(Constraints.fixed(searchW.coerceAtLeast(0), h))
         val total = mainW + gap + searchW
         val x0 = (((w - total) / 2f) * (1f - p)).roundToInt()
-        val a = measurables[0].measure(Constraints.fixed(mainW.coerceAtLeast(0), h))
-        val b = measurables[1].measure(Constraints.fixed(searchW.coerceAtLeast(0), h))
         layout(w, h) {
             a.place(x0, 0)
             b.place(x0 + mainW + gap, 0)
@@ -484,6 +489,7 @@ private fun NavPill(
             .onGloballyPositioned { if (abs(stretch()) < 0.002f) root = it.positionInRoot() }
             .drawBehind { if (indicator != null) indicator(root) }
             .padding(Spacing.Xs),
+        contentAlignment = Alignment.Center,
         content = content,
     )
 }

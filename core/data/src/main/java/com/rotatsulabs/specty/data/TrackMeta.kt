@@ -23,7 +23,7 @@ object TrackMetaCodec {
             val p = line.split('\t')
             if (p.size != 5 || p[0].isEmpty()) continue
             val duration = p[4].toLongOrNull() ?: continue
-            out[p[0]] = TrackMeta(p[1].ifEmpty { null }, p[2].ifEmpty { null }, p[3].ifEmpty { null }, duration)
+            out[p[0]] = TrackMeta(Mojibake.fix(p[1].ifEmpty { null }), Mojibake.fix(p[2].ifEmpty { null }), Mojibake.fix(p[3].ifEmpty { null }), duration)
         }
         return out
     }

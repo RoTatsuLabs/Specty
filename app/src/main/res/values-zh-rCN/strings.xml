@@ -45,7 +45,6 @@
     <string name="about_privacy_desc">所有分析都在你的设备上运行，不会上传任何内容。Specty 未声明联网权限。</string>
     <string name="about_licence">许可证</string>
     <string name="about_licence_tap">%1$s。点按阅读全文。</string>
-    <string name="about_made_by">由 RoTatsuLabs 制作</string>
     <string name="about_tagline">音频质量实验室</string>
     <string name="about_hero">看看音频文件里有什么：频谱、响度与动态，以及无损文件是否原本来自有损音源。</string>
     <string name="about_version">版本 %1$s</string>
@@ -387,8 +386,6 @@
     <plurals name="filter_show">
         <item quantity="other">显示 %1$d 首曲目</item>
     </plurals>
-    <string name="library_menu_scan_new">扫描新增和已更改的曲目（%1$d）</string>
-    <string name="library_menu_scanned">已全部扫描</string>
     <string name="sort_album">专辑</string>
     <string name="sort_modified">修改时间</string>
     <string name="sort_result">结果</string>

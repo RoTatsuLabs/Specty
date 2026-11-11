@@ -137,9 +137,9 @@ object LibraryRepository {
         return try {
             retriever.setDataSource(context, uri)
             TrackMeta(
-                title = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE),
-                artist = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST),
-                album = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ALBUM),
+                title = Mojibake.fix(retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE)),
+                artist = Mojibake.fix(retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST)),
+                album = Mojibake.fix(retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ALBUM)),
                 durationMs = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)?.toLongOrNull() ?: 0L,
             )
         } catch (_: Exception) {

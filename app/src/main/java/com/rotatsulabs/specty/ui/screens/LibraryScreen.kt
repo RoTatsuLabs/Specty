@@ -379,7 +379,7 @@ fun LibraryScreen(
                         }
                     } else {
                         itemsIndexed(collections, key = { _, c -> "c" + c.id }) { _, c ->
-                            CollectionRow(c, { b, cover -> onOpenCollection(c.id, b, cover) }, Modifier.animateItem(placementSpec = Motion.spatial()), flight = pageFlight)
+                            CollectionRow(c, { b, cover -> onOpenCollection(c.id, b, cover) }, Modifier.animateItem(fadeInSpec = null, fadeOutSpec = null, placementSpec = Motion.spatial()), flight = pageFlight)
                         }
                     }
                 }
@@ -477,19 +477,6 @@ private fun Header(
                             text = { Text(stringResource(R.string.library_menu_rescan)) },
                             leadingIcon = { Icon(Icons.Rounded.Refresh, contentDescription = null) },
                             onClick = { menu = false; onRescan() },
-                        )
-                    }
-                    if (canScan) {
-                        ExpressiveMenuItem(
-                            text = {
-                                Text(
-                                    if (unscanned > 0) stringResource(R.string.library_menu_scan_new, unscanned)
-                                    else stringResource(R.string.library_menu_scanned),
-                                )
-                            },
-                            leadingIcon = { Icon(Icons.Rounded.Radar, contentDescription = null) },
-                            enabled = unscanned > 0,
-                            onClick = { menu = false; onScanAll() },
                         )
                     }
                     ExpressiveMenuItem(
@@ -664,6 +651,8 @@ internal fun TrackRow(
 ) {
     var bounds by remember { mutableStateOf<Rect?>(null) }
     var coverBounds by remember { mutableStateOf<Rect?>(null) }
+    val style = com.rotatsulabs.specty.ui.LocalRowStyle.current
+    val cover = if (style.compact) 44.dp else 56.dp
     MorphSurface(
         modifier = modifier.fillMaxWidth().onGloballyPositioned { bounds = it.boundsInRoot() },
         corners = SpectyShapes.Row,
@@ -672,8 +661,6 @@ internal fun TrackRow(
         onClick = { if (selecting) onToggle() else onOpen(bounds, CoverSource(coverBounds, com.rotatsulabs.specty.ui.rowCoverSpec(style), 180)) },
         onLongClick = onToggle,
     ) {
-        val style = com.rotatsulabs.specty.ui.LocalRowStyle.current
-        val cover = if (style.compact) 44.dp else 56.dp
         Row(
             Modifier.padding(horizontal = 16.dp, vertical = if (style.compact) 6.dp else 8.dp),
             horizontalArrangement = Arrangement.spacedBy(16.dp),
