@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="action_back">返回</string>
+    <string name="search_clear">清除搜尋</string>
+    <string name="search_default">搜尋</string>
+    <string name="verdict_lossless">無損</string>
+    <string name="verdict_lossy">有損</string>
+    <string name="verdict_unclear">不明確</string>
+    <string name="palette_violet">紫羅蘭</string>
+    <string name="palette_azure">天藍</string>
+    <string name="palette_teal">青綠</string>
+    <string name="palette_lime">萊姆綠</string>
+    <string name="palette_amber">琥珀</string>
+    <string name="palette_rose">玫瑰</string>
+    <string name="theme_system">跟隨系統</string>
+    <string name="theme_light">淺色</string>
+    <string name="theme_dark">深色</string>
+    <string name="verdict_lossy_source">有損音源</string>
+    <string name="verdict_upsampled">升頻取樣</string>
+    <string name="verdict_possible">可能有損</string>
+    <string name="verdict_band">陡峭截止</string>
+    <string name="verdict_rolloff">衰減</string>
+</resources>

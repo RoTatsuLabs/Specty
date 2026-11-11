@@ -7,6 +7,8 @@ import com.rotatsulabs.specty.ui.design.SpectyShapes
 import com.rotatsulabs.specty.ui.design.components.ButtonKind
 import com.rotatsulabs.specty.ui.design.components.ExpressiveButton
 import com.rotatsulabs.specty.ui.design.components.ExpressiveTopBar
+import com.rotatsulabs.specty.ui.design.Spacing
+import androidx.compose.animation.togetherWith
 import com.rotatsulabs.specty.ui.design.components.MorphSurface
 import com.rotatsulabs.specty.ui.design.components.Pill
 import com.rotatsulabs.specty.ui.design.components.ShapeLoader
@@ -48,6 +50,8 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -107,7 +111,7 @@ fun CompareScreen(state: CompareState, onBack: () -> Unit, modifier: Modifier = 
                 ) {
                     ShapeLoader(size = 72.dp)
                     Spacer(Modifier.height(24.dp))
-                    Text(state.title, style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    Text(state.title, style = MaterialTheme.typography.titleLarge, maxLines = 2, overflow = TextOverflow.Ellipsis)
                     Text(stageText(state.stage), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     Spacer(Modifier.height(16.dp))
                     WavyProgressBar(state.progress)
@@ -128,33 +132,54 @@ fun CompareScreen(state: CompareState, onBack: () -> Unit, modifier: Modifier = 
     }
 }
 
+private enum class CompareSection(val labelRes: Int) {
+    Summary(R.string.compare_tab_summary),
+    Spectra(R.string.compare_tab_spectra),
+}
+
 @Composable
 private fun ReadyContent(a: AnalysisResult, b: AnalysisResult) {
     val scheme = MaterialTheme.colorScheme
+    var section by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(CompareSection.Summary) }
     Column(
-        Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
+        Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = Spacing.Gutter),
+        verticalArrangement = Arrangement.spacedBy(Spacing.Lg),
     ) {
         Reveal(0) {
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(Spacing.Sm)) {
                 FileTag("A", a, scheme.primaryContainer, scheme.onPrimaryContainer, Modifier.weight(1f))
                 FileTag("B", b, scheme.tertiaryContainer, scheme.onTertiaryContainer, Modifier.weight(1f))
             }
         }
-        Reveal(1) {
-            SectionCard(stringResource(R.string.compare_differs)) {
-                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    CompareMath.highlights(a.authenticity, a.levels, b.authenticity, b.levels).forEach {
-                        Text(noteText(it), style = MaterialTheme.typography.bodyMedium)
+        com.rotatsulabs.specty.ui.design.components.OptionSegmentedControl(
+            CompareSection.entries, section, { section = it }, { stringResource(it.labelRes) }, Modifier.fillMaxWidth(),
+        )
+        androidx.compose.animation.AnimatedContent(
+            targetState = section,
+            transitionSpec = { com.rotatsulabs.specty.ui.design.FadeThrough.enter() togetherWith com.rotatsulabs.specty.ui.design.FadeThrough.exit() },
+            label = "compareSection",
+        ) { shown ->
+            Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(Spacing.Lg)) {
+                when (shown) {
+                    CompareSection.Summary -> {
+                        SectionCard(stringResource(R.string.compare_differs)) {
+                            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                                CompareMath.highlights(a.authenticity, a.levels, b.authenticity, b.levels).forEach {
+                                    Text(noteText(it), style = MaterialTheme.typography.bodyMedium)
+                                }
+                            }
+                        }
+                        MetricsTable(a, b)
+                    }
+                    CompareSection.Spectra -> {
+                        SpectrogramsCard(a, b)
+                        DifferenceCard(a.spectrogram, b.spectrogram)
+                        SpectrumCard(a.spectrogram, b.spectrogram)
                     }
                 }
             }
         }
-        Reveal(2) { SpectrogramsCard(a, b) }
-        Reveal(3) { DifferenceCard(a.spectrogram, b.spectrogram) }
-        Reveal(4) { SpectrumCard(a.spectrogram, b.spectrogram) }
-        Reveal(5) { MetricsTable(a, b) }
-        Spacer(Modifier.height(12.dp))
+        Spacer(Modifier.height(Spacing.Lg))
     }
 }
 
@@ -393,7 +418,7 @@ private fun MetricsTable(a: AnalysisResult, b: AnalysisResult) {
 @Composable
 private fun Cell(text: String, better: Boolean, modifier: Modifier) {
     Text(
-        text, modifier, style = MaterialTheme.typography.bodyMedium,
+        text, modifier, style = MaterialTheme.typography.bodyMedium.copy(fontFeatureSettings = "tnum"),
         fontWeight = if (better) FontWeight.Bold else FontWeight.Normal,
         color = if (better) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
         maxLines = 2, overflow = TextOverflow.Ellipsis,
@@ -409,9 +434,16 @@ private fun verdictShort(r: AnalysisResult): String {
         com.rotatsulabs.specty.audio.Verdict.POSSIBLE_LOSSY_SOURCE -> stringResource(R.string.verdict_short_possible)
         com.rotatsulabs.specty.audio.Verdict.UPSAMPLED -> stringResource(R.string.verdict_short_upsampled)
         com.rotatsulabs.specty.audio.Verdict.BAND_LIMITED -> stringResource(R.string.verdict_short_band)
+        com.rotatsulabs.specty.audio.Verdict.ROLLOFF -> stringResource(R.string.verdict_short_rolloff)
         com.rotatsulabs.specty.audio.Verdict.LOSSY_CODEC -> stringResource(R.string.verdict_short_codec)
         com.rotatsulabs.specty.audio.Verdict.DOLBY_ATMOS -> stringResource(R.string.verdict_atmos)
         com.rotatsulabs.specty.audio.Verdict.INCONCLUSIVE -> stringResource(R.string.verdict_head_inconclusive)
     }
-    return if (r.authenticity.confidence > 0) "$v (${r.authenticity.confidence}%)" else v
+    val evidence = when (r.authenticity.evidence) {
+        com.rotatsulabs.specty.audio.Evidence.STRONG -> stringResource(R.string.insight_conf_high)
+        com.rotatsulabs.specty.audio.Evidence.MODERATE -> stringResource(R.string.insight_conf_medium)
+        com.rotatsulabs.specty.audio.Evidence.LIMITED -> stringResource(R.string.insight_conf_low)
+        null -> null
+    }
+    return if (evidence != null) "$v ($evidence)" else v
 }

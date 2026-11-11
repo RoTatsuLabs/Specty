@@ -34,6 +34,9 @@ object AuthenticityAnalyzer {
     /** An edge this close to Nyquist is the end of the band, not a cutoff. */
     private const val NYQUIST_EDGE = 0.985
 
+    /** A roll-off that ends below this is lower than a modern master usually goes; the cause is left open. */
+    private const val LOW_ROLLOFF_HZ = 16_500.0
+
     /** Below this the band is too narrow for a check of the top end. */
     private const val MIN_NYQUIST_HZ = 10_000.0
 
@@ -62,8 +65,8 @@ object AuthenticityAnalyzer {
         // The spectra come from the decoded PCM, whose rate is what the frequency axis means.
         val measured = if (spectra.sampleRate != info.sampleRate) info.copy(sampleRate = spectra.sampleRate) else info
         val base = analyze(measured, spectra.whole, spectra.fftSize, effectiveBitDepth)
-        val report = withInsights(base, measured, spectra.whole, spectra.fftSize, spectra.sections)
-        return withEvidence(report, spectra, upsample)
+        val (report, signs) = insights(base, measured, spectra.whole, spectra.fftSize, spectra.sections)
+        return withEvidence(report, measured, spectra, upsample, signs)
     }
 
     /**
@@ -72,7 +75,13 @@ object AuthenticityAnalyzer {
      * upsampled verdict is backed by a noise floor at 16-bit level, and withdrawn when the floor is below it, because
      * a file with that much resolution is not a stretched CD.
      */
-    private fun withEvidence(report: AuthenticityReport, spectra: AuthSpectra, upsample: UpsampleEvidence.Finding?): AuthenticityReport {
+    private fun withEvidence(
+        report: AuthenticityReport,
+        info: AudioInfo,
+        spectra: AuthSpectra,
+        upsample: UpsampleEvidence.Finding?,
+        signs: CutoffSigns,
+    ): AuthenticityReport {
         if (report.verdict == Verdict.LOSSY_CODEC || report.verdict == Verdict.DOLBY_ATMOS) return report
         if (upsample != null) {
             val key = if (upsample.kind == UpsampleEvidence.Kind.SAMPLE_HOLD) NoteKey.UPSAMPLE_HOLD else NoteKey.UPSAMPLE_LINE
@@ -82,21 +91,49 @@ object AuthenticityAnalyzer {
                 notes = listOf(Note(key, upsample.ratio, sourceKhz)) + report.notes.filter { it.key == NoteKey.BITS_PADDED },
             )
         }
+        val floor = NoiseFloor.classify(spectra.quietFloorVariance)
+        val padded = report.notes.any { it.key == NoteKey.BITS_PADDED }
+        if (report.verdict == Verdict.HI_RES) {
+            // A high sample rate is not resolution. Full-band content is not enough when the samples themselves
+            // carry no more than CD-level detail, so that file is reported as lossless without the Hi-Res label.
+            return if (padded || floor?.level == NoiseFloor.Level.AT_16BIT) {
+                report.copy(verdict = Verdict.GENUINE, notes = report.notes + Note(NoteKey.RATE_UNCONFIRMED))
+            } else {
+                report
+            }
+        }
         if (report.verdict != Verdict.UPSAMPLED) return report
-        val floor = NoiseFloor.classify(spectra.quietFloorVariance) ?: return report
-        return when (floor.level) {
-            NoiseFloor.Level.AT_16BIT -> report.copy(
-                confidence = (report.confidence + 8).coerceAtMost(95),
-                notes = report.notes + Note(NoteKey.FLOOR_AT_16BIT),
-            )
-            NoiseFloor.Level.BELOW_16BIT -> report.copy(
+        // An edge where a 44.1 or 48 kHz source would end is a lead, not proof. It is confirmed by something that is
+        // not the spectrum (a 16-bit noise floor, 16-bit data in a wider file) or by an edge that is steep, empty
+        // above and the same all through the track.
+        val cutoffKhz = fmt((report.cutoffHz ?: 0.0) / 1000.0)
+        val rateKhz = fmt(info.sampleRate / 1000.0)
+        if (floor?.level == NoiseFloor.Level.BELOW_16BIT) {
+            return report.copy(
                 verdict = Verdict.BAND_LIMITED,
                 confidence = (report.confidence - 15).coerceAtLeast(5),
                 notes = report.notes.map {
                     if (it.key == NoteKey.UPSAMPLED) Note(NoteKey.BAND_LIMITED, it.args[0]) else it
                 } + Note(NoteKey.FLOOR_BELOW_16BIT),
             )
-            NoiseFloor.Level.MASKED -> report
+        }
+        val independent = padded || floor?.level == NoiseFloor.Level.AT_16BIT
+        if (!independent && signs.spectral < 3) {
+            return report.copy(
+                verdict = Verdict.BAND_LIMITED,
+                confidence = (report.confidence - 15).coerceAtLeast(5),
+                notes = report.notes.map {
+                    if (it.key == NoteKey.UPSAMPLED) Note(NoteKey.UPSAMPLE_POSSIBLE, cutoffKhz, rateKhz) else it
+                },
+            )
+        }
+        return if (floor?.level == NoiseFloor.Level.AT_16BIT) {
+            report.copy(
+                confidence = (report.confidence + 8).coerceAtMost(95),
+                notes = report.notes + Note(NoteKey.FLOOR_AT_16BIT),
+            )
+        } else {
+            report
         }
     }
 
@@ -146,8 +183,11 @@ object AuthenticityAnalyzer {
                 shape = d.shape,
             )
             SpectrumShape.GRADUAL_ROLLOFF -> AuthenticityReport(
-                Verdict.BAND_LIMITED, null, 0.0,
-                listOf(Note(NoteKey.ROLLOFF, fmt((d.emptyAboveHz ?: 0.0) / 1000.0))) + bitNote,
+                // An observation about the spectrum, not a statement about the source: no sharp edge was found.
+                Verdict.ROLLOFF, null, 0.0,
+                listOf(Note(NoteKey.ROLLOFF, fmt((d.emptyAboveHz ?: 0.0) / 1000.0))) +
+                    (if ((d.emptyAboveHz ?: Double.MAX_VALUE) <= LOW_ROLLOFF_HZ) listOf(Note(NoteKey.ROLLOFF_LOW)) else emptyList()) +
+                    bitNote,
                 emptyAboveHz = d.emptyAboveHz, shape = d.shape,
             )
             SpectrumShape.ABRUPT_CUTOFF -> {
@@ -177,8 +217,44 @@ object AuthenticityAnalyzer {
         averageDb: FloatArray,
         fftSize: Int,
         sections: List<FloatArray?>,
-    ): AuthenticityReport {
-        if (report.verdict == Verdict.INCONCLUSIVE) return report.copy(confidence = 0)
+    ): AuthenticityReport = insights(report, info, averageDb, fftSize, sections).first
+
+    /**
+     * What backs an abrupt cutoff beyond the edge itself. An edge alone is one spectral fact and masters are filtered
+     * too, so the verdict also asks for each of these, which a lossy transcode shows and a mastering filter often does not.
+     */
+    class CutoffSigns(
+        /** The drop is at least [STEEP_DB]: a brick wall rather than a filter slope. */
+        val steep: Boolean,
+        /** Nothing is left above the edge, where dither or noise would leave a floor. */
+        val empty: Boolean,
+        /** The edge sits at the same frequency in nearly every section of the track. */
+        val stable: Boolean,
+        /** The edge is where a common encoder low-passes. A hint only: many masters sit near these too. */
+        val signature: Boolean,
+    ) {
+        /** Spectral signs only; the encoder signature is not counted, it only adds to the evidence score. */
+        val spectral: Int get() = (if (steep) 1 else 0) + (if (empty) 1 else 0) + (if (stable) 1 else 0)
+        val points: Int get() = spectral + (if (signature) 1 else 0)
+
+        companion object {
+            val NONE = CutoffSigns(steep = false, empty = false, stable = false, signature = false)
+        }
+    }
+
+    private const val STEEP_DB = 40.0
+
+    /** Low-pass points of common encoders, in Hz; see [encoderGuess]. */
+    private val ENCODER_EDGES = doubleArrayOf(16_000.0, 17_000.0, 17_500.0, 18_000.0, 18_600.0, 19_000.0, 19_500.0, 20_000.0, 20_500.0)
+
+    private fun insights(
+        report: AuthenticityReport,
+        info: AudioInfo,
+        averageDb: FloatArray,
+        fftSize: Int,
+        sections: List<FloatArray?>,
+    ): Pair<AuthenticityReport, CutoffSigns> {
+        if (report.verdict == Verdict.INCONCLUSIVE) return report.copy(confidence = 0) to CutoffSigns.NONE
         val whole = detect(averageDb, info.sampleRate, fftSize)
         val cutoffs = FloatArray(sections.size)
         var clear = 0
@@ -207,27 +283,63 @@ object AuthenticityAnalyzer {
                 return withCounts.copy(
                     verdict = Verdict.INCONCLUSIVE, cutoffHz = null, cliffDropDb = 0.0, confidence = 0, encoderGuess = null,
                     notes = listOf(Note(NoteKey.SECTIONS_DISAGREE, agreeing, clear)),
-                )
+                ) to CutoffSigns.NONE
             }
             if (clear < MIN_CLEAR_SECTIONS && report.shape != SpectrumShape.ABRUPT_CUTOFF) {
                 return withCounts.copy(
                     verdict = Verdict.INCONCLUSIVE, cutoffHz = null, cliffDropDb = 0.0, confidence = 0, encoderGuess = null,
                     notes = listOf(Note(NoteKey.TOO_LITTLE_CLEAR)),
-                )
+                ) to CutoffSigns.NONE
             }
         }
 
-        val guess = if (report.shape == SpectrumShape.ABRUPT_CUTOFF && report.verdict != Verdict.UPSAMPLED) {
-            report.cutoffHz?.let { encoderGuess(it, info.codec) }
+        val edge = report.cutoffHz
+        val signs = if (!fromContainer && report.shape == SpectrumShape.ABRUPT_CUTOFF && edge != null) {
+            val spread = cutoffs.filter { it > 0f }.map { abs(it - edge.toFloat()) }.sorted().let { if (it.isEmpty()) 0.0 else it[it.size / 2].toDouble() }
+            CutoffSigns(
+                steep = report.cliffDropDb >= STEEP_DB,
+                empty = whole.emptyAboveHz?.let { it - edge <= 1500.0 } == true,
+                stable = clear >= MIN_CLEAR_SECTIONS && agreeing.toDouble() / clear >= 0.8 && spread <= 400.0,
+                signature = ENCODER_EDGES.any { abs(it - edge) <= 150.0 },
+            )
+        } else {
+            CutoffSigns.NONE
+        }
+        val classified = if (signs !== CutoffSigns.NONE) classifyEdge(withCounts, info, edge!!, signs) else withCounts
+
+        val guess = if (classified.shape == SpectrumShape.ABRUPT_CUTOFF &&
+            (classified.verdict == Verdict.LOSSY_SOURCE || classified.verdict == Verdict.POSSIBLE_LOSSY_SOURCE)
+        ) {
+            classified.cutoffHz?.let { encoderGuess(it, info.codec) }
         } else {
             null
         }
         val limited = !fromContainer && clear < MIN_CLEAR_SECTIONS
-        return withCounts.copy(
-            confidence = confidence(report, whole, clear, agreeing),
+        return classified.copy(
+            confidence = confidence(classified, whole, clear, agreeing, signs),
             encoderGuess = guess,
-            notes = if (limited) report.notes + Note(NoteKey.FEW_SECTIONS, clear) else report.notes,
-        )
+            notes = if (limited) classified.notes + Note(NoteKey.FEW_SECTIONS, clear) else classified.notes,
+        ) to signs
+    }
+
+    /**
+     * Words an abrupt edge once its supporting signs are known. Lossy origin needs more than the edge: a low edge
+     * needs two signs, a high one three, and an edge with fewer is reported as what it is, a sharp cutoff.
+     */
+    private fun classifyEdge(report: AuthenticityReport, info: AudioInfo, edge: Double, signs: CutoffSigns): AuthenticityReport {
+        val khz = fmt(edge / 1000.0)
+        val rateKhz = fmt(info.sampleRate / 1000.0)
+        val (verdict, note) = when {
+            info.sampleRate > 48_000 && edge in 20_500.0..23_000.0 -> Verdict.UPSAMPLED to Note(NoteKey.UPSAMPLED, khz, rateKhz)
+            edge <= 16_800.0 ->
+                if (signs.points >= 2) Verdict.LOSSY_SOURCE to Note(NoteKey.HARD_CUTOFF, khz)
+                else Verdict.POSSIBLE_LOSSY_SOURCE to Note(NoteKey.SHARP_CUTOFF, khz)
+            edge <= 20_800.0 ->
+                if (signs.points >= 3) Verdict.POSSIBLE_LOSSY_SOURCE to Note(NoteKey.SHARP_CUTOFF, khz)
+                else Verdict.BAND_LIMITED to Note(NoteKey.BAND_LIMITED, khz)
+            else -> Verdict.BAND_LIMITED to Note(NoteKey.BAND_LIMITED, khz)
+        }
+        return report.copy(verdict = verdict, notes = listOf(note) + report.notes.drop(1))
     }
 
     private fun SpectrumShape.hasEmptyTop() = this == SpectrumShape.ABRUPT_CUTOFF || this == SpectrumShape.GRADUAL_ROLLOFF
@@ -236,13 +348,13 @@ object AuthenticityAnalyzer {
      * Built from measured evidence only: how strong the signature is and how much of the track shows it. Sections that
      * could not be read add nothing, and a verdict without enough clear sections is held below 50.
      */
-    private fun confidence(r: AuthenticityReport, d: Detection, clear: Int, agreeing: Int): Int {
+    private fun confidence(r: AuthenticityReport, d: Detection, clear: Int, agreeing: Int, signs: CutoffSigns): Int {
         if (r.verdict == Verdict.LOSSY_CODEC || r.verdict == Verdict.DOLBY_ATMOS) return 99
         val agree = if (clear >= MIN_CLEAR_SECTIONS) agreeing.toDouble() / clear else null
         var c = when (r.shape) {
             SpectrumShape.ABRUPT_CUTOFF ->
-                35.0 + ((r.cliffDropDb - MIN_CLIFF_DB) / 32.0 * 25.0).coerceIn(0.0, 25.0) +
-                    (if (d.dynamic >= 35.0) 5.0 else 0.0) + 30.0 * (agree ?: 0.0)
+                28.0 + ((r.cliffDropDb - MIN_CLIFF_DB) / 32.0 * 22.0).coerceIn(0.0, 22.0) +
+                    (if (d.dynamic >= 35.0) 5.0 else 0.0) + 25.0 * (agree ?: 0.0) + 4.0 * signs.points
             SpectrumShape.FULL_BAND ->
                 30.0 + ((FULL_BAND_GAP_DB - d.gap) / FULL_BAND_GAP_DB * 20.0).coerceIn(0.0, 20.0) + 40.0 * (agree ?: 0.0)
             SpectrumShape.GRADUAL_ROLLOFF ->
@@ -250,8 +362,8 @@ object AuthenticityAnalyzer {
             else -> 0.0
         }
         c -= when (r.verdict) {
-            Verdict.POSSIBLE_LOSSY_SOURCE -> 12.0
-            Verdict.BAND_LIMITED -> 15.0
+            Verdict.POSSIBLE_LOSSY_SOURCE -> 8.0
+            Verdict.BAND_LIMITED -> 12.0
             else -> 0.0
         }
         if (agree == null) c = min(c, 49.0)

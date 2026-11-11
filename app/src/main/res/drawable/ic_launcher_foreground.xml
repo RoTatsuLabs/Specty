@@ -1,22 +1,44 @@
 <?xml version="1.0" encoding="utf-8"?>
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M26,44h8v20h-8z" />
-    <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M38,36h8v36h-8z" />
-    <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M50,30h8v48h-8z" />
-    <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M62,39h8v30h-8z" />
-    <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M74,46h8v16h-8z" />
+    <!-- Three sound bars that overlap, each cut from the next by a thin gap in the background colour. -->
+    <group android:scaleX="0.76" android:scaleY="0.76" android:pivotX="54" android:pivotY="54">
+        <path
+            android:strokeColor="@color/ic_launcher_background"
+            android:strokeWidth="3.4"
+            android:pathData="M21,48.5a12.5,12.5 0 0,1 25,0v13a12.5,12.5 0 0,1 -25,0z">
+            <aapt:attr name="android:fillColor">
+                <gradient android:type="linear" android:startX="0" android:startY="26" android:endX="0" android:endY="80">
+                    <item android:offset="0" android:color="#7FA8FF" />
+                    <item android:offset="1" android:color="#3D6BFF" />
+                </gradient>
+            </aapt:attr>
+        </path>
+        <path
+            android:strokeColor="@color/ic_launcher_background"
+            android:strokeWidth="3.4"
+            android:pathData="M61,52.5a12.5,12.5 0 0,1 25,0v19a12.5,12.5 0 0,1 -25,0z">
+            <aapt:attr name="android:fillColor">
+                <gradient android:type="linear" android:startX="0" android:startY="44" android:endX="0" android:endY="82">
+                    <item android:offset="0" android:color="#5CE0C0" />
+                    <item android:offset="1" android:color="#2F9BFF" />
+                </gradient>
+            </aapt:attr>
+        </path>
+        <path
+            android:strokeColor="@color/ic_launcher_background"
+            android:strokeWidth="3.4"
+            android:pathData="M41,33.5a12.5,12.5 0 0,1 25,0v41a12.5,12.5 0 0,1 -25,0z">
+            <aapt:attr name="android:fillColor">
+                <gradient android:type="linear" android:startX="0" android:startY="22" android:endX="0" android:endY="88">
+                    <item android:offset="0" android:color="#FFC24D" />
+                    <item android:offset="1" android:color="#FF4F87" />
+                </gradient>
+            </aapt:attr>
+        </path>
+    </group>
 </vector>

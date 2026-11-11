@@ -42,7 +42,7 @@ import kotlinx.coroutines.launch
 /** Material "fade through": the old content fades out, then the new content fades in while scaling up slightly. */
 object FadeThrough {
     fun enter(): EnterTransition = fadeIn(tween(MotionTokens.FadeIn, MotionTokens.FadeOut, MotionTokens.EmphasizedDecelerate)) +
-        scaleIn(tween(MotionTokens.FadeIn + MotionTokens.FadeOut, 0, MotionTokens.EmphasizedDecelerate), initialScale = 0.92f)
+        scaleIn(androidx.compose.animation.core.spring(dampingRatio = 0.72f, stiffness = 380f), initialScale = 0.88f)
 
     fun exit(): ExitTransition = fadeOut(tween(MotionTokens.FadeOut, 0, MotionTokens.EmphasizedAccelerate))
 
@@ -143,7 +143,17 @@ fun ContainerTransform(
                     if (isVisible) progress.snapTo(BackMath.containerOpen(swipe))
                 } else if (following) {
                     following = false
-                    if (!gesture.committed && isVisible) scope.launch { progress.animateTo(1f, Motion.spatial()) }
+                    if (!gesture.committed && isVisible) {
+                        scope.launch { progress.animateTo(1f, Motion.spatial()) }
+                    } else if (gesture.committed) {
+                        // A committed swipe that leaves the screen open (an album back to its artist's page) must not
+                        // stay shrunk. When the screen does close, `visible` is already false by then.
+                        scope.launch {
+                            androidx.compose.runtime.withFrameNanos { }
+                            androidx.compose.runtime.withFrameNanos { }
+                            if (isVisible) progress.animateTo(1f, Motion.spatial())
+                        }
+                    }
                 }
             }
         }
@@ -177,6 +187,11 @@ fun ContainerTransform(
                 )
                 clip = true
             } else {
+                // No row to grow from (a shared cover carries the eye instead): the page eases in from slightly small.
+                transformOrigin = TransformOrigin.Center
+                val s = 0.94f + 0.06f * p.coerceIn(0f, 1f)
+                scaleX = s
+                scaleY = s
                 alpha = p.coerceIn(0f, 1f)
             }
         }.drawBehind {

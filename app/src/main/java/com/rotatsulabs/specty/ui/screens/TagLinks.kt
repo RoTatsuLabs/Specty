@@ -3,7 +3,6 @@ package com.rotatsulabs.specty.ui.screens
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -35,8 +34,8 @@ internal fun TagLine(info: AudioInfo, links: TagLinks) {
     val album = info.tag("album")
     if (artist == null && album == null) return
     Row(
-        Modifier.fillMaxWidth().padding(horizontal = 8.dp),
-        horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally),
+        Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.Start),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         if (artist != null) TagName(artist, BrowseKind.Artists, links, Modifier.weight(1f, fill = false))
@@ -52,14 +51,14 @@ private fun TagName(name: String, kind: BrowseKind, links: TagLinks, modifier: M
     if (!open) {
         Text(
             name, style = MaterialTheme.typography.bodyMedium, color = scheme.onSurfaceVariant,
-            textAlign = TextAlign.Center, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = modifier,
+            textAlign = TextAlign.Start, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = modifier,
         )
         return
     }
     // A page exists: the name stays plain grey text and a tap opens it.
     Text(
         name, style = MaterialTheme.typography.bodyMedium, color = scheme.onSurfaceVariant,
-        textAlign = TextAlign.Center, maxLines = 1, overflow = TextOverflow.Ellipsis,
+        textAlign = TextAlign.Start, maxLines = 1, overflow = TextOverflow.Ellipsis,
         modifier = modifier.clickable { links.onOpen(kind, name) },
     )
 }

@@ -18,7 +18,7 @@ import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.text.style.TextAlign
 import com.rotatsulabs.specty.ui.components.withoutExplicitMark
-import com.rotatsulabs.specty.ui.design.components.VerdictPill
+import com.rotatsulabs.specty.ui.design.components.VerdictLabel
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
@@ -30,6 +30,7 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -47,6 +48,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import com.rotatsulabs.specty.ui.toShape
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -70,6 +72,8 @@ import com.rotatsulabs.specty.ui.components.CoverImage
 import com.rotatsulabs.specty.ui.components.Fmt
 import com.rotatsulabs.specty.ui.design.CoverFlight
 import com.rotatsulabs.specty.ui.design.CoverSource
+import com.rotatsulabs.specty.ui.design.Corners
+import com.rotatsulabs.specty.ui.design.coverTarget
 import com.rotatsulabs.specty.ui.design.SpectyShapes
 import com.rotatsulabs.specty.ui.design.components.ExpressiveIconButton
 import com.rotatsulabs.specty.ui.design.components.ExpressiveMenuItem
@@ -123,11 +127,25 @@ private fun CollectionCover(c: LibraryCollection<Track>, size: Modifier, sizePx:
     }
 }
 
+/** The outline of a collection's cover: round for an artist, softly rounded for an album. */
+private fun coverSpec(c: LibraryCollection<Track>): com.rotatsulabs.specty.ui.design.CoverSpec =
+    if (c.kind == BrowseKind.Artists) com.rotatsulabs.specty.ui.design.CoverSpec.Circle else com.rotatsulabs.specty.ui.design.CoverSpec.rounded(14f)
+
+/** Reports where the element sits in the window, which is what a page grows out of. */
+private fun Modifier.reportBounds(onBounds: (androidx.compose.ui.geometry.Rect) -> Unit): Modifier =
+    this.then(Modifier.onGloballyPositioned { onBounds(it.boundsInRoot()) })
+
 @Composable
-internal fun CollectionRow(c: LibraryCollection<Track>, onClick: () -> Unit, modifier: Modifier = Modifier) {
-    MorphSurface(modifier.fillMaxWidth(), corners = SpectyShapes.Row, color = androidx.compose.ui.graphics.Color.Transparent, onClick = onClick) {
+internal fun CollectionRow(c: LibraryCollection<Track>, onClick: (androidx.compose.ui.geometry.Rect?, CoverSource?) -> Unit, modifier: Modifier = Modifier) {
+    var coverBounds by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf<androidx.compose.ui.geometry.Rect?>(null) }
+    var bounds by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf<androidx.compose.ui.geometry.Rect?>(null) }
+    MorphSurface(
+        modifier.fillMaxWidth().reportBounds { bounds = it }, corners = SpectyShapes.Row,
+        color = androidx.compose.ui.graphics.Color.Transparent,
+        onClick = { onClick(bounds, CoverSource(coverBounds, coverSpec(c), 180)) },
+    ) {
         Row(Modifier.padding(horizontal = 10.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-            CollectionCover(c, Modifier.size(60.dp), 180)
+            CollectionCover(c, Modifier.size(60.dp).reportBounds { coverBounds = it }, 180)
             Spacer(Modifier.width(16.dp))
             Column(Modifier.weight(1f)) {
                 Text(c.title(), style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
@@ -141,10 +159,16 @@ internal fun CollectionRow(c: LibraryCollection<Track>, onClick: () -> Unit, mod
 }
 
 @Composable
-internal fun CollectionTile(c: LibraryCollection<Track>, onClick: () -> Unit, modifier: Modifier = Modifier) {
-    MorphSurface(modifier, corners = SpectyShapes.Row, color = androidx.compose.ui.graphics.Color.Transparent, onClick = onClick) {
+internal fun CollectionTile(c: LibraryCollection<Track>, onClick: (androidx.compose.ui.geometry.Rect?, CoverSource?) -> Unit, modifier: Modifier = Modifier) {
+    var coverBounds by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf<androidx.compose.ui.geometry.Rect?>(null) }
+    var bounds by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf<androidx.compose.ui.geometry.Rect?>(null) }
+    MorphSurface(
+        modifier.reportBounds { bounds = it }, corners = SpectyShapes.Row,
+        color = androidx.compose.ui.graphics.Color.Transparent,
+        onClick = { onClick(bounds, CoverSource(coverBounds, coverSpec(c), 360)) },
+    ) {
         Column(Modifier.padding(6.dp)) {
-            CollectionCover(c, Modifier.fillMaxWidth().aspectRatio(1f), 360)
+            CollectionCover(c, Modifier.fillMaxWidth().aspectRatio(1f).reportBounds { coverBounds = it }, 360)
             Spacer(Modifier.height(8.dp))
             Text(c.title(), style = MaterialTheme.typography.titleSmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
             Text(
@@ -181,6 +205,8 @@ fun CollectionScreen(
     dockVisible: Boolean,
     flight: CoverFlight?,
     modifier: Modifier = Modifier,
+    /** Carries the tapped cover from the library into this page's cover. */
+    heroFlight: CoverFlight? = null,
 ) {
     val artistPage = collection.kind == BrowseKind.Artists
     val albums = remember(collection) {
@@ -199,7 +225,7 @@ fun CollectionScreen(
     Box(modifier.fillMaxSize()) {
         LazyColumn(Modifier.fillMaxSize(), state = listState) {
             item(key = "hero") {
-                if (artistPage) ArtistHero(collection) else AlbumHero(collection, onOpenCollection)
+                CollectionHero(collection, onOpenCollection, heroFlight)
             }
             item(key = "summary") { Summary(summary) }
             if (albums.isNotEmpty()) {
@@ -214,13 +240,13 @@ fun CollectionScreen(
             }
             items(tracks.size, key = { "t" + tracks[it].uri }) { i ->
                 val t = tracks[i]
-                Column(Modifier.padding(horizontal = 16.dp)) {
+                Column(Modifier.padding(horizontal = 12.dp)) {
                     PageTrackRow(
                         track = t, number = i + 1, verdict = verdicts[keyFor(t)], thumb = artistPage, flight = flight,
                         onOpen = { bounds, cover -> onOpenTrack(t, bounds, cover) },
                     )
                     if (i < tracks.size - 1) {
-                        HorizontalDivider(Modifier.padding(start = if (artistPage) 72.dp else 44.dp), color = scheme.outlineVariant.copy(alpha = 0.5f))
+                        HorizontalDivider(Modifier.padding(start = if (artistPage) 72.dp else 44.dp, end = 4.dp), color = scheme.outlineVariant.copy(alpha = 0.5f))
                     }
                 }
             }
@@ -246,65 +272,47 @@ private fun LibraryCollection<Track>.stats(): String {
     return parts.joinToString("  ·  ")
 }
 
-/** A centred cover, the title, and the artist in plain grey text that opens the artist's page. */
+/**
+ * The head of the page, laid out like a Result: the cover in the chosen shape with the name, the artist and what the
+ * page holds beside it. An album also names its artist in plain text, which opens the artist's page.
+ */
 @Composable
-private fun AlbumHero(collection: LibraryCollection<Track>, onOpenCollection: (String) -> Unit) {
+private fun CollectionHero(collection: LibraryCollection<Track>, onOpenCollection: (String) -> Unit, heroFlight: CoverFlight?) {
     val scheme = MaterialTheme.colorScheme
-    Column(
-        Modifier.fillMaxWidth().padding(horizontal = 24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(6.dp),
-    ) {
-        Spacer(Modifier.statusBarsPadding().height(72.dp))
-        CollectionCover(collection, Modifier.fillMaxWidth(0.72f).widthIn(max = 340.dp).aspectRatio(1f), 768, feature = true)
-        Spacer(Modifier.height(10.dp))
-        Text(
-            collection.title(), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold,
-            textAlign = TextAlign.Center, maxLines = 3, overflow = TextOverflow.Ellipsis,
-        )
-        val artist = collection.artist
-        when {
-            artist != null -> Text(
-                artist, style = MaterialTheme.typography.titleMedium, color = scheme.onSurfaceVariant, textAlign = TextAlign.Center,
-                maxLines = 1, overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.clickable { onOpenCollection(Browse.id(BrowseKind.Artists, artist)) },
-            )
-            collection.various -> Text(stringResource(R.string.album_various), style = MaterialTheme.typography.titleMedium, color = scheme.onSurfaceVariant)
-        }
-        Text(collection.stats(), style = MaterialTheme.typography.bodyMedium, color = scheme.onSurfaceVariant.copy(alpha = 0.8f))
-    }
-}
-
-/** A full-width cover that fades into the page, with the name and what the artist has over its lower edge. */
-@Composable
-private fun ArtistHero(collection: LibraryCollection<Track>) {
-    val scheme = MaterialTheme.colorScheme
-    BoxWithConstraints(Modifier.fillMaxWidth()) {
-        val height = minOf(maxWidth, 480.dp)
-        Box(Modifier.fillMaxWidth().height(height)) {
-            CoverImage(
-                uri = collection.items.first().uri, shape = RectangleShape, modifier = Modifier.fillMaxSize(), sizePx = 1024,
-            ) {
-                Surface(Modifier.fillMaxSize(), color = scheme.tertiaryContainer, contentColor = scheme.onTertiaryContainer) {
-                    Box(contentAlignment = Alignment.Center) { Icon(Icons.Rounded.Person, null, Modifier.size(72.dp)) }
+    val artistPage = collection.kind == BrowseKind.Artists
+    val spec = com.rotatsulabs.specty.ui.heroCoverSpec(com.rotatsulabs.specty.ui.LocalRowStyle.current)
+    val lead = collection.items.first().uri
+    // The text waits for the cover to land, then fades in beside it.
+    val settled by androidx.compose.animation.core.animateFloatAsState(
+        if (heroFlight?.hides(lead) == true) 0f else 1f,
+        androidx.compose.animation.core.tween(260), label = "heroText",
+    )
+    Column(Modifier.fillMaxWidth().statusBarsPadding().padding(top = 64.dp, start = 20.dp, end = 20.dp)) {
+        Row(horizontalArrangement = Arrangement.spacedBy(20.dp), verticalAlignment = Alignment.CenterVertically) {
+            Box(Modifier.size(128.dp)) {
+                CoverImage(
+                    uri = lead, shape = spec.toShape(),
+                    modifier = Modifier.fillMaxSize().coverTarget(heroFlight, lead, spec, 768), sizePx = 768,
+                ) {
+                    Surface(Modifier.fillMaxSize(), color = scheme.tertiaryContainer, contentColor = scheme.onTertiaryContainer) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(if (artistPage) Icons.Rounded.Person else Icons.Rounded.Album, null, Modifier.size(48.dp))
+                        }
+                    }
                 }
             }
-            Box(
-                Modifier.fillMaxSize().background(
-                    Brush.verticalGradient(
-                        0.45f to androidx.compose.ui.graphics.Color.Transparent,
-                        1f to scheme.surface,
-                    ),
-                ),
-            )
-            Column(
-                Modifier.align(Alignment.BottomCenter).fillMaxWidth().padding(horizontal = 24.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-            ) {
-                Text(
-                    collection.title(), style = MaterialTheme.typography.displaySmall, fontWeight = FontWeight.Bold,
-                    textAlign = TextAlign.Center, maxLines = 2, overflow = TextOverflow.Ellipsis,
-                )
+            Column(Modifier.weight(1f).graphicsLayer { alpha = settled }, verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text(collection.title(), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, maxLines = 3, overflow = TextOverflow.Ellipsis)
+                val artist = collection.artist
+                when {
+                    artistPage -> Unit
+                    artist != null -> Text(
+                        artist, style = MaterialTheme.typography.titleMedium, color = scheme.onSurfaceVariant,
+                        maxLines = 1, overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.clickable { onOpenCollection(Browse.id(BrowseKind.Artists, artist)) }.padding(vertical = 2.dp),
+                    )
+                    collection.various -> Text(stringResource(R.string.album_various), style = MaterialTheme.typography.titleMedium, color = scheme.onSurfaceVariant)
+                }
                 Text(collection.stats(), style = MaterialTheme.typography.bodyMedium, color = scheme.onSurfaceVariant)
             }
         }
@@ -377,15 +385,16 @@ private fun PageTrackRow(
     val scheme = MaterialTheme.colorScheme
     var bounds by remember { mutableStateOf<Rect?>(null) }
     var coverBounds by remember { mutableStateOf<Rect?>(null) }
+    val style = com.rotatsulabs.specty.ui.LocalRowStyle.current
     MorphSurface(
         Modifier.fillMaxWidth().onGloballyPositioned { bounds = it.boundsInRoot() },
         corners = SpectyShapes.Row, color = androidx.compose.ui.graphics.Color.Transparent,
-        onClick = { onOpen(bounds, if (thumb) CoverSource(coverBounds, SpectyShapes.Cover, 156) else null) },
+        onClick = { onOpen(bounds, if (thumb) CoverSource(coverBounds, com.rotatsulabs.specty.ui.rowCoverSpec(style), 156) else null) },
     ) {
-        Row(Modifier.padding(vertical = 10.dp, horizontal = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+        Row(Modifier.padding(vertical = if (style.compact) 6.dp else 10.dp, horizontal = 4.dp), verticalAlignment = Alignment.CenterVertically) {
             if (thumb) {
-                CoverImage(uri = track.uri, shape = SpectyShapes.Cover.toShape(),
-                    modifier = Modifier.size(52.dp).onGloballyPositioned { coverBounds = it.boundsInRoot() }
+                CoverImage(uri = track.uri, shape = style.coverShape.toShape(),
+                    modifier = Modifier.size(if (style.compact) 44.dp else 52.dp).onGloballyPositioned { coverBounds = it.boundsInRoot() }
                         .graphicsLayer { alpha = if (flight?.hides(track.uri) == true) 0f else 1f },
                     sizePx = 156,
                 ) {
@@ -404,16 +413,16 @@ private fun PageTrackRow(
                 val parts = if (thumb) {
                     listOfNotNull(track.album?.trim()?.takeIf { it.isNotEmpty() }, Fmt.duration(track.durationMs / 1000.0))
                 } else {
-                    listOfNotNull(Fmt.duration(track.durationMs / 1000.0), track.extension.takeIf { it.isNotEmpty() })
+                    listOfNotNull(Fmt.duration(track.durationMs / 1000.0), track.extension.takeIf { style.showFormat && it.isNotEmpty() })
                 }
                 Text(
                     parts.joinToString("  ·  "), style = MaterialTheme.typography.bodyMedium,
                     color = scheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis,
                 )
             }
-            if (verdict != null) {
+            if (verdict != null && style.showResult) {
                 Spacer(Modifier.width(8.dp))
-                VerdictPill(verdict)
+                VerdictLabel(verdict)
             }
         }
     }
@@ -442,14 +451,14 @@ private fun ResultChip(kind: ResultFilter, count: Int) {
 private fun TracksBar(sort: SortField, ascending: Boolean, onSort: (SortField) -> Unit, onToggleOrder: () -> Unit) {
     var menu by remember { mutableStateOf(false) }
     val rotation by animateFloatAsState(if (ascending) 0f else 180f, Motion.spatial(), label = "pageSortArrow")
-    Row(Modifier.fillMaxWidth().padding(start = 24.dp, end = 12.dp, top = 14.dp, bottom = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+    Row(Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 14.dp, bottom = 4.dp), verticalAlignment = Alignment.CenterVertically) {
         Text(
             stringResource(R.string.browse_tracks), style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary,
             modifier = Modifier.weight(1f),
         )
         Box {
-            MorphSurface(Modifier.height(36.dp), corners = SpectyShapes.Pill, color = MaterialTheme.colorScheme.secondaryContainer, onClick = { menu = true }) {
-                Box(Modifier.height(36.dp).padding(horizontal = 16.dp), contentAlignment = Alignment.Center) {
+            MorphSurface(Modifier.heightIn(min = 36.dp), corners = SpectyShapes.Pill, color = MaterialTheme.colorScheme.secondaryContainer, onClick = { menu = true }) {
+                Box(Modifier.heightIn(min = 36.dp).padding(horizontal = 16.dp, vertical = 6.dp), contentAlignment = Alignment.Center) {
                     Text(stringResource(sort.labelRes()), style = MaterialTheme.typography.labelLarge)
                 }
             }
@@ -477,6 +486,6 @@ private fun TracksBar(sort: SortField, ascending: Boolean, onSort: (SortField) -
 private fun PageHeader(text: String) {
     Text(
         text, style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary,
-        modifier = Modifier.padding(start = 24.dp, end = 24.dp, top = 18.dp, bottom = 4.dp),
+        modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 18.dp, bottom = 4.dp),
     )
 }

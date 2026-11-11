@@ -1,6 +1,8 @@
 package com.rotatsulabs.specty.audio
 
 import com.rotatsulabs.specty.ui.components.Fmt
+import com.rotatsulabs.specty.ui.screens.ResultFilter
+import com.rotatsulabs.specty.ui.spectrogram.ReportFacts
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
@@ -92,7 +94,7 @@ class AuthenticityRegressionTest {
         val soft = spectrum { max(base(it) - max(0.0, it - 12_000.0) / 1000.0 * 11.0, -135.0) }
         val r = assess(soft, same(soft))
         assertEquals(SpectrumShape.GRADUAL_ROLLOFF, r.shape)
-        assertEquals(Verdict.BAND_LIMITED, r.verdict)
+        assertEquals(Verdict.ROLLOFF, r.verdict)
         assertNull(r.cutoffHz)
         assertNotNull(r.emptyAboveHz)
         assertTrue("empty above ${r.emptyAboveHz}", r.emptyAboveHz!! in 14_000.0..20_500.0)
@@ -354,5 +356,89 @@ class AuthenticityRegressionTest {
         val finding = UpsampleEvidence.Finding(UpsampleEvidence.Kind.SAMPLE_HOLD, 2, 44_100)
         val r = assessWith(fullBand, info(codec = "mp3"), null, finding)
         assertEquals(Verdict.LOSSY_CODEC, r.verdict)
+    }
+
+    // ---- roll-off, sharp cutoff and what backs a verdict ------------------------------------
+
+    private fun soft(start: Double) = spectrum { max(base(it) - max(0.0, it - start) / 1000.0 * 11.0, -135.0) }
+
+    @Test
+    fun aGradualRolloffDescribesTheSpectrumAndAccusesNothing() {
+        val soft = soft(12_000.0)
+        val r = assess(soft, same(soft))
+        assertEquals(Verdict.ROLLOFF, r.verdict)
+        assertTrue(r.note, r.note.contains("does not by itself show a lossy origin"))
+        assertFalse(r.note, r.note.contains("transcoded"))
+        assertEquals(ResultFilter.Unclear, ResultFilter.of(r.verdict))
+        assertEquals("Gradual high-frequency roll-off", ReportFacts.headline(r.verdict))
+        assertNotNull(r.evidence)
+        // A roll-off in a lossy container is still a lossy format; the spectrum does not change that.
+        assertEquals(Verdict.LOSSY_CODEC, assess(soft, same(soft), info("mp3")).verdict)
+    }
+
+    @Test
+    fun aRolloffThatEndsVeryLowKeepsTheCauseOpen() {
+        val low = soft(9_000.0)
+        val r = assess(low, same(low))
+        assertEquals(Verdict.ROLLOFF, r.verdict)
+        assertTrue("empty above ${r.emptyAboveHz}", r.emptyAboveHz!! <= 16_500.0)
+        assertTrue(r.note, r.note.contains("cause stays open"))
+    }
+
+    @Test
+    fun anEdgeThatMovesAroundTheTrackIsNotAccusedOfBeingLossy() {
+        val whole = cliffAt(19_250.0)
+        val moving = listOf(18_350.0, 18_450.0, 18_550.0, 19_950.0, 20_050.0, 20_150.0).map { cliffAt(it) }
+        val steady = assess(whole, same(whole))
+        val jumpy = assess(whole, moving + moving)
+        assertEquals(Verdict.POSSIBLE_LOSSY_SOURCE, steady.verdict)
+        assertTrue("moving edge was ${jumpy.verdict}", jumpy.verdict != Verdict.POSSIBLE_LOSSY_SOURCE && jumpy.verdict != Verdict.LOSSY_SOURCE)
+        assertTrue(steady.confidence > jumpy.confidence)
+    }
+
+    @Test
+    fun aSharpEdgeNearTheTopOfTheBandStaysASpectralObservation() {
+        val r = assess(cliffAt(21_300.0), same(cliffAt(21_300.0)))
+        assertEquals(Verdict.BAND_LIMITED, r.verdict)
+        assertEquals("Sharp high-frequency cutoff", ReportFacts.headline(r.verdict))
+        assertFalse(r.note, r.note.contains("transcoded"))
+    }
+
+    @Test
+    fun aCutoffWhereAnUpsampledSourceEndsNeedsMoreThanTheEdge() {
+        fun cut(at: Double) = spectrum(96_000) { if (it < at) base(it) else -135.0 }
+        val whole = cut(22_050.0)
+        val wander = listOf(21_000.0, 21_200.0, 21_400.0, 22_700.0, 22_900.0, 23_100.0).map { cut(it) }
+        val fixed = AuthenticityAnalyzer.assess(info(sampleRate = 96_000), AuthSpectra(96_000, AnalysisVersion.AUTH_FFT, whole, same(whole)), null)
+        val loose = AuthenticityAnalyzer.assess(info(sampleRate = 96_000), AuthSpectra(96_000, AnalysisVersion.AUTH_FFT, whole, wander + wander), null)
+        assertEquals(Verdict.UPSAMPLED, fixed.verdict)
+        assertTrue("wandering edge was ${loose.verdict}", loose.verdict != Verdict.UPSAMPLED)
+        // With a 16-bit noise floor behind it, the same loose edge is confirmed.
+        val backed = AuthenticityAnalyzer.assess(
+            info(sampleRate = 96_000), AuthSpectra(96_000, AnalysisVersion.AUTH_FFT, whole, wander + wander, lsbVar), null,
+        )
+        if (loose.verdict == Verdict.BAND_LIMITED) assertEquals(Verdict.UPSAMPLED, backed.verdict)
+    }
+
+    @Test
+    fun aHighSampleRateIsNotHiResWithoutResolutionToMatch() {
+        val wide = spectrum(96_000) { base(it) }
+        val real = assessWith(wide, info(sampleRate = 96_000), null)
+        assertEquals(Verdict.HI_RES, real.verdict)
+        val floorAtCd = assessWith(wide, info(sampleRate = 96_000), lsbVar)
+        assertEquals(Verdict.GENUINE, floorAtCd.verdict)
+        assertTrue(floorAtCd.note, floorAtCd.note.contains("not confirmed as Hi-Res"))
+        val padded = AuthenticityAnalyzer.assess(info(sampleRate = 96_000), AuthSpectra(96_000, AnalysisVersion.AUTH_FFT, wide, same(wide)), 16)
+        assertEquals(Verdict.GENUINE, padded.verdict)
+    }
+
+    @Test
+    fun confidenceIsReportedAsStrengthOfEvidenceNotAProbability() {
+        assertNull(Evidence.of(0))
+        assertEquals(Evidence.LIMITED, Evidence.of(54))
+        assertEquals(Evidence.MODERATE, Evidence.of(55))
+        assertEquals(Evidence.STRONG, Evidence.of(80))
+        val silent = spectrum { -140.0 }
+        assertNull(assess(silent, same(silent)).evidence)
     }
 }

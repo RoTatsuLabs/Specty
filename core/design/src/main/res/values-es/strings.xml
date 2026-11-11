@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="action_back">Atrás</string>
+    <string name="search_clear">Borrar búsqueda</string>
+    <string name="search_default">Buscar</string>
+    <string name="verdict_lossless">Sin pérdida</string>
+    <string name="verdict_lossy">Con pérdida</string>
+    <string name="verdict_unclear">Poco claro</string>
+    <string name="palette_violet">Violeta</string>
+    <string name="palette_azure">Azul</string>
+    <string name="palette_teal">Turquesa</string>
+    <string name="palette_lime">Lima</string>
+    <string name="palette_amber">Ámbar</string>
+    <string name="palette_rose">Rosa</string>
+    <string name="theme_system">Sistema</string>
+    <string name="theme_light">Claro</string>
+    <string name="theme_dark">Oscuro</string>
+    <string name="verdict_lossy_source">Fuente con pérdida</string>
+    <string name="verdict_upsampled">Frecuencia aumentada</string>
+    <string name="verdict_possible">Posible pérdida</string>
+    <string name="verdict_band">Corte marcado</string>
+    <string name="verdict_rolloff">Caída gradual</string>
+</resources>

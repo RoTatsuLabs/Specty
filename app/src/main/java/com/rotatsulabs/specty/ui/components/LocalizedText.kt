@@ -67,6 +67,9 @@ fun noteText(n: Note): String {
         NoteKey.UPSAMPLE_LINE -> stringResource(R.string.note_upsample_line, a[0], a[1])
         NoteKey.FLOOR_AT_16BIT -> stringResource(R.string.note_floor_at_16bit)
         NoteKey.FLOOR_BELOW_16BIT -> stringResource(R.string.note_floor_below_16bit)
+        NoteKey.ROLLOFF_LOW -> stringResource(R.string.note_rolloff_low)
+        NoteKey.UPSAMPLE_POSSIBLE -> stringResource(R.string.note_upsample_possible, a[0], a[1])
+        NoteKey.RATE_UNCONFIRMED -> stringResource(R.string.note_rate_unconfirmed)
         NoteKey.VERDICTS_DIFFER -> stringResource(R.string.hl_verdicts_differ, verdictPhrase(a[0]), verdictPhrase(a[1]))
         NoteKey.MORE_TOP_END -> stringResource(R.string.hl_more_top_end, a[0], a[1], a[2], a[3])
         NoteKey.B_REACHES_TOP -> stringResource(R.string.hl_b_reaches_top, a[0])
@@ -87,6 +90,7 @@ private fun verdictPhrase(name: String): String = stringResource(
         Verdict.POSSIBLE_LOSSY_SOURCE -> R.string.hl_verdict_possible_lossy
         Verdict.UPSAMPLED -> R.string.hl_verdict_upsampled
         Verdict.BAND_LIMITED -> R.string.hl_verdict_band_limited
+        Verdict.ROLLOFF -> R.string.hl_verdict_rolloff
         Verdict.LOSSY_CODEC -> R.string.hl_verdict_lossy_codec
         Verdict.DOLBY_ATMOS -> R.string.hl_verdict_atmos
         Verdict.INCONCLUSIVE -> R.string.hl_verdict_inconclusive

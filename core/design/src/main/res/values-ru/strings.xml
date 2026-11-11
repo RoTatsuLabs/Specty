@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="action_back">Назад</string>
+    <string name="search_clear">Очистить поиск</string>
+    <string name="search_default">Поиск</string>
+    <string name="verdict_lossless">Lossless</string>
+    <string name="verdict_lossy">Lossy</string>
+    <string name="verdict_unclear">Неясно</string>
+    <string name="palette_violet">Фиолетовая</string>
+    <string name="palette_azure">Лазурная</string>
+    <string name="palette_teal">Бирюзовая</string>
+    <string name="palette_lime">Лаймовая</string>
+    <string name="palette_amber">Янтарная</string>
+    <string name="palette_rose">Розовая</string>
+    <string name="theme_system">Системная</string>
+    <string name="theme_light">Светлая</string>
+    <string name="theme_dark">Тёмная</string>
+    <string name="verdict_lossy_source">Lossy-источник</string>
+    <string name="verdict_upsampled">Апсемплинг</string>
+    <string name="verdict_possible">Возможно, lossy</string>
+    <string name="verdict_band">Резкий срез</string>
+    <string name="verdict_rolloff">Спад</string>
+</resources>

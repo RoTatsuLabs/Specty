@@ -43,7 +43,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.automirrored.rounded.VolumeUp
 import androidx.compose.material.icons.rounded.BarChart
-import androidx.compose.material.icons.rounded.Compare
 import androidx.compose.material.icons.rounded.DataObject
 import androidx.compose.material.icons.rounded.Equalizer
 import androidx.compose.material.icons.rounded.ErrorOutline
@@ -84,6 +83,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.material3.toShape
+import com.rotatsulabs.specty.ui.toShape
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -142,10 +143,13 @@ import com.rotatsulabs.specty.ui.components.Stat
 import com.rotatsulabs.specty.ui.components.StatGrid
 import com.rotatsulabs.specty.ui.spectrogram.SpectrogramCard
 import com.rotatsulabs.specty.ui.theme.Motion
+import com.rotatsulabs.specty.ui.design.Spacing
+import com.rotatsulabs.specty.ui.design.FadeThrough
+import androidx.compose.animation.togetherWith
 import kotlinx.coroutines.delay
 
 @Composable
-fun AnalysisScreen(state: AnalysisState, onBack: () -> Unit, onReanalyse: () -> Unit, modifier: Modifier = Modifier, onFullscreen: (Int) -> Unit = {}, onCompare: () -> Unit = {}, onExport: () -> Unit = {}, flight: CoverFlight? = null, links: TagLinks = TagLinks.None) {
+fun AnalysisScreen(state: AnalysisState, onBack: () -> Unit, onReanalyse: () -> Unit, modifier: Modifier = Modifier, onFullscreen: (Int) -> Unit = {}, onExport: () -> Unit = {}, flight: CoverFlight? = null, links: TagLinks = TagLinks.None) {
     val title = when (state) {
         is AnalysisState.Running -> state.title
         is AnalysisState.Failed -> state.title
@@ -163,7 +167,6 @@ fun AnalysisScreen(state: AnalysisState, onBack: () -> Unit, onReanalyse: () -> 
                 actions = {
                     if (state is AnalysisState.Done) {
                         ExpressiveIconButton(Icons.Rounded.IosShare, stringResource(R.string.analysis_export), onExport, tonal = false)
-                        ExpressiveIconButton(Icons.Rounded.Compare, stringResource(R.string.analysis_compare), onCompare, tonal = false)
                         var spins by remember { mutableStateOf(0) }
                         val spin by animateFloatAsState(spins * 360f, spring(dampingRatio = 0.6f, stiffness = 120f), label = "spin")
                         ExpressiveIconButton(
@@ -190,15 +193,29 @@ fun AnalysisScreen(state: AnalysisState, onBack: () -> Unit, onReanalyse: () -> 
 @Composable
 private fun RunningContent(state: AnalysisState.Running) {
     Column(
-        Modifier.fillMaxSize().padding(32.dp),
+        Modifier.fillMaxSize().padding(Spacing.Xl),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
-        ShapeLoader(size = 80.dp)
-        Spacer(Modifier.height(28.dp))
-        Text(stageText(state.stage), style = MaterialTheme.typography.titleMedium)
-        Spacer(Modifier.height(16.dp))
-        WavyProgressBar(state.progress)
+        ShapeLoader(size = 72.dp)
+        Spacer(Modifier.height(Spacing.Xl))
+        Text(
+            state.title.withoutExplicitMark(),
+            style = MaterialTheme.typography.titleLarge,
+            textAlign = TextAlign.Center,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+        )
+        Spacer(Modifier.height(Spacing.Xs))
+        Text(stageText(state.stage), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Spacer(Modifier.height(Spacing.Xl))
+        WavyProgressBar(state.progress, Modifier.widthIn(max = 360.dp))
+        Spacer(Modifier.height(Spacing.Sm))
+        Text(
+            "${(state.progress * 100).roundToInt()}%",
+            style = MaterialTheme.typography.labelLarge.copy(fontFeatureSettings = "tnum"),
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
     }
 }
 
@@ -238,48 +255,80 @@ private fun LimitedContent(info: AudioInfo, report: AuthenticityReport) {
     }
 }
 
+private enum class ResultSection(val labelRes: Int) {
+    Overview(R.string.analysis_tab_overview),
+    Levels(R.string.analysis_tab_levels),
+    Spectrogram(R.string.analysis_tab_spectrogram),
+}
+
 @Composable
 private fun ResultContent(result: AnalysisResult, onFullscreen: (Int) -> Unit, flight: CoverFlight?, links: TagLinks) {
     val wide = rememberIsWide()
+    var section by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(ResultSection.Overview) }
+    // Who the file is and the verdict come first; the detail sits behind a switcher so nothing is a long scroll.
+    val summary: @Composable () -> Unit = {
+        Hero(result, flight, links)
+        Reveal(1) { VerdictCard(result.authenticity) }
+        Reveal(2) { MetricTiles(result) }
+    }
+    val detail: @Composable () -> Unit = {
+        com.rotatsulabs.specty.ui.design.components.OptionSegmentedControl(
+            ResultSection.entries, section, { section = it }, { stringResource(it.labelRes) }, Modifier.fillMaxWidth(),
+        )
+        androidx.compose.animation.AnimatedContent(
+            targetState = section,
+            transitionSpec = { FadeThrough.enter() togetherWith FadeThrough.exit() },
+            label = "resultSection",
+        ) { shown ->
+            Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(Spacing.Lg)) {
+                when (shown) {
+                    ResultSection.Overview -> {
+                        ConfidenceCard(result.authenticity, result.info)
+                        FileCard(result.info, result.decoded)
+                    }
+                    ResultSection.Levels -> {
+                        LevelsCard(result)
+                        TimelineCard(result.levels)
+                        ChannelsCard(result)
+                        StereoCard(result.levels)
+                    }
+                    ResultSection.Spectrogram -> SpectrogramCard(
+                        result.spectrogram,
+                        title = result.info.title.withoutExplicitMark(),
+                        onFullscreen = onFullscreen,
+                        cutoffHz = result.authenticity.cutoffHz,
+                        playback = rememberPlayback(result.uri),
+                        coverUri = result.uri,
+                    )
+                }
+            }
+        }
+    }
     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
-    Column(
-        Modifier.widthIn(max = if (wide) 1200.dp else 720.dp).fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
-    ) {
-        // Two columns on a wide window: what the file is on the left, how it measures on the right.
-        // On a narrow one the same cards stack in one column, in the same order.
-        val about: @Composable () -> Unit = {
-            Hero(result, flight, links)
-            Reveal(1) { VerdictCard(result.authenticity) }
-            Reveal(2) { MetricTiles(result) }
-            Reveal(3) { ConfidenceCard(result.authenticity, result.info) }
-            Reveal(4) { FileCard(result.info, result.decoded) }
-        }
-        val measured: @Composable () -> Unit = {
-            Reveal(5) { LevelsCard(result) }
-            Reveal(6) { TimelineCard(result.levels) }
-            Reveal(7) { ChannelsCard(result) }
-            Reveal(8) { StereoCard(result.levels) }
-        }
         if (wide) {
-            Row(horizontalArrangement = Arrangement.spacedBy(16.dp), verticalAlignment = Alignment.Top) {
-                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(16.dp)) { about() }
-                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(16.dp)) { measured() }
+            Row(
+                Modifier.widthIn(max = 1200.dp).fillMaxSize().padding(horizontal = Spacing.Gutter),
+                horizontalArrangement = Arrangement.spacedBy(Spacing.Lg),
+            ) {
+                Column(
+                    Modifier.weight(0.8f).fillMaxSize().verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(Spacing.Lg),
+                ) { summary(); Spacer(Modifier.height(Spacing.Lg)) }
+                Column(
+                    Modifier.weight(1.2f).fillMaxSize().verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(Spacing.Lg),
+                ) { detail(); Spacer(Modifier.height(Spacing.Lg)) }
             }
         } else {
-            about()
-            measured()
+            Column(
+                Modifier.widthIn(max = 720.dp).fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = Spacing.Gutter),
+                verticalArrangement = Arrangement.spacedBy(Spacing.Lg),
+            ) {
+                summary()
+                detail()
+                Spacer(Modifier.height(Spacing.Lg))
+            }
         }
-        Reveal(10) { SpectrogramCard(
-                result.spectrogram,
-                title = result.info.title.withoutExplicitMark(),
-                onFullscreen = onFullscreen,
-                cutoffHz = result.authenticity.cutoffHz,
-                playback = rememberPlayback(result.uri),
-                coverUri = result.uri,
-            ) }
-        Spacer(Modifier.height(12.dp))
-    }
     }
 }
 
@@ -291,15 +340,15 @@ private fun Hero(result: AnalysisResult, flight: CoverFlight?, links: TagLinks) 
     val scheme = MaterialTheme.colorScheme
     // When the cover flies in from the library it must already sit at rest, so only the rest of the hero reveals.
     val shared = flight != null && flight.shares(result.uri)
+    val heroSpec = com.rotatsulabs.specty.ui.heroCoverSpec(com.rotatsulabs.specty.ui.LocalRowStyle.current)
     val cover: @Composable () -> Unit = {
         val coverSource = remember { MutableInteractionSource() }
         CoverImage(
             uri = result.uri,
-            shape = SpectyShapes.Feature.toShape(),
+            shape = heroSpec.toShape(),
             modifier = Modifier
-                .fillMaxWidth(0.62f)
-                .aspectRatio(1f)
-                .coverTarget(flight, result.uri)
+                .fillMaxSize()
+                .coverTarget(flight, result.uri, heroSpec, 768)
                 .pressScale(coverSource, 0.94f)
                 .clickable(interactionSource = coverSource, indication = null) { },
             sizePx = 768,
@@ -311,27 +360,29 @@ private fun Hero(result: AnalysisResult, flight: CoverFlight?, links: TagLinks) 
             }
         }
     }
-    Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(14.dp)) {
-        if (shared) cover() else Reveal(0) { cover() }
-        Reveal(1) {
-            Row(Modifier.padding(horizontal = 8.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text(
-                    info.title.withoutExplicitMark(),
-                    style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.Bold,
-                    textAlign = TextAlign.Center,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.weight(1f, fill = false),
-                )
-                if (isExplicit(info.tags)) ExplicitMark()
+    Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(Spacing.Md)) {
+        Row(horizontalArrangement = Arrangement.spacedBy(Spacing.Lg), verticalAlignment = Alignment.CenterVertically) {
+            Box(Modifier.size(116.dp)) { if (shared) cover() else Reveal(0) { cover() } }
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(Spacing.Xs)) {
+                Reveal(1) {
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Spacing.Sm)) {
+                        Text(
+                            info.title.withoutExplicitMark(),
+                            style = MaterialTheme.typography.titleLarge,
+                            maxLines = 3,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.weight(1f, fill = false),
+                        )
+                        if (isExplicit(info.tags)) ExplicitMark()
+                    }
+                }
+                TagLine(info, links)
             }
         }
-        TagLine(info, links)
         Reveal(2) {
             FlowRow(
                 Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 val lossless = info.isLossless
@@ -341,8 +392,6 @@ private fun Hero(result: AnalysisResult, flight: CoverFlight?, links: TagLinks) 
                 InfoChip(Fmt.size(info.sizeBytes))
                 when {
                     info.isDolbyAtmos -> QualityBadge(stringResource(R.string.badge_atmos), Icons.Rounded.SurroundSound, scheme.primary, scheme.tertiary)
-                    verdict == Verdict.HI_RES -> QualityBadge(stringResource(R.string.badge_hires_lossless), Icons.Rounded.HighQuality, scheme.primary, scheme.secondary)
-                    verdict == Verdict.GENUINE -> QualityBadge(stringResource(R.string.badge_lossless), Icons.Rounded.Verified, scheme.tertiary, scheme.secondary)
                 }
             }
         }
@@ -425,7 +474,9 @@ private fun VerdictCard(report: AuthenticityReport) {
         Verdict.LOSSY_SOURCE -> Quad(scheme.errorContainer, scheme.onErrorContainer, Icons.Rounded.Warning, stringResource(R.string.verdict_head_lossy_source))
         Verdict.POSSIBLE_LOSSY_SOURCE -> Quad(scheme.secondaryContainer, scheme.onSecondaryContainer, Icons.Rounded.WarningAmber, stringResource(R.string.verdict_head_possible))
         Verdict.UPSAMPLED -> Quad(scheme.errorContainer, scheme.onErrorContainer, Icons.Rounded.Warning, stringResource(R.string.verdict_head_upsampled))
-        Verdict.BAND_LIMITED -> Quad(scheme.secondaryContainer, scheme.onSecondaryContainer, Icons.Rounded.WarningAmber, stringResource(R.string.verdict_head_band))
+        // Observations about the spectrum, not findings about the source: neutral colours and no warning icon.
+        Verdict.BAND_LIMITED -> Quad(scheme.surfaceContainerHigh, scheme.onSurface, Icons.Rounded.Info, stringResource(R.string.verdict_head_band))
+        Verdict.ROLLOFF -> Quad(scheme.surfaceContainerHigh, scheme.onSurface, Icons.Rounded.Info, stringResource(R.string.verdict_head_rolloff))
         Verdict.LOSSY_CODEC -> Quad(scheme.surfaceContainerHigh, scheme.onSurface, Icons.Rounded.Info, stringResource(R.string.verdict_head_codec))
         Verdict.DOLBY_ATMOS -> Quad(scheme.inverseSurface, scheme.inverseOnSurface, Icons.Rounded.SurroundSound, stringResource(R.string.verdict_atmos))
         Verdict.INCONCLUSIVE -> Quad(scheme.surfaceContainerHigh, scheme.onSurface, Icons.Rounded.Info, stringResource(R.string.verdict_head_inconclusive))
@@ -439,7 +490,7 @@ private fun VerdictCard(report: AuthenticityReport) {
     SpectyCard(modifier = Modifier.fillMaxWidth(), corners = SpectyShapes.Hero, color = container) {
         androidx.compose.runtime.CompositionLocalProvider(androidx.compose.material3.LocalContentColor provides content) {
             Row(horizontalArrangement = Arrangement.spacedBy(16.dp), verticalAlignment = Alignment.Top) {
-                IconBadge(icon, Modifier.scale(pop), container = content.copy(alpha = 0.14f), content = content, corners = Corners(24.dp), size = 52.dp)
+                IconBadge(icon, Modifier.scale(pop), container = content.copy(alpha = 0.14f), content = content, shape = verdictShape(report.verdict), size = 56.dp)
                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     Text(headline, style = MaterialTheme.typography.titleMedium)
                     Text(noteText(report.notes), style = MaterialTheme.typography.bodyMedium)
@@ -570,3 +621,16 @@ private fun ChannelsCard(result: AnalysisResult) {
         }
     }
 }
+
+/** Each verdict gets its own Material shape, so the badge reads before the icon does. */
+@OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun verdictShape(verdict: Verdict): androidx.compose.ui.graphics.Shape =
+    when (verdict) {
+        Verdict.GENUINE -> androidx.compose.material3.MaterialShapes.Cookie12Sided
+        Verdict.HI_RES -> androidx.compose.material3.MaterialShapes.Sunny
+        Verdict.LOSSY_SOURCE, Verdict.UPSAMPLED -> androidx.compose.material3.MaterialShapes.Diamond
+        Verdict.POSSIBLE_LOSSY_SOURCE -> androidx.compose.material3.MaterialShapes.Clover4Leaf
+        else -> androidx.compose.material3.MaterialShapes.Cookie9Sided
+    }.toShape()
+

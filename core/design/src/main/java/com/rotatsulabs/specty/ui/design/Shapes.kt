@@ -48,28 +48,28 @@ private fun minOf(a: Dp, b: Dp) = if (a < b) a else b
  */
 object SpectyShapes {
     val Pill = Corners(100.dp)
-    val Card = Corners(topStart = 36.dp, topEnd = 36.dp, bottomEnd = 36.dp, bottomStart = 14.dp)
-    val CardMirrored = Corners(topStart = 14.dp, topEnd = 36.dp, bottomEnd = 36.dp, bottomStart = 36.dp)
-    val CardSoft = Corners(32.dp)
-    val Hero = Corners(topStart = 56.dp, topEnd = 56.dp, bottomEnd = 56.dp, bottomStart = 20.dp)
-    val Feature = Corners(topStart = 72.dp, topEnd = 28.dp, bottomEnd = 72.dp, bottomStart = 28.dp)
-    val Field = Corners(topStart = 14.dp, topEnd = 32.dp, bottomEnd = 32.dp, bottomStart = 32.dp)
-    val Tile = Corners(28.dp)
-    val TileStart = Corners(topStart = 32.dp, topEnd = 10.dp, bottomEnd = 10.dp, bottomStart = 32.dp)
-    val TileMiddle = Corners(10.dp)
-    val TileEnd = Corners(topStart = 10.dp, topEnd = 32.dp, bottomEnd = 32.dp, bottomStart = 10.dp)
-    val Row = Corners(28.dp)
-    val Cover = Corners(20.dp)
-    val Segment = Corners(22.dp)
+    val Card = Corners(24.dp)
+    val CardMirrored = Corners(24.dp)
+    val CardSoft = Corners(20.dp)
+    val Hero = Corners(topStart = 40.dp, topEnd = 40.dp, bottomEnd = 40.dp, bottomStart = 16.dp)
+    val Feature = Corners(topStart = 48.dp, topEnd = 20.dp, bottomEnd = 48.dp, bottomStart = 20.dp)
+    val Field = Corners(20.dp)
+    val Tile = Corners(20.dp)
+    val TileStart = Corners(topStart = 24.dp, topEnd = 6.dp, bottomEnd = 6.dp, bottomStart = 24.dp)
+    val TileMiddle = Corners(6.dp)
+    val TileEnd = Corners(topStart = 6.dp, topEnd = 24.dp, bottomEnd = 24.dp, bottomStart = 6.dp)
+    val Row = Corners(20.dp)
+    val Cover = Corners(14.dp)
+    val Segment = Corners(18.dp)
 }
 
 /** Material's own shape slots, tuned to the same scale so stock components agree with the custom ones. */
 val SpectyMaterialShapes = Shapes(
-    extraSmall = RoundedCornerShape(10.dp),
-    small = RoundedCornerShape(16.dp),
-    medium = RoundedCornerShape(24.dp),
-    large = RoundedCornerShape(32.dp),
-    extraLarge = RoundedCornerShape(44.dp),
+    extraSmall = RoundedCornerShape(8.dp),
+    small = RoundedCornerShape(12.dp),
+    medium = RoundedCornerShape(20.dp),
+    large = RoundedCornerShape(28.dp),
+    extraLarge = RoundedCornerShape(36.dp),
 )
 
 /**

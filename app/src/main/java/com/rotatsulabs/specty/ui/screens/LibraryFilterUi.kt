@@ -85,6 +85,7 @@ internal fun FilterButton(active: Int, onClick: () -> Unit, modifier: Modifier =
             stringResource(R.string.filter_open),
             { haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove); onClick() },
             toggled = active > 0,
+            tonal = false,
         )
         if (active > 0) {
             Badge(Modifier.align(Alignment.TopEnd)) { Text("$active") }

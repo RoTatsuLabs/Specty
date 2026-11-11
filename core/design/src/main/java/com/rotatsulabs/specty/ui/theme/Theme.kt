@@ -4,7 +4,8 @@ import android.content.Context
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.ColorScheme
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MaterialExpressiveTheme
+import androidx.compose.material3.MotionScheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
@@ -58,7 +59,13 @@ fun SpectyTheme(appearance: Appearance, content: @Composable () -> Unit) {
     val scheme = remember(appearance.dynamicColor, appearance.seed, appearance.pureBlack, dark) {
         colorSchemeFor(context, appearance, dark, appearance.pureBlack)
     }
-    MaterialTheme(colorScheme = scheme, typography = SpectyTypography, shapes = SpectyMaterialShapes, content = content)
+    MaterialExpressiveTheme(
+        colorScheme = scheme,
+        motionScheme = MotionScheme.expressive(),
+        shapes = SpectyMaterialShapes,
+        typography = SpectyTypography,
+        content = content,
+    )
 }
 
 private fun ColorRoles.toColorScheme(dark: Boolean): ColorScheme {

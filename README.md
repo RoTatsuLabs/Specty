@@ -21,7 +21,7 @@ An open-source audio analyzer for Android. It draws the spectrogram, measures lo
 
 ## What it does
 
-- Open a file and the verdict comes first: genuine, lossy source, upsampled or band limited, along with the cutoff frequency and how confident Specty is.
+- Open a file and the verdict comes first: genuine, lossy source, upsampled, a sharp cutoff or a gradual roll-off, along with the cutoff frequency and how strong the evidence is. Roll-off and sharp cutoff describe the spectrum and do not claim a source.
 - The spectrogram opens full screen with zoom, pan and a readout of frequency, time and level. You can export it as a PNG.
 - Measurements cover peak, true peak, loudness (LUFS), dynamic range, clipping and effective bit depth, per channel.
 - The library scans your music folders in the background. Filter by verdict, compare two tracks or look for duplicates.

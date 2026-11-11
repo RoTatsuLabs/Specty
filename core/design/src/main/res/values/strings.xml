@@ -4,11 +4,10 @@
     <string name="search_clear">Clear search</string>
     <string name="search_default">Search</string>
     <string name="verdict_atmos" translatable="false">Dolby Atmos</string>
-    <string name="verdict_fake">Fake</string>
     <string name="verdict_hires" translatable="false">Hi-Res</string>
     <string name="verdict_lossless">Lossless</string>
     <string name="verdict_lossy">Lossy</string>
-    <string name="verdict_maybe">Maybe</string>
+    <string name="verdict_unclear">Unclear</string>
     <string name="palette_violet">Violet</string>
     <string name="palette_azure">Azure</string>
     <string name="palette_teal">Teal</string>
@@ -18,4 +17,9 @@
     <string name="theme_system">System</string>
     <string name="theme_light">Light</string>
     <string name="theme_dark">Dark</string>
+    <string name="verdict_lossy_source">Lossy source</string>
+    <string name="verdict_upsampled">Upsampled</string>
+    <string name="verdict_possible">Possibly lossy</string>
+    <string name="verdict_band">Sharp cutoff</string>
+    <string name="verdict_rolloff">Roll-off</string>
 </resources>

@@ -127,6 +127,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             dynamicColor = prefs.getBoolean(KEY_DYNAMIC, true),
             pureBlack = prefs.getBoolean(KEY_BLACK, false),
             seed = SeedPalette.entries.getOrElse(prefs.getInt(KEY_SEED, 0)) { SeedPalette.Violet },
+            reduceMotion = prefs.getBoolean(KEY_REDUCE, false),
         ),
     )
     val appearance: StateFlow<Appearance> = _appearance.asStateFlow()
@@ -146,6 +147,87 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         prefs.edit().putInt(KEY_SEED, seed.ordinal).apply()
     }
 
+    fun setReduceMotion(enabled: Boolean) {
+        _appearance.value = _appearance.value.copy(reduceMotion = enabled)
+        prefs.edit().putBoolean(KEY_REDUCE, enabled).apply()
+    }
+
+    private val _autoScan = MutableStateFlow(prefs.getBoolean(KEY_AUTO_SCAN, false))
+    /** Scan new and changed tracks each time the library loads. */
+    val autoScan: StateFlow<Boolean> = _autoScan.asStateFlow()
+
+    fun setAutoScan(enabled: Boolean) {
+        _autoScan.value = enabled
+        prefs.edit().putBoolean(KEY_AUTO_SCAN, enabled).apply()
+    }
+
+    private val _minSeconds = MutableStateFlow(prefs.getInt(KEY_MIN_SECONDS, 0))
+    /** Library scans skip files shorter than this many seconds; 0 keeps everything. */
+    val minSeconds: StateFlow<Int> = _minSeconds.asStateFlow()
+
+    fun setMinSeconds(seconds: Int) {
+        _minSeconds.value = seconds
+        prefs.edit().putInt(KEY_MIN_SECONDS, seconds).apply()
+    }
+
+    private val _rowStyle = MutableStateFlow(
+        RowStyle(
+            density = RowDensity.entries.getOrElse(prefs.getInt(KEY_DENSITY, 0)) { RowDensity.Comfortable },
+            coverShape = CoverShape.entries.getOrElse(prefs.getInt(KEY_COVER_SHAPE, 0)) { CoverShape.Rounded },
+            showResult = prefs.getBoolean(KEY_SHOW_RESULT, true),
+            showFormat = prefs.getBoolean(KEY_SHOW_FORMAT, true),
+            showFolder = prefs.getBoolean(KEY_SHOW_FOLDER, false),
+        ),
+    )
+    /** How track lists look. */
+    val rowStyle: StateFlow<RowStyle> = _rowStyle.asStateFlow()
+
+    fun setDensity(density: RowDensity) {
+        _rowStyle.value = _rowStyle.value.copy(density = density)
+        prefs.edit().putInt(KEY_DENSITY, density.ordinal).apply()
+    }
+
+    fun setCoverShape(shape: CoverShape) {
+        _rowStyle.value = _rowStyle.value.copy(coverShape = shape)
+        prefs.edit().putInt(KEY_COVER_SHAPE, shape.ordinal).apply()
+    }
+
+    fun setShowResult(show: Boolean) {
+        _rowStyle.value = _rowStyle.value.copy(showResult = show)
+        prefs.edit().putBoolean(KEY_SHOW_RESULT, show).apply()
+    }
+
+    fun setShowFormat(show: Boolean) {
+        _rowStyle.value = _rowStyle.value.copy(showFormat = show)
+        prefs.edit().putBoolean(KEY_SHOW_FORMAT, show).apply()
+    }
+
+    fun setShowFolder(show: Boolean) {
+        _rowStyle.value = _rowStyle.value.copy(showFolder = show)
+        prefs.edit().putBoolean(KEY_SHOW_FOLDER, show).apply()
+    }
+
+    private val _navLabels = MutableStateFlow(
+        com.rotatsulabs.specty.ui.design.components.NavLabels.entries.firstOrNull { it.name == prefs.getString(KEY_NAV_LABELS, null) }
+            ?: com.rotatsulabs.specty.ui.design.components.NavLabels.ActiveOnly,
+    )
+    /** When the bottom bar's destinations show their names. */
+    val navLabels: StateFlow<com.rotatsulabs.specty.ui.design.components.NavLabels> = _navLabels.asStateFlow()
+
+    fun setNavLabels(labels: com.rotatsulabs.specty.ui.design.components.NavLabels) {
+        _navLabels.value = labels
+        prefs.edit().putString(KEY_NAV_LABELS, labels.name).apply()
+    }
+
+    private val _keepAwake = MutableStateFlow(prefs.getBoolean(KEY_KEEP_AWAKE, true))
+    /** Keep the screen on while an analysis or a library scan runs. */
+    val keepAwake: StateFlow<Boolean> = _keepAwake.asStateFlow()
+
+    fun setKeepAwake(enabled: Boolean) {
+        _keepAwake.value = enabled
+        prefs.edit().putBoolean(KEY_KEEP_AWAKE, enabled).apply()
+    }
+
     fun setPureBlack(enabled: Boolean) {
         _appearance.value = _appearance.value.copy(pureBlack = enabled)
         prefs.edit().putBoolean(KEY_BLACK, enabled).apply()
@@ -153,17 +235,17 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     private var analysisJob: Job? = null
 
-    private val _onboarding = MutableStateFlow(!prefs.getBoolean(KEY_ONBOARDED, false))
-    /** True on first launch and when replayed from settings. */
-    val onboarding: StateFlow<Boolean> = _onboarding.asStateFlow()
+    /** Tracks tapped while another one is being analysed, in tap order. They run one after another instead of replacing it. */
+    private val waiting = ArrayDeque<Uri>()
+    private val _queued = MutableStateFlow(0)
+    /** How many tracks wait behind the one being analysed. */
+    val queued: StateFlow<Int> = _queued.asStateFlow()
 
-    fun finishOnboarding() {
-        _onboarding.value = false
-        prefs.edit().putBoolean(KEY_ONBOARDED, true).apply()
-    }
-
-    fun replayOnboarding() {
-        _onboarding.value = true
+    /** Starts the next waiting track, if any. Called when the current one is finished, whatever the outcome. */
+    private fun advance() {
+        val next = waiting.removeFirstOrNull() ?: return
+        _queued.value = waiting.size
+        start(next, force = false)
     }
 
     private val _compare = MutableStateFlow<CompareState>(CompareState.Idle)
@@ -225,7 +307,8 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     fun scanLibrary() {
         val fft = _fftSize.value
         val window = _windowFn.value
-        val todo = _library.value.tracks.filter { !(it.sizeBytes > 0 && cache.contains(cache.keyOf(it.uri, it.sizeBytes, it.modifiedSec, fft, window))) }
+        val shortest = _minSeconds.value * 1000L
+        val todo = _library.value.tracks.filter { it.durationMs >= shortest }.filter { !(it.sizeBytes > 0 && cache.contains(cache.keyOf(it.uri, it.sizeBytes, it.modifiedSec, fft, window))) }
         BatchScanner.start(getApplication(), todo, fft, window)
     }
 
@@ -250,8 +333,28 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         lastUri?.let { analyze(it, force = true) }
     }
 
-    /** Analyses [uri] now, replacing any analysis still running. */
-    fun analyze(uri: Uri, force: Boolean = false) = start(uri, force)
+    /**
+     * Analyses [uri], or opens the result it already has. While another track is being analysed the new one joins the
+     * queue instead of replacing it, and a track that is running, queued or just finished is never started again.
+     */
+    fun analyze(uri: Uri, force: Boolean = false) {
+        if (!force) {
+            val state = _analysis.value
+            if (state is AnalysisState.Running) {
+                if (uri != lastUri && uri !in waiting) {
+                    waiting.addLast(uri)
+                    _queued.value = waiting.size
+                }
+                return
+            }
+            // The result is already on screen's dock: show it rather than reading the file again.
+            if (uri == lastUri && (state is AnalysisState.Done || state is AnalysisState.Limited)) {
+                _viewing.value = true
+                return
+            }
+        }
+        start(uri, force)
+    }
 
     /** The song title the library already shows, so a running analysis is not named after its file. */
     private fun titleOf(uri: Uri, fileName: String): String =
@@ -272,7 +375,9 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                 val hit = withContext(Dispatchers.IO) { cache.load(key, uri) }
                 if (hit != null) {
                     _analysis.value = AnalysisState.Done(hit, cached = true)
-                    _viewing.value = true
+                    // A saved result opens at once, unless more tracks wait: then it only counts as done.
+                    if (waiting.isEmpty()) _viewing.value = true
+                    advance()
                     return@launch
                 }
             }
@@ -296,10 +401,13 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                 AppLog.e("Analyze", e) { "Failed \"$title\" after ${System.currentTimeMillis() - began} ms" }
                 _analysis.value = AnalysisState.Failed(title, (e as? AnalysisFailure)?.failure, e.message)
             }
+            advance()
         }
     }
 
     fun closeAnalysis() {
+        waiting.clear()
+        _queued.value = 0
         analysisJob?.cancel()
         _viewing.value = false
         _analysis.value = AnalysisState.Idle
@@ -356,6 +464,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                 }
                 AppLog.i("Library") { "Scanned ${tracks.size} tracks in ${folders.size} folders, ${System.currentTimeMillis() - scanBegan} ms" }
                 _library.value = LibraryState(loaded = true, loading = false, tracks = tracks, folders = folders, excluded = excluded)
+                if (_autoScan.value) scanLibrary()
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Throwable) {
@@ -370,10 +479,19 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     private companion object {
         const val KEY_FFT = "fft_size"
         const val KEY_WINDOW = "window_fn"
-        const val KEY_ONBOARDED = "onboarded"
         const val KEY_THEME = "theme_mode"
         const val KEY_DYNAMIC = "dynamic_color"
         const val KEY_BLACK = "pure_black"
         const val KEY_SEED = "seed_palette"
+        const val KEY_REDUCE = "reduce_motion"
+        const val KEY_DENSITY = "row_density"
+        const val KEY_COVER_SHAPE = "cover_shape"
+        const val KEY_SHOW_RESULT = "row_show_result"
+        const val KEY_SHOW_FORMAT = "row_show_format"
+        const val KEY_SHOW_FOLDER = "row_show_folder"
+        const val KEY_NAV_LABELS = "nav_labels"
+        const val KEY_KEEP_AWAKE = "keep_awake"
+        const val KEY_AUTO_SCAN = "auto_scan"
+        const val KEY_MIN_SECONDS = "min_scan_seconds"
     }
 }

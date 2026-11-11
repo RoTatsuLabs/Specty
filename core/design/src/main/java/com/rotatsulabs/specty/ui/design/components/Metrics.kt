@@ -17,6 +17,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.material3.ColorScheme
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.HighQuality
+import androidx.compose.material.icons.rounded.Info
+import androidx.compose.material.icons.rounded.SurroundSound
+import androidx.compose.material.icons.automirrored.rounded.TrendingDown
+import androidx.compose.material.icons.rounded.Verified
+import androidx.compose.material.icons.rounded.Warning
+import androidx.compose.material.icons.rounded.WarningAmber
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import com.rotatsulabs.specty.core.design.R
 import com.rotatsulabs.specty.audio.Verdict
@@ -59,14 +69,16 @@ fun MetricTile(
 }
 
 /** Colours and label for a verdict, shared by badges, tiles and the dock so they always agree. */
-data class VerdictStyle(val label: String, val container: Color, val content: Color)
+data class VerdictStyle(val label: String, val container: Color, val content: Color, val icon: ImageVector, val accent: Color)
 
 /** The container and content colours a verdict is shown in, for any colour scheme; null when there is no verdict colour. */
 fun verdictColors(verdict: Verdict, s: ColorScheme): Pair<Color, Color>? = when (verdict) {
     Verdict.GENUINE -> s.tertiaryContainer to s.onTertiaryContainer
     Verdict.HI_RES -> s.primaryContainer to s.onPrimaryContainer
     Verdict.LOSSY_SOURCE, Verdict.UPSAMPLED -> s.errorContainer to s.onErrorContainer
-    Verdict.POSSIBLE_LOSSY_SOURCE, Verdict.BAND_LIMITED -> s.secondaryContainer to s.onSecondaryContainer
+    Verdict.POSSIBLE_LOSSY_SOURCE -> s.secondaryContainer to s.onSecondaryContainer
+    // A description of the spectrum, not a finding about the source, so no warning colour.
+    Verdict.BAND_LIMITED, Verdict.ROLLOFF -> s.surfaceContainerHigh to s.onSurfaceVariant
     Verdict.LOSSY_CODEC -> s.surfaceContainerHighest to s.onSurfaceVariant
     Verdict.DOLBY_ATMOS -> s.inverseSurface to s.inverseOnSurface
     Verdict.INCONCLUSIVE -> null
@@ -76,18 +88,29 @@ fun verdictColors(verdict: Verdict, s: ColorScheme): Pair<Color, Color>? = when 
 fun verdictStyle(verdict: Verdict): VerdictStyle? {
     val s = MaterialTheme.colorScheme
     return when (verdict) {
-        Verdict.GENUINE -> VerdictStyle(stringResource(R.string.verdict_lossless), s.tertiaryContainer, s.onTertiaryContainer)
-        Verdict.HI_RES -> VerdictStyle(stringResource(R.string.verdict_hires), s.primaryContainer, s.onPrimaryContainer)
-        Verdict.LOSSY_SOURCE, Verdict.UPSAMPLED -> VerdictStyle(stringResource(R.string.verdict_fake), s.errorContainer, s.onErrorContainer)
-        Verdict.POSSIBLE_LOSSY_SOURCE, Verdict.BAND_LIMITED -> VerdictStyle(stringResource(R.string.verdict_maybe), s.secondaryContainer, s.onSecondaryContainer)
-        Verdict.LOSSY_CODEC -> VerdictStyle(stringResource(R.string.verdict_lossy), s.surfaceContainerHighest, s.onSurfaceVariant)
-        Verdict.DOLBY_ATMOS -> VerdictStyle(stringResource(R.string.verdict_atmos), s.inverseSurface, s.inverseOnSurface)
-        Verdict.INCONCLUSIVE -> null
+        Verdict.GENUINE -> VerdictStyle(stringResource(R.string.verdict_lossless), s.tertiaryContainer, s.onTertiaryContainer, Icons.Rounded.Verified, s.tertiary)
+        Verdict.HI_RES -> VerdictStyle(stringResource(R.string.verdict_hires), s.primaryContainer, s.onPrimaryContainer, Icons.Rounded.HighQuality, s.primary)
+        Verdict.LOSSY_SOURCE -> VerdictStyle(stringResource(R.string.verdict_lossy_source), s.errorContainer, s.onErrorContainer, Icons.Rounded.Warning, s.error)
+        Verdict.UPSAMPLED -> VerdictStyle(stringResource(R.string.verdict_upsampled), s.errorContainer, s.onErrorContainer, Icons.Rounded.Warning, s.error)
+        Verdict.POSSIBLE_LOSSY_SOURCE -> VerdictStyle(stringResource(R.string.verdict_possible), s.secondaryContainer, s.onSecondaryContainer, Icons.Rounded.WarningAmber, s.secondary)
+        Verdict.BAND_LIMITED -> VerdictStyle(stringResource(R.string.verdict_band), s.surfaceContainerHigh, s.onSurfaceVariant, Icons.AutoMirrored.Rounded.TrendingDown, s.onSurfaceVariant)
+        Verdict.ROLLOFF -> VerdictStyle(stringResource(R.string.verdict_rolloff), s.surfaceContainerHigh, s.onSurfaceVariant, Icons.AutoMirrored.Rounded.TrendingDown, s.onSurfaceVariant)
+        Verdict.LOSSY_CODEC -> VerdictStyle(stringResource(R.string.verdict_lossy), s.surfaceContainerHighest, s.onSurfaceVariant, Icons.Rounded.Info, s.onSurfaceVariant)
+        Verdict.DOLBY_ATMOS -> VerdictStyle(stringResource(R.string.verdict_atmos), s.inverseSurface, s.inverseOnSurface, Icons.Rounded.SurroundSound, s.primary)
+        Verdict.INCONCLUSIVE -> VerdictStyle(stringResource(R.string.verdict_unclear), s.surfaceContainerHigh, s.onSurfaceVariant, Icons.Rounded.Info, s.onSurfaceVariant)
     }
 }
 
+/** The verdict as an icon and a short word with no container, so a row does not carry a filled chip on every track. */
 @Composable
-fun VerdictPill(verdict: Verdict, modifier: Modifier = Modifier) {
+fun VerdictLabel(verdict: Verdict, modifier: Modifier = Modifier) {
     val style = verdictStyle(verdict) ?: return
-    Pill(style.label, modifier, style.container, style.content)
+    androidx.compose.foundation.layout.Row(
+        modifier,
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+        verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
+    ) {
+        androidx.compose.material3.Icon(style.icon, contentDescription = null, tint = style.accent, modifier = Modifier.size(16.dp))
+        Text(style.label, style = MaterialTheme.typography.labelLarge, color = style.accent, maxLines = 1, overflow = TextOverflow.Ellipsis)
+    }
 }

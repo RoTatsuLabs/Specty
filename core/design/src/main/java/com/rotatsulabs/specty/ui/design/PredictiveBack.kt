@@ -111,6 +111,26 @@ fun Modifier.underlay(depth: OverlayDepth): Modifier = graphicsLayer {
     scaleY = s
 }
 
+/**
+ * Where an [OverlayScreen] stood on its last frame: how far it was scaled and moved. Something that has to leave with
+ * the screen, like a cover flying home, reads it to start exactly where the screen's own cover was drawn.
+ */
+class OverlayPose {
+    var scale = 1f
+    var tx = 0f
+    var ty = 0f
+    var width = 0f
+    var height = 0f
+
+    fun map(r: androidx.compose.ui.geometry.Rect): androidx.compose.ui.geometry.Rect {
+        val cx = width / 2f
+        val cy = height / 2f
+        val l = cx + (r.left - cx) * scale + tx
+        val t = cy + (r.top - cy) * scale + ty
+        return androidx.compose.ui.geometry.Rect(l, t, l + r.width * scale, t + r.height * scale)
+    }
+}
+
 enum class OverlayStyle {
     /** Opaque surface of its own ([backdrop]); the screen below shows around it while it is pulled back. */
     Side,
@@ -134,17 +154,22 @@ fun OverlayScreen(
     style: OverlayStyle = OverlayStyle.Side,
     exit: AnimationSpec<Float> = Motion.spatial(),
     backdrop: Color = Color.Transparent,
+    readout: OverlayPose? = null,
     content: @Composable () -> Unit,
 ) {
     val pose = remember { Animatable(if (visible) 0f else 1f) }
     val lift = remember { Animatable(0f) }
     var composed by remember { mutableStateOf(visible) }
     var direction by remember { mutableFloatStateOf(1f) }
+    // A Rise screen only fades in and out until the finger takes hold of it, so whatever is flying into it keeps a
+    // steady target; a swipe then gives it the same shrinking look as every other screen.
+    var swiped by remember { mutableStateOf(false) }
     val isVisible by rememberUpdatedState(visible)
 
     LaunchedEffect(visible) {
         if (visible) {
             direction = 1f
+            swiped = false
             composed = true
             lift.snapTo(0f)
             pose.animateTo(0f, Motion.spatial())
@@ -160,6 +185,7 @@ fun OverlayScreen(
         snapshotFlow { Triple(gesture.active, gesture.progress, gesture.fromRight) }.collect { (active, progress, fromRight) ->
             if (active) {
                 following = true
+                swiped = true
                 if (isVisible) {
                     direction = if (fromRight) -1f else 1f
                     val at = BackMath.pose(progress)
@@ -172,6 +198,17 @@ fun OverlayScreen(
                 if (!gesture.committed && isVisible) {
                     scope.launch { pose.animateTo(0f, Motion.spatial()) }
                     scope.launch { lift.animateTo(0f, Motion.spatial()) }
+                } else if (gesture.committed) {
+                    // A committed swipe that leaves the screen open (a page back to the page under it) must not stay
+                    // shrunk. When the screen does close, `visible` is already false by then.
+                    scope.launch {
+                        androidx.compose.runtime.withFrameNanos { }
+                        androidx.compose.runtime.withFrameNanos { }
+                        if (isVisible) {
+                            launch { pose.animateTo(0f, Motion.spatial()) }
+                            launch { lift.animateTo(0f, Motion.spatial()) }
+                        }
+                    }
                 }
             }
         }
@@ -192,11 +229,17 @@ fun OverlayScreen(
             .fillMaxSize()
             .graphicsLayer {
                 val p = pose.value
+                if (style == OverlayStyle.Rise && !swiped) {
+                    alpha = (1f - p).coerceIn(0f, 1f)
+                    readout?.let { it.scale = 1f; it.tx = 0f; it.ty = 0f; it.width = size.width; it.height = size.height }
+                    return@graphicsLayer
+                }
                 val s = BackMath.scale(p)
                 scaleX = s
                 scaleY = s
                 translationX = direction * size.width * BackMath.shift(p)
                 translationY = BackMath.lift(lift.value, size.height * BackMath.LIFT_LIMIT)
+                readout?.let { it.scale = s; it.tx = translationX; it.ty = translationY; it.width = size.width; it.height = size.height }
                 transformOrigin = TransformOrigin.Center
                 alpha = BackMath.alpha(p)
                 val corner = BackMath.cornerShare(p)

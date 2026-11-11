@@ -4,8 +4,6 @@ import android.content.SharedPreferences
 
 enum class SortField { Title, Artist, Album, Duration, Size, Modified, Result }
 
-enum class GroupField { None, Result, Format }
-
 /** What the library lists: every track, or albums or artists that each open their own page. */
 enum class BrowseKind { Tracks, Albums, Artists }
 
@@ -21,9 +19,6 @@ class TrackFields<T>(
     /** Where the track's result sits in the order results are listed; lower comes first. */
     val resultRank: (T) -> Int,
 )
-
-/** One heading of a grouped library. [key] is the format, null when the track has none. */
-class TrackGroup<T>(val id: String, val key: String?, val rank: Int, val items: List<T>)
 
 object LibraryOrder {
     private const val LAST = "￿"
@@ -44,29 +39,6 @@ object LibraryOrder {
         }
         val sorted = items.sortedWith(order)
         return if (ascending) sorted else sorted.reversed()
-    }
-
-    /**
-     * Splits an already sorted list into headings, keeping each heading's tracks in that order. Headings run A to Z
-     * with the unnamed one last, or by result order for [GroupField.Result].
-     */
-    fun <T> group(sorted: List<T>, by: GroupField, f: TrackFields<T>): List<TrackGroup<T>> {
-        if (by == GroupField.None) return listOf(TrackGroup("all", null, 0, sorted))
-        class Bucket(val id: String, val key: String?, val rank: Int, val sortKey: String) { val items = ArrayList<T>() }
-        val buckets = LinkedHashMap<String, Bucket>()
-        for (item in sorted) {
-            val bucket = when (by) {
-                GroupField.Result -> f.resultRank(item).let { r -> buckets.getOrPut("r$r") { Bucket("r$r", null, r, "") } }
-                else -> {
-                    val name = f.format(item).clean()
-                    val id = if (name == null) "unknown" else "n" + name.lowercase()
-                    buckets.getOrPut(id) { Bucket(id, name, 0, name?.lowercase() ?: LAST) }
-                }
-            }
-            bucket.items += item
-        }
-        val ordered = if (by == GroupField.Result) buckets.values.sortedBy { it.rank } else buckets.values.sortedBy { it.sortKey }
-        return ordered.map { TrackGroup(it.id, it.key, it.rank, it.items) }
     }
 }
 
@@ -131,13 +103,12 @@ data class LibraryView(
     val sort: SortField = SortField.Title,
     val ascending: Boolean = true,
     val grid: Boolean = false,
-    val group: GroupField = GroupField.None,
     val browse: BrowseKind = BrowseKind.Tracks,
 ) {
     fun save(prefs: SharedPreferences) {
         prefs.edit()
             .putString(KEY_SORT, sort.name).putBoolean(KEY_ASC, ascending)
-            .putBoolean(KEY_GRID, grid).putString(KEY_GROUP, group.name).putString(KEY_BROWSE, browse.name)
+            .putBoolean(KEY_GRID, grid).putString(KEY_BROWSE, browse.name)
             .apply()
     }
 
@@ -145,14 +116,12 @@ data class LibraryView(
         private const val KEY_SORT = "library_sort"
         private const val KEY_ASC = "library_ascending"
         private const val KEY_GRID = "library_grid"
-        private const val KEY_GROUP = "library_group"
         private const val KEY_BROWSE = "library_browse"
 
         fun load(prefs: SharedPreferences) = LibraryView(
             sort = SortField.entries.firstOrNull { it.name == prefs.getString(KEY_SORT, null) } ?: SortField.Title,
             ascending = prefs.getBoolean(KEY_ASC, true),
             grid = prefs.getBoolean(KEY_GRID, false),
-            group = GroupField.entries.firstOrNull { it.name == prefs.getString(KEY_GROUP, null) } ?: GroupField.None,
             browse = BrowseKind.entries.firstOrNull { it.name == prefs.getString(KEY_BROWSE, null) } ?: BrowseKind.Tracks,
         )
     }

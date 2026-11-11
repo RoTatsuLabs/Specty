@@ -3,7 +3,6 @@ package com.rotatsulabs.specty.ui
 import com.rotatsulabs.specty.ui.screens.BrowseKind
 import com.rotatsulabs.specty.ui.screens.Browse
 import com.rotatsulabs.specty.ui.screens.ComparePicks
-import com.rotatsulabs.specty.ui.screens.GroupField
 import com.rotatsulabs.specty.ui.screens.LibraryOrder
 import com.rotatsulabs.specty.ui.screens.SortField
 import com.rotatsulabs.specty.ui.screens.TrackFields
@@ -62,39 +61,6 @@ class LibraryOrderTest {
     fun resultSortFollowsTheRankThenTitle() {
         val items = listOf(T("b", rank = 2), T("a", rank = 2), T("z", rank = 0), T("m", rank = 1))
         assertEquals(listOf("z", "m", "a", "b"), titles(LibraryOrder.sort(items, SortField.Result, true, fields)))
-    }
-
-    @Test
-    fun noGroupingGivesOneHeadingWithEverything() {
-        val items = listOf(T("a"), T("b"))
-        val groups = LibraryOrder.group(items, GroupField.None, fields)
-        assertEquals(1, groups.size)
-        assertEquals(items, groups[0].items)
-    }
-
-    @Test
-    fun formatGroupsRunAtoZWithTheUnnamedOneLastAndKeepTheSortOrderInside() {
-        val sorted = listOf(T("1", format = "OPUS"), T("2", format = "flac"), T("3", format = ""), T("4", format = "opus"), T("5", format = "FLAC"))
-        val groups = LibraryOrder.group(sorted, GroupField.Format, fields)
-        assertEquals(listOf("flac", "OPUS", null), groups.map { it.key })
-        assertEquals(listOf("2", "5"), titles(groups[0].items))
-        assertEquals(listOf("1", "4"), titles(groups[1].items))
-        assertEquals(listOf("3"), titles(groups[2].items))
-    }
-
-    @Test
-    fun resultGroupsFollowTheRankNotTheAlphabet() {
-        val sorted = listOf(T("a", rank = 3), T("b", rank = 0), T("c", rank = 3), T("d", rank = 1))
-        val groups = LibraryOrder.group(sorted, GroupField.Result, fields)
-        assertEquals(listOf(0, 1, 3), groups.map { it.rank })
-        assertEquals(listOf("a", "c"), titles(groups[2].items))
-    }
-
-    @Test
-    fun everyHeadingHasItsOwnId() {
-        val sorted = listOf(T("1", format = "A"), T("2", format = ""), T("3", format = "B"))
-        val ids = LibraryOrder.group(sorted, GroupField.Format, fields).map { it.id }
-        assertEquals(ids.size, ids.toSet().size)
     }
 
     @Test

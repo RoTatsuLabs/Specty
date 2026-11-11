@@ -13,7 +13,7 @@ class LocaleConfigTest {
     }
 
     /** The language picker in Settings offers these tags (see AppLanguage.Choice). */
-    private val offered = setOf("en", "id", "zh-CN")
+    private val offered = setOf("en", "id", "zh-CN", "zh-TW", "ja", "es", "pt-BR", "ru")
 
     @Test
     fun theLocaleConfigListsExactlyTheOfferedLanguages() {
@@ -24,14 +24,15 @@ class LocaleConfigTest {
 
     @Test
     fun everyOfferedLanguageHasItsOwnResources() {
-        val dirs = mapOf("en" to "values", "id" to "values-in", "zh-CN" to "values-zh-rCN")
+        val dirs = mapOf("en" to "values", "id" to "values-in", "zh-CN" to "values-zh-rCN",
+            "zh-TW" to "values-zh-rTW", "ja" to "values-ja", "es" to "values-es", "pt-BR" to "values-pt-rBR", "ru" to "values-ru")
         for (tag in offered) assertTrue("no strings for $tag", File(res(), "${dirs.getValue(tag)}/strings.xml").isFile)
     }
 
     @Test
     fun theChoicesInAppLanguageMatchTheOfferedTags() {
         val source = File(res(), "../java/com/rotatsulabs/specty/ui/AppLanguage.kt").readText()
-        val tags = Regex("""(?:English|Indonesian|Chinese)\("([^"]+)",""").findAll(source).map { it.groupValues[1] }.toSet()
+        val tags = Regex("""(?:English|Indonesian|Chinese|ChineseTraditional|Japanese|Spanish|Portuguese|Russian)\("([^"]+)",""").findAll(source).map { it.groupValues[1] }.toSet()
         assertEquals(offered, tags)
     }
 }

@@ -42,21 +42,17 @@
 
     <!-- About -->
     <string name="about_title">About</string>
-    <string name="about_project">Project</string>
     <string name="about_source">Source code</string>
     <string name="about_report">Report a problem</string>
     <string name="about_report_desc">Open an issue on GitHub</string>
-    <string name="about_intro">Show the intro again</string>
     <string name="about_privacy">Privacy</string>
     <string name="about_privacy_title">Stays on your device</string>
     <string name="about_privacy_desc">All analysis runs on your device and nothing is uploaded. Specty does not declare the internet permission.</string>
     <string name="about_licence">Licence</string>
     <string name="about_licence_tap">%1$s. Tap to read it.</string>
-    <string name="about_libraries">Open source libraries</string>
-    <string name="about_libraries_hint">These two need a note. The licences page lists every library in the app.</string>
-    <string name="about_made_by">Made by RoTatsu Labs</string>
+    <string name="about_made_by">Made by RoTatsuLabs</string>
     <string name="about_tagline">Audio quality lab</string>
-    <string name="about_hero">See what an audio file really contains: its spectrum, loudness and dynamics, and whether a lossless file started life as a lossy one.</string>
+    <string name="about_hero">See what is inside an audio file: its spectrum, loudness and dynamics, and whether a lossless file started life as a lossy one.</string>
     <string name="about_version">Version %1$s</string>
     <plurals name="about_dev_taps">
         <item quantity="one">%1$d more tap to become a developer</item>
@@ -80,35 +76,7 @@
     <string name="lib_mornye_summary">Hi-Res checks for upsampling and for the noise floor of 16-bit audio, from the Mornye music app.</string>
     <string name="lib_mornye_note">Specty\'s sample-and-hold, interpolation and 16-bit noise floor checks are Kotlin ports of Mornye\'s Hi-Res evidence code, used under the LGPL and combined with Specty under the GPL. Thank you to its authors. The source is available from the link above.</string>
 
-    <!-- Onboarding -->
-    <string name="onboarding_progress">%1$d of %2$d</string>
-    <string name="onboarding_skip">Skip</string>
-    <string name="onboarding_previous">Previous page</string>
-    <string name="onboarding_start">Get started</string>
-    <string name="onboarding_next">Next</string>
-    <string name="onboarding_0_title">Meet Specty</string>
-    <string name="onboarding_0_body">A quality lab for your music. Look inside any audio file and see what it really contains.</string>
-    <string name="onboarding_1_title">See the spectrum</string>
-    <string name="onboarding_1_body">The spectrogram shows every frequency over time. Open it fullscreen, pinch to zoom into the top end and touch it to read exact values.</string>
-    <string name="onboarding_2_title">Catch fake lossless</string>
-    <string name="onboarding_2_body">A lossless file made from an MP3 keeps the MP3\'s cutoff. Specty finds that edge, says how sure it is and which encoder it resembles.</string>
-    <string name="onboarding_3_title">Measure everything</string>
-    <string name="onboarding_3_body">Loudness, true peak, dynamic range, clipping and stereo health, plus a background scan of your whole library. It all runs on your device.</string>
-    <string name="onboarding_folder_added">Folder added</string>
-    <string name="onboarding_folder_title">Library folders</string>
-    <string name="onboarding_folder_added_desc">Your music will be listed as soon as you start.</string>
-    <string name="onboarding_folder_desc">Pick the folders with your music. Files never leave your device.</string>
-    <string name="onboarding_choose_folder">Choose folder</string>
-    <string name="onboarding_cutoff_chip">16 kHz cutoff</string>
-    <string name="onboarding_verdict_genuine">Lossless full-band</string>
-    <string name="onboarding_verdict_genuine_desc">Content reaches 22 kHz</string>
-    <string name="onboarding_verdict_transcoded">Likely transcoded</string>
-    <string name="onboarding_verdict_transcoded_desc">Hard cutoff near 16 kHz</string>
-    <string name="onboarding_confidence">%1$d%% confidence</string>
-    <string name="onboarding_tile_loudness">Loudness</string>
-    <string name="onboarding_tile_dynamics">Dynamics</string>
-    <string name="onboarding_tile_meter">meter</string>
-    <string name="onboarding_tile_peak">True peak</string>
+    <string name="library_choose_folder">Choose folder</string>
 
     <!-- Library -->
     <string name="action_cancel">Cancel</string>
@@ -193,21 +161,19 @@
     <string name="analysis_share_title">Share analysis</string>
     <string name="analysis_failed_title">Could not analyse this file</string>
     <string name="badge_atmos" translatable="false">DOLBY ATMOS</string>
-    <string name="badge_hires_lossless">HI-RES LOSSLESS</string>
-    <string name="badge_lossless">LOSSLESS</string>
     <string name="verdict_head_genuine">Lossless, no sign of a lossy origin</string>
     <string name="verdict_head_hires">Hi-Res lossless, no sign of a lossy origin</string>
     <string name="verdict_head_lossy_source">Likely transcoded from a lossy source</string>
     <string name="verdict_head_possible">Possibly from a lossy source</string>
     <string name="verdict_head_upsampled">Likely upsampled</string>
-    <string name="verdict_head_band">Band-limited spectrum</string>
+    <string name="verdict_head_band">Sharp high-frequency cutoff</string>
     <string name="verdict_head_codec">Lossy compression</string>
     <string name="verdict_head_inconclusive">Inconclusive</string>
     <string name="verdict_short_hires">Hi-Res Lossless</string>
     <string name="verdict_short_lossy_source">Lossy source</string>
     <string name="verdict_short_possible">Possibly lossy</string>
     <string name="verdict_short_upsampled">Upsampled</string>
-    <string name="verdict_short_band">Band-limited</string>
+    <string name="verdict_short_band">Sharp cutoff</string>
     <string name="verdict_short_codec">Lossy format</string>
     <string name="card_file">File</string>
     <string name="card_levels">Levels and dynamics</string>
@@ -246,10 +212,10 @@
     <string name="edge_unknown">Not determined</string>
 
     <!-- Insight cards -->
-    <string name="insight_conf_high">High confidence</string>
-    <string name="insight_conf_medium">Medium confidence</string>
-    <string name="insight_conf_low">Low confidence</string>
-    <string name="insight_confidence_title">Verdict confidence</string>
+    <string name="insight_conf_high">Strong evidence</string>
+    <string name="insight_conf_medium">Moderate evidence</string>
+    <string name="insight_conf_low">Limited evidence</string>
+    <string name="insight_confidence_title">Strength of evidence</string>
     <string name="insight_sections_match">Matches the overall reading in %1$d of %2$d sections that could be read clearly.</string>
     <string name="insight_resembles">Resembles: %1$s.</string>
     <string name="insight_empty_above">Nothing above %1$s kHz; the band up to %2$s kHz is empty.</string>
@@ -309,6 +275,7 @@
     <string name="spec_cutoff">Cutoff</string>
     <string name="spec_display_options">Display options</string>
     <string name="spec_palette">Colour palette</string>
+    <string name="spec_channel">Channel</string>
     <string name="spec_freq_scale">Frequency scale</string>
     <string name="spec_linear">Linear</string>
     <string name="spec_log">Log</string>
@@ -330,11 +297,11 @@
     <string name="note_no_signal">There is not enough audible content to judge the spectrum.</string>
     <string name="note_faint_top">The top of the spectrum is faint, so quiet content and noise cannot be told apart. A lossy origin is neither shown nor ruled out.</string>
     <string name="note_full_band">Content reaches the top of the spectrum, with no cutoff or roll-off found.</string>
-    <string name="note_rolloff">The spectrum fades out near %1$s kHz without a sharp edge. That can be a mastering filter, an older source or a soft low-pass.</string>
-    <string name="note_hard_cutoff">Hard cutoff near %1$s kHz, typical of an MP3 or AAC low-pass. This file was most likely transcoded from a lossy source.</string>
+    <string name="note_rolloff">The spectrum fades out gradually above about %1$s kHz, with no sharp edge. This is common in mastering filters, older recordings and soft low-pass filters, and it does not by itself show a lossy origin.</string>
+    <string name="note_hard_cutoff">Sharp cutoff near %1$s kHz, with more than one sign of an encoder low-pass: a steep edge, silence above it, or the same position all through the track. The file was most likely transcoded from a lossy source.</string>
     <string name="note_upsampled">Content stops near %1$s kHz inside a %2$s kHz file. It was most likely upsampled from a 44.1 or 48 kHz source.</string>
-    <string name="note_sharp_cutoff">Sharp cutoff near %1$s kHz. This can come from a high-bitrate lossy source, but some masters are also filtered this way.</string>
-    <string name="note_band_limited">The spectrum is band-limited near %1$s kHz. That may be a mastering filter or an older source.</string>
+    <string name="note_sharp_cutoff">Sharp cutoff near %1$s kHz. A lossy source can leave an edge like this, but some masters are filtered the same way, so it is not conclusive.</string>
+    <string name="note_band_limited">The spectrum ends at a sharp edge near %1$s kHz. Nothing else points to a lossy or upsampled source, and mastering or recording filters can leave an edge like this.</string>
     <string name="note_bits_padded">Only the top %1$s bits carry data, so this looks like %1$s-bit audio stored as %2$s-bit.</string>
     <string name="note_sections_disagree">Sections of this track disagree about the top of the spectrum (%1$s of %2$s match the average), so no verdict is given.</string>
     <string name="note_too_little_clear">Too little of the track gives a clear reading of the top of the spectrum to rule out a lossy origin.</string>
@@ -351,7 +318,7 @@
     <string name="hl_verdict_lossy_source">from a lossy source</string>
     <string name="hl_verdict_possible_lossy">possibly from a lossy source</string>
     <string name="hl_verdict_upsampled">upsampled</string>
-    <string name="hl_verdict_band_limited">band-limited</string>
+    <string name="hl_verdict_band_limited">sharply band-limited</string>
     <string name="hl_verdict_lossy_codec">a lossy format</string>
     <string name="hl_verdict_atmos">Dolby Atmos</string>
     <string name="hl_verdict_inconclusive">inconclusive</string>
@@ -407,13 +374,17 @@
     <string name="fail_decode">Decoding failed. %1$s</string>
 
     <!-- Language setting -->
-    <string name="settings_language">Language</string>
     <string name="settings_app_language">App language</string>
     <string name="settings_language_desc">Choose the app language. System default follows your phone.</string>
     <string name="language_system">System default</string>
     <string name="language_en" translatable="false">English</string>
     <string name="language_id" translatable="false">Bahasa Indonesia</string>
     <string name="language_zh" translatable="false">简体中文</string>
+    <string name="language_zh_tw" translatable="false">繁體中文</string>
+    <string name="language_ja" translatable="false">日本語</string>
+    <string name="language_es" translatable="false">Español</string>
+    <string name="language_pt" translatable="false">Português (Brasil)</string>
+    <string name="language_ru" translatable="false">Русский</string>
 
     <!-- Library filter -->
     <string name="filter_open">Filter by result</string>
@@ -431,7 +402,7 @@
     <string name="filter_atmos">Dolby Atmos</string>
     <string name="filter_atmos_hint">Object audio, not judged for lossy origin</string>
     <string name="filter_unclear">Unclear</string>
-    <string name="filter_unclear_hint">Band-limited, or not enough evidence</string>
+    <string name="filter_unclear_hint">Roll-off, sharp cutoff, or not enough evidence</string>
     <string name="filter_reset">Reset</string>
     <string name="filter_clear">Clear filters</string>
     <string name="filter_remove">Remove filter %1$s</string>
@@ -447,13 +418,8 @@
     <string name="sort_modified">Modified</string>
     <string name="sort_result">Result</string>
     <string name="library_sort_by">Sort by</string>
-    <string name="library_group_by">Group by</string>
-    <string name="group_none">No grouping</string>
-    <string name="group_result">Result</string>
-    <string name="group_format">Format</string>
     <string name="group_unknown_artist">Unknown artist</string>
     <string name="group_unknown_album">Unknown album</string>
-    <string name="group_unknown_format">No extension</string>
     <string name="pick_count">%1$d selected</string>
     <string name="pick_one_more">Pick one more to compare</string>
     <string name="pick_compare">Compare</string>
@@ -473,12 +439,6 @@
     <string name="report_portrait">Portrait</string>
     <string name="report_square">Square</string>
     <string name="report_landscape">Landscape</string>
-    <string name="report_portrait_good">Fits every section. Made for stories, chat and wallpapers.</string>
-    <string name="report_portrait_bad">Narrow, so the spectrogram is small.</string>
-    <string name="report_square_good">Compact. Sits well in feeds and grids.</string>
-    <string name="report_square_bad">Little room: text shrinks when many sections are on.</string>
-    <string name="report_landscape_good">Wide spectrogram. Fits slides, desktops and Discord.</string>
-    <string name="report_landscape_bad">Short, so key levels sit in a narrow column.</string>
     <string name="report_content">Show in the image</string>
     <string name="report_section_details">File details</string>
     <string name="report_section_verdict">Verdict</string>
@@ -493,15 +453,10 @@
     <string name="report_look">Colours</string>
     <string name="report_look_auto">Match app</string>
     <string name="report_look_amoled">AMOLED</string>
-    <string name="report_preview">Preview</string>
     <string name="report_caption">Add a caption (optional)</string>
-    <string name="report_png">PNG image</string>
-    <string name="library_menu_insights">Library insights</string>
-    <string name="insights_title">Library insights</string>
     <string name="insights_totals">%1$d tracks  ·  %2$s  ·  %3$s</string>
     <string name="insights_checked">%1$d of %2$d checked</string>
     <string name="insights_formats">Formats</string>
-    <string name="insights_duplicates">Duplicates</string>
     <string name="insights_duplicates_hint">Keep the best copy of each.</string>
     <string name="insights_duplicates_none">No song appears twice.</string>
     <string name="insights_compare">Compare with the best copy</string>
@@ -520,4 +475,89 @@
         <item quantity="one">%d library</item>
         <item quantity="other">%d libraries</item>
     </plurals>
+    <string name="nav_library">Library</string>
+    <string name="analysis_tab_overview">Overview</string>
+    <string name="analysis_tab_levels">Levels</string>
+    <string name="analysis_tab_spectrogram">Spectrogram</string>
+    <string name="compare_tab_summary">Summary</string>
+    <string name="compare_tab_spectra">Spectra</string>
+    <string name="nav_search">Search</string>
+    <string name="settings_library">Library</string>
+    <string name="settings_library_desc">Choose which folders the library reads.</string>
+    <string name="settings_scanning">Scanning</string>
+    <string name="settings_scan_start">Scan when the app opens</string>
+    <string name="settings_scan_start_desc">Check new and changed tracks each time you open Specty.</string>
+    <string name="settings_skip_short">Skip short files</string>
+    <string name="settings_skip_short_desc">Library scans leave out files shorter than this.</string>
+    <string name="settings_skip_off">Off</string>
+    <string name="settings_skip_30">30 s</string>
+    <string name="settings_skip_60">1 min</string>
+    <string name="settings_skip_120">2 min</string>
+    <string name="settings_reduce_motion">Reduce motion</string>
+    <string name="settings_reduce_motion_desc">Fewer slides, and the nav bar no longer stretches.</string>
+    <string name="settings_preview_title">Sample track</string>
+    <string name="settings_preview_sub">Artist · Album</string>
+    <string name="settings_preset">Preset</string>
+    <string name="settings_preset_desc">Starting points for window size and window function.</string>
+    <string name="preset_fast">Fast</string>
+    <string name="preset_balanced">Balanced</string>
+    <string name="preset_detailed">Detailed</string>
+    <string name="preset_custom">Custom</string>
+    <string name="settings_spec_palette">Colour palette</string>
+    <string name="settings_spec_palette_desc">Colours used for every spectrogram.</string>
+    <string name="settings_spec_preview_desc">A sample spectrogram drawn with your current settings</string>
+    <string name="settings_lists">Lists</string>
+    <string name="settings_density">Row size</string>
+    <string name="settings_density_desc">How much room each track takes.</string>
+    <string name="density_comfortable">Comfortable</string>
+    <string name="density_compact">Compact</string>
+    <string name="settings_cover_shape">Cover shape</string>
+    <string name="settings_cover_shape_desc">The shape of covers in track lists.</string>
+    <string name="shape_rounded">Rounded</string>
+    <string name="shape_circle">Circle</string>
+    <string name="shape_cookie">Cookie</string>
+    <string name="settings_show_result">Show result</string>
+    <string name="settings_show_result_desc">The result badge at the end of each row.</string>
+    <string name="settings_show_format">Show format</string>
+    <string name="settings_show_format_desc">The file type, such as FLAC or MP3.</string>
+    <string name="settings_show_folder">Show folder</string>
+    <string name="settings_show_folder_desc">The folder each file is in.</string>
+    <string name="settings_keep_awake">Keep screen on while analysing</string>
+    <string name="settings_keep_awake_desc">Stops the screen from sleeping during an analysis or a library scan.</string>
+    <string name="settings_privacy_title">Private by design</string>
+    <string name="settings_privacy_body">Specty only reads the folders you add. It has no internet permission, so nothing leaves this device.</string>
+    <string name="glossary_title">How to read results</string>
+    <string name="glossary_desc">What each measurement means.</string>
+    <string name="term_true_peak">True peak</string>
+    <string name="term_true_peak_body">The highest level the audio reaches once it is turned back into a smooth wave. Above 0 dBTP it can clip on some players.</string>
+    <string name="term_dynamic_range">Dynamic range</string>
+    <string name="term_dynamic_range_body">The gap between the quiet and loud parts. A small gap often means heavy compression.</string>
+    <string name="term_lufs">LUFS</string>
+    <string name="term_lufs_body">Perceived loudness over the whole track. Streaming services aim for about −14 LUFS, and many CDs sit well above that.</string>
+    <string name="term_cutoff">Cutoff</string>
+    <string name="term_cutoff_body">The frequency above which almost nothing is left. Lossy encoders remove the highs, so a low cutoff, around 16 kHz, hints at a lossy source.</string>
+    <string name="term_upsampled">Upsampled</string>
+    <string name="term_upsampled_body">A file stored at a higher sample rate than its content ever had, so the extra range is empty. The spectrogram stops at the old limit.</string>
+    <string name="term_band_limited">Band-limited</string>
+    <string name="term_band_limited_body">Audio that ends at a sharp edge below the file\'s top frequency, without other signs of a lossy or upsampled origin.</string>
+    <string name="settings_preview">Preview</string>
+    <string name="settings_navigation">Navigation bar</string>
+    <string name="settings_tab_titles">Tab titles</string>
+    <string name="settings_tab_titles_desc">When the bar\'s destinations show their names.</string>
+    <string name="tab_titles_always">Always show</string>
+    <string name="tab_titles_active">Only active</string>
+    <string name="tab_titles_never">Always hide</string>
+    <string name="settings_search">Search settings</string>
+    <string name="settings_search_none">No settings match</string>
+    <string name="settings_search_clear">Clear search</string>
+    <string name="note_rolloff_low">The band ends lower than most modern masters. Lossy encoding, tape and vintage transfers can all do this, so the cause stays open.</string>
+    <string name="note_upsample_possible">The spectrum ends near %1$s kHz, where a 44.1 or 48 kHz source would end inside this %2$s kHz file. Nothing else confirms resampling, so this is a lead, not a finding.</string>
+    <string name="note_rate_unconfirmed">The sample rate is above 48 kHz, but the samples carry no more than CD-level detail, so the file is not confirmed as Hi-Res.</string>
+    <string name="verdict_head_rolloff">Gradual high-frequency roll-off</string>
+    <string name="verdict_short_rolloff">Roll-off</string>
+    <string name="hl_verdict_rolloff">gradually rolling off</string>
+    <string name="insight_evidence_caption">How strongly the measurements support this reading. It is not the chance that the file is genuine or fake.</string>
+    <string name="term_rolloff">Roll-off</string>
+    <string name="term_rolloff_body">A gradual fade of the top of the spectrum with no sharp edge. Mastering filters, older recordings and soft low-pass filters all do this, and it does not show a lossy origin.</string>
+    <string name="dock_queued">%1$d queued</string>
 </resources>

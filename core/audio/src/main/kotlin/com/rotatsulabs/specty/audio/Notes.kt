@@ -5,7 +5,7 @@ enum class NoteKey {
     // Verdict notes.
     ATMOS, LOSSY_CODEC_EDGE, LOSSY_CODEC, NO_DECODER, NO_SIGNAL, FAINT_TOP, FULL_BAND, ROLLOFF,
     HARD_CUTOFF, UPSAMPLED, SHARP_CUTOFF, BAND_LIMITED, BITS_PADDED, SECTIONS_DISAGREE, TOO_LITTLE_CLEAR, FEW_SECTIONS,
-    UPSAMPLE_HOLD, UPSAMPLE_LINE, FLOOR_AT_16BIT, FLOOR_BELOW_16BIT,
+    UPSAMPLE_HOLD, UPSAMPLE_LINE, FLOOR_AT_16BIT, FLOOR_BELOW_16BIT, ROLLOFF_LOW, UPSAMPLE_POSSIBLE, RATE_UNCONFIRMED,
 
     // Compare highlights.
     VERDICTS_DIFFER, MORE_TOP_END, B_REACHES_TOP, A_REACHES_TOP, MORE_DYNAMIC, LOUDER, MORE_CLIPPING, ALMOST_SAME,
@@ -32,18 +32,30 @@ object Notes {
                     "A lossy origin is neither shown nor ruled out."
             NoteKey.FULL_BAND -> "Content reaches the top of the spectrum, with no cutoff or roll-off found."
             NoteKey.ROLLOFF ->
-                "The spectrum fades out near ${a[0]} kHz without a sharp edge. " +
-                    "That can be a mastering filter, an older source or a soft low-pass."
+                "The spectrum fades out gradually above about ${a[0]} kHz, with no sharp edge. " +
+                    "This is common in mastering filters, older recordings and soft low-pass filters, " +
+                    "and it does not by itself show a lossy origin."
+            NoteKey.ROLLOFF_LOW ->
+                "The band ends lower than most modern masters. Lossy encoding, tape and vintage transfers can all do this, " +
+                    "so the cause stays open."
             NoteKey.HARD_CUTOFF ->
-                "Hard cutoff near ${a[0]} kHz, typical of an MP3 or AAC low-pass. " +
-                    "This file was most likely transcoded from a lossy source."
+                "Sharp cutoff near ${a[0]} kHz, with more than one sign of an encoder low-pass: a steep edge, silence above it, " +
+                    "or the same position all through the track. The file was most likely transcoded from a lossy source."
             NoteKey.UPSAMPLED ->
                 "Content stops near ${a[0]} kHz inside a ${a[1]} kHz file. " +
                     "It was most likely upsampled from a 44.1 or 48 kHz source."
             NoteKey.SHARP_CUTOFF ->
-                "Sharp cutoff near ${a[0]} kHz. This can come from a high-bitrate lossy source, " +
-                    "but some masters are also filtered this way."
-            NoteKey.BAND_LIMITED -> "The spectrum is band-limited near ${a[0]} kHz. That may be a mastering filter or an older source."
+                "Sharp cutoff near ${a[0]} kHz. A lossy source can leave an edge like this, but some masters are filtered " +
+                    "the same way, so it is not conclusive."
+            NoteKey.BAND_LIMITED ->
+                "The spectrum ends at a sharp edge near ${a[0]} kHz. Nothing else points to a lossy or upsampled source, " +
+                    "and mastering or recording filters can leave an edge like this."
+            NoteKey.UPSAMPLE_POSSIBLE ->
+                "The spectrum ends near ${a[0]} kHz, where a 44.1 or 48 kHz source would end inside this ${a[1]} kHz file. " +
+                    "Nothing else confirms resampling, so this is a lead, not a finding."
+            NoteKey.RATE_UNCONFIRMED ->
+                "The sample rate is above 48 kHz, but the samples carry no more than CD-level detail, " +
+                    "so the file is not confirmed as Hi-Res."
             NoteKey.BITS_PADDED -> "Only the top ${a[0]} bits carry data, so this looks like ${a[0]}-bit audio stored as ${a[1]}-bit."
             NoteKey.SECTIONS_DISAGREE ->
                 "Sections of this track disagree about the top of the spectrum (${a[0]} of ${a[1]} match the average), " +
@@ -83,7 +95,8 @@ object Notes {
         Verdict.LOSSY_SOURCE -> "from a lossy source"
         Verdict.POSSIBLE_LOSSY_SOURCE -> "possibly from a lossy source"
         Verdict.UPSAMPLED -> "upsampled"
-        Verdict.BAND_LIMITED -> "band-limited"
+        Verdict.BAND_LIMITED -> "sharply band-limited"
+        Verdict.ROLLOFF -> "gradually rolling off"
         Verdict.LOSSY_CODEC -> "a lossy format"
         Verdict.DOLBY_ATMOS -> "Dolby Atmos"
         Verdict.INCONCLUSIVE -> "inconclusive"

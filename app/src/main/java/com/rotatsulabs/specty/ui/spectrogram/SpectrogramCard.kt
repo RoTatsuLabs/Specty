@@ -1,21 +1,11 @@
 package com.rotatsulabs.specty.ui.spectrogram
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.expandVertically
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.shrinkVertically
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.Pause
 import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.material.icons.rounded.KeyboardArrowDown
-import androidx.compose.ui.draw.rotate
-import com.rotatsulabs.specty.ui.design.Corners
-import com.rotatsulabs.specty.ui.theme.Motion
 import com.rotatsulabs.specty.ui.design.SpectyShapes
 import com.rotatsulabs.specty.ui.design.components.ButtonKind
 import com.rotatsulabs.specty.ui.design.components.ExpressiveButton
@@ -165,7 +155,7 @@ fun SpectrogramCard(
 
     val measurer = rememberTextMeasurer()
     val axisColor = MaterialTheme.colorScheme.onSurfaceVariant
-    val labelStyle = TextStyle(fontSize = 10.sp, color = axisColor)
+    val labelStyle = TextStyle(fontSize = 12.sp, color = axisColor)
     val gridColor = Color.White.copy(alpha = 0.14f)
     val cutoffTagText = cutoffHz?.let { stringResource(R.string.spec_cutoff_tag, Fmt.kHz(it)) }
 
@@ -176,17 +166,12 @@ fun SpectrogramCard(
         morphOnPress = false,
     ) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            val tonal = MaterialTheme.colorScheme.secondaryContainer
-            val onTonal = MaterialTheme.colorScheme.onSecondaryContainer
-            // Selection uses the tonal colour, so the solid primary stays free for the main action below.
             SegmentedControl(
                 segments = viewLabels(spectrogram).mapIndexed { i, l -> Segment(i, l) },
                 selected = selected,
                 onSelect = { selected = it },
                 scrollable = spectrogram.displayLabels.size > 3,
                 modifier = Modifier.fillMaxWidth(),
-                indicator = tonal,
-                onIndicator = onTonal,
             )
 
             val seekable = if (playback == null) Modifier else Modifier
@@ -240,7 +225,7 @@ fun SpectrogramCard(
                         Color.White.copy(alpha = 0.9f), Offset(left, y), Offset(left + plotWidth, y), strokeWidth = 1.5.dp.toPx(),
                         pathEffect = androidx.compose.ui.graphics.PathEffect.dashPathEffect(floatArrayOf(14f, 10f)),
                     )
-                    val tag = measurer.measure(cutoffTagText.orEmpty(), TextStyle(fontSize = 10.sp, color = Color.White))
+                    val tag = measurer.measure(cutoffTagText.orEmpty(), TextStyle(fontSize = 12.sp, color = Color.White))
                     drawText(tag, topLeft = Offset(left + plotWidth - tag.size.width - 6.dp.toPx(), (y - tag.size.height - 2.dp.toPx()).coerceAtLeast(top)))
                 }
 
@@ -314,64 +299,6 @@ fun SpectrogramCard(
                         modifier = Modifier.weight(1f),
                         kind = if (options.cutoffLine) ButtonKind.Tonal else ButtonKind.Outlined,
                         icon = if (options.cutoffLine) Icons.Rounded.Check else null,
-                    )
-                }
-            }
-
-            var showOptions by rememberSaveable { mutableStateOf(false) }
-            val turn by animateFloatAsState(if (showOptions) 180f else 0f, Motion.spatial(), label = "optionsTurn")
-            MorphSurface(
-                modifier = Modifier.fillMaxWidth(),
-                corners = Corners(20.dp),
-                color = MaterialTheme.colorScheme.surfaceContainerHighest,
-                onClick = { showOptions = !showOptions },
-            ) {
-                Row(Modifier.padding(horizontal = 16.dp, vertical = 12.dp), verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
-                    Text(
-                        stringResource(R.string.spec_display_options),
-                        style = MaterialTheme.typography.labelLarge,
-                        fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
-                        modifier = Modifier.weight(1f),
-                    )
-                    Icon(Icons.Rounded.KeyboardArrowDown, contentDescription = null, modifier = Modifier.rotate(turn))
-                }
-            }
-            AnimatedVisibility(
-                visible = showOptions,
-                enter = expandVertically(Motion.spatial()) + fadeIn(Motion.effects()),
-                exit = shrinkVertically(Motion.spatial()) + fadeOut(Motion.effects()),
-            ) {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text(stringResource(R.string.spec_palette), style = MaterialTheme.typography.labelMedium, color = axisColor)
-                    SegmentedControl(
-                        segments = SpectrogramPalette.entries.mapIndexed { i, p -> Segment(i, p.label) },
-                        selected = paletteIndex,
-                        onSelect = {
-                            paletteIndex = it
-                            prefs.edit().putInt("spectrogram_palette", it).apply()
-                        },
-                        scrollable = true,
-                        modifier = Modifier.fillMaxWidth(),
-                        indicator = tonal,
-                        onIndicator = onTonal,
-                    )
-                    Text(stringResource(R.string.spec_freq_scale), style = MaterialTheme.typography.labelMedium, color = axisColor)
-                    SegmentedControl(
-                        segments = listOf(Segment(false, stringResource(R.string.spec_linear)), Segment(true, stringResource(R.string.spec_log))),
-                        selected = options.log,
-                        onSelect = { set(options.copy(log = it)) },
-                        modifier = Modifier.fillMaxWidth(),
-                        indicator = tonal,
-                        onIndicator = onTonal,
-                    )
-                    Text(stringResource(R.string.spec_level_range), style = MaterialTheme.typography.labelMedium, color = axisColor)
-                    SegmentedControl(
-                        segments = DbRange.entries.map { Segment(it, stringResource(it.labelRes)) },
-                        selected = options.range,
-                        onSelect = { set(options.copy(range = it)) },
-                        modifier = Modifier.fillMaxWidth(),
-                        indicator = tonal,
-                        onIndicator = onTonal,
                     )
                 }
             }

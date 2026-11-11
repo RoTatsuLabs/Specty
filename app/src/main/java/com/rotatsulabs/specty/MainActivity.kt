@@ -57,6 +57,10 @@ class MainActivity : ComponentActivity() {
         if (uri != null) viewModel.startCompare(uri)
     }
 
+    private val pairPicker = registerForActivityResult(ActivityResultContracts.OpenMultipleDocuments()) { uris ->
+        if (uris.size == 2) viewModel.compareTracks(uris[0], uris[1])
+    }
+
     override fun attachBaseContext(newBase: Context) {
         super.attachBaseContext(AppLanguage.wrap(newBase))
     }
@@ -68,6 +72,7 @@ class MainActivity : ComponentActivity() {
         if (savedInstanceState == null) handleIntent(intent)
         setContent {
             val appearance by viewModel.appearance.collectAsStateWithLifecycle()
+            val rowStyle by viewModel.rowStyle.collectAsStateWithLifecycle()
             val dark = isDarkFor(appearance)
             DisposableEffect(dark) {
                 // Keep the system bar icons readable against the in-app theme, not just the system one.
@@ -88,6 +93,8 @@ class MainActivity : ComponentActivity() {
                 LocalContext provides localized,
                 LocalConfiguration provides config,
                 LocalThemeReveal provides reveal,
+                com.rotatsulabs.specty.ui.theme.LocalReducedMotion provides appearance.reduceMotion,
+                com.rotatsulabs.specty.ui.LocalRowStyle provides rowStyle,
             ) {
                 ThemeRevealHost(reveal) {
                     SpectyTheme(appearance) {
@@ -100,6 +107,7 @@ class MainActivity : ComponentActivity() {
                                     onPickFolder = { folderPicker.launch(null) },
                                     onPickExcluded = { excludePicker.launch(null) },
                                     onPickCompare = { comparePicker.launch(arrayOf("audio/*", "application/ogg")) },
+                                    onPickPair = { pairPicker.launch(arrayOf("audio/*", "application/ogg")) },
                                 )
                             }
                         }

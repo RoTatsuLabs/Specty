@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="action_back">Voltar</string>
+    <string name="search_clear">Limpar pesquisa</string>
+    <string name="search_default">Pesquisar</string>
+    <string name="verdict_lossless">Lossless</string>
+    <string name="verdict_lossy">Lossy</string>
+    <string name="verdict_unclear">Pouco claro</string>
+    <string name="palette_violet">Violeta</string>
+    <string name="palette_azure">Azul</string>
+    <string name="palette_teal">Verde-azulado</string>
+    <string name="palette_lime">Lima</string>
+    <string name="palette_amber">Âmbar</string>
+    <string name="palette_rose">Rosa</string>
+    <string name="theme_system">Sistema</string>
+    <string name="theme_light">Claro</string>
+    <string name="theme_dark">Escuro</string>
+    <string name="verdict_lossy_source">Fonte lossy</string>
+    <string name="verdict_upsampled">Com upsampling</string>
+    <string name="verdict_possible">Possivelmente lossy</string>
+    <string name="verdict_band">Corte abrupto</string>
+    <string name="verdict_rolloff">Roll-off</string>
+</resources>

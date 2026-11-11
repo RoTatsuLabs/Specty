@@ -7,7 +7,7 @@ package com.rotatsulabs.specty.audio
  */
 object AnalysisVersion {
     const val SCHEMA = 8
-    const val ALGORITHM = 4
+    const val ALGORITHM = 5
 
     /** The authenticity verdict is always judged on this transform, whatever size the spectrogram is drawn at. */
     const val AUTH_FFT = 4096

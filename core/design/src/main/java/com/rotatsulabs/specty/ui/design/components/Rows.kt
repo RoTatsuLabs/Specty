@@ -11,9 +11,19 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.ListItem
+import androidx.compose.material3.ListItemDefaults
+import androidx.compose.material3.Surface
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.toShape
+import androidx.compose.runtime.remember
 import androidx.compose.material3.Switch
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.toggleableState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -31,13 +41,18 @@ fun IconBadge(
     modifier: Modifier = Modifier,
     container: Color = MaterialTheme.colorScheme.secondaryContainer,
     content: Color = MaterialTheme.colorScheme.onSecondaryContainer,
-    corners: Corners = Corners(16.dp),
+    shape: androidx.compose.ui.graphics.Shape = rememberCookieShape(),
     size: androidx.compose.ui.unit.Dp = 44.dp,
 ) {
-    MorphSurface(modifier.size(size), corners, container, content, morphOnPress = false) {
+    Surface(modifier.size(size), shape = shape, color = container, contentColor = content) {
         Box(Modifier.size(size), contentAlignment = Alignment.Center) { Icon(icon, null, Modifier.size(size * 0.5f)) }
     }
 }
+
+/** The scalloped cookie that Material 3 Expressive uses for icon containers. */
+@OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+fun rememberCookieShape(): androidx.compose.ui.graphics.Shape = androidx.compose.material3.MaterialShapes.Cookie9Sided.toShape()
 
 /**
  * A general list row: optional leading badge, title and supporting text, and a trailing slot.
@@ -55,20 +70,25 @@ fun ListRow(
     leading: (@Composable () -> Unit)? = null,
     trailing: (@Composable () -> Unit)? = null,
 ) {
-    MorphSurface(modifier.fillMaxWidth(), corners, color, onClick = onClick) {
-        Row(Modifier.padding(horizontal = 16.dp, vertical = 14.dp), verticalAlignment = Alignment.CenterVertically) {
-            when {
-                leading != null -> { leading(); Spacer(Modifier.width(14.dp)) }
-                icon != null -> { IconBadge(icon); Spacer(Modifier.width(14.dp)) }
-            }
-            Column(Modifier.weight(1f)) {
-                Text(title, style = MaterialTheme.typography.titleMedium)
-                if (supporting != null) {
-                    Text(supporting, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                }
-            }
-            if (trailing != null) { Spacer(Modifier.width(12.dp)); trailing() }
-        }
+    val lead: (@Composable () -> Unit)? = when {
+        leading != null -> leading
+        icon != null -> ({ IconBadge(icon) })
+        else -> null
+    }
+    val body: @Composable () -> Unit = {
+        ListItem(
+            headlineContent = { Text(title) },
+            supportingContent = if (supporting != null) ({ Text(supporting) }) else null,
+            leadingContent = lead,
+            trailingContent = trailing,
+            colors = ListItemDefaults.colors(containerColor = Color.Transparent),
+        )
+    }
+    val shape = corners.toShape()
+    if (onClick != null) {
+        Surface(onClick = onClick, modifier = modifier.fillMaxWidth(), shape = shape, color = color, content = body)
+    } else {
+        Surface(modifier = modifier.fillMaxWidth(), shape = shape, color = color, content = body)
     }
 }
 
@@ -87,17 +107,19 @@ fun groupCorners(index: Int, count: Int, outer: Corners = SpectyShapes.Tile, inn
 /** A titled stack of rows. Give each row `groupCorners(i, n)` so they read as one segmented block. */
 @Composable
 fun SettingGroup(
-    title: String,
+    title: String?,
     modifier: Modifier = Modifier,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     Column(modifier.fillMaxWidth()) {
-        Text(
-            title,
-            style = MaterialTheme.typography.labelLarge,
-            color = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.padding(start = 20.dp, bottom = 8.dp),
-        )
+        if (title != null) {
+            Text(
+                title,
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.padding(start = 20.dp, bottom = 8.dp),
+            )
+        }
         Column(verticalArrangement = Arrangement.spacedBy(3.dp), content = content)
     }
 }
@@ -119,7 +141,10 @@ fun SettingToggleRow(
         supporting = supporting,
         icon = icon,
         corners = corners,
-        modifier = modifier,
+        modifier = modifier.semantics(mergeDescendants = true) {
+            role = androidx.compose.ui.semantics.Role.Switch
+            toggleableState = androidx.compose.ui.state.ToggleableState(checked)
+        },
         onClick = if (enabled) ({ onChecked(!checked) }) else null,
         trailing = { Switch(checked = checked, onCheckedChange = null, enabled = enabled) },
     )
@@ -131,14 +156,27 @@ fun SettingBlock(
     title: String,
     modifier: Modifier = Modifier,
     supporting: String? = null,
+    icon: ImageVector? = null,
     corners: Corners = SpectyShapes.Row,
     content: @Composable () -> Unit,
 ) {
-    MorphSurface(modifier.fillMaxWidth(), corners, MaterialTheme.colorScheme.surfaceContainer, morphOnPress = false) {
+    Card(
+        modifier.fillMaxWidth(),
+        shape = corners.toShape(),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
+    ) {
         Column(Modifier.padding(16.dp)) {
-            Text(title, style = MaterialTheme.typography.titleMedium)
-            if (supporting != null) {
-                Text(supporting, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                if (icon != null) {
+                    IconBadge(icon)
+                    Spacer(Modifier.width(16.dp))
+                }
+                Column(Modifier.weight(1f)) {
+                    Text(title, style = MaterialTheme.typography.titleMedium)
+                    if (supporting != null) {
+                        Text(supporting, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                }
             }
             Spacer(Modifier.height(12.dp))
             content()

@@ -3,10 +3,9 @@
     <string name="action_back">返回</string>
     <string name="search_clear">清除搜索</string>
     <string name="search_default">搜索</string>
-    <string name="verdict_fake">伪无损</string>
     <string name="verdict_lossless">无损</string>
     <string name="verdict_lossy">有损</string>
-    <string name="verdict_maybe">存疑</string>
+    <string name="verdict_unclear">无定论</string>
     <string name="palette_violet">紫罗兰</string>
     <string name="palette_azure">天蓝</string>
     <string name="palette_teal">青绿</string>
@@ -16,4 +15,9 @@
     <string name="theme_system">跟随系统</string>
     <string name="theme_light">浅色</string>
     <string name="theme_dark">深色</string>
+    <string name="verdict_lossy_source">有损音源</string>
+    <string name="verdict_upsampled">升采样</string>
+    <string name="verdict_possible">可能有损</string>
+    <string name="verdict_band">陡峭截止</string>
+    <string name="verdict_rolloff">衰减</string>
 </resources>

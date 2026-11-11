@@ -62,23 +62,21 @@ internal fun ConfidenceCard(report: AuthenticityReport, info: AudioInfo) {
     val target = report.confidence / 100f
     val grow by rememberGrow(450)
     val animated = (target * grow).coerceIn(0f, 1f)
-    val label = when {
-        report.confidence >= 80 -> stringResource(R.string.insight_conf_high)
-        report.confidence >= 55 -> stringResource(R.string.insight_conf_medium)
+    val label = when (report.evidence) {
+        com.rotatsulabs.specty.audio.Evidence.STRONG -> stringResource(R.string.insight_conf_high)
+        com.rotatsulabs.specty.audio.Evidence.MODERATE -> stringResource(R.string.insight_conf_medium)
         else -> stringResource(R.string.insight_conf_low)
     }
     SectionCard(stringResource(R.string.insight_confidence_title)) {
         Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
-            Row(verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                Text("${(animated * 100).roundToInt()}%", style = MaterialTheme.typography.displaySmall, fontWeight = FontWeight.Bold)
-                Text(label, style = MaterialTheme.typography.titleSmall, color = scheme.onSurfaceVariant, modifier = Modifier.padding(bottom = 6.dp))
-            }
+            Text(label, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
             val track = scheme.surfaceContainerHighest
             val fill = scheme.primary
             Canvas(Modifier.fillMaxWidth().height(12.dp)) {
                 drawRoundRect(track, size = size, cornerRadius = androidx.compose.ui.geometry.CornerRadius(size.height / 2))
                 drawRoundRect(fill, size = Size(size.width * animated, size.height), cornerRadius = androidx.compose.ui.geometry.CornerRadius(size.height / 2))
             }
+            InsightLine(stringResource(R.string.insight_evidence_caption))
             if (report.segmentCutoffs.size >= 2) CutoffTimeline(report, info)
             if (report.sectionsJudged > 0 && report.verdict != Verdict.LOSSY_CODEC && report.verdict != Verdict.DOLBY_ATMOS) {
                 InsightLine(stringResource(R.string.insight_sections_match, report.sectionsAgreeing, report.sectionsJudged))

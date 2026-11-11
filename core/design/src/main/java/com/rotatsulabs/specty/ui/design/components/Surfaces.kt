@@ -1,40 +1,36 @@
 package com.rotatsulabs.specty.ui.design.components
 
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.LocalContentColor
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ripple
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.runtime.getValue
+import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.material3.Surface
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
-import com.rotatsulabs.specty.ui.components.pressScale
 import com.rotatsulabs.specty.ui.design.Corners
 import com.rotatsulabs.specty.ui.design.SpectyShapes
-import androidx.compose.animation.core.animateFloatAsState
-import com.rotatsulabs.specty.ui.theme.Motion
 import com.rotatsulabs.specty.ui.design.animateTone
 
 /**
- * The base of every container in the app. Its corners are a [Corners] value, so the surface can morph: when it is
- * clickable it squares its corners and squashes slightly while pressed, then springs back.
+ * The base of the app's simple containers, built on the Material [Surface]. Kept as one entry point so call sites
+ * share a single place for the corner [Corners], colour and click handling (a long press needs
+ * `combinedClickable`, which Material's clickable Surface has no overload for).
  */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -54,28 +50,19 @@ fun MorphSurface(
     animateColor: Boolean = false,
     content: @Composable () -> Unit,
 ) {
+    // Pressing squeezes the surface and squares its corners on a bouncy spring, then it springs back.
     val source = remember { MutableInteractionSource() }
     val pressed by source.collectIsPressedAsState()
-    // One spring drives all four corners, so a pressed surface costs a single animation.
-    val squash by animateFloatAsState(if (pressed && morphOnPress && onClick != null) 1f else 0f, Motion.spatialFast(), label = "morph")
-    val shape = remember(corners, squash) { corners.lerpTo(corners.pressed(), squash).toShape() }
-    var m = modifier
-    if (onClick != null) m = m.pressScale(source, 0.94f)
-    if (shadowElevation > 0.dp) m = m.shadow(shadowElevation, shape)
-    m = m.clip(shape).background(if (animateColor) animateTone(color) else color, shape)
-    if (border != null) m = m.border(border, shape)
-    if (onClick != null) {
-        m = m.combinedClickable(
-            interactionSource = source,
-            indication = ripple(),
-            enabled = enabled,
-            role = role,
-            onClick = onClick,
-            onLongClick = onLongClick,
-        )
-    }
-    CompositionLocalProvider(LocalContentColor provides contentColor) {
-        Box(m) { content() }
+    val press by animateFloatAsState(if (pressed && morphOnPress && onClick != null) 1f else 0f, MaterialTheme.motionScheme.fastSpatialSpec(), label = "morph")
+    val shape = remember(corners, press) { corners.lerpTo(corners.pressed(), press.coerceIn(0f, 1f)).toShape() }
+    val container = if (animateColor) animateTone(color) else color
+    Surface(modifier.graphicsLayer { val k = 1f - 0.04f * press; scaleX = k; scaleY = k }, shape = shape, color = container, contentColor = contentColor, border = border, shadowElevation = shadowElevation) {
+        val click = if (onClick != null) {
+            Modifier.combinedClickable(interactionSource = source, indication = androidx.compose.material3.ripple(), enabled = enabled, role = role, onClick = onClick, onLongClick = onLongClick)
+        } else {
+            Modifier
+        }
+        Box(click) { content() }
     }
 }
 
@@ -103,7 +90,15 @@ fun SpectyCard(
     onClick: (() -> Unit)? = null,
     content: @Composable ColumnScope.() -> Unit,
 ) {
-    MorphSurface(modifier, corners, color, onClick = onClick) {
-        Column(Modifier.padding(padding), content = content)
+    val shape = corners.toShape()
+    val colors = CardDefaults.cardColors(containerColor = color)
+    if (onClick != null) {
+        Card(onClick = onClick, modifier = modifier, shape = shape, colors = colors) {
+            Column(Modifier.padding(padding), content = content)
+        }
+    } else {
+        Card(modifier = modifier, shape = shape, colors = colors) {
+            Column(Modifier.padding(padding), content = content)
+        }
     }
 }

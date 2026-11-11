@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="action_back">戻る</string>
+    <string name="search_clear">検索をクリア</string>
+    <string name="search_default">検索</string>
+    <string name="verdict_lossless">ロスレス</string>
+    <string name="verdict_lossy">非可逆</string>
+    <string name="verdict_unclear">不明</string>
+    <string name="palette_violet">バイオレット</string>
+    <string name="palette_azure">アズール</string>
+    <string name="palette_teal">ティール</string>
+    <string name="palette_lime">ライム</string>
+    <string name="palette_amber">アンバー</string>
+    <string name="palette_rose">ローズ</string>
+    <string name="theme_system">システム</string>
+    <string name="theme_light">ライト</string>
+    <string name="theme_dark">ダーク</string>
+    <string name="verdict_lossy_source">非可逆音源</string>
+    <string name="verdict_upsampled">アップサンプリング</string>
+    <string name="verdict_possible">非可逆の疑い</string>
+    <string name="verdict_band">鋭いカットオフ</string>
+    <string name="verdict_rolloff">ロールオフ</string>
+</resources>

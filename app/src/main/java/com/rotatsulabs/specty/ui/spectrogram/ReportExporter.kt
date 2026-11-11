@@ -270,7 +270,7 @@ object ReportExporter {
         val headline = ReportFacts.headline(report.verdict)
         val note = StaticLayout.Builder.obtain(report.note, 0, report.note.length, notePaint, (w - 2 * pad).toInt())
             .setLineSpacing(0f, 1.3f).setAlignment(Layout.Alignment.ALIGN_NORMAL).build()
-        val confidence = if (report.confidence > 0) "${report.confidence}% confidence" else null
+        val confidence = report.evidence?.english
         val confPaint = k.text(13f, k.theme.onVerdict, 600, 0.004f).apply { textAlign = Paint.Align.RIGHT; alpha = 200 }
         val room = w - 2 * pad - (confidence?.let { confPaint.measureText(it) + k.dp(16f) } ?: 0f)
         val head = TextUtils.ellipsize(headline, headPaint, room, TextUtils.TruncateAt.END).toString()

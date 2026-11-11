@@ -189,7 +189,10 @@ enum class Verdict {
     LOSSY_SOURCE,
     POSSIBLE_LOSSY_SOURCE,
     UPSAMPLED,
+    /** A sharp edge in the spectrum that nothing else ties to a lossy or upsampled origin. */
     BAND_LIMITED,
+    /** The top of the spectrum fades out without a sharp edge. A description of the spectrum, not of the source. */
+    ROLLOFF,
     LOSSY_CODEC,
     DOLBY_ATMOS,
     INCONCLUSIVE,
@@ -202,7 +205,7 @@ data class AuthenticityReport(
     val cliffDropDb: Double,
     /** Why the verdict was given, as data. The UI words them in the app language; [note] is the English text. */
     val notes: List<Note>,
-    /** 0..100, how sure the verdict is. Zero when the verdict is inconclusive. */
+    /** 0..100 evidence score (see [Evidence]), not a probability. Zero when the verdict is inconclusive. */
     val confidence: Int = 0,
     /** Cutoff per equal slice of the track in Hz; 0 where no cliff was found. */
     val segmentCutoffs: FloatArray = FloatArray(0),
@@ -217,8 +220,31 @@ data class AuthenticityReport(
 ) {
     val hasCliff: Boolean get() = cutoffHz != null
 
+    /** How strongly the measurements support the reading, in words. Null when there is no verdict to support. */
+    val evidence: Evidence? get() = Evidence.of(confidence)
+
     /** English text of [notes], for the report export. */
     val note: String get() = Notes.english(notes)
+}
+
+/**
+ * How much evidence stands behind a verdict. The number kept as [AuthenticityReport.confidence] is an evidence score
+ * built from how clear the signature is and how much of the track shows it. It is not a probability that the file is
+ * genuine or fake, so it is shown as one of these words.
+ */
+enum class Evidence(val english: String) {
+    STRONG("Strong evidence"),
+    MODERATE("Moderate evidence"),
+    LIMITED("Limited evidence");
+
+    companion object {
+        fun of(score: Int): Evidence? = when {
+            score <= 0 -> null
+            score >= 80 -> STRONG
+            score >= 55 -> MODERATE
+            else -> LIMITED
+        }
+    }
 }
 
 /** Coarse time series (equal slices of the track) for the dynamics graph. */

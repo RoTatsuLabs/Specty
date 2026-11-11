@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Themed icon: one colour, so the bars sit apart instead of overlapping. -->
+    <group android:scaleX="0.76" android:scaleY="0.76" android:pivotX="54" android:pivotY="54">
+        <path android:fillColor="#000000" android:pathData="M24,44.5a8.5,8.5 0 0,1 17,0v21a8.5,8.5 0 0,1 -17,0z" />
+        <path android:fillColor="#000000" android:pathData="M45.5,29.5a8.5,8.5 0 0,1 17,0v49a8.5,8.5 0 0,1 -17,0z" />
+        <path android:fillColor="#000000" android:pathData="M67,49.5a8.5,8.5 0 0,1 17,0v25a8.5,8.5 0 0,1 -17,0z" />
+    </group>
+</vector>

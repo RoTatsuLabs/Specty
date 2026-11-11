@@ -31,7 +31,8 @@ enum class ResultFilter {
             Verdict.LOSSY_SOURCE, Verdict.UPSAMPLED, Verdict.POSSIBLE_LOSSY_SOURCE -> NeedsLook
             Verdict.LOSSY_CODEC -> LossyFormat
             Verdict.DOLBY_ATMOS -> Atmos
-            Verdict.BAND_LIMITED, Verdict.INCONCLUSIVE -> Unclear
+            // Observations about the spectrum say nothing for or against the source, so they sit with the unclear ones.
+            Verdict.BAND_LIMITED, Verdict.ROLLOFF, Verdict.INCONCLUSIVE -> Unclear
         }
 
         /** Results from the ones worth a look down to tracks not checked yet; the order of the Result sort and summaries. */

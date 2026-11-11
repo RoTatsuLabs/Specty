@@ -27,6 +27,11 @@ object AppLanguage {
         English("en", R.string.language_en),
         Indonesian("id", R.string.language_id),
         Chinese("zh-CN", R.string.language_zh),
+        ChineseTraditional("zh-TW", R.string.language_zh_tw),
+        Japanese("ja", R.string.language_ja),
+        Spanish("es", R.string.language_es),
+        Portuguese("pt-BR", R.string.language_pt),
+        Russian("ru", R.string.language_ru),
     }
 
     private const val PREFS = "specty"
@@ -66,8 +71,15 @@ object AppLanguage {
         } else {
             context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getString(KEY, null)
         } ?: return Choice.System
-        val language = Locale.forLanguageTag(tag).language
-        return Choice.entries.firstOrNull { it.tag != null && Locale.forLanguageTag(it.tag).language == language } ?: Choice.System
+        val variant = variantOf(Locale.forLanguageTag(tag))
+        return Choice.entries.firstOrNull { it.tag != null && variantOf(Locale.forLanguageTag(it.tag)) == variant } ?: Choice.System
+    }
+
+    /** The language code, except that Chinese is told apart by script so Simplified and Traditional do not collide. */
+    private fun variantOf(locale: Locale): String {
+        if (locale.language != "zh") return locale.language
+        val traditional = locale.script == "Hant" || locale.country in setOf("TW", "HK", "MO")
+        return if (traditional) "zh-TW" else "zh-CN"
     }
 
     /** Applies [choice]. The activity handles the locale change itself, so nothing is rebuilt. */
