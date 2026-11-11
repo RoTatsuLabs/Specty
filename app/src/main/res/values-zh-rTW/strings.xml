@@ -13,7 +13,6 @@
     <string name="settings_palette_desc">應用程式中的所有顏色都由這個顏色衍生。</string>
     <string name="settings_pure_black">純黑</string>
     <string name="settings_pure_black_desc">深色模式下使用純黑背景，對 OLED 螢幕更省電。</string>
-    <string name="settings_results">結果</string>
     <string name="settings_spectrogram">頻譜圖</string>
     <string name="settings_window_size">視窗大小</string>
     <string name="settings_window_size_desc">視窗越大，頻率解析度越細；視窗越小，時間解析度越細。</string>
@@ -41,7 +40,6 @@
     <string name="about_title">關於</string>
     <string name="about_source">原始碼</string>
     <string name="about_report">回報問題</string>
-    <string name="about_report_desc">在 GitHub 上提出 issue</string>
     <string name="about_privacy">隱私權</string>
     <string name="about_privacy_title">資料只留在你的裝置上</string>
     <string name="about_privacy_desc">所有分析都在你的裝置上執行，不會上傳任何內容。Specty 沒有宣告網路權限。</string>
@@ -77,7 +75,6 @@
     <!-- Library -->
     <string name="action_cancel">取消</string>
     <string name="action_dismiss">關閉</string>
-    <string name="action_done">完成</string>
     <string name="library_menu_rescan">重新掃描音樂庫</string>
     <string name="library_menu_folders">音樂庫資料夾</string>
     <string name="library_more">更多選項</string>
@@ -147,10 +144,8 @@
     <string name="sentence_sep">""</string>
 
     <!-- Analysis -->
-    <string name="analysis_compare">與另一個檔案比較</string>
     <string name="analysis_again">重新分析</string>
     <string name="analysis_export">匯出為圖片</string>
-    <string name="analysis_share_image">分享圖片</string>
     <string name="analysis_share_title">分享分析結果</string>
     <string name="analysis_failed_title">無法分析這個檔案</string>
     <string name="verdict_head_genuine">無損，沒有來自有損音源的跡象</string>
@@ -434,15 +429,6 @@
     <string name="report_look_auto">跟隨應用程式</string>
     <string name="report_look_amoled">AMOLED</string>
     <string name="report_caption">新增說明（選填）</string>
-    <string name="insights_totals">%1$d 首  ·  %2$s  ·  %3$s</string>
-    <string name="insights_checked">已檢查 %1$d / %2$d</string>
-    <string name="insights_formats">格式</string>
-    <string name="insights_duplicates_hint">每首歌保留最好的一份。</string>
-    <string name="insights_duplicates_none">沒有重複的歌曲。</string>
-    <string name="insights_compare">與最佳版本比較</string>
-    <string name="insights_best">最佳版本</string>
-    <string name="insights_share">分享摘要</string>
-    <string name="insights_share_title">Specty 音樂庫摘要</string>
     <plurals name="insights_duplicate_songs">
         <item quantity="other">%d 首歌有多個版本</item>
     </plurals>

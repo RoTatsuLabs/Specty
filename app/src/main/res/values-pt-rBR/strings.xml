@@ -13,7 +13,6 @@
     <string name="settings_palette_desc">Todas as cores do app derivam desta.</string>
     <string name="settings_pure_black">Preto puro</string>
     <string name="settings_pure_black_desc">Fundos totalmente pretos no modo escuro, mais suaves em telas OLED.</string>
-    <string name="settings_results">Resultados</string>
     <string name="settings_spectrogram">Espectrograma</string>
     <string name="settings_window_size">Tamanho da janela</string>
     <string name="settings_window_size_desc">Janelas maiores resolvem a frequência com mais precisão; as menores resolvem melhor o tempo.</string>
@@ -43,7 +42,6 @@
     <string name="about_title">Sobre</string>
     <string name="about_source">Código-fonte</string>
     <string name="about_report">Informar um problema</string>
-    <string name="about_report_desc">Abrir uma issue no GitHub</string>
     <string name="about_privacy">Privacidade</string>
     <string name="about_privacy_title">Fica no seu dispositivo</string>
     <string name="about_privacy_desc">Toda a análise roda no seu dispositivo e nada é enviado. O Specty não declara a permissão de internet.</string>
@@ -81,7 +79,6 @@
     <!-- Library -->
     <string name="action_cancel">Cancelar</string>
     <string name="action_dismiss">Dispensar</string>
-    <string name="action_done">Concluído</string>
     <string name="library_menu_rescan">Reanalisar biblioteca</string>
     <string name="library_menu_folders">Pastas da biblioteca</string>
     <string name="library_more">Mais opções</string>
@@ -157,10 +154,8 @@
     <string name="sentence_sep">" "</string>
 
     <!-- Analysis -->
-    <string name="analysis_compare">Comparar com outro arquivo</string>
     <string name="analysis_again">Analisar de novo</string>
     <string name="analysis_export">Exportar como imagem</string>
-    <string name="analysis_share_image">Compartilhar imagem</string>
     <string name="analysis_share_title">Compartilhar análise</string>
     <string name="analysis_failed_title">Não foi possível analisar este arquivo</string>
     <string name="verdict_head_genuine">Lossless, sem sinal de origem lossy</string>
@@ -448,15 +443,6 @@
     <string name="report_look_auto">Igual ao app</string>
     <string name="report_look_amoled">AMOLED</string>
     <string name="report_caption">Adicionar uma legenda (opcional)</string>
-    <string name="insights_totals">%1$d faixas  ·  %2$s  ·  %3$s</string>
-    <string name="insights_checked">%1$d de %2$d verificados</string>
-    <string name="insights_formats">Formatos</string>
-    <string name="insights_duplicates_hint">Fique com a melhor cópia de cada uma.</string>
-    <string name="insights_duplicates_none">Nenhuma música aparece duas vezes.</string>
-    <string name="insights_compare">Comparar com a melhor cópia</string>
-    <string name="insights_best">Melhor cópia</string>
-    <string name="insights_share">Compartilhar resumo</string>
-    <string name="insights_share_title">Resumo da biblioteca do Specty</string>
     <plurals name="insights_duplicate_songs">
         <item quantity="one">%d música com várias cópias</item>
         <item quantity="many">%d de músicas com várias cópias</item>

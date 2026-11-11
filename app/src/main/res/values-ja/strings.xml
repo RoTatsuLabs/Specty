@@ -13,7 +13,6 @@
     <string name="settings_palette_desc">アプリ内のすべての色は、この色から作られます。</string>
     <string name="settings_pure_black">ピュアブラック</string>
     <string name="settings_pure_black_desc">ダークモードの背景を真っ黒にします。OLED 画面に向いています。</string>
-    <string name="settings_results">結果</string>
     <string name="settings_spectrogram">スペクトログラム</string>
     <string name="settings_window_size">ウィンドウサイズ</string>
     <string name="settings_window_size_desc">大きいほど周波数を細かく、小さいほど時間を細かく分解できます。</string>
@@ -41,7 +40,6 @@
     <string name="about_title">このアプリについて</string>
     <string name="about_source">ソースコード</string>
     <string name="about_report">問題を報告</string>
-    <string name="about_report_desc">GitHub で issue を作成</string>
     <string name="about_privacy">プライバシー</string>
     <string name="about_privacy_title">端末の外に出ません</string>
     <string name="about_privacy_desc">解析はすべて端末内で行い、何もアップロードしません。Specty はインターネット権限を宣言していません。</string>
@@ -77,7 +75,6 @@
     <!-- Library -->
     <string name="action_cancel">キャンセル</string>
     <string name="action_dismiss">閉じる</string>
-    <string name="action_done">完了</string>
     <string name="library_menu_rescan">ライブラリを再スキャン</string>
     <string name="library_menu_folders">ライブラリのフォルダ</string>
     <string name="library_more">その他のオプション</string>
@@ -147,10 +144,8 @@
     <string name="sentence_sep">""</string>
 
     <!-- Analysis -->
-    <string name="analysis_compare">別のファイルと比較</string>
     <string name="analysis_again">もう一度解析</string>
     <string name="analysis_export">画像として書き出す</string>
-    <string name="analysis_share_image">画像を共有</string>
     <string name="analysis_share_title">解析結果を共有</string>
     <string name="analysis_failed_title">このファイルを解析できませんでした</string>
     <string name="verdict_head_genuine">ロスレス、非可逆が元だった形跡なし</string>
@@ -434,15 +429,6 @@
     <string name="report_look_auto">アプリに合わせる</string>
     <string name="report_look_amoled">AMOLED</string>
     <string name="report_caption">キャプションを追加(任意)</string>
-    <string name="insights_totals">%1$d 曲  ·  %2$s  ·  %3$s</string>
-    <string name="insights_checked">%2$d 曲中 %1$d 曲をチェック済み</string>
-    <string name="insights_formats">形式</string>
-    <string name="insights_duplicates_hint">それぞれ最良のコピーを残しましょう。</string>
-    <string name="insights_duplicates_none">重複している曲はありません。</string>
-    <string name="insights_compare">最良のコピーと比較</string>
-    <string name="insights_best">最良のコピー</string>
-    <string name="insights_share">概要を共有</string>
-    <string name="insights_share_title">Specty ライブラリの概要</string>
     <plurals name="insights_duplicate_songs">
         <item quantity="other">複数のコピーがある曲: %d 曲</item>
     </plurals>

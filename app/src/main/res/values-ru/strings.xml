@@ -13,7 +13,6 @@
     <string name="settings_palette_desc">Все цвета в приложении строятся от этой палитры.</string>
     <string name="settings_pure_black">Чисто чёрный</string>
     <string name="settings_pure_black_desc">Настоящий чёрный фон в тёмной теме, бережнее к OLED-экранам.</string>
-    <string name="settings_results">Результаты</string>
     <string name="settings_spectrogram">Спектрограмма</string>
     <string name="settings_window_size">Размер окна</string>
     <string name="settings_window_size_desc">Чем больше окно, тем точнее частота, чем меньше, тем точнее время.</string>
@@ -44,7 +43,6 @@
     <string name="about_title">О приложении</string>
     <string name="about_source">Исходный код</string>
     <string name="about_report">Сообщить о проблеме</string>
-    <string name="about_report_desc">Создать обращение на GitHub</string>
     <string name="about_privacy">Конфиденциальность</string>
     <string name="about_privacy_title">Всё остаётся на устройстве</string>
     <string name="about_privacy_desc">Весь анализ выполняется на вашем устройстве, ничего не загружается. Specty не запрашивает разрешение на доступ в интернет.</string>
@@ -83,7 +81,6 @@
     <!-- Library -->
     <string name="action_cancel">Отмена</string>
     <string name="action_dismiss">Закрыть</string>
-    <string name="action_done">Готово</string>
     <string name="library_menu_rescan">Пересканировать медиатеку</string>
     <string name="library_menu_folders">Папки медиатеки</string>
     <string name="library_more">Ещё</string>
@@ -162,10 +159,8 @@
     <string name="sentence_sep">" "</string>
 
     <!-- Analysis -->
-    <string name="analysis_compare">Сравнить с другим файлом</string>
     <string name="analysis_again">Проанализировать снова</string>
     <string name="analysis_export">Экспорт в изображение</string>
-    <string name="analysis_share_image">Поделиться изображением</string>
     <string name="analysis_share_title">Поделиться анализом</string>
     <string name="analysis_failed_title">Не удалось проанализировать этот файл</string>
     <string name="verdict_head_genuine">Без потерь, признаков lossy-происхождения нет</string>
@@ -455,15 +450,6 @@
     <string name="report_look_auto">Как в приложении</string>
     <string name="report_look_amoled">AMOLED</string>
     <string name="report_caption">Добавить подпись (необязательно)</string>
-    <string name="insights_totals">треков: %1$d  ·  %2$s  ·  %3$s</string>
-    <string name="insights_checked">проверено %1$d из %2$d</string>
-    <string name="insights_formats">Форматы</string>
-    <string name="insights_duplicates_hint">Оставьте лучшую копию каждого.</string>
-    <string name="insights_duplicates_none">Ни одна песня не встречается дважды.</string>
-    <string name="insights_compare">Сравнить с лучшей копией</string>
-    <string name="insights_best">Лучшая копия</string>
-    <string name="insights_share">Поделиться сводкой</string>
-    <string name="insights_share_title">Сводка медиатеки Specty</string>
     <plurals name="insights_duplicate_songs">
         <item quantity="one">%d песня с несколькими копиями</item>
         <item quantity="few">%d песни с несколькими копиями</item>

@@ -168,8 +168,6 @@ internal fun SortField.labelRes(): Int = when (this) {
     SortField.Result -> R.string.sort_result
 }
 
-@StringRes
-
 /** Results from the ones worth a look down to tracks not checked yet; this is the order of the Result sort. */
 private val RESULT_ORDER = ResultFilter.ORDER
 

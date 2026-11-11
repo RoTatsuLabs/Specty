@@ -13,7 +13,6 @@
     <string name="settings_palette_desc">Semua warna di aplikasi diturunkan dari warna ini.</string>
     <string name="settings_pure_black">Hitam pekat</string>
     <string name="settings_pure_black_desc">Latar belakang hitam sejati di mode gelap, lebih nyaman untuk layar OLED.</string>
-    <string name="settings_results">Hasil</string>
     <string name="settings_spectrogram">Spektrogram</string>
     <string name="settings_window_size">Ukuran jendela</string>
     <string name="settings_window_size_desc">Jendela yang lebih besar membedakan frekuensi dengan lebih halus; yang lebih kecil membedakan waktu dengan lebih halus.</string>
@@ -41,7 +40,6 @@
     <string name="about_title">Tentang</string>
     <string name="about_source">Kode sumber</string>
     <string name="about_report">Laporkan masalah</string>
-    <string name="about_report_desc">Buka isu di GitHub</string>
     <string name="about_privacy">Privasi</string>
     <string name="about_privacy_title">Tetap di perangkat Anda</string>
     <string name="about_privacy_desc">Semua analisis berjalan di perangkat Anda dan tidak ada yang diunggah. Specty tidak mendeklarasikan izin internet.</string>
@@ -77,7 +75,6 @@
     <!-- Library -->
     <string name="action_cancel">Batal</string>
     <string name="action_dismiss">Tutup</string>
-    <string name="action_done">Selesai</string>
     <string name="library_menu_rescan">Pindai ulang pustaka</string>
     <string name="library_menu_folders">Folder pustaka</string>
     <string name="library_more">Opsi lainnya</string>
@@ -147,10 +144,8 @@
     <string name="sentence_sep">" "</string>
 
     <!-- Analysis -->
-    <string name="analysis_compare">Bandingkan dengan file lain</string>
     <string name="analysis_again">Analisis ulang</string>
     <string name="analysis_export">Ekspor sebagai gambar</string>
-    <string name="analysis_share_image">Bagikan gambar</string>
     <string name="analysis_share_title">Bagikan analisis</string>
     <string name="analysis_failed_title">File ini tidak dapat dianalisis</string>
     <string name="verdict_head_genuine">Lossless, tanpa tanda berasal dari sumber lossy</string>
@@ -434,15 +429,6 @@
     <string name="report_look_auto">Ikuti aplikasi</string>
     <string name="report_look_amoled">AMOLED</string>
     <string name="report_caption">Tambahkan keterangan (opsional)</string>
-    <string name="insights_totals">%1$d lagu  ·  %2$s  ·  %3$s</string>
-    <string name="insights_checked">%1$d dari %2$d sudah diperiksa</string>
-    <string name="insights_formats">Format</string>
-    <string name="insights_duplicates_hint">Simpan salinan terbaik dari tiap lagu.</string>
-    <string name="insights_duplicates_none">Tidak ada lagu yang muncul dua kali.</string>
-    <string name="insights_compare">Bandingkan dengan salinan terbaik</string>
-    <string name="insights_best">Salinan terbaik</string>
-    <string name="insights_share">Bagikan ringkasan</string>
-    <string name="insights_share_title">Ringkasan pustaka Specty</string>
     <plurals name="insights_duplicate_songs">
         <item quantity="other">%d lagu punya beberapa salinan</item>
     </plurals>
