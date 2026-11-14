@@ -140,4 +140,4 @@ jobs:
           name: Specty_${{ steps.version.outputs.apk }}_${{ matrix.abi }}
           path: dist/*.apk
           if-no-files-found: error
-          retention-days: 14
+          retention-days: 1
