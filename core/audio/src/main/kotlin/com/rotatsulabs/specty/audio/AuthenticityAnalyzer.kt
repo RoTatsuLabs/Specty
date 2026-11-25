@@ -20,8 +20,13 @@ object AuthenticityAnalyzer {
     private const val HI_RES_ABOVE_HZ = 48_000
     private const val TOP_AT_PEAKS_CONFIDENCE = 60
     private const val MIN_DYNAMIC_DB = 25.0
-    private const val MIN_CLIFF_DB = 28.0
-    private const val PERMANENT_DROP_DB = 20.0
+    private const val MIN_CLIFF_DB = 22.0
+
+    /** A cliff this deep is a clear one; confidence rises from here. */
+    private const val STRONG_CLIFF_DB = 28.0
+    private const val MIN_CLIFF_DB_PER_KHZ = 12.0
+    private val CLIFF_WIDTHS_HZ = doubleArrayOf(300.0, 600.0, 1200.0, 2400.0)
+    private const val PERMANENT_DROP_DB = 15.0
 
     /** Mean level of the 1.5 to 5 kHz band (dB per bin at [AnalysisVersion.AUTH_FFT]) below which there is nothing to judge. */
     private const val SILENT_REFERENCE_DB = -95.0
@@ -34,6 +39,9 @@ object AuthenticityAnalyzer {
 
     /** An edge this close to Nyquist is the end of the band, not a cutoff. */
     private const val NYQUIST_EDGE = 0.985
+
+    /** In a file above 48 kHz the converter filter ends at 0.95 to 0.98 of Nyquist; that edge is not a finding. */
+    private const val HIGH_RATE_NYQUIST_EDGE = 0.95
 
     /** A roll-off that ends below this is lower than a modern master usually goes; the cause is left open. */
     private const val LOW_ROLLOFF_HZ = 16_500.0
@@ -373,7 +381,7 @@ object AuthenticityAnalyzer {
         val agree = if (clear >= MIN_CLEAR_SECTIONS) agreeing.toDouble() / clear else null
         var c = when (r.shape) {
             SpectrumShape.ABRUPT_CUTOFF ->
-                28.0 + ((r.cliffDropDb - MIN_CLIFF_DB) / 32.0 * 22.0).coerceIn(0.0, 22.0) +
+                28.0 + ((r.cliffDropDb - STRONG_CLIFF_DB) / 32.0 * 22.0).coerceIn(0.0, 22.0) +
                     (if (d.dynamic >= 35.0) 5.0 else 0.0) + 25.0 * (agree ?: 0.0) + 4.0 * signs.points
             SpectrumShape.FULL_BAND ->
                 30.0 + ((FULL_BAND_GAP_DB - d.gap) / FULL_BAND_GAP_DB * 20.0).coerceIn(0.0, 20.0) + 40.0 * (agree ?: 0.0)
@@ -451,9 +459,9 @@ object AuthenticityAnalyzer {
         val topLevel = median(s.copyOfRange(topFrom, topTo))
         val gap = reference - topLevel
 
-        // A cliff is a steep drop over ~600 Hz after which the spectrum never climbs back up.
-        // Notches and gradual roll-off do not qualify.
-        val window = max(3, (600.0 / binHz).roundToInt())
+        // A cliff is a steep drop after which the spectrum never climbs back up. A brick-wall filter drops in a few
+        // hundred Hz, a resampler's transition band takes a few kHz, so several widths are tried. The drop has to be
+        // at least MIN_CLIFF_DB and at least MIN_CLIFF_DB_PER_KHZ for its width. Notches and gradual roll-off do not qualify.
         val startK = (4000.0 / binHz).roundToInt()
         val suffixMax = FloatArray(bins)
         run {
@@ -465,23 +473,30 @@ object AuthenticityAnalyzer {
         }
         var bestDrop = 0.0
         var bestK = -1
-        if (dynamic >= MIN_DYNAMIC_DB && startK + window < bins) {
-            for (k in startK until bins - window) {
-                val drop = (s[k] - s[k + window]).toDouble()
-                if (drop > bestDrop && suffixMax[k + window] <= s[k] - PERMANENT_DROP_DB) {
-                    bestDrop = drop
-                    bestK = k
+        var bestWindow = 0
+        if (dynamic >= MIN_DYNAMIC_DB) {
+            for (widthHz in CLIFF_WIDTHS_HZ) {
+                val window = max(3, (widthHz / binHz).roundToInt())
+                if (startK + window >= bins) continue
+                val needed = max(MIN_CLIFF_DB, MIN_CLIFF_DB_PER_KHZ * widthHz / 1000.0)
+                for (k in startK until bins - window) {
+                    val drop = (s[k] - s[k + window]).toDouble()
+                    if (drop >= needed && drop > bestDrop && suffixMax[k + window] <= s[k] - PERMANENT_DROP_DB) {
+                        bestDrop = drop
+                        bestK = k
+                        bestWindow = window
+                    }
                 }
             }
         }
         var cutoff: Double? = null
-        if (bestDrop >= MIN_CLIFF_DB && bestK >= 0) {
+        if (bestK >= 0) {
             // Edge = first bin that falls below the midpoint of the drop.
-            val mid = (s[bestK] + s[bestK + window]) / 2f
+            val mid = (s[bestK] + s[bestK + bestWindow]) / 2f
             var edge = bestK
-            while (edge < bestK + window && s[edge] > mid) edge++
+            while (edge < bestK + bestWindow && s[edge] > mid) edge++
             val hz = edge * binHz
-            if (hz < nyquist * NYQUIST_EDGE) cutoff = hz
+            if (hz < nyquist * (if (sampleRate > HI_RES_ABOVE_HZ) HIGH_RATE_NYQUIST_EDGE else NYQUIST_EDGE)) cutoff = hz
         }
 
         // Highest frequency still above the noise floor: everything past it is empty.

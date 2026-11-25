@@ -126,8 +126,8 @@ class AuthenticityRegressionTest {
     fun aFaintTopEndThatCouldBeNoiseOrQuietContentIsInconclusive() {
         val faint = spectrum { f ->
             when {
-                f < 18_000.0 -> base(f)
-                f < 20_000.0 -> base(18_000.0) - (f - 18_000.0) / 2000.0 * (57.0 + base(18_000.0) - base(f))
+                f < 16_000.0 -> base(f)
+                f < 22_000.0 -> base(16_000.0) - (f - 16_000.0) / 6000.0 * (57.0 + base(16_000.0) - base(f))
                 else -> -48.0 - 57.0
             }
         }
