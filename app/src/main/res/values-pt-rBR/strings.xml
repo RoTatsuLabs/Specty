@@ -532,6 +532,7 @@
     <string name="note_rolloff_low">A banda termina mais abaixo do que na maioria dos masters modernos. Codificação lossy, fita e transferências antigas podem causar isso, então a causa continua em aberto.</string>
     <string name="note_upsample_possible">O espectro termina perto de %1$s kHz, onde uma fonte de 44,1 ou 48 kHz terminaria dentro deste arquivo de %2$s kHz. Nada mais confirma reamostragem, então é uma pista, não uma conclusão.</string>
     <string name="note_rate_unconfirmed">A taxa de amostragem é maior que 48 kHz, mas as amostras não trazem mais detalhe que o nível de CD, então o arquivo não é confirmado como Hi-Res.</string>
+    <string name="note_top_at_peaks">O espectro médio mostra pouco acima de 24 kHz, mas os momentos mais fortes trazem conteúdo ali, então o arquivo não é cortado no limite de uma fonte de 44,1 ou 48 kHz.</string>
     <string name="verdict_head_rolloff">Queda gradual em altas frequências</string>
     <string name="verdict_short_rolloff">Roll-off</string>
     <string name="hl_verdict_rolloff">com queda gradual</string>

@@ -6,6 +6,7 @@ enum class NoteKey {
     ATMOS, LOSSY_CODEC_EDGE, LOSSY_CODEC, NO_DECODER, NO_SIGNAL, FAINT_TOP, FULL_BAND, ROLLOFF,
     HARD_CUTOFF, UPSAMPLED, SHARP_CUTOFF, BAND_LIMITED, BITS_PADDED, SECTIONS_DISAGREE, TOO_LITTLE_CLEAR, FEW_SECTIONS,
     UPSAMPLE_HOLD, UPSAMPLE_LINE, FLOOR_AT_16BIT, FLOOR_BELOW_16BIT, ROLLOFF_LOW, UPSAMPLE_POSSIBLE, RATE_UNCONFIRMED,
+    TOP_AT_PEAKS,
 
     // Compare highlights.
     VERDICTS_DIFFER, MORE_TOP_END, B_REACHES_TOP, A_REACHES_TOP, MORE_DYNAMIC, LOUDER, MORE_CLIPPING, ALMOST_SAME,
@@ -56,6 +57,9 @@ object Notes {
             NoteKey.RATE_UNCONFIRMED ->
                 "The sample rate is above 48 kHz, but the samples carry no more than CD-level detail, " +
                     "so the file is not confirmed as Hi-Res."
+            NoteKey.TOP_AT_PEAKS ->
+                "The average spectrum shows little above 24 kHz, but the loudest moments carry content there, " +
+                    "so the file is not cut off at the limit of a 44.1 or 48 kHz source."
             NoteKey.BITS_PADDED -> "Only the top ${a[0]} bits carry data, so this looks like ${a[0]}-bit audio stored as ${a[1]}-bit."
             NoteKey.SECTIONS_DISAGREE ->
                 "Sections of this track disagree about the top of the spectrum (${a[0]} of ${a[1]} match the average), " +

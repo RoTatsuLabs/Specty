@@ -18,6 +18,7 @@ import kotlin.math.roundToInt
 object AuthenticityAnalyzer {
     /** Lossless above this sample rate is called Hi-Res. */
     private const val HI_RES_ABOVE_HZ = 48_000
+    private const val TOP_AT_PEAKS_CONFIDENCE = 60
     private const val MIN_DYNAMIC_DB = 25.0
     private const val MIN_CLIFF_DB = 28.0
     private const val PERMANENT_DROP_DB = 20.0
@@ -75,22 +76,41 @@ object AuthenticityAnalyzer {
      * upsampled verdict is backed by a noise floor at 16-bit level, and withdrawn when the floor is below it, because
      * a file with that much resolution is not a stretched CD.
      */
+    /**
+     * The average spectrum can show a cut where the loudest frames carry content above a 44.1 or 48 kHz source's
+     * limit. That content settles it: the file is read as full band instead of as cut off.
+     */
+    private fun withTopContent(report: AuthenticityReport, info: AudioInfo, spectra: AuthSpectra): AuthenticityReport {
+        if (info.sampleRate <= HI_RES_ABOVE_HZ) return report
+        if (report.verdict == Verdict.HI_RES || report.verdict == Verdict.GENUINE) return report
+        if (report.shape == SpectrumShape.NO_SIGNAL || report.shape == SpectrumShape.FULL_BAND) return report
+        if ((report.cutoffHz ?: 0.0) >= TopContent.FROM_HZ) return report
+        val margin = TopContent.marginDb(spectra.peak, spectra.quietFloorVariance, spectra.sampleRate, spectra.fftSize)
+        if (margin == null || margin < TopContent.MARGIN_DB) return report
+        return report.copy(
+            verdict = Verdict.HI_RES, cutoffHz = null, cliffDropDb = 0.0, emptyAboveHz = null, encoderGuess = null,
+            shape = SpectrumShape.FULL_BAND, confidence = TOP_AT_PEAKS_CONFIDENCE,
+            notes = listOf(Note(NoteKey.TOP_AT_PEAKS)) + report.notes.filter { it.key == NoteKey.BITS_PADDED },
+        )
+    }
+
     private fun withEvidence(
-        report: AuthenticityReport,
+        reported: AuthenticityReport,
         info: AudioInfo,
         spectra: AuthSpectra,
         upsample: UpsampleEvidence.Finding?,
         signs: CutoffSigns,
     ): AuthenticityReport {
-        if (report.verdict == Verdict.LOSSY_CODEC || report.verdict == Verdict.DOLBY_ATMOS) return report
+        if (reported.verdict == Verdict.LOSSY_CODEC || reported.verdict == Verdict.DOLBY_ATMOS) return reported
         if (upsample != null) {
             val key = if (upsample.kind == UpsampleEvidence.Kind.SAMPLE_HOLD) NoteKey.UPSAMPLE_HOLD else NoteKey.UPSAMPLE_LINE
             val sourceKhz = fmt(upsample.sourceHz / 1000.0)
-            return report.copy(
+            return reported.copy(
                 verdict = Verdict.UPSAMPLED, confidence = 97, encoderGuess = null,
-                notes = listOf(Note(key, upsample.ratio, sourceKhz)) + report.notes.filter { it.key == NoteKey.BITS_PADDED },
+                notes = listOf(Note(key, upsample.ratio, sourceKhz)) + reported.notes.filter { it.key == NoteKey.BITS_PADDED },
             )
         }
+        val report = withTopContent(reported, info, spectra)
         val floor = NoiseFloor.classify(spectra.quietFloorVariance)
         val padded = report.notes.any { it.key == NoteKey.BITS_PADDED }
         if (report.verdict == Verdict.HI_RES) {

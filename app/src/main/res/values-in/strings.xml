@@ -514,6 +514,7 @@
     <string name="note_rolloff_low">Pita berakhir lebih rendah daripada kebanyakan master modern. Pengkodean lossy, pita kaset, dan transfer lama bisa menyebabkannya, jadi penyebabnya belum pasti.</string>
     <string name="note_upsample_possible">Spektrum berakhir di sekitar %1$s kHz, tempat sumber 44,1 atau 48 kHz akan berakhir di dalam file %2$s kHz ini. Tidak ada tanda lain yang memastikan resampling, jadi ini petunjuk, bukan temuan.</string>
     <string name="note_rate_unconfirmed">Sample rate di atas 48 kHz, tetapi sampelnya tidak memuat detail lebih dari tingkat CD, jadi file ini tidak terkonfirmasi sebagai Hi-Res.</string>
+    <string name="note_top_at_peaks">Spektrum rata-rata hanya menunjukkan sedikit di atas 24 kHz, tetapi momen paling keras membawa konten di sana, jadi file ini tidak terpotong pada batas sumber 44,1 atau 48 kHz.</string>
     <string name="verdict_head_rolloff">Roll-off bertahap di frekuensi tinggi</string>
     <string name="verdict_short_rolloff">Roll-off</string>
     <string name="hl_verdict_rolloff">roll-off bertahap</string>

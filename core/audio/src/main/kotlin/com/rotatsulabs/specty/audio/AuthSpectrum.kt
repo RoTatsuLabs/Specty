@@ -13,7 +13,12 @@ class AuthSpectra(
     val sections: List<FloatArray?>,
     /** White-noise equivalent power per channel (full scale +-1.0) of the quietest passages, or null when none qualified. */
     val quietFloorVariance: Double? = null,
+    /** Per-bin level that 1 % of the audible frames exceed; null when no frame was audible. */
+    val peak: PeakHold? = null,
 )
+
+/** A high percentile of each bin over the audible frames, which an average in dB hides when content is brief. */
+class PeakHold(val db: FloatArray, val frames: Int, val rank: Int)
 
 /**
  * Builds the spectra the authenticity verdict is judged on. They use one fixed Hann transform of
@@ -27,6 +32,9 @@ object AuthSpectrumAnalyzer {
 
     /** Frames quieter than this (dBFS, summed power) are left out of the averages. */
     private const val ACTIVE_FRAME_DB = -70.0
+
+    /** Share of the audible frames a bin may exceed and still set the peak-hold level. */
+    private const val PEAK_SHARE = 0.01
 
     fun compute(pcm: PcmFile, onProgress: (Float) -> Unit = {}): AuthSpectra {
         val fftSize = AnalysisVersion.AUTH_FFT
@@ -50,6 +58,10 @@ object AuthSpectrumAnalyzer {
         val allSum = DoubleArray(bins)
         val sectionSum = Array(sectionCount) { DoubleArray(bins) }
         val sectionActive = IntArray(sectionCount)
+        val keep = maxOf(1, columns / 100)
+        val top = FloatArray(bins * keep) { Float.NEGATIVE_INFINITY }
+        val topMin = FloatArray(bins) { Float.NEGATIVE_INFINITY }
+        val topAt = IntArray(bins)
 
         // Noise floor of the quietest frames (see NoiseFloor): median band power per frame, in raw |X|^2 units.
         val windowPower = window.sumOf { it * it }
@@ -98,7 +110,18 @@ object AuthSpectrumAnalyzer {
                 }
             }
             if (toDb(framePower) > ACTIVE_FRAME_DB) {
-                for (k in 0 until bins) activeSum[k] += db[k]
+                for (k in 0 until bins) {
+                    activeSum[k] += db[k]
+                    val v = db[k].toFloat()
+                    if (v > topMin[k]) {
+                        val base = k * keep
+                        top[base + topAt[k]] = v
+                        var low = 0
+                        for (j in 1 until keep) if (top[base + j] < top[base + low]) low = j
+                        topAt[k] = low
+                        topMin[k] = top[base + low]
+                    }
+                }
                 activeCount++
                 if (sectionCount > 0) {
                     val section = (col.toLong() * sectionCount / columns).toInt()
@@ -122,7 +145,18 @@ object AuthSpectrumAnalyzer {
                 FloatArray(bins) { k -> (sectionSum[s][k] / sectionActive[s]).toFloat() }
             }
         }
-        return AuthSpectra(pcm.sampleRate, fftSize, whole, sections, quietFloor(floorFrames, windowPower))
+        val peak = if (activeCount > 0) {
+            val rank = Math.round(activeCount * PEAK_SHARE).toInt().coerceIn(1, keep)
+            val levels = FloatArray(bins) { k ->
+                val kept = top.copyOfRange(k * keep, (k + 1) * keep)
+                kept.sortDescending()
+                kept[rank - 1]
+            }
+            PeakHold(levels, activeCount, rank)
+        } else {
+            null
+        }
+        return AuthSpectra(pcm.sampleRate, fftSize, whole, sections, quietFloor(floorFrames, windowPower), peak)
     }
 
     /**

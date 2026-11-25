@@ -514,6 +514,7 @@
     <string name="note_rolloff_low">頻帶的終點比多數現代母帶更低。有損編碼、磁帶和早期轉錄都可能造成這種情況，所以原因尚不確定。</string>
     <string name="note_upsample_possible">頻譜在約 %1$s kHz 處結束，44.1 或 48 kHz 的音源放進這個 %2$s kHz 的檔案中恰好會在此結束。沒有其他跡象證實重新取樣，所以這只是線索，不是結論。</string>
     <string name="note_rate_unconfirmed">取樣率高於 48 kHz，但取樣中的細節並未超過 CD 水準，因此無法確認該檔案為 Hi-Res。</string>
+    <string name="note_top_at_peaks">平均頻譜在 24 kHz 以上幾乎沒有內容，但最響的片段中存在該頻段的內容，因此該檔案並未在 44.1 或 48 kHz 來源的上限處被截斷。</string>
     <string name="verdict_head_rolloff">高頻逐漸衰減</string>
     <string name="verdict_short_rolloff">衰減</string>
     <string name="hl_verdict_rolloff">高頻逐漸衰減</string>
