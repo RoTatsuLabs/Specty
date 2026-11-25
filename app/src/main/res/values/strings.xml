@@ -293,7 +293,7 @@
     <string name="note_full_band">Content reaches the top of the spectrum, with no cutoff or roll-off found.</string>
     <string name="note_rolloff">The spectrum fades out gradually above about %1$s kHz, with no sharp edge. This is common in mastering filters, older recordings and soft low-pass filters, and it does not by itself show a lossy origin.</string>
     <string name="note_hard_cutoff">Sharp cutoff near %1$s kHz, with more than one sign of an encoder low-pass: a steep edge, silence above it, or the same position all through the track. The file was most likely transcoded from a lossy source.</string>
-    <string name="note_upsampled">Content stops near %1$s kHz inside a %2$s kHz file. It was most likely upsampled from a 44.1 or 48 kHz source.</string>
+    <string name="note_upsampled">Content stops near %1$s kHz inside a %2$s kHz file. It was most likely upsampled from a source sampled at %3$s or %4$s kHz.</string>
     <string name="note_sharp_cutoff">Sharp cutoff near %1$s kHz. A lossy source can leave an edge like this, but some masters are filtered the same way, so it is not conclusive.</string>
     <string name="note_band_limited">The spectrum ends at a sharp edge near %1$s kHz. Nothing else points to a lossy or upsampled source, and mastering or recording filters can leave an edge like this.</string>
     <string name="note_bits_padded">Only the top %1$s bits carry data, so this looks like %1$s-bit audio stored as %2$s-bit.</string>
@@ -534,7 +534,7 @@
     <string name="settings_search_none">No settings match</string>
     <string name="settings_search_clear">Clear search</string>
     <string name="note_rolloff_low">The band ends lower than most modern masters. Lossy encoding, tape and vintage transfers can all do this, so the cause stays open.</string>
-    <string name="note_upsample_possible">The spectrum ends near %1$s kHz, where a 44.1 or 48 kHz source would end inside this %2$s kHz file. Nothing else confirms resampling, so this is a lead, not a finding.</string>
+    <string name="note_upsample_possible">The spectrum ends near %1$s kHz, where a source sampled at %3$s or %4$s kHz would end inside this %2$s kHz file. Nothing else confirms resampling, so this is a lead, not a finding.</string>
     <string name="note_rate_unconfirmed">The sample rate is above 48 kHz, but the samples carry no more than CD-level detail, so the file is not confirmed as Hi-Res.</string>
     <string name="note_top_at_peaks">The average spectrum shows little above 24 kHz, but the loudest moments carry content there, so the file is not cut off at the limit of a 44.1 or 48 kHz source.</string>
     <string name="verdict_head_rolloff">Gradual high-frequency roll-off</string>

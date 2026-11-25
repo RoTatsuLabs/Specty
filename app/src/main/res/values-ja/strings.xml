@@ -283,7 +283,7 @@
     <string name="note_full_band">スペクトルの上端まで成分があり、カットオフもロールオフも見つかりませんでした。</string>
     <string name="note_rolloff">スペクトルは約 %1$s kHz 以上で鋭い境目なしに徐々に減衰しています。マスタリングのフィルター、古い録音、緩やかなローパスでよく見られる形で、これだけでは非可逆が元だとは言えません。</string>
     <string name="note_hard_cutoff">%1$s kHz 付近に鋭いカットオフがあり、エンコーダーのローパスを示す手がかりが複数あります（急な境目、その上の無音、トラック全体で同じ位置）。非可逆音源からトランスコードされた可能性が高いです。</string>
-    <string name="note_upsampled">%2$s kHz のファイルなのに、成分が %1$s kHz 付近で止まっています。44.1 kHz または 48 kHz の音源からアップサンプリングされた可能性が非常に高いです。</string>
+    <string name="note_upsampled">%2$s kHz のファイルなのに、成分が %1$s kHz 付近で止まっています。%3$s kHz または %4$s kHz の音源からアップサンプリングされた可能性が非常に高いです。</string>
     <string name="note_sharp_cutoff">%1$s kHz 付近に鋭いカットオフがあります。非可逆音源でもこうした境目は残りますが、一部のマスターも同様にフィルターされるため、断定はできません。</string>
     <string name="note_band_limited">スペクトルは %1$s kHz 付近の鋭い境目で終わっています。非可逆やアップサンプリングを示す他の手がかりはなく、マスタリングや録音のフィルターでもこうした境目は残ります。</string>
     <string name="note_bits_padded">上位 %1$s ビットだけにデータがあり、%1$s ビットの音声を %2$s ビットで保存したものに見えます。</string>
@@ -512,7 +512,7 @@
     <string name="settings_search_none">一致する設定がありません</string>
     <string name="settings_search_clear">検索をクリア</string>
     <string name="note_rolloff_low">帯域の終わりが最近のマスターの多くより低くなっています。非可逆エンコード、テープ、古い転送のいずれでも起こり得るため、原因は特定できません。</string>
-    <string name="note_upsample_possible">スペクトルは %1$s kHz 付近で終わっており、%2$s kHz のこのファイルに 44.1 または 48 kHz の音源を入れた場合の上限と一致します。リサンプリングを裏付ける他の手がかりはないため、確定ではなく手がかりです。</string>
+    <string name="note_upsample_possible">スペクトルは %1$s kHz 付近で終わっており、%2$s kHz のこのファイルに %3$s または %4$s kHz の音源を入れた場合の上限と一致します。リサンプリングを裏付ける他の手がかりはないため、確定ではなく手がかりです。</string>
     <string name="note_rate_unconfirmed">サンプルレートは 48 kHz を超えていますが、サンプルの情報量は CD 水準を超えていないため、ハイレゾとは確認できません。</string>
     <string name="note_top_at_peaks">平均スペクトルでは 24 kHz 超にほとんど成分が見えませんが、最も大きい部分にはその帯域の成分があるため、このファイルは 44.1 kHz や 48 kHz のソースの上限で切られてはいません。</string>
     <string name="verdict_head_rolloff">高域の緩やかなロールオフ</string>

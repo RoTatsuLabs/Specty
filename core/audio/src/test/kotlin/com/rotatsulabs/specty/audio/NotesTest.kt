@@ -9,10 +9,10 @@ class NotesTest {
     private val argCount = mapOf(
         NoteKey.ATMOS to 0, NoteKey.LOSSY_CODEC_EDGE to 2, NoteKey.LOSSY_CODEC to 1, NoteKey.NO_DECODER to 0,
         NoteKey.NO_SIGNAL to 0, NoteKey.FAINT_TOP to 0, NoteKey.FULL_BAND to 0, NoteKey.ROLLOFF to 1,
-        NoteKey.HARD_CUTOFF to 1, NoteKey.UPSAMPLED to 2, NoteKey.SHARP_CUTOFF to 1, NoteKey.BAND_LIMITED to 1,
+        NoteKey.HARD_CUTOFF to 1, NoteKey.UPSAMPLED to 4, NoteKey.SHARP_CUTOFF to 1, NoteKey.BAND_LIMITED to 1,
         NoteKey.BITS_PADDED to 2, NoteKey.SECTIONS_DISAGREE to 2, NoteKey.TOO_LITTLE_CLEAR to 0, NoteKey.FEW_SECTIONS to 1,
         NoteKey.UPSAMPLE_HOLD to 2, NoteKey.UPSAMPLE_LINE to 2, NoteKey.FLOOR_AT_16BIT to 0, NoteKey.FLOOR_BELOW_16BIT to 0,
-        NoteKey.ROLLOFF_LOW to 0, NoteKey.UPSAMPLE_POSSIBLE to 2, NoteKey.RATE_UNCONFIRMED to 0,
+        NoteKey.ROLLOFF_LOW to 0, NoteKey.UPSAMPLE_POSSIBLE to 4, NoteKey.RATE_UNCONFIRMED to 0,
         NoteKey.TOP_AT_PEAKS to 0,
         NoteKey.VERDICTS_DIFFER to 2, NoteKey.MORE_TOP_END to 4, NoteKey.B_REACHES_TOP to 1, NoteKey.A_REACHES_TOP to 1,
         NoteKey.MORE_DYNAMIC to 3, NoteKey.LOUDER to 2, NoteKey.MORE_CLIPPING to 1, NoteKey.ALMOST_SAME to 0,

@@ -283,7 +283,7 @@
     <string name="note_full_band">內容延伸到頻譜頂端，沒有發現截止或衰減。</string>
     <string name="note_rolloff">頻譜在約 %1$s kHz 以上逐漸衰減，沒有陡峭的邊緣。這在母帶濾波、較早的錄音和平緩的低通濾波中很常見，本身並不代表來源有損。</string>
     <string name="note_hard_cutoff">在約 %1$s kHz 處出現陡峭截止，並且有不只一項編碼器低通的跡象：邊緣陡峭、其上一片靜默，或整首曲目中位置一致。該檔案很可能由有損音源轉碼而來。</string>
-    <string name="note_upsampled">內容在 %2$s kHz 的檔案中止於約 %1$s kHz。很可能由 44.1 或 48 kHz 的音源升頻取樣而來。</string>
+    <string name="note_upsampled">內容在 %2$s kHz 的檔案中止於約 %1$s kHz。很可能由 %3$s 或 %4$s kHz 的音源升頻取樣而來。</string>
     <string name="note_sharp_cutoff">在約 %1$s kHz 處出現陡峭截止。有損音源可能留下這樣的邊緣，但有些母帶也會這樣濾波，因此不能據此定論。</string>
     <string name="note_band_limited">頻譜在約 %1$s kHz 處以陡峭的邊緣結束。沒有其他跡象指向有損或升頻取樣的來源，母帶或錄音濾波也可能留下這樣的邊緣。</string>
     <string name="note_bits_padded">只有最高 %1$s 位元帶有資料，看起來是以 %2$s 位元儲存的 %1$s 位元音訊。</string>
@@ -512,7 +512,7 @@
     <string name="settings_search_none">沒有符合的設定</string>
     <string name="settings_search_clear">清除搜尋</string>
     <string name="note_rolloff_low">頻帶的終點比多數現代母帶更低。有損編碼、磁帶和早期轉錄都可能造成這種情況，所以原因尚不確定。</string>
-    <string name="note_upsample_possible">頻譜在約 %1$s kHz 處結束，44.1 或 48 kHz 的音源放進這個 %2$s kHz 的檔案中恰好會在此結束。沒有其他跡象證實重新取樣，所以這只是線索，不是結論。</string>
+    <string name="note_upsample_possible">頻譜在約 %1$s kHz 處結束，%3$s 或 %4$s kHz 的音源放進這個 %2$s kHz 的檔案中恰好會在此結束。沒有其他跡象證實重新取樣，所以這只是線索，不是結論。</string>
     <string name="note_rate_unconfirmed">取樣率高於 48 kHz，但取樣中的細節並未超過 CD 水準，因此無法確認該檔案為 Hi-Res。</string>
     <string name="note_top_at_peaks">平均頻譜在 24 kHz 以上幾乎沒有內容，但最響的片段中存在該頻段的內容，因此該檔案並未在 44.1 或 48 kHz 來源的上限處被截斷。</string>
     <string name="verdict_head_rolloff">高頻逐漸衰減</string>

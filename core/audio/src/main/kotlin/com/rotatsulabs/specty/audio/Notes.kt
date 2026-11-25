@@ -44,7 +44,7 @@ object Notes {
                     "or the same position all through the track. The file was most likely transcoded from a lossy source."
             NoteKey.UPSAMPLED ->
                 "Content stops near ${a[0]} kHz inside a ${a[1]} kHz file. " +
-                    "It was most likely upsampled from a 44.1 or 48 kHz source."
+                    "It was most likely upsampled from a source sampled at ${a[2]} or ${a[3]} kHz."
             NoteKey.SHARP_CUTOFF ->
                 "Sharp cutoff near ${a[0]} kHz. A lossy source can leave an edge like this, but some masters are filtered " +
                     "the same way, so it is not conclusive."
@@ -52,7 +52,7 @@ object Notes {
                 "The spectrum ends at a sharp edge near ${a[0]} kHz. Nothing else points to a lossy or upsampled source, " +
                     "and mastering or recording filters can leave an edge like this."
             NoteKey.UPSAMPLE_POSSIBLE ->
-                "The spectrum ends near ${a[0]} kHz, where a 44.1 or 48 kHz source would end inside this ${a[1]} kHz file. " +
+                "The spectrum ends near ${a[0]} kHz, where a source sampled at ${a[2]} or ${a[3]} kHz would end inside this ${a[1]} kHz file. " +
                     "Nothing else confirms resampling, so this is a lead, not a finding."
             NoteKey.RATE_UNCONFIRMED ->
                 "The sample rate is above 48 kHz, but the samples carry no more than CD-level detail, " +

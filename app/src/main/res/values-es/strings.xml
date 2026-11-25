@@ -293,7 +293,7 @@
     <string name="note_full_band">El contenido llega hasta lo más alto del espectro, sin corte ni caída.</string>
     <string name="note_rolloff">El espectro se desvanece gradualmente por encima de unos %1$s kHz, sin un borde marcado. Es habitual en filtros de masterización, grabaciones antiguas y filtros de paso bajo suaves, y por sí solo no indica un origen con pérdida.</string>
     <string name="note_hard_cutoff">Corte marcado cerca de %1$s kHz, con más de un indicio de paso bajo de codificador: un borde abrupto, silencio por encima o la misma posición en toda la pista. El archivo probablemente se transcodificó desde una fuente con pérdida.</string>
-    <string name="note_upsampled">El contenido se detiene cerca de %1$s kHz dentro de un archivo de %2$s kHz. Lo más probable es que se haya aumentado desde una fuente de 44,1 o 48 kHz.</string>
+    <string name="note_upsampled">El contenido se detiene cerca de %1$s kHz dentro de un archivo de %2$s kHz. Lo más probable es que se haya aumentado desde una fuente de %3$s o %4$s kHz.</string>
     <string name="note_sharp_cutoff">Corte marcado cerca de %1$s kHz. Una fuente con pérdida puede dejar un borde así, pero algunos masters se filtran igual, así que no es concluyente.</string>
     <string name="note_band_limited">El espectro termina en un borde marcado cerca de %1$s kHz. Nada más apunta a una fuente con pérdida o con aumento de frecuencia, y los filtros de masterización o grabación pueden dejar un borde así.</string>
     <string name="note_bits_padded">Solo los %1$s bits superiores contienen datos, así que parece audio de %1$s bits almacenado como de %2$s bits.</string>
@@ -530,7 +530,7 @@
     <string name="settings_search_none">Ningún ajuste coincide</string>
     <string name="settings_search_clear">Borrar búsqueda</string>
     <string name="note_rolloff_low">La banda termina más abajo que en la mayoría de masters modernos. La compresión con pérdida, la cinta y las transferencias antiguas pueden causarlo, así que la causa queda abierta.</string>
-    <string name="note_upsample_possible">El espectro termina cerca de %1$s kHz, donde terminaría una fuente de 44,1 o 48 kHz dentro de este archivo de %2$s kHz. Nada más confirma un remuestreo, así que es una pista, no una conclusión.</string>
+    <string name="note_upsample_possible">El espectro termina cerca de %1$s kHz, donde terminaría una fuente de %3$s o %4$s kHz dentro de este archivo de %2$s kHz. Nada más confirma un remuestreo, así que es una pista, no una conclusión.</string>
     <string name="note_rate_unconfirmed">La frecuencia de muestreo supera los 48 kHz, pero las muestras no contienen más detalle que el nivel de un CD, así que el archivo no se confirma como Hi-Res.</string>
     <string name="note_top_at_peaks">El espectro medio muestra poco por encima de 24 kHz, pero los momentos más fuertes llevan contenido ahí, así que el archivo no está cortado en el límite de una fuente de 44,1 o 48 kHz.</string>
     <string name="verdict_head_rolloff">Caída gradual en altas frecuencias</string>

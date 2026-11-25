@@ -133,10 +133,13 @@ object AuthenticityAnalyzer {
         if (report.verdict != Verdict.UPSAMPLED) return report
         // An edge where a 44.1 or 48 kHz source would end is a lead, not proof. It is confirmed by something that is
         // not the spectrum (a 16-bit noise floor, 16-bit data in a wider file) or by an edge that is steep, empty
-        // above and the same all through the track.
+        // above and the same all through the track. A 88.2 or 96 kHz source has no 16-bit floor to show, so for
+        // that edge only the spectral signs count and a deep floor does not withdraw it.
         val cutoffKhz = fmt((report.cutoffHz ?: 0.0) / 1000.0)
         val rateKhz = fmt(info.sampleRate / 1000.0)
-        if (floor?.level == NoiseFloor.Level.BELOW_16BIT) {
+        val source = UpsampleEdge.match(report.cutoffHz ?: 0.0, info.sampleRate)
+        val fromHiRes = source?.hiRes == true
+        if (!fromHiRes && floor?.level == NoiseFloor.Level.BELOW_16BIT) {
             return report.copy(
                 verdict = Verdict.BAND_LIMITED,
                 confidence = (report.confidence - 15).coerceAtLeast(5),
@@ -145,13 +148,13 @@ object AuthenticityAnalyzer {
                 } + Note(NoteKey.FLOOR_BELOW_16BIT),
             )
         }
-        val independent = padded || floor?.level == NoiseFloor.Level.AT_16BIT
+        val independent = !fromHiRes && (padded || floor?.level == NoiseFloor.Level.AT_16BIT)
         if (!independent && signs.spectral < 3) {
             return report.copy(
                 verdict = Verdict.BAND_LIMITED,
                 confidence = (report.confidence - 15).coerceAtLeast(5),
                 notes = report.notes.map {
-                    if (it.key == NoteKey.UPSAMPLED) Note(NoteKey.UPSAMPLE_POSSIBLE, cutoffKhz, rateKhz) else it
+                    if (it.key == NoteKey.UPSAMPLED) Note(NoteKey.UPSAMPLE_POSSIBLE, cutoffKhz, rateKhz, source?.lowKhz ?: "44.1", source?.highKhz ?: "48") else it
                 },
             )
         }
@@ -221,10 +224,11 @@ object AuthenticityAnalyzer {
             SpectrumShape.ABRUPT_CUTOFF -> {
                 val edge = cutoff ?: 0.0
                 val rateKhz = fmt(info.sampleRate / 1000.0)
+                val source = UpsampleEdge.match(edge, info.sampleRate)
                 val (verdict, note) = when {
                     edge <= 16_800.0 -> Verdict.LOSSY_SOURCE to Note(NoteKey.HARD_CUTOFF, cutoffKhz.orEmpty())
-                    info.sampleRate > 48_000 && edge in 20_500.0..23_000.0 ->
-                        Verdict.UPSAMPLED to Note(NoteKey.UPSAMPLED, cutoffKhz.orEmpty(), rateKhz)
+                    source != null ->
+                        Verdict.UPSAMPLED to Note(NoteKey.UPSAMPLED, cutoffKhz.orEmpty(), rateKhz, source.lowKhz, source.highKhz)
                     info.sampleRate <= 48_000 && edge <= 20_800.0 ->
                         Verdict.POSSIBLE_LOSSY_SOURCE to Note(NoteKey.SHARP_CUTOFF, cutoffKhz.orEmpty())
                     else -> Verdict.BAND_LIMITED to Note(NoteKey.BAND_LIMITED, cutoffKhz.orEmpty())
@@ -357,8 +361,9 @@ object AuthenticityAnalyzer {
     private fun classifyEdge(report: AuthenticityReport, info: AudioInfo, edge: Double, signs: CutoffSigns): AuthenticityReport {
         val khz = fmt(edge / 1000.0)
         val rateKhz = fmt(info.sampleRate / 1000.0)
+        val source = UpsampleEdge.match(edge, info.sampleRate)
         val (verdict, note) = when {
-            info.sampleRate > 48_000 && edge in 20_500.0..23_000.0 -> Verdict.UPSAMPLED to Note(NoteKey.UPSAMPLED, khz, rateKhz)
+            source != null -> Verdict.UPSAMPLED to Note(NoteKey.UPSAMPLED, khz, rateKhz, source.lowKhz, source.highKhz)
             edge <= 16_800.0 ->
                 if (signs.points >= 2) Verdict.LOSSY_SOURCE to Note(NoteKey.HARD_CUTOFF, khz)
                 else Verdict.POSSIBLE_LOSSY_SOURCE to Note(NoteKey.SHARP_CUTOFF, khz)

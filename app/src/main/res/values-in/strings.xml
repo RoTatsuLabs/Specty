@@ -283,7 +283,7 @@
     <string name="note_full_band">Konten mencapai bagian atas spektrum, tanpa cutoff atau roll-off yang ditemukan.</string>
     <string name="note_rolloff">Spektrum memudar bertahap di atas sekitar %1$s kHz, tanpa tepi yang tajam. Ini umum pada filter mastering, rekaman lama, dan filter low-pass yang landai, dan dengan sendirinya tidak menunjukkan asal lossy.</string>
     <string name="note_hard_cutoff">Pemotongan tajam di sekitar %1$s kHz, dengan lebih dari satu tanda low-pass encoder: tepi curam, kesenyapan di atasnya, atau posisi yang sama sepanjang trek. File ini kemungkinan besar ditranskode dari sumber lossy.</string>
-    <string name="note_upsampled">Konten berhenti di sekitar %1$s kHz dalam file %2$s kHz. Kemungkinan besar di-upsample dari sumber 44.1 atau 48 kHz.</string>
+    <string name="note_upsampled">Konten berhenti di sekitar %1$s kHz dalam file %2$s kHz. Kemungkinan besar di-upsample dari sumber %3$s atau %4$s kHz.</string>
     <string name="note_sharp_cutoff">Pemotongan tajam di sekitar %1$s kHz. Sumber lossy bisa meninggalkan tepi seperti ini, tetapi beberapa master juga difilter dengan cara yang sama, jadi belum bisa dipastikan.</string>
     <string name="note_band_limited">Spektrum berakhir di tepi tajam sekitar %1$s kHz. Tidak ada tanda lain yang mengarah ke sumber lossy atau hasil upsampling, dan filter mastering atau perekaman bisa meninggalkan tepi seperti ini.</string>
     <string name="note_bits_padded">Hanya %1$s bit teratas yang berisi data, jadi ini tampak seperti audio %1$s-bit yang disimpan sebagai %2$s-bit.</string>
@@ -512,7 +512,7 @@
     <string name="settings_search_none">Tidak ada pengaturan yang cocok</string>
     <string name="settings_search_clear">Hapus pencarian</string>
     <string name="note_rolloff_low">Pita berakhir lebih rendah daripada kebanyakan master modern. Pengkodean lossy, pita kaset, dan transfer lama bisa menyebabkannya, jadi penyebabnya belum pasti.</string>
-    <string name="note_upsample_possible">Spektrum berakhir di sekitar %1$s kHz, tempat sumber 44,1 atau 48 kHz akan berakhir di dalam file %2$s kHz ini. Tidak ada tanda lain yang memastikan resampling, jadi ini petunjuk, bukan temuan.</string>
+    <string name="note_upsample_possible">Spektrum berakhir di sekitar %1$s kHz, tempat sumber %3$s atau %4$s kHz akan berakhir di dalam file %2$s kHz ini. Tidak ada tanda lain yang memastikan resampling, jadi ini petunjuk, bukan temuan.</string>
     <string name="note_rate_unconfirmed">Sample rate di atas 48 kHz, tetapi sampelnya tidak memuat detail lebih dari tingkat CD, jadi file ini tidak terkonfirmasi sebagai Hi-Res.</string>
     <string name="note_top_at_peaks">Spektrum rata-rata hanya menunjukkan sedikit di atas 24 kHz, tetapi momen paling keras membawa konten di sana, jadi file ini tidak terpotong pada batas sumber 44,1 atau 48 kHz.</string>
     <string name="verdict_head_rolloff">Roll-off bertahap di frekuensi tinggi</string>
