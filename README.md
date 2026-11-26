@@ -70,5 +70,6 @@ Specty is released under the [GNU General Public License v3.0](LICENSE). The Abo
 
 ## Acknowledgements
 
-- [FFmpegKitNext](https://github.com/arthenica/ffmpeg-kit-next) (LGPL v3.0) decodes audio through FFmpeg.
+- [FFmpegKitNext](https://github.com/arthenica/ffmpeg-kit-next) (LGPL v3.0) decodes audio through FFmpeg. Specty uses the build from [RoTatsuLabs/ffmpeg-kit-next](https://github.com/RoTatsuLabs/ffmpeg-kit-next).
 - [Mornye](https://github.com/mornyeapp/Mornye) (LGPL v3.0) is the source of the Hi-Res evidence checks that Specty ports to Kotlin.
+- [TrueLossless](https://github.com/0n4sh0/truelossless) (MIT) was studied as a reference for spectral cutoff and bit-depth checks. Specty does not use its code.
