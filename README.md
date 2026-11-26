@@ -26,6 +26,22 @@ An open-source audio analyzer for Android. It draws the spectrogram, measures lo
 - Measurements cover peak, true peak, loudness (LUFS), dynamic range, clipping and effective bit depth, per channel.
 - The library scans your music folders in the background. Filter by verdict, compare two tracks or look for duplicates.
 
+## Hi-Res
+
+Specty treats a lossless file as Hi-Res when its sample rate is above 48 kHz, the rule Apple uses. The JAS logo asks for at least 24-bit at 96 kHz, which is stricter. A sample rate alone is not resolution, so files above 48 kHz get one of three states:
+
+- **Verified**: real content above 24 kHz, or a noise floor below 16-bit.
+- **Unconfirmed**: nothing contradicts it and nothing proves it. A 16-bit floor beside real content ends up here, because 16-bit dither and an analog floor of the same level read alike.
+- **Not Hi-Res**: upsampled from a CD-rate source, 16-bit data (stored as 16-bit, or padded to 24), or a 16-bit floor with nothing above 24 kHz.
+
+What the checks cannot do:
+
+- A spectrogram does not show bit depth, and padding disappears after a gain change or dither.
+- Finding no sign of a transcode is not proof of where a file came from.
+- Sample-level upsample evidence only sees integer ratios from 44.1 and 48 kHz. High-quality resampling and ratios such as 44.1 to 96 kHz are recognised only by an edge in the spectrum at the source Nyquist, and a 16-bit dither floor can hide a small one.
+- A peak-hold spectrum is built from at most 1,200 frames of a track, so content that lasts a few frames can be missed in long files.
+- The thresholds were tuned on a synthetic corpus (`tools/hires-corpus`), not on a collection of real recordings.
+
 ## Install
 
 Download an APK from the [latest release](https://github.com/RoTatsuLabs/Specty/releases/latest) and open it on a device running Android 8.0 or newer.
