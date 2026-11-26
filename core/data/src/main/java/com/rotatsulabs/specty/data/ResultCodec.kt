@@ -6,6 +6,7 @@ import com.rotatsulabs.specty.audio.AuthenticityReport
 import com.rotatsulabs.specty.audio.BitDepthBasis
 import com.rotatsulabs.specty.audio.ChannelStats
 import com.rotatsulabs.specty.audio.DecodedFormat
+import com.rotatsulabs.specty.audio.HiRes
 import com.rotatsulabs.specty.audio.LevelStats
 import com.rotatsulabs.specty.audio.Note
 import com.rotatsulabs.specty.audio.NoteKey
@@ -115,6 +116,7 @@ object ResultCodec {
             writeStr(out, encoderGuess)
             out.writeDouble(emptyAboveHz ?: Double.NaN)
             out.writeUTF(shape.name); out.writeInt(sectionsJudged); out.writeInt(sectionsAgreeing)
+            out.writeUTF(hiRes?.name.orEmpty())
         }
         out.writeBoolean(r.decoded != null)
         r.decoded?.let { out.writeInt(it.sampleRate); out.writeInt(it.channels) }
@@ -169,6 +171,7 @@ object ResultCodec {
             emptyAboveHz = inp.readDouble().takeUnless { it.isNaN() },
             shape = SpectrumShape.valueOf(inp.readUTF()),
             sectionsJudged = inp.readInt(), sectionsAgreeing = inp.readInt(),
+            hiRes = inp.readUTF().let { saved -> HiRes.entries.firstOrNull { it.name == saved } },
         )
         val decoded = if (inp.readBoolean()) DecodedFormat(inp.readInt(), inp.readInt()) else null
         val columns = inp.readInt(); val bins = inp.readInt(); val rate = inp.readInt(); val fft = inp.readInt()

@@ -543,6 +543,7 @@
     <string name="note_rate_unconfirmed">Частота дискретизации выше 48 кГц, но в отсчётах нет больше деталей, чем на уровне CD, поэтому файл не подтверждён как Hi-Res.</string>
     <string name="note_top_at_peaks">Средний спектр почти пуст выше 24 кГц, но самые громкие моменты содержат там сигнал, поэтому файл не обрезан на пределе источника 44,1 или 48 кГц.</string>
     <string name="note_rising_noise">Выше 24 кГц спектр растёт к верхнему краю полосы. Это формирование шума (noise shaping), как в PCM, полученном из DSD, а не музыка, поэтому оно не считается содержимым.</string>
+    <string name="note_sixteen_bit_file">Файл хранит 16-битные отсчёты, поэтому он не является Hi-Res при любой частоте дискретизации.</string>
     <string name="verdict_head_rolloff">Плавный спад на высоких частотах</string>
     <string name="verdict_short_rolloff">Спад</string>
     <string name="hl_verdict_rolloff">с плавным спадом</string>

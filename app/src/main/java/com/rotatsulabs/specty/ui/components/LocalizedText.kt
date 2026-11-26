@@ -72,6 +72,7 @@ fun noteText(n: Note): String {
         NoteKey.RATE_UNCONFIRMED -> stringResource(R.string.note_rate_unconfirmed)
         NoteKey.TOP_AT_PEAKS -> stringResource(R.string.note_top_at_peaks)
         NoteKey.RISING_NOISE -> stringResource(R.string.note_rising_noise)
+        NoteKey.SIXTEEN_BIT_FILE -> stringResource(R.string.note_sixteen_bit_file)
         NoteKey.VERDICTS_DIFFER -> stringResource(R.string.hl_verdicts_differ, verdictPhrase(a[0]), verdictPhrase(a[1]))
         NoteKey.MORE_TOP_END -> stringResource(R.string.hl_more_top_end, a[0], a[1], a[2], a[3])
         NoteKey.B_REACHES_TOP -> stringResource(R.string.hl_b_reaches_top, a[0])

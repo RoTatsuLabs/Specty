@@ -7,6 +7,7 @@ import com.rotatsulabs.specty.audio.AuthenticityReport
 import com.rotatsulabs.specty.audio.BitDepthBasis
 import com.rotatsulabs.specty.audio.ChannelStats
 import com.rotatsulabs.specty.audio.DecodedFormat
+import com.rotatsulabs.specty.audio.HiRes
 import com.rotatsulabs.specty.audio.LevelAnalyzer
 import com.rotatsulabs.specty.audio.LevelStats
 import com.rotatsulabs.specty.audio.PcmFile
@@ -58,7 +59,7 @@ class ResultCodecTest {
         assertEquals(a.confidence, b.confidence); assertTrue(a.segmentCutoffs.contentEquals(b.segmentCutoffs))
         assertEquals(a.encoderGuess, b.encoderGuess); assertEquals(a.emptyAboveHz, b.emptyAboveHz)
         assertEquals(a.shape, b.shape); assertEquals(a.sectionsJudged, b.sectionsJudged)
-        assertEquals(a.sectionsAgreeing, b.sectionsAgreeing)
+        assertEquals(a.sectionsAgreeing, b.sectionsAgreeing); assertEquals(a.hiRes, b.hiRes)
     }
 
     @Test
@@ -74,7 +75,7 @@ class ResultCodecTest {
     fun everyFieldSurvivesTheRoundTrip() {
         val r = AuthenticityReport(
             Verdict.LOSSY_SOURCE, 16_050.0, 74.5, listOf(Note(NoteKey.HARD_CUTOFF, "16.1"), Note(NoteKey.BITS_PADDED, 16, 24)), 91, floatArrayOf(16_000f, 0f, 16_100f), "MP3 around 128 kbps",
-            16_300.0, SpectrumShape.ABRUPT_CUTOFF, 10, 9,
+            16_300.0, SpectrumShape.ABRUPT_CUTOFF, 10, 9, HiRes.UNCONFIRMED,
         )
         val s = stored(r)
         val back = ResultCodec.fromBytes(ResultCodec.toBytes(s))!!

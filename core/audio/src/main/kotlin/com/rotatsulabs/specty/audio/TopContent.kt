@@ -21,17 +21,17 @@ object TopContent {
     private const val MIN_BINS = 16
 
     /**
-     * Median peak-hold level of the band above [FROM_HZ], less the level the peak-hold spectrum of the file's own
+     * Median peak-hold level of the band from [FROM_HZ] up to [upToHz] (the top of the band when null), less the level the peak-hold spectrum of the file's own
      * noise floor ([floorVariance], see [NoiseFloor]) would reach. Near zero for a floor alone; large when frames
      * carry content. Null when the band is too narrow, the floor is unknown or there are too few frames.
      */
-    fun marginDb(hold: PeakHold?, floorVariance: Double?, sampleRate: Int, fftSize: Int): Double? {
+    fun marginDb(hold: PeakHold?, floorVariance: Double?, sampleRate: Int, fftSize: Int, upToHz: Double? = null): Double? {
         if (hold == null || hold.frames < MIN_FRAMES) return null
         if (floorVariance == null || floorVariance.isNaN() || floorVariance <= 0.0) return null
         val bins = hold.db.size
         val binHz = sampleRate.toDouble() / fftSize
         val from = (FROM_HZ / binHz).roundToInt()
-        val to = (sampleRate / 2.0 * 0.99 / binHz).toInt().coerceAtMost(bins - 1)
+        val to = (minOf(sampleRate / 2.0 * 0.99, upToHz ?: Double.MAX_VALUE) / binHz).toInt().coerceAtMost(bins - 1)
         if (to - from < MIN_BINS) return null
         val radius = max(1, (65.0 / binHz).roundToInt())
         val level = DoubleArray(to - from + 1)

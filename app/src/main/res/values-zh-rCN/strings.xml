@@ -516,6 +516,7 @@
     <string name="note_rate_unconfirmed">采样率高于 48 kHz，但采样中的细节并未超过 CD 水平，因此无法确认该文件为 Hi-Res。</string>
     <string name="note_top_at_peaks">平均频谱在 24 kHz 以上几乎没有内容，但最响的片段中存在该频段的内容，因此该文件并未在 44.1 或 48 kHz 源的上限处被截断。</string>
     <string name="note_rising_noise">24 kHz 以上的频谱向频带顶端上升。这是噪声整形（如由 DSD 转换的 PCM），并非音乐，因此不计为内容。</string>
+    <string name="note_sixteen_bit_file">该文件存储的是 16 位采样，因此无论采样率多高，都不是 Hi-Res。</string>
     <string name="verdict_head_rolloff">高频逐渐衰减</string>
     <string name="verdict_short_rolloff">衰减</string>
     <string name="hl_verdict_rolloff">高频逐渐衰减</string>

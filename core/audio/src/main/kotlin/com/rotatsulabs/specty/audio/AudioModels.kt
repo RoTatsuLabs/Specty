@@ -182,9 +182,9 @@ enum class SpectrumShape {
 }
 
 enum class Verdict {
-    /** Full-band lossless audio at 48 kHz or below. */
+    /** Full-band lossless audio at 48 kHz or below, or above it when [HiRes] is not verified. */
     GENUINE,
-    /** Full-band lossless audio above 48 kHz. */
+    /** Full-band lossless audio above 48 kHz whose [HiRes] state is verified; the library and the export tag rely on it. */
     HI_RES,
     LOSSY_SOURCE,
     POSSIBLE_LOSSY_SOURCE,
@@ -196,6 +196,21 @@ enum class Verdict {
     LOSSY_CODEC,
     DOLBY_ATMOS,
     INCONCLUSIVE,
+}
+
+/**
+ * Whether a file above 48 kHz holds Hi-Res detail. High resolution means more than CD resolution: a sample rate above
+ * 48 kHz is the usual rule (Apple's) and is not enough on its own, so the samples have to show it too.
+ */
+enum class HiRes {
+    /** Real content above 24 kHz, or a noise floor below 16-bit. */
+    VERIFIED,
+
+    /** Nothing contradicts it and nothing proves it. */
+    UNCONFIRMED,
+
+    /** Upsampled from CD rate, 16-bit data (padded or stored as 16-bit), or a 16-bit noise floor with nothing above 24 kHz. */
+    NOT_HI_RES,
 }
 
 data class AuthenticityReport(
@@ -217,6 +232,8 @@ data class AuthenticityReport(
     /** Sections of the track that could be judged, and how many of them agree with the overall shape. */
     val sectionsJudged: Int = 0,
     val sectionsAgreeing: Int = 0,
+    /** Null for files of 48 kHz or less, lossy formats and files with no signal. */
+    val hiRes: HiRes? = null,
 ) {
     val hasCliff: Boolean get() = cutoffHz != null
 

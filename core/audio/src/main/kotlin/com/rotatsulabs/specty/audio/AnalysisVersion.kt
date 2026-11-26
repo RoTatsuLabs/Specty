@@ -6,7 +6,7 @@ package com.rotatsulabs.specty.audio
  * measurement. Both are part of every cache key and of the cache header, so older results are dropped, not reused.
  */
 object AnalysisVersion {
-    const val SCHEMA = 8
+    const val SCHEMA = 9
     const val ALGORITHM = 5
 
     /** The authenticity verdict is always judged on this transform, whatever size the spectrogram is drawn at. */

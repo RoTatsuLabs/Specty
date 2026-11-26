@@ -80,7 +80,7 @@ object AuthenticityAnalyzer {
         val measured = if (spectra.sampleRate != info.sampleRate) info.copy(sampleRate = spectra.sampleRate) else info
         val base = analyze(measured, spectra.whole, spectra.fftSize, effectiveBitDepth)
         val (report, signs) = insights(base, measured, spectra.whole, spectra.fftSize, spectra.sections)
-        return withEvidence(report, measured, spectra, upsample, signs)
+        return withHiRes(withEvidence(report, measured, spectra, upsample, signs), measured, spectra, effectiveBitDepth)
     }
 
     /**
@@ -108,6 +108,41 @@ object AuthenticityAnalyzer {
         )
     }
 
+    /**
+     * Sets [AuthenticityReport.hiRes] for a lossless file above 48 kHz. A 16-bit file is not Hi-Res whatever its rate.
+     * Real content above 24 kHz or a floor below 16-bit verifies it; a 16-bit floor beside real content leaves it
+     * unconfirmed, since dither and an analog floor of the same level read alike; a 16-bit floor with nothing above
+     * 24 kHz, or an upsampled CD-rate source, is not Hi-Res.
+     */
+    private fun withHiRes(report: AuthenticityReport, info: AudioInfo, spectra: AuthSpectra, effectiveBitDepth: Int?): AuthenticityReport {
+        if (info.sampleRate <= HI_RES_ABOVE_HZ || info.isLossy || info.isDolbyAtmos) return report
+        if (report.verdict == Verdict.LOSSY_CODEC || report.verdict == Verdict.DOLBY_ATMOS || report.shape == SpectrumShape.NO_SIGNAL) return report
+        fun result(state: HiRes, vararg more: Note) =
+            report.copy(hiRes = state, notes = report.notes + more.filter { n -> report.notes.none { it.key == n.key } })
+
+        val padded = BitDepth.paddingNote(info.bitDepth, effectiveBitDepth).isNotEmpty()
+        val upsampledFrom = if (report.verdict == Verdict.UPSAMPLED) UpsampleEdge.match(report.cutoffHz ?: 0.0, info.sampleRate) else null
+        when {
+            padded -> return result(HiRes.NOT_HI_RES)
+            (info.bitDepth ?: Int.MAX_VALUE) <= 16 -> return result(HiRes.NOT_HI_RES, Note(NoteKey.SIXTEEN_BIT_FILE))
+            report.verdict == Verdict.UPSAMPLED && upsampledFrom?.hiRes != true -> return result(HiRes.NOT_HI_RES)
+            report.verdict == Verdict.LOSSY_SOURCE || report.verdict == Verdict.POSSIBLE_LOSSY_SOURCE -> return result(HiRes.NOT_HI_RES)
+        }
+        val floor = NoiseFloor.classify(spectra.quietFloorVariance)
+        val rising = report.notes.any { it.key == NoteKey.RISING_NOISE }
+        val content = !rising && (
+            report.verdict == Verdict.HI_RES || report.shape == SpectrumShape.FULL_BAND ||
+                report.notes.any { it.key == NoteKey.TOP_AT_PEAKS } ||
+                (TopContent.marginDb(spectra.peak, spectra.quietFloorVariance, spectra.sampleRate, spectra.fftSize, report.cutoffHz) ?: Double.NEGATIVE_INFINITY) >= TopContent.MARGIN_DB
+            )
+        if (content) return result(if (floor?.level == NoiseFloor.Level.AT_16BIT) HiRes.UNCONFIRMED else HiRes.VERIFIED)
+        return when (floor?.level) {
+            NoiseFloor.Level.BELOW_16BIT -> result(HiRes.VERIFIED, Note(NoteKey.FLOOR_BELOW_16BIT))
+            NoiseFloor.Level.AT_16BIT -> result(HiRes.NOT_HI_RES, Note(NoteKey.FLOOR_AT_16BIT))
+            else -> result(HiRes.UNCONFIRMED)
+        }
+    }
+
     private fun withEvidence(
         reported: AuthenticityReport,
         info: AudioInfo,
@@ -131,7 +166,7 @@ object AuthenticityAnalyzer {
         if (report.verdict == Verdict.HI_RES) {
             // A high sample rate is not resolution. Full-band content is not enough when the samples themselves
             // carry no more than CD-level detail, so that file is reported as lossless without the Hi-Res label.
-            return if (padded || floor?.level == NoiseFloor.Level.AT_16BIT) {
+            return if (padded || (info.bitDepth ?: Int.MAX_VALUE) <= 16 || floor?.level == NoiseFloor.Level.AT_16BIT) {
                 report.copy(verdict = Verdict.GENUINE, notes = report.notes + Note(NoteKey.RATE_UNCONFIRMED))
             } else {
                 report
