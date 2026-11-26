@@ -3,7 +3,6 @@ import com.rotatsulabs.specty.audio.*
 import java.io.File
 import java.util.Locale
 
-/** Runs the real analysis pipeline on every file of a corpus and prints one CSV row per file. See make-corpus.sh. */
 fun main(args: Array<String>) {
     val dir = File(args[0])
     val only = args.getOrNull(1)

@@ -5,7 +5,6 @@ import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Test
 
-/** Cliffs of different widths and depths, in spectra shaped by hand (dB per bin, 96 kHz, 4096-point transform). */
 class CliffDetectionTest {
     private val rate = 96_000
     private val fft = AnalysisVersion.AUTH_FFT
@@ -41,7 +40,6 @@ class CliffDetectionTest {
 
     @Test
     fun aGentleRolloffIsNotACliff() {
-        // 5 dB per kHz from 10 kHz down to the top of the band, which reaches the floor without any edge.
         assertNull(detect { f -> -40.0 - 5.0 * ((f - 8_000.0) / 1000.0).coerceAtLeast(0.0) }.cutoff)
     }
 

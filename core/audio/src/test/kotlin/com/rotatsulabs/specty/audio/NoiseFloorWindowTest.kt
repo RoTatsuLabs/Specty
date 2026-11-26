@@ -4,7 +4,6 @@ import org.junit.Assert.assertEquals
 import org.junit.Test
 import kotlin.math.pow
 
-/** Where a floor stops reading as 16-bit audio, tested from 0 to +20 dB over 16-bit quantisation noise. */
 class NoiseFloorWindowTest {
     private val sixteenBit = 2.0.pow(-15).let { it * it / 12.0 }
     private fun variance(db: Double) = sixteenBit * 10.0.pow(db / 10.0)
@@ -38,7 +37,6 @@ class NoiseFloorWindowTest {
         assertEquals(NoiseFloor.Level.AT_16BIT, NoiseFloor.classify(spread, share)!!.level)
     }
 
-    // ---- what the floor does to the verdict, from a full-band spectrum shaped by hand ----------------
 
     private fun assess(floorDb: Double): AuthenticityReport {
         val rate = 96_000

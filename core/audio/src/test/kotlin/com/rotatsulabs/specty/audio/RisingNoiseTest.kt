@@ -7,7 +7,6 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import kotlin.math.pow
 
-/** Noise shaping that climbs above 25 kHz (PCM made from DSD) is not content. */
 class RisingNoiseTest {
     private val fft = AnalysisVersion.AUTH_FFT
 

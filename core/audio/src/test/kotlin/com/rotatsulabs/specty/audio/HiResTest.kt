@@ -6,7 +6,6 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import kotlin.math.pow
 
-/** Verified, unconfirmed or not Hi-Res, for lossless files above 48 kHz. */
 class HiResTest {
     private val fft = AnalysisVersion.AUTH_FFT
     private val sixteenBit = 2.0.pow(-15).let { it * it / 12.0 }

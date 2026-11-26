@@ -5,7 +5,6 @@ package com.rotatsulabs.specty.audio
  * filter starts rolling off before it. Only sources of 44.1, 48, 88.2 and 96 kHz are looked for.
  */
 object UpsampleEdge {
-    /** The two source rates (kHz, as words) an edge points to, whether they are high-resolution rates, and the Nyquist matched. */
     class Source(val lowKhz: String, val highKhz: String, val hiRes: Boolean, val nyquistHz: Double)
 
     private val NYQUISTS = doubleArrayOf(22_050.0, 24_000.0, 44_100.0, 48_000.0)

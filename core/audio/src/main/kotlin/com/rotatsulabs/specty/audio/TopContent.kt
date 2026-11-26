@@ -21,9 +21,9 @@ object TopContent {
     private const val MIN_BINS = 16
 
     /**
-     * Median peak-hold level of the band from [FROM_HZ] up to [upToHz] (the top of the band when null), less the level the peak-hold spectrum of the file's own
-     * noise floor ([floorVariance], see [NoiseFloor]) would reach. Near zero for a floor alone; large when frames
-     * carry content. Null when the band is too narrow, the floor is unknown or there are too few frames.
+     * Median peak-hold level from [FROM_HZ] to [upToHz] (top of the band when null), less what the file's own noise
+     * floor ([floorVariance]) would reach. Near zero for a floor alone. Null when the band is too narrow, the floor
+     * is unknown or there are too few frames.
      */
     fun marginDb(hold: PeakHold?, floorVariance: Double?, sampleRate: Int, fftSize: Int, upToHz: Double? = null): Double? {
         if (hold == null || hold.frames < MIN_FRAMES) return null

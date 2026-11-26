@@ -13,7 +13,6 @@ import java.util.Random
 import kotlin.math.PI
 import kotlin.math.sin
 
-/** Content above a 44.1 or 48 kHz source's limit, read from the peak-hold spectrum. */
 class TopContentTest {
     private val rate = 96_000
     private val floorSigma = 0.003
@@ -54,7 +53,6 @@ class TopContentTest {
         assertNull(TopContent.marginDb(s.peak, 1e-8, 44_100, s.fftSize))
     }
 
-    // ---- the verdict, from spectra shaped by hand ----------------------------------------------
 
     private val bins = AnalysisVersion.AUTH_FFT / 2
     private val binHz = rate.toDouble() / AnalysisVersion.AUTH_FFT

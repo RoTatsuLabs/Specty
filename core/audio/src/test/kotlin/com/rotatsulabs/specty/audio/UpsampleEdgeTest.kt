@@ -7,7 +7,6 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
-/** An upsampled file ends at the Nyquist of its source: 44.1 and 48 kHz sources, and 88.2 and 96 kHz ones. */
 class UpsampleEdgeTest {
     @Test
     fun edgesJustBelowAFortyFourOneOrFortyEightNyquistPointToACdRateSource() {
@@ -36,7 +35,6 @@ class UpsampleEdgeTest {
         assertNull(UpsampleEdge.match(30_000.0, 192_000))
     }
 
-    // ---- the verdict, from spectra shaped by hand --------------------------------------------
 
     private val sixteenBitFloor = Math.pow(2.0, -15.0).let { it * it / 12.0 }
 

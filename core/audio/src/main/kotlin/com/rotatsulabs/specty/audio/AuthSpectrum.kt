@@ -33,7 +33,6 @@ object AuthSpectrumAnalyzer {
     /** Frames quieter than this (dBFS, summed power) are left out of the averages. */
     private const val ACTIVE_FRAME_DB = -70.0
 
-    /** Share of the audible frames a bin may exceed and still set the peak-hold level. */
     private const val PEAK_SHARE = 0.01
 
     fun compute(pcm: PcmFile, onProgress: (Float) -> Unit = {}): AuthSpectra {

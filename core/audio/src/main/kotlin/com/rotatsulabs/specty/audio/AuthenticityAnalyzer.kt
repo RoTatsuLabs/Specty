@@ -474,7 +474,7 @@ object AuthenticityAnalyzer {
         val cutoff: Double?,
         /** Start of the empty top band, set only when the shape has one. */
         val emptyAboveHz: Double?,
-        /** Slope in dB per kHz of a line fitted to the band above [RISING_FROM_HZ]; null in files of 48 kHz or less. */
+        /** dB per kHz above [RISING_FROM_HZ]; null at 48 kHz or less. */
         val topSlope: Double? = null,
     ) {
         val hasCliff: Boolean get() = cutoff != null
@@ -574,7 +574,6 @@ object AuthenticityAnalyzer {
         )
     }
 
-    /** Least-squares slope (dB per kHz) of [s] from [RISING_FROM_HZ] to 0.99 of Nyquist, or null if that band is too narrow. */
     private fun slopeAboveSourceLimit(s: FloatArray, binHz: Double, nyquist: Double): Double? {
         val from = (RISING_FROM_HZ / binHz).roundToInt()
         val to = minOf(s.size - 1, (nyquist * 0.99 / binHz).toInt())
