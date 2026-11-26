@@ -119,7 +119,8 @@ object AuthenticityAnalyzer {
             )
         }
         val report = withTopContent(reported, info, spectra)
-        val floor = NoiseFloor.classify(spectra.quietFloorVariance)
+        val source = if (report.verdict == Verdict.UPSAMPLED) UpsampleEdge.match(report.cutoffHz ?: 0.0, info.sampleRate) else null
+        val floor = NoiseFloor.classify(spectra.quietFloorVariance, source?.let { it.nyquistHz / (info.sampleRate / 2.0) } ?: 1.0)
         val padded = report.notes.any { it.key == NoteKey.BITS_PADDED }
         if (report.verdict == Verdict.HI_RES) {
             // A high sample rate is not resolution. Full-band content is not enough when the samples themselves
@@ -137,7 +138,6 @@ object AuthenticityAnalyzer {
         // that edge only the spectral signs count and a deep floor does not withdraw it.
         val cutoffKhz = fmt((report.cutoffHz ?: 0.0) / 1000.0)
         val rateKhz = fmt(info.sampleRate / 1000.0)
-        val source = UpsampleEdge.match(report.cutoffHz ?: 0.0, info.sampleRate)
         val fromHiRes = source?.hiRes == true
         if (!fromHiRes && floor?.level == NoiseFloor.Level.BELOW_16BIT) {
             return report.copy(

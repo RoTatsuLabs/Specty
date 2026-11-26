@@ -5,11 +5,9 @@ package com.rotatsulabs.specty.audio
  * filter starts rolling off before it. Only sources of 44.1, 48, 88.2 and 96 kHz are looked for.
  */
 object UpsampleEdge {
-    /** The two source rates (kHz, as words) an edge points to, and whether they are high-resolution rates. */
-    class Source(val lowKhz: String, val highKhz: String, val hiRes: Boolean)
+    /** The two source rates (kHz, as words) an edge points to, whether they are high-resolution rates, and the Nyquist matched. */
+    class Source(val lowKhz: String, val highKhz: String, val hiRes: Boolean, val nyquistHz: Double)
 
-    private val CD = Source("44.1", "48", hiRes = false)
-    private val HI_RES = Source("88.2", "96", hiRes = true)
     private val NYQUISTS = doubleArrayOf(22_050.0, 24_000.0, 44_100.0, 48_000.0)
 
     /** An edge between this share of the source Nyquist and just above it. */
@@ -22,7 +20,7 @@ object UpsampleEdge {
     fun match(edgeHz: Double, sampleRate: Int): Source? {
         for (nyquist in NYQUISTS) {
             if (edgeHz in nyquist * FROM..nyquist * TO && sampleRate / 2.0 >= nyquist * ROOM) {
-                return if (nyquist < 40_000.0) CD else HI_RES
+                return if (nyquist < 40_000.0) Source("44.1", "48", false, nyquist) else Source("88.2", "96", true, nyquist)
             }
         }
         return null
