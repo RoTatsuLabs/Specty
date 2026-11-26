@@ -34,6 +34,11 @@ object AuthenticityAnalyzer {
     /** The top end this close to the mid band means content reaches the top. */
     private const val FULL_BAND_GAP_DB = 50.0
 
+    /** Above the Nyquist of a 44.1 or 48 kHz source, music falls or lies flat; a floor that rises this fast is shaped noise. */
+    private const val RISING_FROM_HZ = 25_000.0
+    private const val RISING_DB_PER_KHZ = 0.5
+    private const val RISING_MIN_SPAN_HZ = 8_000.0
+
     /** The top end this far below the mid band is empty. Between the two limits nothing can be said. */
     private const val EMPTY_TOP_GAP_DB = 65.0
 
@@ -92,6 +97,7 @@ object AuthenticityAnalyzer {
         if (info.sampleRate <= HI_RES_ABOVE_HZ) return report
         if (report.verdict == Verdict.HI_RES || report.verdict == Verdict.GENUINE) return report
         if (report.shape == SpectrumShape.NO_SIGNAL || report.shape == SpectrumShape.FULL_BAND) return report
+        if (report.notes.any { it.key == NoteKey.RISING_NOISE }) return report
         if ((report.cutoffHz ?: 0.0) >= TopContent.FROM_HZ) return report
         val margin = TopContent.marginDb(spectra.peak, spectra.quietFloorVariance, spectra.sampleRate, spectra.fftSize)
         if (margin == null || margin < TopContent.MARGIN_DB) return report
@@ -205,7 +211,7 @@ object AuthenticityAnalyzer {
             )
             SpectrumShape.UNCLEAR -> AuthenticityReport(
                 Verdict.INCONCLUSIVE, null, 0.0,
-                listOf(Note(NoteKey.FAINT_TOP)) + bitNote,
+                listOf(Note(if ((d.topSlope ?: 0.0) >= RISING_DB_PER_KHZ && d.gap <= FULL_BAND_GAP_DB) NoteKey.RISING_NOISE else NoteKey.FAINT_TOP)) + bitNote,
                 shape = d.shape,
             )
             SpectrumShape.FULL_BAND -> AuthenticityReport(
@@ -433,6 +439,8 @@ object AuthenticityAnalyzer {
         val cutoff: Double?,
         /** Start of the empty top band, set only when the shape has one. */
         val emptyAboveHz: Double?,
+        /** Slope in dB per kHz of a line fitted to the band above [RISING_FROM_HZ]; null in files of 48 kHz or less. */
+        val topSlope: Double? = null,
     ) {
         val hasCliff: Boolean get() = cutoff != null
     }
@@ -512,8 +520,12 @@ object AuthenticityAnalyzer {
         val topHz = (top + 1) * binHz
         if (top < bins - 1 && topHz < nyquist * 0.97 && topHz > 1000.0) emptyAbove = topHz
 
+        val topSlope = if (sampleRate > HI_RES_ABOVE_HZ) slopeAboveSourceLimit(s, binHz, nyquist) else null
+        val rising = topSlope != null && topSlope >= RISING_DB_PER_KHZ
         val shape = when {
             cutoff != null -> SpectrumShape.ABRUPT_CUTOFF
+            // Noise that climbs toward Nyquist is noise shaping (as in PCM made from DSD), not music.
+            gap <= FULL_BAND_GAP_DB && rising -> SpectrumShape.UNCLEAR
             gap <= FULL_BAND_GAP_DB -> SpectrumShape.FULL_BAND
             gap >= EMPTY_TOP_GAP_DB && emptyAbove != null -> SpectrumShape.GRADUAL_ROLLOFF
             else -> SpectrumShape.UNCLEAR
@@ -523,7 +535,28 @@ object AuthenticityAnalyzer {
             reference, dynamic, gap,
             if (cutoff != null) bestDrop else 0.0,
             shape, cutoff, emptyAbove.takeIf { hasEmptyTop },
+            topSlope,
         )
+    }
+
+    /** Least-squares slope (dB per kHz) of [s] from [RISING_FROM_HZ] to 0.99 of Nyquist, or null if that band is too narrow. */
+    private fun slopeAboveSourceLimit(s: FloatArray, binHz: Double, nyquist: Double): Double? {
+        val from = (RISING_FROM_HZ / binHz).roundToInt()
+        val to = minOf(s.size - 1, (nyquist * 0.99 / binHz).toInt())
+        if ((to - from) * binHz < RISING_MIN_SPAN_HZ) return null
+        var sumX = 0.0
+        var sumY = 0.0
+        var sumXY = 0.0
+        var sumXX = 0.0
+        val n = to - from + 1
+        for (k in from..to) {
+            val x = k * binHz / 1000.0
+            sumX += x
+            sumY += s[k]
+            sumXY += x * s[k]
+            sumXX += x * x
+        }
+        return (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX)
     }
 
     private fun smooth(values: FloatArray, radius: Int): FloatArray {

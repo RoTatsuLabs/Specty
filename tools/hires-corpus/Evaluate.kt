@@ -7,7 +7,7 @@ import java.util.Locale
 fun main(args: Array<String>) {
     val dir = File(args[0])
     val only = args.getOrNull(1)
-    println("id,truth,hires_truth,rate,bits,verdict,cutoff_hz,drop_db,shape,confidence,floor_db,floor_level,eff_bits,gap_db,top_margin,notes")
+    println("id,truth,hires_truth,rate,bits,verdict,cutoff_hz,drop_db,shape,confidence,floor_db,floor_level,eff_bits,gap_db,top_margin,top_slope,notes")
     for (line in File(dir, "manifest.csv").readLines().drop(1)) {
         val c = line.split(",", limit = 6)
         val id = c[0]
@@ -35,7 +35,7 @@ fun main(args: Array<String>) {
                 println(listOf(
                     id, c[1], c[2], rate, bits ?: "", r.verdict, f(r.cutoffHz), f(r.cliffDropDb), r.shape, r.confidence,
                     f(floor?.vs16BitDb), floor?.level ?: "", levels.effectiveBitDepth ?: "", f(d.gap),
-                    f(top),
+                    f(top), f(d.topSlope),
                     r.notes.joinToString("|") { it.key.name },
                 ).joinToString(","))
             }

@@ -14,6 +14,7 @@ class NotesTest {
         NoteKey.UPSAMPLE_HOLD to 2, NoteKey.UPSAMPLE_LINE to 2, NoteKey.FLOOR_AT_16BIT to 0, NoteKey.FLOOR_BELOW_16BIT to 0,
         NoteKey.ROLLOFF_LOW to 0, NoteKey.UPSAMPLE_POSSIBLE to 4, NoteKey.RATE_UNCONFIRMED to 0,
         NoteKey.TOP_AT_PEAKS to 0,
+        NoteKey.RISING_NOISE to 0,
         NoteKey.VERDICTS_DIFFER to 2, NoteKey.MORE_TOP_END to 4, NoteKey.B_REACHES_TOP to 1, NoteKey.A_REACHES_TOP to 1,
         NoteKey.MORE_DYNAMIC to 3, NoteKey.LOUDER to 2, NoteKey.MORE_CLIPPING to 1, NoteKey.ALMOST_SAME to 0,
     )

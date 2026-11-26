@@ -515,6 +515,7 @@
     <string name="note_upsample_possible">スペクトルは %1$s kHz 付近で終わっており、%2$s kHz のこのファイルに %3$s または %4$s kHz の音源を入れた場合の上限と一致します。リサンプリングを裏付ける他の手がかりはないため、確定ではなく手がかりです。</string>
     <string name="note_rate_unconfirmed">サンプルレートは 48 kHz を超えていますが、サンプルの情報量は CD 水準を超えていないため、ハイレゾとは確認できません。</string>
     <string name="note_top_at_peaks">平均スペクトルでは 24 kHz 超にほとんど成分が見えませんが、最も大きい部分にはその帯域の成分があるため、このファイルは 44.1 kHz や 48 kHz のソースの上限で切られてはいません。</string>
+    <string name="note_rising_noise">24 kHz を超えるとスペクトルは帯域の上端に向かって上昇します。これは DSD から変換した PCM に見られるノイズシェーピングであり、音楽ではないため、成分としては数えません。</string>
     <string name="verdict_head_rolloff">高域の緩やかなロールオフ</string>
     <string name="verdict_short_rolloff">ロールオフ</string>
     <string name="hl_verdict_rolloff">緩やかにロールオフしている</string>
