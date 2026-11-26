@@ -11,15 +11,15 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
-        // FFmpegKitNext, built by this repository (ffmpegkit.yml). GitHub Packages needs a token with read:packages, even for public packages.
+        // FFmpegKitNext, from RoTatsuLabs/ffmpeg-kit-next. GitHub Packages needs a token with read:packages, even for public packages.
         maven {
-            name = "specty"
-            url = uri("https://maven.pkg.github.com/RoTatsuLabs/Specty")
+            name = "ffmpegKitNext"
+            url = uri("https://maven.pkg.github.com/RoTatsuLabs/ffmpeg-kit-next")
             credentials {
                 username = providers.gradleProperty("specty.user").orElse(providers.environmentVariable("SPECTY_PACKAGES_USER")).orNull
                 password = providers.gradleProperty("specty.token").orElse(providers.environmentVariable("SPECTY_PACKAGES_TOKEN")).orNull
             }
-            content { includeGroup("com.rotatsulabs.specty") }
+            content { includeGroup("com.rotatsulabs") }
         }
     }
 }
