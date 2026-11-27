@@ -517,6 +517,7 @@
     <string name="note_top_at_peaks">平均頻譜在 24 kHz 以上幾乎沒有內容，但最響的片段中存在該頻段的內容，因此該檔案並未在 44.1 或 48 kHz 來源的上限處被截斷。</string>
     <string name="note_rising_noise">24 kHz 以上的頻譜向頻帶頂端上升。這是噪聲整形（如由 DSD 轉換的 PCM），並非音樂，因此不計為內容。</string>
     <string name="note_sixteen_bit_file">該檔案儲存的是 16 位元取樣，因此無論取樣率多高，都不是 Hi-Res。</string>
+    <string name="note_content_reaches">內容延伸至約 %1$s kHz。沒有跡象顯示來源是有損音訊或經過升頻取樣。</string>
     <string name="verdict_head_rolloff">高頻逐漸衰減</string>
     <string name="verdict_short_rolloff">衰減</string>
     <string name="hl_verdict_rolloff">高頻逐漸衰減</string>

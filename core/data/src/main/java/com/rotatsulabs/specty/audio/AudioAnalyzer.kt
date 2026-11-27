@@ -80,7 +80,7 @@ class AudioAnalyzer(
                     val out = spectrum.await()
                     report(stage, 1f)
                     val upsample = if (info.isLossy || info.isDolbyAtmos) null else UpsampleEvidence.scan(pcm) { ensureActive() }
-                    val authenticity = AuthenticityAnalyzer.assess(info, out.auth, levels.effectiveBitDepth, upsample)
+                    val authenticity = AuthenticityAnalyzer.reassure(AuthenticityAnalyzer.assess(info, out.auth, levels.effectiveBitDepth, upsample), info)
                     AnalysisResult(uri, info, levels, authenticity, out.spectrogram, decoded)
                 }
             }

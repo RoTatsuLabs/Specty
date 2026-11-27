@@ -6,7 +6,7 @@ enum class NoteKey {
     ATMOS, LOSSY_CODEC_EDGE, LOSSY_CODEC, NO_DECODER, NO_SIGNAL, FAINT_TOP, FULL_BAND, ROLLOFF,
     HARD_CUTOFF, UPSAMPLED, SHARP_CUTOFF, BAND_LIMITED, BITS_PADDED, SECTIONS_DISAGREE, TOO_LITTLE_CLEAR, FEW_SECTIONS,
     UPSAMPLE_HOLD, UPSAMPLE_LINE, FLOOR_AT_16BIT, FLOOR_BELOW_16BIT, ROLLOFF_LOW, UPSAMPLE_POSSIBLE, RATE_UNCONFIRMED,
-    TOP_AT_PEAKS, RISING_NOISE, SIXTEEN_BIT_FILE,
+    TOP_AT_PEAKS, RISING_NOISE, SIXTEEN_BIT_FILE, CONTENT_REACHES,
 
     // Compare highlights.
     VERDICTS_DIFFER, MORE_TOP_END, B_REACHES_TOP, A_REACHES_TOP, MORE_DYNAMIC, LOUDER, MORE_CLIPPING, ALMOST_SAME,
@@ -63,6 +63,7 @@ object Notes {
             NoteKey.RISING_NOISE ->
                 "Above 24 kHz the spectrum climbs toward the top of the band. That is noise shaping, as in PCM made " +
                     "from DSD, not music, so it is not counted as content."
+            NoteKey.CONTENT_REACHES -> "Content reaches about ${a[0]} kHz. Nothing points to a lossy or upsampled source."
             NoteKey.SIXTEEN_BIT_FILE -> "The file stores 16-bit samples, so it is not Hi-Res whatever its sample rate."
             NoteKey.BITS_PADDED -> "Only the top ${a[0]} bits carry data, so this looks like ${a[0]}-bit audio stored as ${a[1]}-bit."
             NoteKey.SECTIONS_DISAGREE ->

@@ -26,7 +26,7 @@ fun main(args: Array<String>) {
                 val levels = LevelAnalyzer.analyze(pcm, 4)
                 val auth = AuthSpectrumAnalyzer.compute(pcm)
                 val upsample = UpsampleEvidence.scan(pcm)
-                val r = AuthenticityAnalyzer.assess(info, auth, levels.effectiveBitDepth, upsample)
+                val r = AuthenticityAnalyzer.reassure(AuthenticityAnalyzer.assess(info, auth, levels.effectiveBitDepth, upsample), info)
                 val d = AuthenticityAnalyzer.detect(auth.whole, auth.sampleRate, auth.fftSize)
                 val top = TopContent.marginDb(auth.peak, auth.quietFloorVariance, auth.sampleRate, auth.fftSize)
                 val floor = NoiseFloor.classify(auth.quietFloorVariance)

@@ -16,6 +16,7 @@ class NotesTest {
         NoteKey.TOP_AT_PEAKS to 0,
         NoteKey.RISING_NOISE to 0,
         NoteKey.SIXTEEN_BIT_FILE to 0,
+        NoteKey.CONTENT_REACHES to 1,
         NoteKey.VERDICTS_DIFFER to 2, NoteKey.MORE_TOP_END to 4, NoteKey.B_REACHES_TOP to 1, NoteKey.A_REACHES_TOP to 1,
         NoteKey.MORE_DYNAMIC to 3, NoteKey.LOUDER to 2, NoteKey.MORE_CLIPPING to 1, NoteKey.ALMOST_SAME to 0,
     )

@@ -539,6 +539,7 @@
     <string name="note_top_at_peaks">The average spectrum shows little above 24 kHz, but the loudest moments carry content there, so the file is not cut off at the limit of a 44.1 or 48 kHz source.</string>
     <string name="note_rising_noise">Above 24 kHz the spectrum climbs toward the top of the band. That is noise shaping, as in PCM made from DSD, not music, so it is not counted as content.</string>
     <string name="note_sixteen_bit_file">The file stores 16-bit samples, so it is not Hi-Res whatever its sample rate.</string>
+    <string name="note_content_reaches">Content reaches about %1$s kHz. Nothing points to a lossy or upsampled source.</string>
     <string name="verdict_head_rolloff">Gradual high-frequency roll-off</string>
     <string name="verdict_short_rolloff">Roll-off</string>
     <string name="hl_verdict_rolloff">gradually rolling off</string>

@@ -57,7 +57,7 @@ private fun f1(v: Double) = String.format(Locale.US, "%.1f", v)
 /** How sure the verdict is, where in the track the cutoff was found, and what encoder it resembles. */
 @Composable
 internal fun ConfidenceCard(report: AuthenticityReport, info: AudioInfo) {
-    if (report.verdict == Verdict.INCONCLUSIVE) return
+    if (report.verdict == Verdict.INCONCLUSIVE || report.evidence == null) return
     val scheme = MaterialTheme.colorScheme
     val target = report.confidence / 100f
     val grow by rememberGrow(450)

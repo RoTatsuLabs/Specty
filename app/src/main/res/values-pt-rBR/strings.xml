@@ -535,6 +535,7 @@
     <string name="note_top_at_peaks">O espectro médio mostra pouco acima de 24 kHz, mas os momentos mais fortes trazem conteúdo ali, então o arquivo não é cortado no limite de uma fonte de 44,1 ou 48 kHz.</string>
     <string name="note_rising_noise">Acima de 24 kHz o espectro sobe em direção ao topo da banda. Isso é noise shaping, como no PCM gerado a partir de DSD, e não música, então não é contado como conteúdo.</string>
     <string name="note_sixteen_bit_file">O arquivo guarda amostras de 16 bits, então não é Hi-Res, qualquer que seja a taxa de amostragem.</string>
+    <string name="note_content_reaches">O conteúdo chega a cerca de %1$s kHz. Nada indica uma fonte com perdas ou upsampling.</string>
     <string name="verdict_head_rolloff">Queda gradual em altas frequências</string>
     <string name="verdict_short_rolloff">Roll-off</string>
     <string name="hl_verdict_rolloff">com queda gradual</string>

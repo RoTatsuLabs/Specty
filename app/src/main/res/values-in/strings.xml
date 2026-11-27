@@ -517,6 +517,7 @@
     <string name="note_top_at_peaks">Spektrum rata-rata hanya menunjukkan sedikit di atas 24 kHz, tetapi momen paling keras membawa konten di sana, jadi file ini tidak terpotong pada batas sumber 44,1 atau 48 kHz.</string>
     <string name="note_rising_noise">Di atas 24 kHz spektrum naik menuju batas atas pita. Itu adalah noise shaping, seperti pada PCM hasil konversi DSD, bukan musik, jadi tidak dihitung sebagai konten.</string>
     <string name="note_sixteen_bit_file">File ini menyimpan sampel 16-bit, jadi bukan Hi-Res berapa pun sample rate-nya.</string>
+    <string name="note_content_reaches">Konten mencapai sekitar %1$s kHz. Tidak ada tanda sumber lossy atau hasil upsampling.</string>
     <string name="verdict_head_rolloff">Roll-off bertahap di frekuensi tinggi</string>
     <string name="verdict_short_rolloff">Roll-off</string>
     <string name="hl_verdict_rolloff">roll-off bertahap</string>

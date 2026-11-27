@@ -69,6 +69,33 @@ object AuthenticityAnalyzer {
         confidence = 99,
     )
 
+    /**
+     * What the person is told. A sharp edge or a roll-off that nothing else ties to a lossy or upsampled origin, and a
+     * spectrum that cannot be read, say nothing against the file, so they are reported as lossless (Hi-Res when that
+     * is verified) with the edge kept as a plain note. Only evidence of a problem changes the verdict.
+     */
+    fun reassure(report: AuthenticityReport, info: AudioInfo): AuthenticityReport {
+        val unreadable = report.notes.any { it.key == NoteKey.NO_SIGNAL || it.key == NoteKey.NO_DECODER }
+        val plain = when (report.verdict) {
+            Verdict.BAND_LIMITED, Verdict.ROLLOFF -> true
+            Verdict.INCONCLUSIVE -> !unreadable
+            else -> false
+        }
+        if (!plain) return report
+        val edge = report.cutoffHz ?: report.emptyAboveHz
+        val kept = report.notes.filter { it.key in KEPT_NOTES }
+        return report.copy(
+            verdict = if (info.sampleRate > HI_RES_ABOVE_HZ && report.hiRes == HiRes.VERIFIED) Verdict.HI_RES else Verdict.GENUINE,
+            confidence = 0,
+            notes = (if (edge != null) listOf(Note(NoteKey.CONTENT_REACHES, fmt(edge / 1000.0))) else emptyList()) + kept,
+        )
+    }
+
+    private val KEPT_NOTES = setOf(
+        NoteKey.BITS_PADDED, NoteKey.SIXTEEN_BIT_FILE, NoteKey.FLOOR_AT_16BIT, NoteKey.FLOOR_BELOW_16BIT,
+        NoteKey.RATE_UNCONFIRMED, NoteKey.TOP_AT_PEAKS, NoteKey.RISING_NOISE,
+    )
+
     /** Full judgement from the spectra built by [AuthSpectrumAnalyzer]. */
     fun assess(
         info: AudioInfo,
